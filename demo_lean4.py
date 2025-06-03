@@ -3,18 +3,24 @@ This script is taken from the LeanDojo repository and is used to demonstrate how
 https://github.com/lean-dojo/LeanDojo/blob/main/scripts/demo-lean4.ipynb
 """
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+MATHLIB4_DATASET_PATH = os.getenv("MATHLIB4_DATASET_PATH")
+
 from lean_dojo import LeanGitRepo, trace
 
 
 def main():
     repo = LeanGitRepo(
-        "$HOME/datasets/mathlib4_traced",
+        "https://github.com/leanprover-community/mathlib4",
         "29dcec074de168ac2bf835a77ef68bbe069194c5",
     )
 
     repo.get_config("lean-toolchain")
 
-    traced_repo = trace(repo, dst_dir="$HOME/datasets/mathlib4_traced", build_deps=True)
+    traced_repo = trace(repo, dst_dir=MATHLIB4_DATASET_PATH, build_deps=True)
 
     traced_file = traced_repo.get_traced_file("Mathlib/Algebra/BigOperators/Pi.lean")
 
