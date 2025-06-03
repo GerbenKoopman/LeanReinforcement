@@ -15,5 +15,5 @@ module load Anaconda3/2024.06-1
 conda init
 conda activate lean-reinforcement
 
-cd $HOME/LeanReinforcement
-srun python demo.py
+cd $HOME/leanreinforcement
+srun python demo_lean4.py
