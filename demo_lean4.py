@@ -14,7 +14,7 @@ def main():
 
     repo.get_config("lean-toolchain")
 
-    traced_repo = trace(repo)
+    traced_repo = trace(repo, dst_dir="$HOME/datasets/mathlib4_traced", build_deps=True)
 
     traced_file = traced_repo.get_traced_file("Mathlib/Algebra/BigOperators/Pi.lean")
 
