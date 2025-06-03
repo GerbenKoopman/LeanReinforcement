@@ -1,0 +1,16 @@
+name: lean-reinforcement
+channels:
+  - defaults
+  - conda-forge
+  - pytorch
+dependencies:
+  - python=3.10 # As per README: 3.9 <= Python < 3.13
+  - pytorch
+  - pip
+  - numpy
+  - matplotlib
+  - jupyter
+  - ipykernel
+  - pip:
+    - chardet
+    - lean-dojo
