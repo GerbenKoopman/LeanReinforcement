@@ -16,4 +16,4 @@ conda init
 conda activate lean-reinforcement
 
 cd $HOME/LeanReinforcement
-python demo.py
+srun python demo.py
