@@ -8,7 +8,7 @@ from lean_dojo import LeanGitRepo, trace
 
 def main():
     repo = LeanGitRepo(
-        "https://github.com/leanprover-community/mathlib4",
+        "$HOME/datasets/mathlib4_traced",
         "29dcec074de168ac2bf835a77ef68bbe069194c5",
     )
 
