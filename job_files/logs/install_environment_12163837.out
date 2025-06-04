@@ -1,0 +1,239 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Channels:
+ - defaults
+ - conda-forge
+ - pytorch
+Platform: linux-64
+Collecting package metadata (repodata.json): ...working... done
+Solving environment: ...working... done
+
+Downloading and Extracting Packages: ...working... done
+Preparing transaction: ...working... done
+Verifying transaction: ...working... done
+Executing transaction: ...working... done
+Installing pip dependencies: ...working... Ran pip subprocess with arguments:
+['/home/gkoopman/.conda/envs/lean-reinforcement/bin/python', '-m', 'pip', 'install', '-U', '-r', '/gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt', '--exists-action=b']
+Pip subprocess output:
+Collecting chardet (from -r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 1))
+  Downloading chardet-5.2.0-py3-none-any.whl.metadata (3.4 kB)
+Collecting lean-dojo (from -r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading lean_dojo-2.2.0-py3-none-any.whl.metadata (7.9 kB)
+Requirement already satisfied: filelock in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (3.17.0)
+Collecting gitpython (from lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading GitPython-3.1.44-py3-none-any.whl.metadata (13 kB)
+Collecting loguru (from lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading loguru-0.7.3-py3-none-any.whl.metadata (22 kB)
+Collecting lxml (from lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading lxml-5.4.0-cp310-cp310-manylinux_2_28_x86_64.whl.metadata (3.5 kB)
+Requirement already satisfied: networkx in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (3.4.2)
+Requirement already satisfied: pexpect in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (4.8.0)
+Requirement already satisfied: psutil in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (5.9.0)
+Collecting pygithub (from lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading PyGithub-2.6.1-py3-none-any.whl.metadata (3.9 kB)
+Collecting python-dotenv (from lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading python_dotenv-1.1.0-py3-none-any.whl.metadata (24 kB)
+Collecting ray>=2.8 (from ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading ray-2.46.0-cp310-cp310-manylinux2014_x86_64.whl.metadata (19 kB)
+Collecting toml (from lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading toml-0.10.2-py2.py3-none-any.whl.metadata (7.1 kB)
+Collecting tqdm (from lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading tqdm-4.67.1-py3-none-any.whl.metadata (57 kB)
+Collecting types-psutil (from lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading types_psutil-7.0.0.20250601-py3-none-any.whl.metadata (1.8 kB)
+Collecting types-toml (from lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading types_toml-0.10.8.20240310-py3-none-any.whl.metadata (1.5 kB)
+Collecting click>=7.0 (from ray>=2.8->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading click-8.2.1-py3-none-any.whl.metadata (2.5 kB)
+Requirement already satisfied: jsonschema in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from ray>=2.8->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (4.23.0)
+Collecting msgpack<2.0.0,>=1.0.0 (from ray>=2.8->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading msgpack-1.1.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (8.4 kB)
+Requirement already satisfied: packaging in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from ray>=2.8->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (24.2)
+Collecting protobuf!=3.19.5,>=3.15.3 (from ray>=2.8->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading protobuf-6.31.1-cp39-abi3-manylinux2014_x86_64.whl.metadata (593 bytes)
+Requirement already satisfied: pyyaml in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from ray>=2.8->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (6.0.2)
+Requirement already satisfied: requests in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from ray>=2.8->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (2.32.3)
+Collecting aiohttp>=3.7 (from ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading aiohttp-3.12.7-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.6 kB)
+Collecting aiohttp_cors (from ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading aiohttp_cors-0.8.1-py3-none-any.whl.metadata (20 kB)
+Collecting colorful (from ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading colorful-0.5.6-py2.py3-none-any.whl.metadata (16 kB)
+Collecting py-spy>=0.2.0 (from ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading py_spy-0.4.0-py2.py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.whl.metadata (16 kB)
+Collecting grpcio>=1.42.0 (from ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading grpcio-1.72.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (3.8 kB)
+Collecting opencensus (from ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading opencensus-0.11.4-py2.py3-none-any.whl.metadata (12 kB)
+Collecting pydantic!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.*,!=2.4.*,<3 (from ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading pydantic-2.11.5-py3-none-any.whl.metadata (67 kB)
+Requirement already satisfied: prometheus_client>=0.7.1 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (0.21.1)
+Collecting smart_open (from ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading smart_open-7.1.0-py3-none-any.whl.metadata (24 kB)
+Collecting virtualenv!=20.21.1,>=20.0.24 (from ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading virtualenv-20.31.2-py3-none-any.whl.metadata (4.5 kB)
+Collecting annotated-types>=0.6.0 (from pydantic!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.*,!=2.4.*,<3->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading annotated_types-0.7.0-py3-none-any.whl.metadata (15 kB)
+Collecting pydantic-core==2.33.2 (from pydantic!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.*,!=2.4.*,<3->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading pydantic_core-2.33.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.8 kB)
+Requirement already satisfied: typing-extensions>=4.12.2 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from pydantic!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.*,!=2.4.*,<3->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (4.12.2)
+Collecting typing-inspection>=0.4.0 (from pydantic!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.*,!=2.4.*,<3->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading typing_inspection-0.4.1-py3-none-any.whl.metadata (2.6 kB)
+Collecting aiohappyeyeballs>=2.5.0 (from aiohttp>=3.7->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading aiohappyeyeballs-2.6.1-py3-none-any.whl.metadata (5.9 kB)
+Collecting aiosignal>=1.1.2 (from aiohttp>=3.7->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading aiosignal-1.3.2-py2.py3-none-any.whl.metadata (3.8 kB)
+Collecting async-timeout<6.0,>=4.0 (from aiohttp>=3.7->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading async_timeout-5.0.1-py3-none-any.whl.metadata (5.1 kB)
+Requirement already satisfied: attrs>=17.3.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from aiohttp>=3.7->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (24.3.0)
+Collecting frozenlist>=1.1.1 (from aiohttp>=3.7->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading frozenlist-1.6.0-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (16 kB)
+Collecting multidict<7.0,>=4.5 (from aiohttp>=3.7->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading multidict-6.4.4-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+Collecting propcache>=0.2.0 (from aiohttp>=3.7->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading propcache-0.3.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (10 kB)
+Collecting yarl<2.0,>=1.17.0 (from aiohttp>=3.7->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading yarl-1.20.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (72 kB)
+Requirement already satisfied: idna>=2.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from yarl<2.0,>=1.17.0->aiohttp>=3.7->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (3.7)
+Collecting distlib<1,>=0.3.7 (from virtualenv!=20.21.1,>=20.0.24->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading distlib-0.3.9-py2.py3-none-any.whl.metadata (5.2 kB)
+Requirement already satisfied: platformdirs<5,>=3.9.1 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from virtualenv!=20.21.1,>=20.0.24->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (4.3.7)
+Collecting gitdb<5,>=4.0.1 (from gitpython->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading gitdb-4.0.12-py3-none-any.whl.metadata (1.2 kB)
+Collecting smmap<6,>=3.0.1 (from gitdb<5,>=4.0.1->gitpython->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading smmap-5.0.2-py3-none-any.whl.metadata (4.3 kB)
+Requirement already satisfied: jsonschema-specifications>=2023.03.6 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from jsonschema->ray>=2.8->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (2023.7.1)
+Requirement already satisfied: referencing>=0.28.4 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from jsonschema->ray>=2.8->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (0.30.2)
+Requirement already satisfied: rpds-py>=0.7.1 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from jsonschema->ray>=2.8->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (0.22.3)
+Collecting opencensus-context>=0.1.3 (from opencensus->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading opencensus_context-0.1.3-py2.py3-none-any.whl.metadata (3.3 kB)
+Requirement already satisfied: six~=1.16 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from opencensus->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (1.17.0)
+Collecting google-api-core<3.0.0,>=1.0.0 (from opencensus->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading google_api_core-2.25.0-py3-none-any.whl.metadata (3.0 kB)
+Collecting googleapis-common-protos<2.0.0,>=1.56.2 (from google-api-core<3.0.0,>=1.0.0->opencensus->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading googleapis_common_protos-1.70.0-py3-none-any.whl.metadata (9.3 kB)
+Collecting proto-plus<2.0.0,>=1.22.3 (from google-api-core<3.0.0,>=1.0.0->opencensus->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading proto_plus-1.26.1-py3-none-any.whl.metadata (2.2 kB)
+Collecting google-auth<3.0.0,>=2.14.1 (from google-api-core<3.0.0,>=1.0.0->opencensus->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading google_auth-2.40.2-py2.py3-none-any.whl.metadata (6.2 kB)
+Collecting cachetools<6.0,>=2.0.0 (from google-auth<3.0.0,>=2.14.1->google-api-core<3.0.0,>=1.0.0->opencensus->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading cachetools-5.5.2-py3-none-any.whl.metadata (5.4 kB)
+Collecting pyasn1-modules>=0.2.1 (from google-auth<3.0.0,>=2.14.1->google-api-core<3.0.0,>=1.0.0->opencensus->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading pyasn1_modules-0.4.2-py3-none-any.whl.metadata (3.5 kB)
+Collecting rsa<5,>=3.1.4 (from google-auth<3.0.0,>=2.14.1->google-api-core<3.0.0,>=1.0.0->opencensus->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading rsa-4.9.1-py3-none-any.whl.metadata (5.6 kB)
+Requirement already satisfied: charset-normalizer<4,>=2 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from requests->ray>=2.8->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (3.3.2)
+Requirement already satisfied: urllib3<3,>=1.21.1 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from requests->ray>=2.8->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (2.3.0)
+Requirement already satisfied: certifi>=2017.4.17 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from requests->ray>=2.8->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (2025.4.26)
+Collecting pyasn1>=0.1.3 (from rsa<5,>=3.1.4->google-auth<3.0.0,>=2.14.1->google-api-core<3.0.0,>=1.0.0->opencensus->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading pyasn1-0.6.1-py3-none-any.whl.metadata (8.4 kB)
+Requirement already satisfied: ptyprocess>=0.5 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from pexpect->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (0.7.0)
+Collecting pynacl>=1.4.0 (from pygithub->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading PyNaCl-1.5.0-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_24_x86_64.whl.metadata (8.6 kB)
+Collecting pyjwt>=2.4.0 (from pyjwt[crypto]>=2.4.0->pygithub->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading PyJWT-2.10.1-py3-none-any.whl.metadata (4.0 kB)
+Requirement already satisfied: Deprecated in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from pygithub->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (1.2.13)
+Collecting cryptography>=3.4.0 (from pyjwt[crypto]>=2.4.0->pygithub->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2))
+  Downloading cryptography-45.0.3-cp37-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+Requirement already satisfied: cffi>=1.14 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from cryptography>=3.4.0->pyjwt[crypto]>=2.4.0->pygithub->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (1.17.1)
+Requirement already satisfied: pycparser in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from cffi>=1.14->cryptography>=3.4.0->pyjwt[crypto]>=2.4.0->pygithub->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (2.21)
+Requirement already satisfied: wrapt<2,>=1.10 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from Deprecated->pygithub->lean-dojo->-r /gpfs/home1/gkoopman/LeanReinforcement/condaenv.bcmsyg06.requirements.txt (line 2)) (1.17.0)
+Downloading chardet-5.2.0-py3-none-any.whl (199 kB)
+Downloading lean_dojo-2.2.0-py3-none-any.whl (52 kB)
+Downloading ray-2.46.0-cp310-cp310-manylinux2014_x86_64.whl (68.4 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 68.4/68.4 MB 93.5 MB/s eta 0:00:00
+Downloading msgpack-1.1.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (378 kB)
+Downloading click-8.2.1-py3-none-any.whl (102 kB)
+Downloading protobuf-6.31.1-cp39-abi3-manylinux2014_x86_64.whl (321 kB)
+Downloading pydantic-2.11.5-py3-none-any.whl (444 kB)
+Downloading pydantic_core-2.33.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.0/2.0 MB 153.7 MB/s eta 0:00:00
+Downloading aiohttp-3.12.7-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.6/1.6 MB 139.5 MB/s eta 0:00:00
+Downloading async_timeout-5.0.1-py3-none-any.whl (6.2 kB)
+Downloading multidict-6.4.4-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (219 kB)
+Downloading yarl-1.20.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (333 kB)
+Downloading aiohappyeyeballs-2.6.1-py3-none-any.whl (15 kB)
+Downloading aiosignal-1.3.2-py2.py3-none-any.whl (7.6 kB)
+Downloading annotated_types-0.7.0-py3-none-any.whl (13 kB)
+Downloading frozenlist-1.6.0-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (287 kB)
+Downloading grpcio-1.72.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (5.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.9/5.9 MB 244.7 MB/s eta 0:00:00
+Downloading propcache-0.3.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (206 kB)
+Downloading py_spy-0.4.0-py2.py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.whl (2.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.7/2.7 MB 167.7 MB/s eta 0:00:00
+Downloading typing_inspection-0.4.1-py3-none-any.whl (14 kB)
+Downloading virtualenv-20.31.2-py3-none-any.whl (6.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.1/6.1 MB 198.9 MB/s eta 0:00:00
+Downloading distlib-0.3.9-py2.py3-none-any.whl (468 kB)
+Downloading aiohttp_cors-0.8.1-py3-none-any.whl (25 kB)
+Downloading colorful-0.5.6-py2.py3-none-any.whl (201 kB)
+Downloading GitPython-3.1.44-py3-none-any.whl (207 kB)
+Downloading gitdb-4.0.12-py3-none-any.whl (62 kB)
+Downloading smmap-5.0.2-py3-none-any.whl (24 kB)
+Downloading loguru-0.7.3-py3-none-any.whl (61 kB)
+Downloading lxml-5.4.0-cp310-cp310-manylinux_2_28_x86_64.whl (5.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.1/5.1 MB 230.6 MB/s eta 0:00:00
+Downloading opencensus-0.11.4-py2.py3-none-any.whl (128 kB)
+Downloading google_api_core-2.25.0-py3-none-any.whl (160 kB)
+Downloading google_auth-2.40.2-py2.py3-none-any.whl (216 kB)
+Downloading cachetools-5.5.2-py3-none-any.whl (10 kB)
+Downloading googleapis_common_protos-1.70.0-py3-none-any.whl (294 kB)
+Downloading proto_plus-1.26.1-py3-none-any.whl (50 kB)
+Downloading rsa-4.9.1-py3-none-any.whl (34 kB)
+Downloading opencensus_context-0.1.3-py2.py3-none-any.whl (5.1 kB)
+Downloading pyasn1-0.6.1-py3-none-any.whl (83 kB)
+Downloading pyasn1_modules-0.4.2-py3-none-any.whl (181 kB)
+Downloading PyGithub-2.6.1-py3-none-any.whl (410 kB)
+Downloading PyJWT-2.10.1-py3-none-any.whl (22 kB)
+Downloading cryptography-45.0.3-cp37-abi3-manylinux_2_34_x86_64.whl (4.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 196.7 MB/s eta 0:00:00
+Downloading PyNaCl-1.5.0-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_24_x86_64.whl (856 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 856.7/856.7 kB 57.0 MB/s eta 0:00:00
+Downloading python_dotenv-1.1.0-py3-none-any.whl (20 kB)
+Downloading smart_open-7.1.0-py3-none-any.whl (61 kB)
+Downloading toml-0.10.2-py2.py3-none-any.whl (16 kB)
+Downloading tqdm-4.67.1-py3-none-any.whl (78 kB)
+Downloading types_psutil-7.0.0.20250601-py3-none-any.whl (23 kB)
+Downloading types_toml-0.10.8.20240310-py3-none-any.whl (4.8 kB)
+Installing collected packages: py-spy, opencensus-context, distlib, colorful, virtualenv, typing-inspection, types-toml, types-psutil, tqdm, toml, smmap, smart_open, python-dotenv, pyjwt, pydantic-core, pyasn1, protobuf, propcache, multidict, msgpack, lxml, loguru, grpcio, frozenlist, click, chardet, cachetools, async-timeout, annotated-types, aiohappyeyeballs, yarl, rsa, pynacl, pydantic, pyasn1-modules, proto-plus, googleapis-common-protos, gitdb, cryptography, aiosignal, google-auth, gitpython, aiohttp, ray, pygithub, google-api-core, aiohttp_cors, opencensus, lean-dojo
+
+Successfully installed aiohappyeyeballs-2.6.1 aiohttp-3.12.7 aiohttp_cors-0.8.1 aiosignal-1.3.2 annotated-types-0.7.0 async-timeout-5.0.1 cachetools-5.5.2 chardet-5.2.0 click-8.2.1 colorful-0.5.6 cryptography-45.0.3 distlib-0.3.9 frozenlist-1.6.0 gitdb-4.0.12 gitpython-3.1.44 google-api-core-2.25.0 google-auth-2.40.2 googleapis-common-protos-1.70.0 grpcio-1.72.1 lean-dojo-2.2.0 loguru-0.7.3 lxml-5.4.0 msgpack-1.1.0 multidict-6.4.4 opencensus-0.11.4 opencensus-context-0.1.3 propcache-0.3.1 proto-plus-1.26.1 protobuf-6.31.1 py-spy-0.4.0 pyasn1-0.6.1 pyasn1-modules-0.4.2 pydantic-2.11.5 pydantic-core-2.33.2 pygithub-2.6.1 pyjwt-2.10.1 pynacl-1.5.0 python-dotenv-1.1.0 ray-2.46.0 rsa-4.9.1 smart_open-7.1.0 smmap-5.0.2 toml-0.10.2 tqdm-4.67.1 types-psutil-7.0.0.20250601 types-toml-0.10.8.20240310 typing-inspection-0.4.1 virtualenv-20.31.2 yarl-1.20.0
+
+done
+#
+# To activate this environment, use
+#
+#     $ conda activate lean-reinforcement
+#
+# To deactivate an active environment, use
+#
+#     $ conda deactivate
+
+
+JOB STATISTICS
+==============
+Job ID: 12163837
+Cluster: snellius
+User/Group: gkoopman/gkoopman
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 9
+CPU Utilized: 00:02:30
+CPU Efficiency: 11.19% of 00:22:21 core-walltime
+Job Wall-clock time: 00:02:29
+Memory Utilized: 976.28 MB
+Memory Efficiency: 1.59% of 60.00 GB (60.00 GB/node)
