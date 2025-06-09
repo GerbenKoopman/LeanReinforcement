@@ -1,0 +1,50 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Traceback (most recent call last):
+  File "/gpfs/home1/gkoopman/lean_reinforcement/demo_lean4.py", line 37, in <module>
+    main()
+  File "/gpfs/home1/gkoopman/lean_reinforcement/demo_lean4.py", line 10, in main
+    repo = LeanGitRepo(
+  File "<string>", line 5, in __init__
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/lean.py", line 560, in __post_init__
+    repo = url_to_repo(self.url, repo_type=repo_type, tmp_dir=tmp_dir)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/lean.py", line 169, in url_to_repo
+    raise ex
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/lean.py", line 163, in url_to_repo
+    shutil.copytree(url, repo_name)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/shutil.py", line 559, in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/shutil.py", line 457, in _copytree
+    os.makedirs(dst, exist_ok=dirs_exist_ok)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/os.py", line 225, in makedirs
+    mkdir(name, mode)
+FileExistsError: [Errno 17] File exists: 'mathlib4_traced'
+srun: error: gcn2: task 0: Exited with exit code 1
+srun: Terminating StepId=12166996.0
+
+JOB STATISTICS
+==============
+Job ID: 12166996
+Cluster: snellius
+User/Group: gkoopman/gkoopman
+State: FAILED (exit code 1)
+Nodes: 1
+Cores per node: 9
+CPU Utilized: 00:00:02
+CPU Efficiency: 1.39% of 00:02:24 core-walltime
+Job Wall-clock time: 00:00:16
+Memory Utilized: 1.57 MB
+Memory Efficiency: 0.00% of 60.00 GB (60.00 GB/node)
