@@ -14,5 +14,5 @@ module load Anaconda3/2024.06-1
 
 source activate lean-reinforcement
 
-cd $HOME/lean_reinforcement
+cd $HOME/lean_reinforcement/src
 srun python demo_lean4.py
