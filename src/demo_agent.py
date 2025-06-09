@@ -17,7 +17,7 @@ MATHLIB4_DATASET_PATH = os.getenv("MATHLIB4_DATASET_PATH")
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from lean_dojo import LeanGitRepo, trace
-from lean_rl import LeanEnvironment, RandomAgent, ActionResult
+from lean_rl import LeanEnvironment, RandomAgent
 
 
 def simple_demo():
@@ -77,7 +77,7 @@ def simple_demo():
 
         if result.done:
             print(f"   Episode finished! Total reward: {total_reward}")
-            if result.info["action_result"] == ActionResult.PROOF_FINISHED:
+            if result.info["action_result"] == "proof_finished":
                 print("   🎉 PROOF COMPLETED!")
             else:
                 print(

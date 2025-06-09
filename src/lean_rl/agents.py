@@ -9,7 +9,7 @@ import random
 from typing import List, Dict, Any, Optional
 from abc import ABC, abstractmethod
 
-from .environment import LeanEnvironment, StepResult, ActionResult
+from .environment import LeanEnvironment, StepResult
 
 
 class BaseAgent(ABC):
@@ -108,7 +108,7 @@ class RandomAgent(BaseAgent):
 
         # Statistics tracking
         self.actions_taken: List[str] = []
-        self.results: List[ActionResult] = []
+        self.results: List[str] = []
         self.episode_count = 0
 
     def select_action(self, state, **kwargs) -> str:
@@ -145,12 +145,15 @@ class RandomAgent(BaseAgent):
             return {"episodes": self.episode_count, "total_actions": 0}
 
         total_actions = len(self.results)
+
+        # Define possible result types
+        result_types = ["success", "proof_finished", "proof_given_up", "error"]
         result_counts = {}
-        for result in ActionResult:
-            result_counts[result.value] = self.results.count(result)
+        for result_type in result_types:
+            result_counts[result_type] = self.results.count(result_type)
 
         # Calculate success rate (actions that didn't error)
-        success_actions = sum(1 for r in self.results if r != ActionResult.ERROR)
+        success_actions = sum(1 for r in self.results if r != "error")
         success_rate = success_actions / total_actions if total_actions > 0 else 0
 
         # Most common tactics
@@ -233,10 +236,7 @@ class WeightedRandomAgent(RandomAgent):
             return
 
         # Update success count
-        if step_result.action_result in [
-            ActionResult.SUCCESS,
-            ActionResult.PROOF_FINISHED,
-        ]:
+        if step_result.action_result in ["success", "proof_finished"]:
             self.tactic_successes[self.last_action] += 1
 
         # Update weights based on success rate
