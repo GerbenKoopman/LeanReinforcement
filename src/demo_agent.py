@@ -33,13 +33,14 @@ def simple_demo():
         "29dcec074de168ac2bf835a77ef68bbe069194c5",
     )
 
+    repo.get_config("lean-toolchain")
+
     if MATHLIB4_DATASET_PATH is not None:
-        print("2. Loading traced repository from disk...")
-        traced_repo_path = Path(MATHLIB4_DATASET_PATH)
-        traced_repo = TracedRepo.load_from_disk(traced_repo_path, build_deps=True)
+        print("2. Loading traced repository from cache...")
+        traced_repo = trace(repo, dst_dir=Path(MATHLIB4_DATASET_PATH))
     else:
         print("2. Tracing repository...")
-        traced_repo = trace(repo, dst_dir=MATHLIB4_DATASET_PATH, build_deps=True)
+        traced_repo = trace(repo, build_deps=True)
 
     # Get a test theorem
     print("3. Loading test theorem...")
