@@ -6,6 +6,7 @@ with a simple example.
 """
 
 import os
+from pathlib import Path
 import sys
 from dotenv import load_dotenv
 
@@ -16,7 +17,7 @@ MATHLIB4_DATASET_PATH = os.getenv("MATHLIB4_DATASET_PATH")
 # Add the project root to Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from lean_dojo import LeanGitRepo, trace
+from lean_dojo import LeanGitRepo, trace, TracedRepo
 from lean_rl import LeanEnvironment, RandomAgent
 
 
@@ -32,14 +33,13 @@ def simple_demo():
         "29dcec074de168ac2bf835a77ef68bbe069194c5",
     )
 
-    if MATHLIB4_DATASET_PATH is None:
-        build_deps = True
-        print("2. Tracing repository...")
+    if MATHLIB4_DATASET_PATH is not None:
+        print("2. Loading traced repository from disk...")
+        traced_repo_path = Path(MATHLIB4_DATASET_PATH)
+        traced_repo = TracedRepo.load_from_disk(traced_repo_path, build_deps=True)
     else:
-        build_deps = False
-        print(f"2. Using existing traced repository at {MATHLIB4_DATASET_PATH}...")
-
-    traced_repo = trace(repo, dst_dir=MATHLIB4_DATASET_PATH, build_deps=build_deps)
+        print("2. Tracing repository...")
+        traced_repo = trace(repo, dst_dir=MATHLIB4_DATASET_PATH, build_deps=True)
 
     # Get a test theorem
     print("3. Loading test theorem...")
