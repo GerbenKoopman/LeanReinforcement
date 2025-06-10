@@ -27,10 +27,16 @@ def simple_demo():
 
     # Setup repository
     print("1. Setting up Lean repository...")
-    repo = LeanGitRepo(
-        "https://github.com/leanprover-community/mathlib4",
-        "29dcec074de168ac2bf835a77ef68bbe069194c5",
-    )
+    if MATHLIB4_DATASET_PATH is not None:
+        repo = LeanGitRepo(
+            MATHLIB4_DATASET_PATH,
+            "29dcec074de168ac2bf835a77ef68bbe069194c5",
+        )
+    else:
+        repo = LeanGitRepo(
+            "https://github.com/leanprover-community/mathlib4",
+            "29dcec074de168ac2bf835a77ef68bbe069194c5",
+        )
 
     print("2. Tracing repository...")
     traced_repo = trace(repo, dst_dir=MATHLIB4_DATASET_PATH, build_deps=True)
