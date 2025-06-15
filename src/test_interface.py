@@ -7,7 +7,6 @@ to interact with Lean theorems through LeanDojo.
 
 import os
 import sys
-from typing import List, Tuple
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -18,7 +17,11 @@ MATHLIB4_DATASET_PATH = os.getenv("MATHLIB4_DATASET_PATH")
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from lean_dojo import LeanGitRepo, trace, Theorem
-from lean_rl import LeanEnvironment, RandomAgent, WeightedRandomAgent
+from lean_rl import (
+    LeanEnvironment,
+    RandomAgent,
+    WeightedRandomAgent,
+)
 
 
 def setup_repository() -> tuple:
