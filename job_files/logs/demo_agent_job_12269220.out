@@ -1,0 +1,44 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+2025-06-10 11:03:55.636 | WARNING  | lean_dojo.data_extraction.lean:get_repo_type:106 - /scratch-shared/lean-reinforcement/datasets/mathlib4_traced/ is not a valid URL
+Traceback (most recent call last):
+  File "/gpfs/home1/gkoopman/lean_reinforcement/src/demo_agent.py", line 100, in <module>
+    simple_demo()
+  File "/gpfs/home1/gkoopman/lean_reinforcement/src/demo_agent.py", line 31, in simple_demo
+    repo = LeanGitRepo(
+  File "<string>", line 5, in __init__
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/lean.py", line 546, in __post_init__
+    raise ValueError(f"{self.url} is not a valid URL")
+ValueError: /scratch-shared/lean-reinforcement/datasets/mathlib4_traced/ is not a valid URL
+LeanDojo RL Interface - Simple Demo
+========================================
+1. Setting up Lean repository...
+Error: /scratch-shared/lean-reinforcement/datasets/mathlib4_traced/ is not a valid URL
+
+JOB STATISTICS
+==============
+Job ID: 12269220
+Cluster: snellius
+User/Group: gkoopman/gkoopman
+State: RUNNING
+Nodes: 1
+Cores per node: 9
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 00:01:39 core-walltime
+Job Wall-clock time: 00:00:11
+Memory Utilized: 0.00 MB
+Memory Efficiency: 0.00% of 60.00 GB (60.00 GB/node)
+WARNING: Efficiency statistics can only be obtained after the job has ended as seff tool is based on the accounting database data.
