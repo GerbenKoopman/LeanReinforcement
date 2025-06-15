@@ -287,7 +287,7 @@ class MCTSAgent(BaseAgent):
                 learning_rate=self.heuristic_learning_rate,
             )
 
-    def select_action(self, state, **kwargs) -> Union[str, None]:
+    def select_action(self, state, **kwargs) -> str:
         """
         Select an action using MCTS.
 
@@ -323,6 +323,10 @@ class MCTSAgent(BaseAgent):
         else:
             best_child = self.root.get_most_visited_child()
             action = best_child.action
+
+        # Ensure we always return a valid action
+        if action is None:
+            action = random.choice(self.tactics)
 
         self.action_history.append(action)
         return action
