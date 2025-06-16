@@ -5,9 +5,9 @@ This script demonstrates the basic usage of the LeanDojo RL interface
 with a simple example.
 """
 
+import os
 from lean_dojo import LeanGitRepo, trace
 from lean_rl import LeanEnvironment, RandomAgent
-from lean_dojo.data_extraction.trace import is_available_in_cache
 
 
 def simple_demo():
@@ -22,13 +22,12 @@ def simple_demo():
         "29dcec074de168ac2bf835a77ef68bbe069194c5",
     )
 
-    # Check if already cached
-    if is_available_in_cache(repo):
-        print("2. Loading traced repository from cache...")
-        traced_repo = trace(repo, dst_dir=None, build_deps=True)
-    else:
-        print("2. Tracing repository (this will take a while)...")
-        traced_repo = trace(repo, dst_dir=None, build_deps=True)
+    # Trace repository - LeanDojo will automatically handle caching
+    print("2. Tracing repository (using LeanDojo's automatic caching)...")
+    print(f"   Cache directory: {os.environ.get('CACHE_DIR', 'default ~/.cache')}")
+
+    # Let LeanDojo handle caching automatically - don't specify dst_dir
+    traced_repo = trace(repo)
 
     # Get a test theorem
     print("3. Loading test theorem...")

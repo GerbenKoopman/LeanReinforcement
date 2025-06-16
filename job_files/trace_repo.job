@@ -14,5 +14,13 @@ module load Anaconda3/2024.06-1
 
 source activate lean-reinforcement
 
+# Source environment variables
+set -a
+source $HOME/lean_reinforcement/.env
+set +a
+
+# Ensure cache directory exists
+mkdir -p "${CACHE_DIR}"
+
 cd $HOME/lean_reinforcement/src
 srun python trace_repo.py
