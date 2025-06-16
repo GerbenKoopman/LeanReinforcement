@@ -2,20 +2,8 @@
 Trace Repository for LeanDojo Reinforcement Learning Interface
 """
 
-import os
-from pathlib import Path
-import sys
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
-SCRATCH_SHARED = os.getenv("SCRATCH_SHARED")
-
-# Add the project root to Python path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
 from lean_dojo import LeanGitRepo, trace
-from lean_dojo.data_extraction.trace import check_files
+from lean_dojo.data_extraction.trace import is_available_in_cache
 
 
 def trace_repo():
@@ -30,24 +18,15 @@ def trace_repo():
         "29dcec074de168ac2bf835a77ef68bbe069194c5",
     )
 
-    scratch_dir = SCRATCH_SHARED
-    if scratch_dir is not None:
-        scratch_dir = scratch_dir + "/test_traced_repo"
-    destination_dir = (
-        Path(scratch_dir)
-        if scratch_dir
-        else Path("/scratch-shared/lean-reinforcement/traced_repo")
-    )
+    # Check if already cached
+    if is_available_in_cache(repo):
+        print("2. Loading traced repository from cache...")
+        traced_repo = trace(repo, dst_dir=None, build_deps=True)
+    else:
+        print("2. Tracing repository (this will take a while)...")
+        traced_repo = trace(repo, dst_dir=None, build_deps=True)
 
-    print(f"Destination directory: {destination_dir}")
-
-    print("2. Tracing repository...")
-    traced_repo = trace(repo, dst_dir=destination_dir, build_deps=True)
-
-    print("3. Checking trace...")
-    check_files(destination_dir, no_deps=False)
-
-    print("\n6. Trace completed!")
+    print("\n3. Trace completed!")
     print("=" * 40)
 
 

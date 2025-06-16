@@ -5,24 +5,16 @@ This script provides comprehensive testing of the Monte Carlo Tree Search agent
 for theorem proving, including basic functionality, neural heuristics, and performance analysis.
 """
 
-import os
 import sys
 import time
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
-MATHLIB4_DATASET_PATH = os.getenv("MATHLIB4_DATASET_PATH")
-
-# Add the project root to Python path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-from lean_dojo import LeanGitRepo, trace, Theorem
+from lean_dojo import LeanGitRepo, trace
 from lean_rl import (
     LeanEnvironment,
     MCTSAgent,
     RandomAgent,
 )
+from lean_dojo.data_extraction.trace import is_available_in_cache
 
 
 def setup_repository() -> tuple:
@@ -34,8 +26,13 @@ def setup_repository() -> tuple:
         "29dcec074de168ac2bf835a77ef68bbe069194c5",
     )
 
-    print("Tracing repository (this may take a while)...")
-    traced_repo = trace(repo, dst_dir=MATHLIB4_DATASET_PATH, build_deps=True)
+    # Check if already cached
+    if is_available_in_cache(repo):
+        print("2. Loading traced repository from cache...")
+        traced_repo = trace(repo, dst_dir=None, build_deps=True)
+    else:
+        print("2. Tracing repository (this will take a while)...")
+        traced_repo = trace(repo, dst_dir=None, build_deps=True)
 
     # Get some test theorems
     traced_file = traced_repo.get_traced_file("Mathlib/Algebra/BigOperators/Pi.lean")
