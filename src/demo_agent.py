@@ -5,20 +5,9 @@ This script demonstrates the basic usage of the LeanDojo RL interface
 with a simple example.
 """
 
-import os
-from pathlib import Path
-import sys
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
-MATHLIB4_DATASET_PATH = os.getenv("MATHLIB4_DATASET_PATH")
-
-# Add the project root to Python path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-from lean_dojo import LeanGitRepo, trace, TracedRepo
+from lean_dojo import LeanGitRepo, trace
 from lean_rl import LeanEnvironment, RandomAgent
+from lean_dojo.data_extraction.trace import is_available_in_cache
 
 
 def simple_demo():
@@ -33,13 +22,13 @@ def simple_demo():
         "29dcec074de168ac2bf835a77ef68bbe069194c5",
     )
 
-    if MATHLIB4_DATASET_PATH is not None:
-        print("2. Loading traced repository from disk...")
-        traced_repo_path = Path(MATHLIB4_DATASET_PATH)
-        traced_repo = TracedRepo.load_from_disk(traced_repo_path, build_deps=True)
+    # Check if already cached
+    if is_available_in_cache(repo):
+        print("2. Loading traced repository from cache...")
+        traced_repo = trace(repo, dst_dir=None, build_deps=True)
     else:
-        print("2. Tracing repository...")
-        traced_repo = trace(repo, dst_dir=MATHLIB4_DATASET_PATH, build_deps=True)
+        print("2. Tracing repository (this will take a while)...")
+        traced_repo = trace(repo, dst_dir=None, build_deps=True)
 
     # Get a test theorem
     print("3. Loading test theorem...")
