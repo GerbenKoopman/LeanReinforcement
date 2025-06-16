@@ -14,8 +14,13 @@ module load Anaconda3/2024.06-1
 
 source activate lean-reinforcement
 
-# Set environment variables
-export MATHLIB4_DATASET_PATH=$HOME/lean_reinforcement/data/mathlib4_traced
+# Source environment variables
+set -a
+source $HOME/lean_reinforcement/.env
+set +a
+
+# Ensure cache directory exists
+mkdir -p "${CACHE_DIR}"
 
 cd $HOME/lean_reinforcement/src
 srun python test_mcts.py
