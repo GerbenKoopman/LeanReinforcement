@@ -52,7 +52,7 @@ class MCTSAgent(BaseAgent):
         if seed is not None:
             random.seed(seed)
 
-        # Default tactics similar to RandomAgent
+        # Default tactics
         if tactics is None:
             tactics = [
                 # High-value tactics that often work
@@ -87,7 +87,7 @@ class MCTSAgent(BaseAgent):
                 "aesop",
                 "decide",
                 # Meta
-                # "sorry", # Might be implemented with heavy penalty
+                "sorry",
             ]
 
         self.tactics = tactics
