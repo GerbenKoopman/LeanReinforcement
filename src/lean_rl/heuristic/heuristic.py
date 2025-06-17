@@ -52,17 +52,23 @@ class SimpleNeuralHeuristic(nn.Module):
         # Move to device
         self.to(self.device)
 
-        # Optimizer
-        self.optimizer = optim.AdamW(self.parameters(), lr=learning_rate)
+        # Optimizer with weight decay (AdamW's main benefit)
+        self.optimizer = optim.AdamW(
+            self.parameters(), lr=learning_rate, weight_decay=0.01
+        )
+
+        # Learning rate scheduler for intelligent LR adjustment
+        self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+            self.optimizer, mode="min", factor=0.8, patience=10
+        )
 
         # Loss function
         self.criterion = nn.MSELoss()
 
-        # For tracking and adaptive learning rate
+        # For tracking
         self.training_count = 0
         self.recent_losses = []
         self.max_loss_history = 100
-        self.initial_lr = learning_rate
 
     def _initialize_weights(self):
         """Initialize weights with Xavier initialization."""
@@ -125,15 +131,12 @@ class SimpleNeuralHeuristic(nn.Module):
         # Backward pass
         loss.backward()
 
-        # Apply gradient clipping for stability
-        torch.nn.utils.clip_grad_norm_(self.parameters(), max_norm=1.0)
-
-        # Update weights with adaptive learning rate
-        adaptive_lr = self.initial_lr / (1 + self.training_count * 0.0001)
-        for param_group in self.optimizer.param_groups:
-            param_group["lr"] = adaptive_lr
-
         self.optimizer.step()
+
+        # Update scheduler based on average loss every 10 steps
+        if self.training_count % 10 == 0 and self.training_count > 0:
+            avg_loss = self.get_average_loss()
+            self.scheduler.step(avg_loss)
 
         # Track training progress
         self.training_count += 1
@@ -172,6 +175,7 @@ class SimpleNeuralHeuristic(nn.Module):
             {
                 "model_state_dict": self.state_dict(),
                 "optimizer_state_dict": self.optimizer.state_dict(),
+                "scheduler_state_dict": self.scheduler.state_dict(),
                 "training_count": self.training_count,
                 "recent_losses": self.recent_losses,
             },
