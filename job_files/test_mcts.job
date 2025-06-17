@@ -4,7 +4,7 @@
 #SBATCH --gpus=1
 #SBATCH --job-name=TestMCTSJob
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=9
+#SBATCH --cpus-per-task=18
 #SBATCH --time=12:00:00
 #SBATCH --output=logs/test_mcts_job_%A.out
 
