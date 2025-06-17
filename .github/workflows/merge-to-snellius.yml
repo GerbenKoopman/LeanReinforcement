@@ -1,0 +1,36 @@
+name: Auto Merge main -> snellius/main
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Git config
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch all branches
+        run: |
+          git fetch origin snellius/main
+
+      - name: Merge main into snellius/main
+        run: |
+          git checkout snellius/main
+          git merge main --no-edit
+
+      - name: Push changes
+        run: |
+          git push origin snellius/main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
