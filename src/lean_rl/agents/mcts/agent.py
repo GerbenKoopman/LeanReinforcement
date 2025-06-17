@@ -133,7 +133,15 @@ class MCTSAgent(BaseAgent):
         # For TacticState, we can use the goals as the key
         # This assumes states with same goals are equivalent
         if hasattr(state, "goals"):
-            return f"goals_{state.num_goals}_{hash(state.goals)}"
+            try:
+                # Try to create a stable string representation of goals
+                goals_str = str(state.goals)
+                goals_hash = hash(goals_str)
+            except:
+                # Fallback if goals can't be converted to string
+                goals_hash = hash(f"num_goals_{state.num_goals}")
+
+            return f"goals_{state.num_goals}_{goals_hash}"
         else:
             # Fallback to string representation
             return str(state)
