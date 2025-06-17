@@ -10,6 +10,11 @@ import sys
 import time
 
 from lean_dojo import LeanGitRepo, trace
+from lean_dojo.data_extraction.trace import (
+    is_available_in_cache,
+    get_traced_repo_path,
+)
+from lean_dojo.data_extraction.traced_data import TracedRepo
 from lean_rl import (
     LeanEnvironment,
     MCTSAgent,
@@ -30,20 +35,25 @@ def setup_repository() -> tuple:
     print("2. Tracing repository (using LeanDojo's automatic caching)...")
     print(f"   Cache directory: {os.environ.get('CACHE_DIR', 'default ~/.cache')}")
 
-    try:
-        # Let LeanDojo handle caching automatically
-        traced_repo = trace(repo)
-    except AssertionError as e:
-        if "traced_repo is None" in str(e) or "sanity" in str(e).lower():
-            print(f"   Warning: Sanity check failed, but trace likely completed: {e}")
-            print("   Continuing with tests despite sanity check issues...")
-            # For testing purposes, we can try to get the cached path directly
-            from lean_dojo.data_extraction.trace import get_traced_repo_path
-            from lean_dojo.data_extraction.traced_data import TracedRepo
-
-            cached_path = get_traced_repo_path(repo)
-            traced_repo = TracedRepo.load_from_disk(cached_path, build_deps=True)
-        else:
+    if is_available_in_cache(repo):
+        print("   Found existing trace in cache - loading directly!")
+        try:
+            cached_path = get_traced_repo_path(
+                repo, build_deps=False
+            )  # Don't rebuild deps
+            traced_repo = TracedRepo.load_from_disk(cached_path, build_deps=False)
+            print("   Successfully loaded from cache!")
+        except Exception as e:
+            print(f"   Cache load failed: {e}, falling back to full trace...")
+            traced_repo = trace(
+                repo, build_deps=False
+            )  # Skip building dependencies for speed
+    else:
+        print("   No cache found, performing trace...")
+        try:
+            # Use build_deps=False for much faster tracing if we only need specific files
+            traced_repo = trace(repo, build_deps=False)
+        except AssertionError as e:
             raise
 
     # Get some test theorems
