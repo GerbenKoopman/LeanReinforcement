@@ -26,3 +26,11 @@ class BaseAgent(ABC):
     def reset(self) -> None:
         """Reset the agent for a new episode."""
         pass
+
+    def end_episode(self, episode_reward: float) -> None:
+        """Called at the end of an episode.
+
+        Args:
+            episode_reward: Total reward accumulated during the episode.
+        """
+        pass
