@@ -6,7 +6,7 @@ on theorem proving tasks using LeanDojo.
 """
 
 from .environment import LeanEnvironment, StepResult
-from .agents import BaseAgent, RandomAgent, WeightedRandomAgent, MCTSAgent
+from .agents import BaseAgent, RandomAgent, WeightedRandomAgent, MCTSAgent, HierarchicalTransformerAgent
 
 __all__ = [
     "LeanEnvironment",
@@ -15,4 +15,5 @@ __all__ = [
     "RandomAgent",
     "WeightedRandomAgent",
     "MCTSAgent",
+    "HierarchicalTransformerAgent",
 ]
