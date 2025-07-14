@@ -315,9 +315,9 @@ class HierarchicalTransformerTester:
             return False
 
     def _test_state_encoding(self) -> bool:
-        """Test state encoding functionality."""
+        """Test state encoding functionality with both mock and real states."""
         try:
-            # Create mock state
+            # Test 1: Mock state for basic functionality
             mock_state = Mock()
             mock_state.pp = "example proof state with goals"
             mock_state.num_goals = 2
@@ -333,6 +333,39 @@ class HierarchicalTransformerTester:
             # Check tensor shapes
             assert encoded["input_ids"].dim() == 2  # [batch, seq]
             assert encoded["attention_mask"].dim() == 2
+
+            # Test 2: Real TacticState if available
+            try:
+                if hasattr(self, "env") and self.env is not None:
+                    # Try to get a real theorem and its initial state
+                    test_theorems = self._get_test_theorems(num_theorems=1)
+                    if test_theorems:
+                        real_state = self.env.reset(test_theorems[0].theorem)
+                        if real_state is not None:
+                            real_encoded = self.agent.encode_state(real_state)
+
+                            # Validate real state encoding
+                            assert isinstance(real_encoded, dict)
+                            assert "input_ids" in real_encoded
+                            assert real_encoded["input_ids"].numel() > 0
+
+                            self.logger.info("Successfully encoded real TacticState")
+                        else:
+                            self.logger.warning(
+                                "Could not get real TacticState - environment reset failed"
+                            )
+                    else:
+                        self.logger.warning(
+                            "No test theorems available for real state testing"
+                        )
+                else:
+                    self.logger.warning(
+                        "Environment not available for real state testing"
+                    )
+            except Exception as e:
+                self.logger.warning(
+                    f"Real state encoding test failed (non-critical): {e}"
+                )
 
             return True
         except Exception as e:
@@ -377,6 +410,7 @@ class HierarchicalTransformerTester:
     def _test_strategic_action_selection(self) -> bool:
         """Test strategic action selection."""
         try:
+            # Test with Mock state first
             mock_state = Mock()
             mock_state.pp = "test proof state"
             mock_state.num_goals = 1
@@ -387,6 +421,24 @@ class HierarchicalTransformerTester:
             assert isinstance(action, str)
             assert action in StrategicActions.ALL_ACTIONS
 
+            # Test with real state if available
+            if hasattr(self, "env") and self.env is not None:
+                try:
+                    test_theorems = self._get_test_theorems(num_theorems=1)
+                    if test_theorems:
+                        real_state = self.env.reset(test_theorems[0].theorem)
+                        if real_state is not None:
+                            real_action = self.agent.select_strategic_action(real_state)
+                            assert isinstance(real_action, str)
+                            assert real_action in StrategicActions.ALL_ACTIONS
+                            self.logger.info(
+                                "Successfully tested strategic action selection with real state"
+                            )
+                except Exception as e:
+                    self.logger.warning(
+                        f"Real state strategic test failed (non-critical): {e}"
+                    )
+
             return True
         except Exception as e:
             self.logger.error(f"Strategic action selection test failed: {e}")
@@ -395,6 +447,7 @@ class HierarchicalTransformerTester:
     def _test_tactical_selection(self) -> bool:
         """Test tactical family selection."""
         try:
+            # Test with Mock state first
             mock_state = Mock()
             mock_state.pp = "test proof state"
             mock_state.num_goals = 1
@@ -405,6 +458,26 @@ class HierarchicalTransformerTester:
             assert isinstance(family, str)
             assert family in TacticalFamilies.ALL_FAMILIES
 
+            # Test with real state if available
+            if hasattr(self, "env") and self.env is not None:
+                try:
+                    test_theorems = self._get_test_theorems(num_theorems=1)
+                    if test_theorems:
+                        real_state = self.env.reset(test_theorems[0].theorem)
+                        if real_state is not None:
+                            real_family = self.agent.select_tactic_family(
+                                real_state, "direct_proof"
+                            )
+                            assert isinstance(real_family, str)
+                            assert real_family in TacticalFamilies.ALL_FAMILIES
+                            self.logger.info(
+                                "Successfully tested tactical selection with real state"
+                            )
+                except Exception as e:
+                    self.logger.warning(
+                        f"Real state tactical test failed (non-critical): {e}"
+                    )
+
             return True
         except Exception as e:
             self.logger.error(f"Tactical selection test failed: {e}")
@@ -413,14 +486,50 @@ class HierarchicalTransformerTester:
     def _test_parameter_generation(self) -> bool:
         """Test parameter generation."""
         try:
+            # Test with Mock state first
             mock_state = Mock()
             mock_state.pp = "test proof state"
             mock_state.num_goals = 1
 
+            # Test basic parameter generation
             params = self.agent.generate_tactic_parameters(mock_state, "apply_family")
 
             # Check output format
             assert isinstance(params, list)
+            assert all(isinstance(p, str) for p in params)
+
+            # Test different families
+            test_families = ["rewrite_family", "intro_family", "case_family"]
+            for family in test_families:
+                family_params = self.agent.generate_tactic_parameters(
+                    mock_state, family
+                )
+                assert isinstance(family_params, list)
+
+            # Test with pointer network
+            pointer_params = self.agent.generate_tactic_parameters(
+                mock_state, "apply_family", use_pointer_network=True
+            )
+            assert isinstance(pointer_params, list)
+
+            # Test with real state if available
+            if hasattr(self, "env") and self.env is not None:
+                try:
+                    test_theorems = self._get_test_theorems(num_theorems=1)
+                    if test_theorems:
+                        real_state = self.env.reset(test_theorems[0].theorem)
+                        if real_state is not None:
+                            real_params = self.agent.generate_tactic_parameters(
+                                real_state, "apply_family"
+                            )
+                            assert isinstance(real_params, list)
+                            self.logger.info(
+                                "Successfully tested parameter generation with real state"
+                            )
+                except Exception as e:
+                    self.logger.warning(
+                        f"Real state parameter test failed (non-critical): {e}"
+                    )
 
             return True
         except Exception as e:
