@@ -142,7 +142,7 @@ class HierarchicalTransformerAgent(BaseAgent):
 
         # Search tree
         self.search_tree = None
-        
+
         # Validate all required components are initialized
         self._validate_initialization()
 
@@ -150,51 +150,57 @@ class HierarchicalTransformerAgent(BaseAgent):
         """Validate that all required components are properly initialized."""
         required_components = [
             ("hierarchical_policy", self.hierarchical_policy),
-            ("tactic_pointer", self.tactic_pointer), 
+            ("tactic_pointer", self.tactic_pointer),
             ("parameter_generator", self.parameter_generator),
             ("parameter_pointer", self.parameter_pointer),
             ("tokenizer", self.tokenizer),
             ("tactic_encoder", self.tactic_encoder),
         ]
-        
+
         for name, component in required_components:
             if component is None:
                 raise ValueError(f"Required component '{name}' is not initialized")
-            
+
             # Check if neural network components are on the correct device
-            if hasattr(component, 'parameters'):
+            if hasattr(component, "parameters"):
                 try:
                     component_device = next(component.parameters()).device
                     if component_device != self.device:
-                        print(f"Warning: Component '{name}' is on device {component_device}, expected {self.device}")
+                        print(
+                            f"Warning: Component '{name}' is on device {component_device}, expected {self.device}"
+                        )
                         # Move component to correct device
                         component.to(self.device)
                 except StopIteration:
                     # Component has no parameters, skip device check
                     pass
-                    
+
         # Verify all components can interact properly
         try:
             # Create a simple test state using TacticState structure
             # This creates a minimal test without using Mock
             test_pp = "test proof state"
             test_goals = ["test goal"]
-            
+
             # Create a basic encoded state structure
             test_encoded = {
                 "input_ids": torch.zeros((1, 10), dtype=torch.long, device=self.device),
                 "goal_mask": torch.ones((1, 10), dtype=torch.bool, device=self.device),
-                "hypothesis_mask": torch.zeros((1, 10), dtype=torch.bool, device=self.device),
-                "attention_mask": torch.ones((1, 10), dtype=torch.bool, device=self.device),
+                "hypothesis_mask": torch.zeros(
+                    (1, 10), dtype=torch.bool, device=self.device
+                ),
+                "attention_mask": torch.ones(
+                    (1, 10), dtype=torch.bool, device=self.device
+                ),
             }
-            
+
             # Test hierarchical forward pass
             output = self.hierarchical_forward(test_encoded, HierarchyLevel.STRATEGIC)
             assert isinstance(output, dict)
             assert "policy_logits" in output
-            
+
             print("Agent validation completed successfully")
-            
+
         except Exception as e:
             print(f"Agent validation warning: {e}")
             # Don't fail initialization, just warn
@@ -565,30 +571,55 @@ class HierarchicalTransformerAgent(BaseAgent):
         )
 
     def save_model(self, filepath: str) -> None:
-        """Save model state."""
-        torch.save(
-            {
-                "hierarchical_policy": self.hierarchical_policy.state_dict(),
-                "tactic_pointer": self.tactic_pointer.state_dict(),
-                "parameter_generator": self.parameter_generator.state_dict(),
-                "parameter_pointer": self.parameter_pointer.state_dict(),
-                "optimizer": self.optimizer.state_dict(),
-                "scheduler": self.scheduler.state_dict(),
+        """Save model state with consistent structure."""
+        state_dict = {
+            "hierarchical_policy": self.hierarchical_policy.state_dict(),
+            "tactic_pointer": self.tactic_pointer.state_dict(),
+            "parameter_generator": self.parameter_generator.state_dict(),
+            "parameter_pointer": self.parameter_pointer.state_dict(),
+            "optimizer": self.optimizer.state_dict(),
+            "scheduler": self.scheduler.state_dict(),
+        }
+
+        # Save both formats for compatibility
+        checkpoint = {
+            "agent_state_dict": state_dict,  # New nested format for training
+            "config": {
+                "vocab_size": self.vocab_size,
+                "d_model": self.d_model,
+                "n_heads": self.n_heads,
+                "n_layers": self.n_layers,
             },
-            filepath,
-        )
+            # Also save individual components for backward compatibility
+            **state_dict,
+        }
+
+        torch.save(checkpoint, filepath)
 
     def load_model(self, filepath: str) -> None:
         """Load model state."""
         checkpoint = torch.load(filepath, map_location=self.device, weights_only=True)
 
-        self.hierarchical_policy.load_state_dict(checkpoint["hierarchical_policy"])
-        self.tactic_pointer.load_state_dict(checkpoint["tactic_pointer"])
-        self.parameter_generator.load_state_dict(checkpoint["parameter_generator"])
-        if "parameter_pointer" in checkpoint:  # Backward compatibility
-            self.parameter_pointer.load_state_dict(checkpoint["parameter_pointer"])
-        self.optimizer.load_state_dict(checkpoint["optimizer"])
-        self.scheduler.load_state_dict(checkpoint["scheduler"])
+        # Check if using new nested format
+        if "agent_state_dict" in checkpoint:
+            state_dict = checkpoint["agent_state_dict"]
+        else:
+            # Use old format for backward compatibility
+            state_dict = checkpoint
+
+        # Load each component
+        if "hierarchical_policy" in state_dict:
+            self.hierarchical_policy.load_state_dict(state_dict["hierarchical_policy"])
+        if "tactic_pointer" in state_dict:
+            self.tactic_pointer.load_state_dict(state_dict["tactic_pointer"])
+        if "parameter_generator" in state_dict:
+            self.parameter_generator.load_state_dict(state_dict["parameter_generator"])
+        if "parameter_pointer" in state_dict:
+            self.parameter_pointer.load_state_dict(state_dict["parameter_pointer"])
+        if "optimizer" in state_dict:
+            self.optimizer.load_state_dict(state_dict["optimizer"])
+        if "scheduler" in state_dict:
+            self.scheduler.load_state_dict(state_dict["scheduler"])
 
     def get_family_tactics(self, tactic_family: str) -> List[str]:
         """Get all tactics for a given family using metadata."""
