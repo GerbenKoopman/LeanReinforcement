@@ -5,12 +5,9 @@ This module implements a simple random agent for theorem proving in Lean environ
 """
 
 import random
-import math
-import numpy as np
-from typing import List, Dict, Any, Optional, Union
-from abc import ABC, abstractmethod
+from typing import List, Dict, Any, Optional
 
-from ...environment import LeanEnvironment, StepResult
+from ...environment import StepResult
 from ..agents import BaseAgent
 
 
