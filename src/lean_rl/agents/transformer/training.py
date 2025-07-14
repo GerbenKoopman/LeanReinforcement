@@ -5,6 +5,9 @@ This module implements comprehensive training strategies for the HierarchicalTra
 including curriculum learning, distributed training, and various learning paradigms.
 """
 
+import os
+import gc
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -22,6 +25,7 @@ import logging
 
 from lean_dojo import LeanGitRepo, trace, TacticState
 from lean_dojo.data_extraction.traced_data import TracedRepo
+from lean_dojo.data_extraction.trace import is_available_in_cache, get_traced_repo_path
 
 from .agent import HierarchicalTransformerAgent, HierarchicalAction
 from .hierarchy import (
@@ -32,6 +36,7 @@ from .config import (
     ExperimentConfig,
     ModelConfig,
     CurriculumConfig,
+    DistributedConfig,
 )
 from ...environment import LeanEnvironment
 
@@ -360,7 +365,6 @@ class HierarchicalTransformerTrainer:
 
     def _setup_logging(self):
         """Setup logging configuration."""
-        import os
 
         # Get SCRATCH_SHARED from environment
         scratch_dir = os.getenv("SCRATCH_SHARED", ".")
@@ -391,11 +395,19 @@ class HierarchicalTransformerTrainer:
         self.repo = LeanGitRepo(self.config.repo_url, self.config.repo_commit)
 
         try:
-            # Trace repository
-            self.traced_repo = trace(self.repo)
-            self.logger.info("Repository traced successfully")
+            # Check if traced repository is available in cache
+            if is_available_in_cache(self.repo):
+                self.logger.info("Loading repository from cache...")
+                traced_repo_path = get_traced_repo_path(self.repo)
+                self.traced_repo = TracedRepo.load_from_disk(traced_repo_path)
+                self.logger.info("Repository loaded from cache successfully")
+            else:
+                # Trace repository
+                self.logger.info("Tracing repository from Git...")
+                self.traced_repo = trace(self.repo)
+                self.logger.info("Repository traced successfully")
         except Exception as e:
-            self.logger.error(f"Failed to trace repository: {e}")
+            self.logger.error(f"Failed to setup repository: {e}")
             raise
 
         # Setup curriculum if enabled
@@ -499,7 +511,6 @@ class HierarchicalTransformerTrainer:
 
     def _setup_evaluation(self):
         """Setup evaluation and logging."""
-        import os
 
         # Get SCRATCH_SHARED from environment
         scratch_dir = os.getenv("SCRATCH_SHARED", ".")
@@ -630,8 +641,6 @@ class HierarchicalTransformerTrainer:
                         self.logger.warning("No world_size specified, defaulting to 1")
             else:
                 # Create default distributed config
-                from .config import DistributedConfig
-
                 self.config.distributed = DistributedConfig(
                     use_distributed=False, rank=0, world_size=1
                 )
@@ -1130,8 +1139,6 @@ class HierarchicalTransformerTrainer:
         if self.config.distributed.rank != 0:  # Only main process saves
             return
 
-        import os
-
         # Get SCRATCH_SHARED from environment
         scratch_dir = os.getenv("SCRATCH_SHARED", ".")
         checkpoint_dir = (
@@ -1225,9 +1232,6 @@ class HierarchicalTransformerTrainer:
             # CUDA memory cleanup
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
-
-            # Force garbage collection
-            import gc
 
             gc.collect()
 
