@@ -241,27 +241,14 @@ class HierarchicalTransformerTester:
         )
 
         try:
-            # Try to load from cache first (like test_mcts.py does)
+            self.logger.info("Setting up traced repository...")
             if is_available_in_cache(self.repo):
-                self.logger.info("Found existing trace in cache - loading directly!")
-                try:
-                    cached_path = get_traced_repo_path(
-                        self.repo, build_deps=False
-                    )  # Don't rebuild deps
-                    self.traced_repo = TracedRepo.load_from_disk(
-                        cached_path, build_deps=False
-                    )
-                    self.logger.info("Successfully loaded from cache!")
-                except Exception as e:
-                    self.logger.warning(
-                        f"Cache load failed: {e}, falling back to full trace..."
-                    )
-                    self.traced_repo = trace(
-                        self.repo, build_deps=False
-                    )  # Skip building dependencies for speed
+                self.logger.info("Found existing trace in cache - using it!")
             else:
-                self.logger.info("No cache found, performing trace...")
-                self.traced_repo = trace(self.repo, build_deps=False)
+                self.logger.info("No cache found, will perform trace...")
+
+            self.traced_repo = trace(self.repo, build_deps=False)
+            self.logger.info("Successfully loaded traced repository!")
 
             self.env = LeanEnvironment(self.repo, max_steps=50, timeout=30)
             self.logger.info("Test repository setup completed")
