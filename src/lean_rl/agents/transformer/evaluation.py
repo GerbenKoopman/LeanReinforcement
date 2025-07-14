@@ -5,6 +5,10 @@ This module provides comprehensive evaluation capabilities including benchmarkin
 against standard datasets, ablation studies, and analysis of learned behaviors.
 """
 
+import argparse
+import random
+import os
+
 import torch
 import numpy as np
 import pandas as pd
@@ -19,6 +23,8 @@ from collections import defaultdict, Counter
 import pickle
 
 from lean_dojo import LeanGitRepo, trace
+from lean_dojo.data_extraction.traced_data import TracedRepo
+from lean_dojo.data_extraction.trace import is_available_in_cache, get_traced_repo_path
 
 from .agent import HierarchicalTransformerAgent, HierarchicalAction
 from ...environment import LeanEnvironment
@@ -180,8 +186,6 @@ class HierarchicalTransformerEvaluator:
 
     def _setup_directories(self):
         """Setup output directories using SCRATCH_SHARED."""
-        import os
-
         # Get SCRATCH_SHARED from environment
         scratch_dir = os.getenv("SCRATCH_SHARED", ".")
 
@@ -204,7 +208,18 @@ class HierarchicalTransformerEvaluator:
         )
 
         try:
-            self.traced_repo = trace(self.repo)
+            # Check if traced repository is available in cache
+            if is_available_in_cache(self.repo):
+                self.logger.info("Loading repository from cache...")
+                traced_repo_path = get_traced_repo_path(self.repo)
+                self.traced_repo = TracedRepo.load_from_disk(traced_repo_path)
+                self.logger.info("Repository loaded from cache successfully")
+            else:
+                # Trace repository
+                self.logger.info("Tracing repository from Git...")
+                self.traced_repo = trace(self.repo)
+                self.logger.info("Repository traced successfully")
+
             self.env = LeanEnvironment(
                 self.repo,
                 max_steps=self.config.max_steps_per_theorem,
@@ -282,8 +297,6 @@ class HierarchicalTransformerEvaluator:
                     # Sample theorems to avoid overwhelming evaluation
                     max_per_file = 10
                     if len(theorems) > max_per_file:
-                        import random
-
                         random.seed(42)  # Reproducible sampling
                         theorems = random.sample(theorems, max_per_file)
 
@@ -1071,8 +1084,6 @@ def run_evaluation(
 
 
 if __name__ == "__main__":
-    import argparse
-
     parser = argparse.ArgumentParser(
         description="Evaluate Hierarchical Transformer Agent"
     )

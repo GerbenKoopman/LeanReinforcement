@@ -5,6 +5,8 @@ This module provides comprehensive testing capabilities for the HierarchicalTran
 including unit tests, integration tests, performance benchmarks, and evaluation metrics.
 """
 
+import argparse
+
 import torch
 import numpy as np
 import time
@@ -18,8 +20,17 @@ import logging
 from unittest.mock import Mock
 
 from lean_dojo import LeanGitRepo, trace
+from lean_dojo.data_extraction.trace import (
+    is_available_in_cache,
+    get_traced_repo_path,
+)
+from lean_dojo.data_extraction.traced_data import TracedRepo
 
-from .agent import HierarchicalTransformerAgent, HierarchicalAction
+from .agent import (
+    HierarchicalTransformerAgent,
+    HierarchicalAction,
+    HierarchicalSearchTree,
+)
 from .hierarchy import HierarchyLevel, StrategicActions, TacticalFamilies
 from ...environment import LeanEnvironment
 from ...agents import RandomAgent, MCTSAgent
@@ -223,13 +234,35 @@ class HierarchicalTransformerTester:
 
     def _setup_test_repository(self):
         """Setup test repository and environment."""
+
         self.repo = LeanGitRepo(
             "https://github.com/leanprover-community/mathlib4",
             "29dcec074de168ac2bf835a77ef68bbe069194c5",
         )
 
         try:
-            self.traced_repo = trace(self.repo)
+            # Try to load from cache first (like test_mcts.py does)
+            if is_available_in_cache(self.repo):
+                self.logger.info("Found existing trace in cache - loading directly!")
+                try:
+                    cached_path = get_traced_repo_path(
+                        self.repo, build_deps=False
+                    )  # Don't rebuild deps
+                    self.traced_repo = TracedRepo.load_from_disk(
+                        cached_path, build_deps=False
+                    )
+                    self.logger.info("Successfully loaded from cache!")
+                except Exception as e:
+                    self.logger.warning(
+                        f"Cache load failed: {e}, falling back to full trace..."
+                    )
+                    self.traced_repo = trace(
+                        self.repo, build_deps=False
+                    )  # Skip building dependencies for speed
+            else:
+                self.logger.info("No cache found, performing trace...")
+                self.traced_repo = trace(self.repo, build_deps=False)
+
             self.env = LeanEnvironment(self.repo, max_steps=50, timeout=30)
             self.logger.info("Test repository setup completed")
         except Exception as e:
@@ -540,8 +573,6 @@ class HierarchicalTransformerTester:
     def _test_search_tree(self) -> bool:
         """Test search tree functionality."""
         try:
-            from .agent import HierarchicalSearchTree
-
             mock_state = Mock()
             mock_state.pp = "test proof state"
             mock_state.num_goals = 1
@@ -919,7 +950,6 @@ class HierarchicalTransformerTester:
 
     def _generate_test_report(self):
         """Generate comprehensive test report."""
-        import os
 
         # Get SCRATCH_SHARED from environment
         scratch_dir = os.getenv("SCRATCH_SHARED", ".")
@@ -1059,8 +1089,6 @@ def run_theorem_benchmark(model_path: Optional[str] = None, num_theorems: int = 
 
 
 if __name__ == "__main__":
-    import argparse
-
     parser = argparse.ArgumentParser(description="Test Hierarchical Transformer Agent")
     parser.add_argument(
         "--model-path", type=str, help="Path to trained model checkpoint"
