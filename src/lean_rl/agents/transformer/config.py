@@ -407,12 +407,12 @@ class ExperimentTracker:
 
     def __init__(self, experiments_dir: Optional[Union[str, Path]] = None):
         import os
-        
+
         if experiments_dir is None:
             # Get SCRATCH_SHARED from environment
-            scratch_dir = os.getenv('SCRATCH_SHARED', '.')
+            scratch_dir = os.getenv("SCRATCH_SHARED", ".")
             experiments_dir = Path(scratch_dir) / "experiments"
-        
+
         self.experiments_dir = Path(experiments_dir)
         self.experiments_dir.mkdir(parents=True, exist_ok=True)
 

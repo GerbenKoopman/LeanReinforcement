@@ -361,14 +361,16 @@ class HierarchicalTransformerTrainer:
     def _setup_logging(self):
         """Setup logging configuration."""
         import os
-        
+
         # Get SCRATCH_SHARED from environment
-        scratch_dir = os.getenv('SCRATCH_SHARED', '.')
+        scratch_dir = os.getenv("SCRATCH_SHARED", ".")
         log_dir = Path(scratch_dir) / "training_logs"
         log_dir.mkdir(parents=True, exist_ok=True)
-        
-        log_file = log_dir / f"training_{self.config.experiment_name}_{int(time.time())}.log"
-        
+
+        log_file = (
+            log_dir / f"training_{self.config.experiment_name}_{int(time.time())}.log"
+        )
+
         logging.basicConfig(
             level=logging.INFO,
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -498,20 +500,26 @@ class HierarchicalTransformerTrainer:
     def _setup_evaluation(self):
         """Setup evaluation and logging."""
         import os
-        
+
         # Get SCRATCH_SHARED from environment
-        scratch_dir = os.getenv('SCRATCH_SHARED', '.')
-        
+        scratch_dir = os.getenv("SCRATCH_SHARED", ".")
+
         # Tensorboard writer
         if self.config.distributed.rank == 0:  # Only main process writes logs
-            log_dir = Path(scratch_dir) / "tensorboard_logs" / f"exp_{self.config.experiment_name}_{int(time.time())}"
+            log_dir = (
+                Path(scratch_dir)
+                / "tensorboard_logs"
+                / f"exp_{self.config.experiment_name}_{int(time.time())}"
+            )
             log_dir.mkdir(parents=True, exist_ok=True)
             self.writer = SummaryWriter(log_dir)
         else:
             self.writer = None
 
         # Checkpoint directory
-        self.checkpoint_dir = Path(scratch_dir) / "checkpoints" / f"exp_{self.config.experiment_name}"
+        self.checkpoint_dir = (
+            Path(scratch_dir) / "checkpoints" / f"exp_{self.config.experiment_name}"
+        )
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
     def _get_agent_parameters(self):
@@ -1123,10 +1131,12 @@ class HierarchicalTransformerTrainer:
             return
 
         import os
-        
+
         # Get SCRATCH_SHARED from environment
-        scratch_dir = os.getenv('SCRATCH_SHARED', '.')
-        checkpoint_dir = Path(scratch_dir) / "checkpoints" / f"exp_{self.config.experiment_name}"
+        scratch_dir = os.getenv("SCRATCH_SHARED", ".")
+        checkpoint_dir = (
+            Path(scratch_dir) / "checkpoints" / f"exp_{self.config.experiment_name}"
+        )
         checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
         checkpoint_path = checkpoint_dir / f"checkpoint_{checkpoint_type}_{episode}.pt"

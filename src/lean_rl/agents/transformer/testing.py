@@ -920,12 +920,12 @@ class HierarchicalTransformerTester:
     def _generate_test_report(self):
         """Generate comprehensive test report."""
         import os
-        
+
         # Get SCRATCH_SHARED from environment
-        scratch_dir = os.getenv('SCRATCH_SHARED', '.')
+        scratch_dir = os.getenv("SCRATCH_SHARED", ".")
         reports_dir = Path(scratch_dir) / "test_reports"
         reports_dir.mkdir(parents=True, exist_ok=True)
-        
+
         report = {
             "test_summary": {
                 "unit_tests_passed": self.results.unit_tests_passed,
