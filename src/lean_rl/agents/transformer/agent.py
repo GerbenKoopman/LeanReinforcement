@@ -6,7 +6,6 @@ all components of the transformer-based hierarchical RL architecture.
 """
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from typing import Dict, List, Optional, Union
 from dataclasses import dataclass

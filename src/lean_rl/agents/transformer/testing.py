@@ -135,10 +135,7 @@ class HierarchicalTransformerTester:
             and "parameter_generator" in state_dict
         ):
             agent.parameter_generator.load_state_dict(state_dict["parameter_generator"])
-        if (
-            hasattr(agent, "parameter_pointer")
-            and "parameter_pointer" in state_dict
-        ):
+        if hasattr(agent, "parameter_pointer") and "parameter_pointer" in state_dict:
             agent.parameter_pointer.load_state_dict(state_dict["parameter_pointer"])
 
     def _set_agent_mode(self, agent, train_mode):

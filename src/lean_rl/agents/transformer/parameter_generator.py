@@ -9,7 +9,7 @@ autoregressive term generation.
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Dict, Optional, Any, List, Union
+from typing import Dict, Optional, Any, List
 from enum import Enum
 
 from .attention import MultiHeadAttention, AttentionPooling
