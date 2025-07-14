@@ -15,7 +15,7 @@ import traceback
 # Import our modules
 from .training import HierarchicalTransformerTrainer
 from .testing import HierarchicalTransformerTester, run_comprehensive_tests
-from .evaluation import HierarchicalTransformerEvaluator, run_evaluation
+from .evaluation import HierarchicalTransformerEvaluator, run_evaluation, EvaluationConfig
 from .config import (
     ConfigManager,
     ExperimentConfig,
@@ -186,8 +186,6 @@ def evaluate_command(args):
     logger.info("Starting evaluation...")
 
     try:
-        from .evaluation import EvaluationConfig
-
         # Create evaluation config
         eval_config = EvaluationConfig(
             max_steps_per_theorem=args.max_steps,
@@ -249,8 +247,6 @@ def hyperparameter_tune_command(args):
             return trainer.agent, trainer.metrics
 
         def eval_function(model, config):
-            from .evaluation import EvaluationConfig
-
             eval_config = EvaluationConfig(max_steps_per_theorem=50)  # Quick evaluation
             evaluator = HierarchicalTransformerEvaluator(model, eval_config)
             results = evaluator.evaluate()

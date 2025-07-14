@@ -3,6 +3,8 @@ Trace Repository for LeanDojo Reinforcement Learning Interface
 """
 
 import os
+import traceback
+
 from lean_dojo import LeanGitRepo, trace
 
 
@@ -60,6 +62,4 @@ if __name__ == "__main__":
         trace_repo()
     except Exception as e:
         print(f"Error: {e}")
-        import traceback
-
         traceback.print_exc()

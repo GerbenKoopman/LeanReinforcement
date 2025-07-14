@@ -6,7 +6,11 @@ with a simple example.
 """
 
 import os
+import traceback
+
 from lean_dojo import LeanGitRepo, trace
+from lean_dojo.data_extraction.trace import get_traced_repo_path
+from lean_dojo.data_extraction.traced_data import TracedRepo
 from lean_rl import LeanEnvironment, RandomAgent
 
 
@@ -34,9 +38,6 @@ def simple_demo():
             print(f"   Warning: Sanity check failed, but trace likely completed: {e}")
             print("   Continuing with demo despite sanity check issues...")
             # For demo purposes, we can try to get the cached path directly
-            from lean_dojo.data_extraction.trace import get_traced_repo_path
-            from lean_dojo.data_extraction.traced_data import TracedRepo
-
             cached_path = get_traced_repo_path(repo)
             traced_repo = TracedRepo.load_from_disk(cached_path, build_deps=True)
         else:
@@ -101,6 +102,4 @@ if __name__ == "__main__":
         simple_demo()
     except Exception as e:
         print(f"Error: {e}")
-        import traceback
-
         traceback.print_exc()
