@@ -5,32 +5,33 @@ This module implements the main HierarchicalTransformerAgent that coordinates
 all components of the transformer-based hierarchical RL architecture.
 """
 
+import os
+import time
+from dataclasses import dataclass
+from pathlib import Path
+from queue import PriorityQueue
+from typing import Dict, List, Optional, Union
+
 import torch
 import torch.nn.functional as F
-from typing import Dict, List, Optional, Union
-from dataclasses import dataclass
-from queue import PriorityQueue
-import time
 
+from lean_dojo import TacticState
+
+from ...environment import StepResult
+from ..agents import BaseAgent
 from .hierarchy import (
     HierarchicalPolicyNetwork,
     HierarchyLevel,
     StrategicActions,
     TacticalFamilies,
 )
-from .pointer_network import TacticPointerNetwork, ParameterPointerNetwork
-
 from .parameter_generator import TacticParameterGenerator
+from .pointer_network import TacticPointerNetwork, ParameterPointerNetwork
 from .utils import (
     ProofStateTokenizer,
     TacticEncoder,
     StateEncoder,
 )
-
-from ...environment import StepResult
-from ..agents import BaseAgent
-
-from lean_dojo import TacticState
 
 
 @dataclass
@@ -572,9 +573,6 @@ class HierarchicalTransformerAgent(BaseAgent):
 
     def save_model(self, filepath: Optional[str] = None) -> None:
         """Save model state with consistent structure."""
-        import os
-        from pathlib import Path
-
         if filepath is None:
             # Use SCRATCH_SHARED for default save location
             scratch_dir = os.getenv("SCRATCH_SHARED", ".")

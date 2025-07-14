@@ -6,13 +6,17 @@ and experimental setup utilities.
 """
 
 import json
-import yaml
-import torch
+import logging
+import os
+import time
+import uuid
 from pathlib import Path
 from typing import Dict, Any, Optional, List, Union
 from dataclasses import dataclass, asdict, field
-import logging
+
 import optuna
+import torch
+import yaml
 
 
 @dataclass
@@ -406,8 +410,6 @@ class ExperimentTracker:
     """Track experiments and their results."""
 
     def __init__(self, experiments_dir: Optional[Union[str, Path]] = None):
-        import os
-
         if experiments_dir is None:
             # Get SCRATCH_SHARED from environment
             scratch_dir = os.getenv("SCRATCH_SHARED", ".")
@@ -435,9 +437,6 @@ class ExperimentTracker:
 
     def start_experiment(self, config: ExperimentConfig) -> str:
         """Start a new experiment and return experiment ID."""
-        import time
-        import uuid
-
         experiment_id = (
             f"{config.experiment_name}_{int(time.time())}_{str(uuid.uuid4())[:8]}"
         )
@@ -478,8 +477,6 @@ class ExperimentTracker:
         """Mark experiment as finished."""
         if experiment_id not in self.experiments:
             raise ValueError(f"Experiment {experiment_id} not found")
-
-        import time
 
         self.experiments[experiment_id]["status"] = "completed"
         self.experiments[experiment_id]["end_time"] = time.time()

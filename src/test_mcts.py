@@ -8,6 +8,7 @@ for theorem proving, including basic functionality, neural heuristics, and perfo
 import os
 import sys
 import time
+import traceback
 
 from lean_dojo import LeanGitRepo, trace
 from lean_dojo.data_extraction.trace import (
@@ -413,8 +414,6 @@ def run_all_tests():
 
     except Exception as e:
         print(f"\n❌ Test failed with error: {e}")
-        import traceback
-
         traceback.print_exc()
         sys.exit(1)
 
