@@ -433,11 +433,17 @@ class HierarchicalTransformerTrainer:
 
         # Setup distributed training
         if self.config.distributed and self.config.distributed.use_distributed:
-            # Note: For DDP, we'll wrap during forward pass rather than modifying agent structure
-            self.use_distributed = True
-            self.logger.info(
-                "Distributed training enabled - will wrap models during forward pass"
+            # Wrap the entire agent with DDP instead of individual components
+            self.agent = DDP(
+                self.agent,
+                device_ids=(
+                    [self.config.distributed.rank]
+                    if torch.cuda.is_available()
+                    else None
+                ),
             )
+            self.use_distributed = True
+            self.logger.info("Distributed training enabled with DDP wrapping")
         else:
             self.use_distributed = False
 
@@ -445,16 +451,8 @@ class HierarchicalTransformerTrainer:
         """Setup training components."""
         self.logger.info("Setting up training components...")
 
-        # Optimizers - get parameters from the hierarchical policy
-        agent_parameters = []
-        if hasattr(self.agent, "hierarchical_policy"):
-            agent_parameters.extend(self.agent.hierarchical_policy.parameters())
-        if hasattr(self.agent, "tactic_pointer"):
-            agent_parameters.extend(self.agent.tactic_pointer.parameters())
-        if hasattr(self.agent, "parameter_generator"):
-            agent_parameters.extend(self.agent.parameter_generator.parameters())
-        if hasattr(self.agent, "parameter_pointer"):
-            agent_parameters.extend(self.agent.parameter_pointer.parameters())
+        # Optimizers - get parameters from the agent using the helper method
+        agent_parameters = self._get_agent_parameters()
 
         self.optimizer = torch.optim.AdamW(
             agent_parameters,
@@ -504,31 +502,31 @@ class HierarchicalTransformerTrainer:
     def _get_agent_parameters(self):
         """Get all parameters from agent submodules."""
         parameters = []
-        if hasattr(self.agent, "hierarchical_policy"):
-            parameters.extend(self.agent.hierarchical_policy.parameters())
-        if hasattr(self.agent, "tactic_pointer"):
-            parameters.extend(self.agent.tactic_pointer.parameters())
-        if hasattr(self.agent, "parameter_generator"):
-            parameters.extend(self.agent.parameter_generator.parameters())
-        if hasattr(self.agent, "parameter_pointer"):
-            parameters.extend(self.agent.parameter_pointer.parameters())
+        agent = self.agent.module if isinstance(self.agent, DDP) else self.agent
+
+        if hasattr(agent, "hierarchical_policy"):
+            parameters.extend(agent.hierarchical_policy.parameters())
+        if hasattr(agent, "tactic_pointer"):
+            parameters.extend(agent.tactic_pointer.parameters())
+        if hasattr(agent, "parameter_generator"):
+            parameters.extend(agent.parameter_generator.parameters())
+        if hasattr(agent, "parameter_pointer"):
+            parameters.extend(agent.parameter_pointer.parameters())
         return parameters
 
     def _get_agent_state_dict(self):
         """Get state dict from all agent submodules."""
         state_dict = {}
-        if hasattr(self.agent, "hierarchical_policy"):
-            state_dict["hierarchical_policy"] = (
-                self.agent.hierarchical_policy.state_dict()
-            )
-        if hasattr(self.agent, "tactic_pointer"):
-            state_dict["tactic_pointer"] = self.agent.tactic_pointer.state_dict()
-        if hasattr(self.agent, "parameter_generator"):
-            state_dict["parameter_generator"] = (
-                self.agent.parameter_generator.state_dict()
-            )
-        if hasattr(self.agent, "parameter_pointer"):
-            state_dict["parameter_pointer"] = self.agent.parameter_pointer.state_dict()
+        agent = self.agent.module if isinstance(self.agent, DDP) else self.agent
+
+        if hasattr(agent, "hierarchical_policy"):
+            state_dict["hierarchical_policy"] = agent.hierarchical_policy.state_dict()
+        if hasattr(agent, "tactic_pointer"):
+            state_dict["tactic_pointer"] = agent.tactic_pointer.state_dict()
+        if hasattr(agent, "parameter_generator"):
+            state_dict["parameter_generator"] = agent.parameter_generator.state_dict()
+        if hasattr(agent, "parameter_pointer"):
+            state_dict["parameter_pointer"] = agent.parameter_pointer.state_dict()
         return state_dict
 
     def _get_target_agent_state_dict(self):
@@ -727,9 +725,12 @@ class HierarchicalTransformerTrainer:
     def _run_episode(self, theorem) -> Tuple[float, int, bool]:
         """Run a single training episode."""
         try:
+            # Get the actual agent (unwrap DDP if needed)
+            agent = self.agent.module if isinstance(self.agent, DDP) else self.agent
+
             # Reset environment
             state = self.env.reset(theorem.theorem)
-            self.agent.reset()
+            agent.reset()
 
             episode_reward = 0.0
             episode_length = 0
@@ -740,7 +741,7 @@ class HierarchicalTransformerTrainer:
             while True:
                 # Select action
                 if state is not None:
-                    action_str = self.agent.select_action(state)
+                    action_str = agent.select_action(state)
                     if action_str is None:
                         break
 
@@ -748,7 +749,7 @@ class HierarchicalTransformerTrainer:
                     step_result = self.env.step(action_str)
 
                     # Update agent
-                    self.agent.update(step_result)
+                    agent.update(step_result)
 
                     # Store experience for replay
                     if self.config.training.use_experience_replay:
@@ -857,13 +858,27 @@ class HierarchicalTransformerTrainer:
                 self.metrics.loss_history.append(total_loss.item())
 
         except Exception as e:
-            self.logger.warning(f"Training step failed: {e}")
+            self.logger.error(f"Training step failed: {e}")
+            # Track training failures
+            if not hasattr(self, "training_failures"):
+                self.training_failures = 0
+            self.training_failures += 1
+
+            # If too many consecutive failures, stop training
+            if self.training_failures > 50:
+                self.logger.error("Too many training failures, stopping training")
+                raise RuntimeError(
+                    f"Training failed with {self.training_failures} consecutive failures"
+                )
 
     def _compute_hierarchical_q_values(
         self, encoded_states: List, strategic_actions: List, tactic_families: List
     ) -> Dict[str, torch.Tensor]:
         """Compute Q-values for all hierarchy levels."""
         batch_size = len(encoded_states)
+
+        # Get the actual agent (unwrap DDP if needed)
+        agent = self.agent.module if isinstance(self.agent, DDP) else self.agent
 
         # Initialize outputs
         strategic_q_values = []
@@ -880,7 +895,7 @@ class HierarchicalTransformerTrainer:
 
             try:
                 # Strategic level
-                strategic_output = self.agent.hierarchical_forward(
+                strategic_output = agent.hierarchical_forward(
                     {k: v.unsqueeze(0) for k, v in encoded_states[i].items()},
                     HierarchyLevel.STRATEGIC,
                 )
@@ -889,7 +904,7 @@ class HierarchicalTransformerTrainer:
                 )
 
                 # Tactical level
-                tactical_output = self.agent.hierarchical_forward(
+                tactical_output = agent.hierarchical_forward(
                     {k: v.unsqueeze(0) for k, v in encoded_states[i].items()},
                     HierarchyLevel.TACTICAL,
                     strategic_action=strategic_actions[i],
@@ -991,21 +1006,24 @@ class HierarchicalTransformerTrainer:
         successes = 0
         total_reward = 0.0
 
+        # Get the actual agent (unwrap DDP if needed)
+        agent = self.agent.module if isinstance(self.agent, DDP) else self.agent
+
         # Set model to evaluation mode
-        self._set_agent_mode(self.agent, False)  # Set to eval mode
+        self._set_agent_mode(agent, False)  # Set to eval mode
 
         with torch.no_grad():
             for theorem in eval_theorems:
                 try:
                     state = self.env.reset(theorem.theorem)
-                    self.agent.reset()
+                    agent.reset()
 
                     episode_reward = 0.0
                     steps = 0
 
                     while steps < self.config.training.max_steps_per_episode:
                         if state is not None:
-                            action_str = self.agent.select_action(state)
+                            action_str = agent.select_action(state)
                             if action_str is None:
                                 break
 
@@ -1029,7 +1047,7 @@ class HierarchicalTransformerTrainer:
                     continue
 
         # Set model back to training mode
-        self._set_agent_mode(self.agent, True)  # Set to train mode
+        self._set_agent_mode(agent, True)  # Set to train mode
 
         success_rate = successes / len(eval_theorems)
         avg_reward = total_reward / len(eval_theorems)
