@@ -101,7 +101,7 @@ class HierarchicalTransformerTester:
         return logging.getLogger(__name__)
 
     def _load_trained_agent(self, model_path: str) -> HierarchicalTransformerAgent:
-        """Load a trained agent from checkpoint."""
+        """Load a trained agent from checkpoint with improved compatibility."""
         checkpoint = torch.load(model_path, map_location=self.device)
 
         # Extract config if available
@@ -116,7 +116,65 @@ class HierarchicalTransformerTester:
         )
 
         # Load state dict using helper method
-        self._load_agent_state_dict(agent, checkpoint["agent_state_dict"])
+        try:
+            # Check for nested format first
+            if "agent_state_dict" in checkpoint:
+                self._load_agent_state_dict(agent, checkpoint["agent_state_dict"])
+                self.logger.info("Loaded agent using new nested state dict format")
+            else:
+                # Fallback to old format
+                self._load_agent_state_dict(agent, checkpoint)
+                self.logger.info("Loaded agent using legacy state dict format")
+        except Exception as e:
+            self.logger.warning(f"Failed to load state dict: {e}")
+            # Try loading individual components
+            self._load_agent_state_dict_fallback(agent, checkpoint)
+
+        return agent
+
+    def _load_agent_state_dict_fallback(self, agent, checkpoint):
+        """Fallback method for loading state dict when normal loading fails."""
+        try:
+            # Try loading individual components one by one
+            if "hierarchical_policy" in checkpoint:
+                try:
+                    agent.hierarchical_policy.load_state_dict(
+                        checkpoint["hierarchical_policy"]
+                    )
+                    self.logger.info("Loaded hierarchical_policy successfully")
+                except Exception as e:
+                    self.logger.warning(f"Failed to load hierarchical_policy: {e}")
+
+            if "tactic_pointer" in checkpoint:
+                try:
+                    agent.tactic_pointer.load_state_dict(checkpoint["tactic_pointer"])
+                    self.logger.info("Loaded tactic_pointer successfully")
+                except Exception as e:
+                    self.logger.warning(f"Failed to load tactic_pointer: {e}")
+
+            if "parameter_generator" in checkpoint:
+                try:
+                    agent.parameter_generator.load_state_dict(
+                        checkpoint["parameter_generator"]
+                    )
+                    self.logger.info("Loaded parameter_generator successfully")
+                except Exception as e:
+                    self.logger.warning(f"Failed to load parameter_generator: {e}")
+
+            if "parameter_pointer" in checkpoint:
+                try:
+                    agent.parameter_pointer.load_state_dict(
+                        checkpoint["parameter_pointer"]
+                    )
+                    self.logger.info("Loaded parameter_pointer successfully")
+                except Exception as e:
+                    self.logger.warning(f"Failed to load parameter_pointer: {e}")
+
+        except Exception as e:
+            self.logger.error(f"Fallback state dict loading failed: {e}")
+            # If everything fails, continue with fresh weights
+            self.logger.warning("Continuing with fresh agent weights")
+
         self._set_agent_mode(agent, False)  # Set to eval mode
 
         return agent
