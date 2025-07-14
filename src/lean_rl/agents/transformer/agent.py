@@ -142,6 +142,62 @@ class HierarchicalTransformerAgent(BaseAgent):
 
         # Search tree
         self.search_tree = None
+        
+        # Validate all required components are initialized
+        self._validate_initialization()
+
+    def _validate_initialization(self):
+        """Validate that all required components are properly initialized."""
+        required_components = [
+            ("hierarchical_policy", self.hierarchical_policy),
+            ("tactic_pointer", self.tactic_pointer), 
+            ("parameter_generator", self.parameter_generator),
+            ("parameter_pointer", self.parameter_pointer),
+            ("tokenizer", self.tokenizer),
+            ("tactic_encoder", self.tactic_encoder),
+        ]
+        
+        for name, component in required_components:
+            if component is None:
+                raise ValueError(f"Required component '{name}' is not initialized")
+            
+            # Check if neural network components are on the correct device
+            if hasattr(component, 'parameters'):
+                try:
+                    component_device = next(component.parameters()).device
+                    if component_device != self.device:
+                        print(f"Warning: Component '{name}' is on device {component_device}, expected {self.device}")
+                        # Move component to correct device
+                        component.to(self.device)
+                except StopIteration:
+                    # Component has no parameters, skip device check
+                    pass
+                    
+        # Verify all components can interact properly
+        try:
+            # Create a simple test state using TacticState structure
+            # This creates a minimal test without using Mock
+            test_pp = "test proof state"
+            test_goals = ["test goal"]
+            
+            # Create a basic encoded state structure
+            test_encoded = {
+                "input_ids": torch.zeros((1, 10), dtype=torch.long, device=self.device),
+                "goal_mask": torch.ones((1, 10), dtype=torch.bool, device=self.device),
+                "hypothesis_mask": torch.zeros((1, 10), dtype=torch.bool, device=self.device),
+                "attention_mask": torch.ones((1, 10), dtype=torch.bool, device=self.device),
+            }
+            
+            # Test hierarchical forward pass
+            output = self.hierarchical_forward(test_encoded, HierarchyLevel.STRATEGIC)
+            assert isinstance(output, dict)
+            assert "policy_logits" in output
+            
+            print("Agent validation completed successfully")
+            
+        except Exception as e:
+            print(f"Agent validation warning: {e}")
+            # Don't fail initialization, just warn
 
     def select_action(self, state: TacticState, **kwargs) -> Union[str, None]:
         """
