@@ -360,10 +360,19 @@ class HierarchicalTransformerTrainer:
 
     def _setup_logging(self):
         """Setup logging configuration."""
+        import os
+        
+        # Get SCRATCH_SHARED from environment
+        scratch_dir = os.getenv('SCRATCH_SHARED', '.')
+        log_dir = Path(scratch_dir) / "training_logs"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        
+        log_file = log_dir / f"training_{self.config.experiment_name}_{int(time.time())}.log"
+        
         logging.basicConfig(
             level=logging.INFO,
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-            handlers=[logging.FileHandler("training.log"), logging.StreamHandler()],
+            handlers=[logging.FileHandler(log_file), logging.StreamHandler()],
         )
         self.logger = logging.getLogger(__name__)
 
@@ -488,16 +497,22 @@ class HierarchicalTransformerTrainer:
 
     def _setup_evaluation(self):
         """Setup evaluation and logging."""
+        import os
+        
+        # Get SCRATCH_SHARED from environment
+        scratch_dir = os.getenv('SCRATCH_SHARED', '.')
+        
         # Tensorboard writer
         if self.config.distributed.rank == 0:  # Only main process writes logs
-            log_dir = Path(self.config.log_dir) / f"run_{int(time.time())}"
+            log_dir = Path(scratch_dir) / "tensorboard_logs" / f"exp_{self.config.experiment_name}_{int(time.time())}"
+            log_dir.mkdir(parents=True, exist_ok=True)
             self.writer = SummaryWriter(log_dir)
         else:
             self.writer = None
 
         # Checkpoint directory
-        self.checkpoint_dir = Path(self.config.checkpoint_dir)
-        self.checkpoint_dir.mkdir(exist_ok=True)
+        self.checkpoint_dir = Path(scratch_dir) / "checkpoints" / f"exp_{self.config.experiment_name}"
+        self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
     def _get_agent_parameters(self):
         """Get all parameters from agent submodules."""
@@ -1103,13 +1118,18 @@ class HierarchicalTransformerTrainer:
                 )
 
     def _save_checkpoint(self, episode: int, checkpoint_type: str):
-        """Save model checkpoint."""
+        """Save model checkpoint to SCRATCH_SHARED."""
         if self.config.distributed.rank != 0:  # Only main process saves
             return
 
-        checkpoint_path = (
-            self.checkpoint_dir / f"checkpoint_{checkpoint_type}_{episode}.pt"
-        )
+        import os
+        
+        # Get SCRATCH_SHARED from environment
+        scratch_dir = os.getenv('SCRATCH_SHARED', '.')
+        checkpoint_dir = Path(scratch_dir) / "checkpoints" / f"exp_{self.config.experiment_name}"
+        checkpoint_dir.mkdir(parents=True, exist_ok=True)
+
+        checkpoint_path = checkpoint_dir / f"checkpoint_{checkpoint_type}_{episode}.pt"
 
         # Get state dict from potentially wrapped model
         if isinstance(self.agent, DDP):

@@ -570,8 +570,18 @@ class HierarchicalTransformerAgent(BaseAgent):
             confidence=0.8,  # Placeholder
         )
 
-    def save_model(self, filepath: str) -> None:
+    def save_model(self, filepath: Optional[str] = None) -> None:
         """Save model state with consistent structure."""
+        import os
+        from pathlib import Path
+        
+        if filepath is None:
+            # Use SCRATCH_SHARED for default save location
+            scratch_dir = os.getenv('SCRATCH_SHARED', '.')
+            models_dir = Path(scratch_dir) / "saved_models"
+            models_dir.mkdir(parents=True, exist_ok=True)
+            filepath = str(models_dir / f"hierarchical_transformer_{int(time.time())}.pt")
+        
         state_dict = {
             "hierarchical_policy": self.hierarchical_policy.state_dict(),
             "tactic_pointer": self.tactic_pointer.state_dict(),
@@ -595,6 +605,7 @@ class HierarchicalTransformerAgent(BaseAgent):
         }
 
         torch.save(checkpoint, filepath)
+        print(f"Model saved to {filepath}")
 
     def load_model(self, filepath: str) -> None:
         """Load model state."""

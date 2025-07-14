@@ -405,9 +405,16 @@ class HyperparameterTuner:
 class ExperimentTracker:
     """Track experiments and their results."""
 
-    def __init__(self, experiments_dir: Union[str, Path] = "experiments"):
+    def __init__(self, experiments_dir: Optional[Union[str, Path]] = None):
+        import os
+        
+        if experiments_dir is None:
+            # Get SCRATCH_SHARED from environment
+            scratch_dir = os.getenv('SCRATCH_SHARED', '.')
+            experiments_dir = Path(scratch_dir) / "experiments"
+        
         self.experiments_dir = Path(experiments_dir)
-        self.experiments_dir.mkdir(exist_ok=True)
+        self.experiments_dir.mkdir(parents=True, exist_ok=True)
 
         self.experiments_file = self.experiments_dir / "experiments.json"
         self.experiments = self._load_experiments()

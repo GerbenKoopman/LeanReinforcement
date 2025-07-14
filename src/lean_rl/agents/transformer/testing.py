@@ -11,6 +11,7 @@ import time
 import json
 import os
 import tempfile
+from pathlib import Path
 from typing import Dict, List, Optional
 from dataclasses import dataclass, field
 import logging
@@ -918,6 +919,13 @@ class HierarchicalTransformerTester:
 
     def _generate_test_report(self):
         """Generate comprehensive test report."""
+        import os
+        
+        # Get SCRATCH_SHARED from environment
+        scratch_dir = os.getenv('SCRATCH_SHARED', '.')
+        reports_dir = Path(scratch_dir) / "test_reports"
+        reports_dir.mkdir(parents=True, exist_ok=True)
+        
         report = {
             "test_summary": {
                 "unit_tests_passed": self.results.unit_tests_passed,
@@ -947,8 +955,8 @@ class HierarchicalTransformerTester:
             "unit_test_details": self.results.unit_test_details,
         }
 
-        # Save report
-        report_path = f"test_report_{int(time.time())}.json"
+        # Save report to SCRATCH_SHARED
+        report_path = reports_dir / f"test_report_{int(time.time())}.json"
         with open(report_path, "w") as f:
             json.dump(report, f, indent=2)
 
