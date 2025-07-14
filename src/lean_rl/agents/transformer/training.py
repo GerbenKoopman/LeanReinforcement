@@ -15,7 +15,7 @@ import numpy as np
 import random
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union, Any
+from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass, asdict
 from collections import deque
 import logging
@@ -26,16 +26,6 @@ from lean_dojo.data_extraction.traced_data import TracedRepo
 from .agent import HierarchicalTransformerAgent, HierarchicalAction
 from .hierarchy import (
     HierarchyLevel,
-    TacticalFamilies,
-    StrategicActions,
-    HierarchicalPolicyNetwork,
-)
-from .pointer_network import TacticPointerNetwork, ParameterPointerNetwork
-from .utils import (
-    ProofStateTokenizer,
-    TacticEncoder,
-    default_tactic_encoder,
-    default_tokenizer,
 )
 from .config import (
     TrainingConfig,
