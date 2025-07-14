@@ -712,6 +712,10 @@ class HierarchicalTransformerTrainer:
             if episode % self.config.training.target_update_frequency == 0:
                 self._update_target_network()
 
+            # Memory cleanup every 20 episodes to prevent memory leaks
+            if episode % 20 == 0:
+                self._cleanup_memory()
+
             episode += 1
 
         self.logger.info("Training completed!")
@@ -1149,6 +1153,38 @@ class HierarchicalTransformerTrainer:
                 continue
 
         return all_theorems
+
+    def _cleanup_memory(self):
+        """Clean up memory between episodes to prevent memory leaks."""
+        try:
+            # Get the actual agent (unwrap DDP if needed)
+            agent = self.agent.module if isinstance(self.agent, DDP) else self.agent
+
+            # Clear agent's episode data if it exists
+            if hasattr(agent, "episode_rewards") and isinstance(
+                agent.episode_rewards, list
+            ):
+                # Keep only recent rewards
+                agent.episode_rewards = agent.episode_rewards[-100:]
+
+            if hasattr(agent, "experience_buffer") and isinstance(
+                agent.experience_buffer, list
+            ):
+                # Clear experience buffer periodically to prevent memory buildup
+                if len(agent.experience_buffer) > 1000:
+                    agent.experience_buffer = agent.experience_buffer[-500:]
+
+            # CUDA memory cleanup
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+
+            # Force garbage collection
+            import gc
+
+            gc.collect()
+
+        except Exception as e:
+            self.logger.warning(f"Memory cleanup failed: {e}")
 
 
 def main():
