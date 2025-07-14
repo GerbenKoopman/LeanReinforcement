@@ -15,7 +15,11 @@ import traceback
 # Import our modules
 from .training import HierarchicalTransformerTrainer
 from .testing import HierarchicalTransformerTester, run_comprehensive_tests
-from .evaluation import HierarchicalTransformerEvaluator, run_evaluation, EvaluationConfig
+from .evaluation import (
+    HierarchicalTransformerEvaluator,
+    run_evaluation,
+    EvaluationConfig,
+)
 from .config import (
     ConfigManager,
     ExperimentConfig,
