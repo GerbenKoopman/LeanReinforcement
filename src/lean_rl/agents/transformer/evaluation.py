@@ -179,12 +179,18 @@ class HierarchicalTransformerEvaluator:
         return logging.getLogger(__name__)
 
     def _setup_directories(self):
-        """Setup output directories."""
-        self.results_dir = Path(self.config.results_dir)
-        self.plots_dir = Path(self.config.plots_dir)
+        """Setup output directories using SCRATCH_SHARED."""
+        import os
+        
+        # Get SCRATCH_SHARED from environment
+        scratch_dir = os.getenv('SCRATCH_SHARED', '.')
+        
+        # Setup directories within SCRATCH_SHARED
+        self.results_dir = Path(scratch_dir) / "evaluation_results" / f"eval_{int(time.time())}"
+        self.plots_dir = Path(scratch_dir) / "evaluation_plots" / f"eval_{int(time.time())}"
 
-        self.results_dir.mkdir(exist_ok=True)
-        self.plots_dir.mkdir(exist_ok=True)
+        self.results_dir.mkdir(parents=True, exist_ok=True)
+        self.plots_dir.mkdir(parents=True, exist_ok=True)
 
     def _setup_repository(self):
         """Setup repository and environment."""

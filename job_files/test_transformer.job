@@ -22,6 +22,16 @@ set +a
 # Ensure cache directory exists
 mkdir -p "${CACHE_DIR}"
 
+# Ensure SCRATCH_SHARED subdirectories exist
+mkdir -p "${SCRATCH_SHARED}/test_reports"
+mkdir -p "${SCRATCH_SHARED}/checkpoints" 
+mkdir -p "${SCRATCH_SHARED}/evaluation_results"
+mkdir -p "${SCRATCH_SHARED}/evaluation_plots"
+mkdir -p "${SCRATCH_SHARED}/tensorboard_logs"
+mkdir -p "${SCRATCH_SHARED}/training_logs"
+mkdir -p "${SCRATCH_SHARED}/saved_models"
+mkdir -p "${SCRATCH_SHARED}/experiments"
+
 cd $HOME/lean_reinforcement/src
 
 # Run comprehensive tests
