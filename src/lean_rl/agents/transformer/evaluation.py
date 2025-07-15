@@ -8,6 +8,7 @@ against standard datasets, ablation studies, and analysis of learned behaviors.
 import argparse
 import random
 import os
+import traceback
 
 import torch
 import numpy as np
@@ -315,7 +316,18 @@ class HierarchicalTransformerEvaluator:
             for file_path in theorem_files:
                 try:
                     traced_file = self.traced_repo.get_traced_file(file_path)
+                    if traced_file is None:
+                        self.logger.warning(
+                            f"Failed to load theorems from {file_path}: traced_file is None"
+                        )
+                        continue
+
                     theorems = traced_file.get_traced_theorems()
+                    if theorems is None:
+                        self.logger.warning(
+                            f"Failed to load theorems from {file_path}: get_traced_theorems returned None"
+                        )
+                        continue
 
                     # Sample theorems to avoid overwhelming evaluation
                     max_per_file = 10
@@ -324,11 +336,15 @@ class HierarchicalTransformerEvaluator:
                         theorems = random.sample(theorems, max_per_file)
 
                     all_theorems.extend(theorems)
+                    self.logger.info(
+                        f"Loaded {len(theorems)} theorems from {file_path}"
+                    )
 
                 except Exception as e:
                     self.logger.warning(
-                        f"Failed to load theorems from {file_path}: {e}"
+                        f"Failed to load theorems from {file_path}: {type(e).__name__}: {str(e)}"
                     )
+                    self.logger.debug(f"Full traceback: {traceback.format_exc()}")
                     continue
 
         # Add competition problems and custom benchmarks
