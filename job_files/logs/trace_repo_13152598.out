@@ -1,0 +1,50 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+2025-07-15 00:35:11.326 | INFO     | lean_dojo.data_extraction.trace:trace:248 - Loading the traced repo from /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/leanprover-community-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4
+Traceback (most recent call last):
+  File "/gpfs/home1/gkoopman/lean_reinforcement/src/trace_repo.py", line 62, in <module>
+    trace_repo()
+  File "/gpfs/home1/gkoopman/lean_reinforcement/src/trace_repo.py", line 57, in trace_repo
+    return trace_repo_safe()
+  File "/gpfs/home1/gkoopman/lean_reinforcement/src/trace_repo.py", line 32, in trace_repo_safe
+    traced_repo = trace(repo)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/trace.py", line 249, in trace
+    traced_repo = TracedRepo.load_from_disk(cached_path, build_deps)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/traced_data.py", line 1185, in load_from_disk
+    raise RuntimeError(f"{root_dir} is not a Git repo.")
+RuntimeError: /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/leanprover-community-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4 is not a Git repo.
+Tracing Repository
+========================================
+1. Setting up Lean repository...
+2. Tracing repository (using LeanDojo's automatic caching)...
+   Cache directory: /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache
+   LOAD_USED_PACKAGES_ONLY: 1
+Error: /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/leanprover-community-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4 is not a Git repo.
+
+JOB STATISTICS
+==============
+Job ID: 13152598
+Cluster: snellius
+User/Group: gkoopman/gkoopman
+State: RUNNING
+Nodes: 1
+Cores per node: 9
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 00:01:57 core-walltime
+Job Wall-clock time: 00:00:13
+Memory Utilized: 0.00 MB
+Memory Efficiency: 0.00% of 60.00 GB (60.00 GB/node)
+WARNING: Efficiency statistics can only be obtained after the job has ended as seff tool is based on the accounting database data.

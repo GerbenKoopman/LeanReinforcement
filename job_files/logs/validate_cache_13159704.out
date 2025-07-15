@@ -1,0 +1,50 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+✓ Cache directory exists: /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache
+✓ Mathlib4 repository found in cache: /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/leanprover-community-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4
+✓ Mathlib directory exists
+✓ Essential file found: Mathlib.lean
+✓ Essential file found: lakefile.lean
+✓ Essential file found: lean-toolchain
+✓ Key directory found: Mathlib
+✓ Key directory found: Archive
+✓ Key directory found: Counterexamples
+✓ Repository size: 18.08 GB
+✓ SCRATCH_SHARED directory exists: /gpfs/scratch1/shared/lean-reinforcement
+✓ Required directory exists: checkpoints
+✓ Required directory exists: evaluation_results
+✓ Required directory exists: evaluation_plots
+✓ Required directory exists: tensorboard_logs
+✓ Required directory exists: training_logs
+✓ Required directory exists: saved_models
+✓ Required directory exists: experiments
+✓ Required directory exists: test_reports
+
+✓ Cache validation successful!
+
+JOB STATISTICS
+==============
+Job ID: 13159704
+Cluster: snellius
+User/Group: gkoopman/gkoopman
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 9
+CPU Utilized: 00:00:04
+CPU Efficiency: 0.16% of 00:42:36 core-walltime
+Job Wall-clock time: 00:04:44
+Memory Utilized: 119.81 MB
+Memory Efficiency: 0.19% of 60.00 GB (60.00 GB/node)

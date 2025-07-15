@@ -1,0 +1,68 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+2025-07-15 00:24:43,290 - __main__ - INFO - Starting testing...
+Warning: Component 'hierarchical_policy' is on device cuda:0, expected cuda
+Warning: Component 'tactic_pointer' is on device cuda:0, expected cuda
+Warning: Component 'parameter_generator' is on device cuda:0, expected cuda
+Warning: Component 'parameter_pointer' is on device cuda:0, expected cuda
+Agent validation warning: The size of tensor a (256) must match the size of tensor b (32) at non-singleton dimension 2
+2025-07-15 00:24:46,994 - lean_rl.agents.transformer.testing - INFO - Initialized fresh agent for testing
+2025-07-15 00:24:47,443 - lean_rl.agents.transformer.testing - INFO - Found existing trace in cache - loading directly!
+2025-07-15 00:24:47,503 - lean_rl.agents.transformer.testing - WARNING - Cache load failed: /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/leanprover-community-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4 is not a Git repo., falling back to full trace...
+2025-07-15 00:24:47.503 | INFO     | lean_dojo.data_extraction.trace:trace:248 - Loading the traced repo from /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/leanprover-community-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4
+2025-07-15 00:24:47,503 - lean_rl.agents.transformer.testing - ERROR - Failed to setup test repository: /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/leanprover-community-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4 is not a Git repo.
+2025-07-15 00:24:47,503 - __main__ - ERROR - Testing failed: /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/leanprover-community-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4 is not a Git repo.
+2025-07-15 00:24:47,505 - __main__ - ERROR - Traceback (most recent call last):
+  File "/gpfs/home1/gkoopman/lean_reinforcement/src/lean_rl/agents/transformer/testing.py", line 251, in _setup_test_repository
+    self.traced_repo = TracedRepo.load_from_disk(
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/traced_data.py", line 1185, in load_from_disk
+    raise RuntimeError(f"{root_dir} is not a Git repo.")
+RuntimeError: /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/leanprover-community-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4 is not a Git repo.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/gpfs/home1/gkoopman/lean_reinforcement/src/lean_rl/agents/transformer/runner.py", line 140, in test_command
+    results = run_comprehensive_tests(args.model_path)
+  File "/gpfs/home1/gkoopman/lean_reinforcement/src/lean_rl/agents/transformer/testing.py", line 1044, in run_comprehensive_tests
+    tester = HierarchicalTransformerTester(model_path)
+  File "/gpfs/home1/gkoopman/lean_reinforcement/src/lean_rl/agents/transformer/testing.py", line 105, in __init__
+    self._setup_test_repository()
+  File "/gpfs/home1/gkoopman/lean_reinforcement/src/lean_rl/agents/transformer/testing.py", line 259, in _setup_test_repository
+    self.traced_repo = trace(
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/trace.py", line 249, in trace
+    traced_repo = TracedRepo.load_from_disk(cached_path, build_deps)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/traced_data.py", line 1185, in load_from_disk
+    raise RuntimeError(f"{root_dir} is not a Git repo.")
+RuntimeError: /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/leanprover-community-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4 is not a Git repo.
+
+srun: error: gcn33: task 0: Exited with exit code 1
+srun: Terminating StepId=13152509.0
+
+JOB STATISTICS
+==============
+Job ID: 13152509
+Cluster: snellius
+User/Group: gkoopman/gkoopman
+State: RUNNING
+Nodes: 1
+Cores per node: 18
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 00:06:54 core-walltime
+Job Wall-clock time: 00:00:23
+Memory Utilized: 0.00 MB
+Memory Efficiency: 0.00% of 120.00 GB (120.00 GB/node)
+WARNING: Efficiency statistics can only be obtained after the job has ended as seff tool is based on the accounting database data.
