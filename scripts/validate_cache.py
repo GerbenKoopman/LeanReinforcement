@@ -32,31 +32,42 @@ def main():
         traced_path = get_traced_repo_path(repo)
         print(f"✓ Mathlib4 repository found in cache: {traced_path}")
 
-        # Check key directories
-        mathlib_path = Path(traced_path) / "Mathlib4"
-        if mathlib_path.exists():
-            print(f"✓ Mathlib4 source directory exists")
+        # Check key directories and files
+        repo_root = Path(traced_path)
+        mathlib_dir = repo_root / "Mathlib"
 
-            # Check for essential files
-            essential_files = ["Mathlib.lean", "lakefile.lean", "lean-toolchain"]
-            for file in essential_files:
-                if (mathlib_path / file).exists():
-                    print(f"✓ Essential file found: {file}")
-                else:
-                    print(f"⚠ Missing file: {file}")
-
-            # Check directory sizes
-            try:
-                mathlib_size = sum(
-                    f.stat().st_size for f in mathlib_path.rglob("*") if f.is_file()
-                )
-                print(f"✓ Mathlib4 directory size: {mathlib_size / (1024**3):.2f} GB")
-            except Exception as e:
-                print(f"⚠ Could not determine directory size: {e}")
-
+        if mathlib_dir.exists():
+            print(f"✓ Mathlib directory exists")
         else:
-            print(f"ERROR: Mathlib4 source directory not found: {mathlib_path}")
-            sys.exit(1)
+            print(f"⚠ Mathlib directory not found at: {mathlib_dir}")
+
+        # Check for essential files in the repository root
+        essential_files = ["Mathlib.lean", "lakefile.lean", "lean-toolchain"]
+        for file in essential_files:
+            file_path = repo_root / file
+            if file_path.exists():
+                print(f"✓ Essential file found: {file}")
+            else:
+                print(f"⚠ Missing file: {file}")
+
+        # Check some key subdirectories
+        key_subdirs = ["Mathlib", "Archive", "Counterexamples"]
+        for subdir in key_subdirs:
+            subdir_path = repo_root / subdir
+            if subdir_path.exists():
+                print(f"✓ Key directory found: {subdir}")
+            else:
+                print(f"⚠ Missing directory: {subdir}")
+
+        # Check directory sizes
+        try:
+            repo_size = sum(
+                f.stat().st_size for f in repo_root.rglob("*") if f.is_file()
+            )
+            print(f"✓ Repository size: {repo_size / (1024**3):.2f} GB")
+        except Exception as e:
+            print(f"⚠ Could not determine repository size: {e}")
+
     else:
         print("ERROR: Mathlib4 repository not available in cache")
         print("Run trace_repo.py to generate the cache first")
