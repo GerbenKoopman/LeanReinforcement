@@ -239,10 +239,12 @@ class HierarchicalTransformerEvaluator:
                     f"Please ensure the repository is properly traced and cached. "
                     f"Cache directory: {cache_dir}"
                 )
-            
+
             self.logger.info("Loading repository from cache...")
-            traced_repo_path = get_traced_repo_path(self.repo)
-            self.traced_repo = TracedRepo.load_from_disk(traced_repo_path)
+            traced_repo_path = get_traced_repo_path(self.repo, build_deps=False)
+            self.traced_repo = TracedRepo.load_from_disk(
+                traced_repo_path, build_deps=False
+            )
             self.logger.info("Repository loaded from cache successfully")
 
             self.env = LeanEnvironment(
