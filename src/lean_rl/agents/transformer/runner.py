@@ -7,6 +7,7 @@ testing, and evaluating the hierarchical transformer agent.
 
 import argparse
 import logging
+import os
 import sys
 from pathlib import Path
 from typing import Optional
@@ -509,6 +510,15 @@ Examples:
 
     # Setup logging
     setup_logging(args.log_level, args.log_file)
+
+    # Log environment information for HPC deployments
+    logger = logging.getLogger(__name__)
+    if os.getenv("SCRATCH_SHARED"):
+        logger.info(f"SCRATCH_SHARED: {os.getenv('SCRATCH_SHARED')}")
+    if os.getenv("CACHE_DIR"):
+        logger.info(f"CACHE_DIR: {os.getenv('CACHE_DIR')}")
+    if os.getenv("SLURM_JOB_ID"):
+        logger.info(f"Running in SLURM job: {os.getenv('SLURM_JOB_ID')}")
 
     if args.command == "train":
         train_command(args)
