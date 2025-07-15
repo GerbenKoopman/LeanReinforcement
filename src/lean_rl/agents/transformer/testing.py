@@ -284,8 +284,16 @@ class HierarchicalTransformerTester:
             # Load from cache without fallback to tracing
             try:
                 cached_path = get_traced_repo_path(self.repo, build_deps=False)
-                self.traced_repo = TracedRepo.load_from_disk(cached_path, build_deps=False)
-                self.logger.info(f"Successfully loaded from cache: {cached_path}")
+                
+                # Try with build_deps=True first for better theorem access
+                try:
+                    self.traced_repo = TracedRepo.load_from_disk(cached_path, build_deps=True)
+                    self.logger.info(f"Successfully loaded from cache with build_deps=True: {cached_path}")
+                except Exception as e:
+                    self.logger.warning(f"Failed to load with build_deps=True: {e}, trying with build_deps=False")
+                    self.traced_repo = TracedRepo.load_from_disk(cached_path, build_deps=False)
+                    self.logger.info(f"Successfully loaded from cache with build_deps=False: {cached_path}")
+                    
             except Exception as e:
                 self.logger.error(f"Failed to load from cache: {e}")
                 self.logger.error("This indicates the cache is corrupted or incomplete.")
@@ -991,65 +999,46 @@ class HierarchicalTransformerTester:
 
         # Check if we can safely access traced files
         try:
-            # First, let's see what files are actually available
-            self.logger.info("Checking available traced files...")
-            available_files = []
-            
-            # Safely iterate through traced files
-            if hasattr(self.traced_repo, 'traced_files') and self.traced_repo.traced_files:
-                for tf in self.traced_repo.traced_files:
-                    try:
-                        file_path = str(tf.path)
-                        # Skip problematic files that might trigger builds or errors
-                        if not any(skip_pattern in file_path for skip_pattern in [
-                            'ExtractData', 'Build', 'build', 'extract', 'Extract'
-                        ]):
-                            available_files.append(file_path)
-                    except Exception as e:
-                        self.logger.warning(f"Error processing traced file: {e}")
-                        continue
+            self.logger.info("Getting test theorems...")
 
-            self.logger.info(f"Found {len(available_files)} traced files")
-            if len(available_files) > 0:
-                self.logger.info(f"Sample available files: {available_files[:10]}")
-
-            # Try to get theorems from multiple files (safe approach)
-            safe_test_files = []
-            
-            # Add any safe available files from our actual traced files
-            for available_file in available_files[:10]:  # Try first 10 available files
-                if (available_file.endswith(".lean") and 
-                    "Mathlib" in available_file and
-                    not any(skip in available_file for skip in ['test', 'Test', 'extract', 'Extract'])):
-                    safe_test_files.append(available_file)
-
-            # Try basic files that are less likely to cause issues
-            fallback_files = [
+            # Try known good files that typically contain theorems
+            # These are files that work in demo_agent.py and test_mcts.py
+            known_good_files = [
+                "Mathlib/Algebra/BigOperators/Pi.lean",  # Used in working examples
                 "Mathlib/Data/Nat/Basic.lean",
                 "Mathlib/Logic/Basic.lean", 
                 "Mathlib/Data/List/Basic.lean",
+                "Mathlib/Algebra/Group/Defs.lean",
+                "Mathlib/Data/Nat/Defs.lean",
             ]
 
-            all_test_files = safe_test_files + fallback_files
-
-            for file_path in all_test_files[:5]:  # Limit to 5 files to avoid timeouts
+            for file_path in known_good_files:
                 try:
                     self.logger.info(f"Attempting to load theorems from: {file_path}")
-                    traced_file = self.traced_repo.get_traced_file(file_path)
+                    
+                    # Check if the file exists in traced repo first
+                    try:
+                        traced_file = self.traced_repo.get_traced_file(file_path)
+                    except Exception as e:
+                        self.logger.warning(f"File {file_path} not found in traced repo: {e}")
+                        continue
+                        
                     if traced_file is None:
-                        self.logger.warning(
-                            f"Failed to load theorems from {file_path}: traced_file is None"
-                        )
+                        self.logger.warning(f"Traced file is None for {file_path}")
                         continue
 
-                    theorems = traced_file.get_traced_theorems()
+                    # Try to get theorems using the method that works in demo_agent.py
+                    try:
+                        theorems = traced_file.get_traced_theorems()
+                    except Exception as e:
+                        self.logger.warning(f"Error calling get_traced_theorems() for {file_path}: {e}")
+                        continue
+                        
                     if theorems is None:
-                        self.logger.warning(
-                            f"Failed to load theorems from {file_path}: get_traced_theorems returned None"
-                        )
+                        self.logger.warning(f"get_traced_theorems returned None for {file_path}")
                         continue
 
-                    if len(theorems) > 0:
+                    if isinstance(theorems, list) and len(theorems) > 0:
                         self.logger.info(f"Found {len(theorems)} theorems in {file_path}")
                         all_theorems.extend(theorems)
                         
@@ -1057,11 +1046,48 @@ class HierarchicalTransformerTester:
                         if len(all_theorems) >= num_theorems:
                             break
                     else:
-                        self.logger.warning(f"No theorems found in {file_path}")
+                        self.logger.warning(f"No theorems found in {file_path} (got {type(theorems)})")
 
                 except Exception as e:
                     self.logger.warning(f"Error loading theorems from {file_path}: {e}")
+                    # Log the full exception for debugging
+                    import traceback
+                    self.logger.debug(f"Full traceback: {traceback.format_exc()}")
                     continue
+
+            # If we still don't have enough theorems, try a broader search
+            if len(all_theorems) < num_theorems:
+                self.logger.info(f"Only found {len(all_theorems)} theorems, trying broader search...")
+                
+                # Get first few traced files and try them
+                try:
+                    traced_files = list(self.traced_repo.traced_files)[:20]  # Try first 20 files
+                    for tf in traced_files:
+                        try:
+                            file_path = str(tf.path)
+                            # Skip problematic files
+                            if any(skip_pattern in file_path for skip_pattern in [
+                                'ExtractData', 'Build', 'build', 'extract', 'Extract', 'test', 'Test'
+                            ]):
+                                continue
+                                
+                            if not file_path.endswith(".lean") or "Mathlib" not in file_path:
+                                continue
+                                
+                            theorems = tf.get_traced_theorems()
+                            if theorems and len(theorems) > 0:
+                                self.logger.info(f"Found {len(theorems)} additional theorems in {file_path}")
+                                all_theorems.extend(theorems)
+                                
+                                if len(all_theorems) >= num_theorems:
+                                    break
+                                    
+                        except Exception as e:
+                            # Silent failure for broad search
+                            continue
+                            
+                except Exception as e:
+                    self.logger.warning(f"Broader search failed: {e}")
 
             # Return up to the requested number of theorems
             result_theorems = all_theorems[:num_theorems]
@@ -1070,6 +1096,8 @@ class HierarchicalTransformerTester:
 
         except Exception as e:
             self.logger.error(f"Critical error in _get_test_theorems: {e}")
+            import traceback
+            self.logger.debug(f"Full traceback: {traceback.format_exc()}")
             return []
 
     def _generate_test_report(self):
