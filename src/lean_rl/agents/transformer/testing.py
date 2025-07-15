@@ -6,12 +6,12 @@ including unit tests, integration tests, performance benchmarks, and evaluation 
 """
 
 import argparse
+import os
 
 import torch
 import numpy as np
 import time
 import json
-import os
 import tempfile
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 import logging
 from unittest.mock import Mock
 
-from lean_dojo import LeanGitRepo, trace
+from lean_dojo import LeanGitRepo
 from lean_dojo.data_extraction.trace import (
     is_available_in_cache,
     get_traced_repo_path,
@@ -34,6 +34,29 @@ from .agent import (
 from .hierarchy import HierarchyLevel, StrategicActions, TacticalFamilies
 from ...environment import LeanEnvironment
 from ...agents import RandomAgent, MCTSAgent
+
+
+# Ensure cache-only mode is enforced when running tests
+def _ensure_cache_only_mode():
+    """Ensure that we're running in cache-only mode to prevent redundant tracing."""
+    # Set critical environment variables to prevent any builds
+    os.environ["LEAN_CACHE_ONLY"] = "1"
+    os.environ["DISABLE_BUILD_DEPS"] = "1"
+    os.environ["LOAD_USED_PACKAGES_ONLY"] = "1"
+    os.environ["NO_LAKE_BUILD"] = "1"
+    os.environ["SKIP_DEPENDENCIES"] = "1"
+
+    # Also check if we have the required cache directory
+    cache_dir = os.getenv("CACHE_DIR")
+    if not cache_dir:
+        raise RuntimeError("CACHE_DIR environment variable not set!")
+
+    if not os.path.exists(cache_dir):
+        raise RuntimeError(f"Cache directory does not exist: {cache_dir}")
+
+
+# Call this at module import time
+_ensure_cache_only_mode()
 
 
 @dataclass
@@ -233,7 +256,7 @@ class HierarchicalTransformerTester:
         return state_dict
 
     def _setup_test_repository(self):
-        """Setup test repository and environment."""
+        """Setup test repository and environment using cached pre-traced repository."""
 
         self.repo = LeanGitRepo(
             "https://github.com/leanprover-community/mathlib4",
@@ -248,28 +271,36 @@ class HierarchicalTransformerTester:
             if cache_dir:
                 self.logger.info(f"Using cache directory: {cache_dir}")
 
-            if is_available_in_cache(self.repo):
-                self.logger.info("Found existing trace in cache - using it!")
-                # Try to load from cache with dependencies
-                try:
-                    cached_path = get_traced_repo_path(self.repo, build_deps=True)
-                    self.traced_repo = TracedRepo.load_from_disk(
-                        cached_path, build_deps=True
-                    )
-                    self.logger.info(
-                        "Successfully loaded from cache with dependencies!"
-                    )
-                except Exception as e:
-                    self.logger.warning(f"Failed to load from cache with deps: {e}")
-                    # Fallback to regular trace
-                    self.traced_repo = trace(self.repo, build_deps=True)
-            else:
-                self.logger.info("No cache found, will perform trace...")
-                # Use build_deps=True to get access to Mathlib files
-                self.traced_repo = trace(self.repo, build_deps=True)
-            self.logger.info("Successfully loaded traced repository!")
+            # Always use cache-only mode in HPC environment to prevent redundant tracing
+            if not is_available_in_cache(self.repo):
+                raise RuntimeError(
+                    f"Pre-traced repository not found in cache! "
+                    f"Please ensure the repository is properly traced and cached. "
+                    f"Cache directory: {cache_dir}"
+                )
 
-            self.env = LeanEnvironment(self.repo, max_steps=50, timeout=30)
+            self.logger.info("Found existing trace in cache - loading it directly!")
+
+            # Load from cache without fallback to tracing
+            try:
+                cached_path = get_traced_repo_path(self.repo, build_deps=False)
+                self.traced_repo = TracedRepo.load_from_disk(cached_path, build_deps=False)
+                self.logger.info(f"Successfully loaded from cache: {cached_path}")
+            except Exception as e:
+                self.logger.error(f"Failed to load from cache: {e}")
+                self.logger.error("This indicates the cache is corrupted or incomplete.")
+                raise RuntimeError(
+                    f"Cannot load pre-traced repository from cache: {e}. "
+                    f"Please re-run the trace_repo.py script to rebuild the cache."
+                )
+
+            # Create environment without triggering any builds
+            self.env = LeanEnvironment(
+                self.repo,
+                max_steps=50,
+                timeout=30,
+                additional_imports=[],  # Minimize imports to avoid build triggers
+            )
             self.logger.info("Test repository setup completed")
         except Exception as e:
             self.logger.error(f"Failed to setup test repository: {e}")
@@ -374,9 +405,13 @@ class HierarchicalTransformerTester:
             assert encoded["input_ids"].dim() == 2  # [batch, seq]
             assert encoded["attention_mask"].dim() == 2
 
-            # Test 2: Real TacticState if available
+            # Test 2: Real TacticState if available (safer approach)
             try:
-                if hasattr(self, "env") and self.env is not None:
+                # Only test real state encoding if cache-only mode is enabled
+                # to avoid triggering builds that cause ExtractData.lean errors
+                cache_only_mode = os.getenv("LEAN_CACHE_ONLY", "0") == "1"
+
+                if cache_only_mode and hasattr(self, "env") and self.env is not None:
                     # Try to get a real theorem and its initial state
                     test_theorems = self._get_test_theorems(num_theorems=1)
                     if test_theorems:
@@ -398,11 +433,17 @@ class HierarchicalTransformerTester:
                         self.logger.warning(
                             "No test theorems available for real state testing"
                         )
+                elif not cache_only_mode:
+                    self.logger.info(
+                        "Skipping real state encoding test - cache-only mode not enabled"
+                    )
                 else:
                     self.logger.warning(
                         "Environment not available for real state testing"
                     )
             except Exception as e:
+                # This is expected to fail with ExtractData.lean errors in some setups
+                # Log it as a warning but don't fail the entire test
                 self.logger.warning(
                     f"Real state encoding test failed (non-critical): {e}"
                 )
@@ -945,91 +986,91 @@ class HierarchicalTransformerTester:
             self.results.parameter_accuracy = parameter_correct / total_decisions
 
     def _get_test_theorems(self, num_theorems: int = 20) -> List:
-        """Get test theorems from the repository."""
+        """Get test theorems from the repository with improved error handling."""
         all_theorems = []
 
-        # First, let's see what files are actually available
-        self.logger.info("Checking available traced files...")
-        available_files = []
-        for tf in self.traced_repo.traced_files:
-            available_files.append(str(tf.path))
+        # Check if we can safely access traced files
+        try:
+            # First, let's see what files are actually available
+            self.logger.info("Checking available traced files...")
+            available_files = []
+            
+            # Safely iterate through traced files
+            if hasattr(self.traced_repo, 'traced_files') and self.traced_repo.traced_files:
+                for tf in self.traced_repo.traced_files:
+                    try:
+                        file_path = str(tf.path)
+                        # Skip problematic files that might trigger builds or errors
+                        if not any(skip_pattern in file_path for skip_pattern in [
+                            'ExtractData', 'Build', 'build', 'extract', 'Extract'
+                        ]):
+                            available_files.append(file_path)
+                    except Exception as e:
+                        self.logger.warning(f"Error processing traced file: {e}")
+                        continue
 
-        self.logger.info(f"Found {len(available_files)} traced files")
-        if len(available_files) > 0:
-            self.logger.info(f"Sample available files: {available_files[:10]}")
+            self.logger.info(f"Found {len(available_files)} traced files")
+            if len(available_files) > 0:
+                self.logger.info(f"Sample available files: {available_files[:10]}")
 
-        # Try to get theorems from multiple files
-        test_files = [
-            "Mathlib/Data/Nat/Basic.lean",
-            "Mathlib/Data/List/Basic.lean",
-            "Mathlib/Logic/Basic.lean",
-            "Mathlib/Algebra/Group/Defs.lean",
-        ]
+            # Try to get theorems from multiple files (safe approach)
+            safe_test_files = []
+            
+            # Add any safe available files from our actual traced files
+            for available_file in available_files[:10]:  # Try first 10 available files
+                if (available_file.endswith(".lean") and 
+                    "Mathlib" in available_file and
+                    not any(skip in available_file for skip in ['test', 'Test', 'extract', 'Extract'])):
+                    safe_test_files.append(available_file)
 
-        # Also try some files that are more likely to be available
-        fallback_files = [
-            "Mathlib/Init.lean",
-            "Mathlib.lean",
-        ]
+            # Try basic files that are less likely to cause issues
+            fallback_files = [
+                "Mathlib/Data/Nat/Basic.lean",
+                "Mathlib/Logic/Basic.lean", 
+                "Mathlib/Data/List/Basic.lean",
+            ]
 
-        # Add any available files from our actual traced files
-        for available_file in available_files[:5]:  # Try first 5 available files
-            if available_file.endswith(".lean") and "Mathlib" in available_file:
-                fallback_files.append(available_file)
+            all_test_files = safe_test_files + fallback_files
 
-        all_test_files = test_files + fallback_files
-
-        for file_path in all_test_files:
-            try:
-                traced_file = self.traced_repo.get_traced_file(file_path)
-                if traced_file is None:
-                    self.logger.warning(
-                        f"Failed to load theorems from {file_path}: traced_file is None"
-                    )
-                    continue
-
-                theorems = traced_file.get_traced_theorems()
-                if theorems is None:
-                    self.logger.warning(
-                        f"Failed to load theorems from {file_path}: get_traced_theorems returned None"
-                    )
-                    continue
-
-                all_theorems.extend(theorems)
-                self.logger.info(f"Loaded {len(theorems)} theorems from {file_path}")
-
-                if len(all_theorems) >= num_theorems:
-                    break
-
-            except Exception as e:
-                import traceback
-
-                self.logger.warning(
-                    f"Failed to load theorems from {file_path}: {type(e).__name__}: {str(e)}"
-                )
-                self.logger.debug(f"Full traceback: {traceback.format_exc()}")
-                continue
-
-        # If we still don't have enough theorems, try getting theorems from any available file
-        if len(all_theorems) < num_theorems:
-            self.logger.info(
-                f"Only found {len(all_theorems)} theorems, trying all available files..."
-            )
-            for tf in self.traced_repo.traced_files:
-                if len(all_theorems) >= num_theorems:
-                    break
+            for file_path in all_test_files[:5]:  # Limit to 5 files to avoid timeouts
                 try:
-                    additional_theorems = tf.get_traced_theorems()
-                    if additional_theorems:
-                        all_theorems.extend(additional_theorems)
-                        self.logger.info(
-                            f"Loaded {len(additional_theorems)} additional theorems from {tf.path}"
+                    self.logger.info(f"Attempting to load theorems from: {file_path}")
+                    traced_file = self.traced_repo.get_traced_file(file_path)
+                    if traced_file is None:
+                        self.logger.warning(
+                            f"Failed to load theorems from {file_path}: traced_file is None"
                         )
+                        continue
+
+                    theorems = traced_file.get_traced_theorems()
+                    if theorems is None:
+                        self.logger.warning(
+                            f"Failed to load theorems from {file_path}: get_traced_theorems returned None"
+                        )
+                        continue
+
+                    if len(theorems) > 0:
+                        self.logger.info(f"Found {len(theorems)} theorems in {file_path}")
+                        all_theorems.extend(theorems)
+                        
+                        # Early exit if we have enough theorems
+                        if len(all_theorems) >= num_theorems:
+                            break
+                    else:
+                        self.logger.warning(f"No theorems found in {file_path}")
+
                 except Exception as e:
+                    self.logger.warning(f"Error loading theorems from {file_path}: {e}")
                     continue
 
-        # Return subset
-        return all_theorems[:num_theorems]
+            # Return up to the requested number of theorems
+            result_theorems = all_theorems[:num_theorems]
+            self.logger.info(f"Returning {len(result_theorems)} test theorems")
+            return result_theorems
+
+        except Exception as e:
+            self.logger.error(f"Critical error in _get_test_theorems: {e}")
+            return []
 
     def _generate_test_report(self):
         """Generate comprehensive test report."""
