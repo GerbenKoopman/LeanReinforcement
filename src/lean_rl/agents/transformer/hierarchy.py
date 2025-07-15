@@ -470,6 +470,9 @@ class HierarchicalPolicyNetwork(nn.Module):
         pooled_repr = execution_repr.mean(dim=1)
         result["value"] = self.execution_value(pooled_repr)
 
+        # Add representation for parameter generation
+        result["representation"] = pooled_repr
+
         return result
 
 
