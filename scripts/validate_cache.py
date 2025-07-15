@@ -33,7 +33,7 @@ def main():
         print(f"✓ Mathlib4 repository found in cache: {traced_path}")
 
         # Check key directories
-        mathlib_path = Path(traced_path) / "mathlib4"
+        mathlib_path = Path(traced_path) / "Mathlib4"
         if mathlib_path.exists():
             print(f"✓ Mathlib4 source directory exists")
 
