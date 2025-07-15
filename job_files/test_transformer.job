@@ -34,10 +34,24 @@ mkdir -p "${SCRATCH_SHARED}/experiments"
 
 cd $HOME/lean_reinforcement/src
 
+# Log environment information
+echo "Testing environment:"
+echo "SCRATCH_SHARED: ${SCRATCH_SHARED}"
+echo "CACHE_DIR: ${CACHE_DIR}"
+
 # Run comprehensive tests
+echo "Running comprehensive transformer tests..."
 srun python -m lean_rl.agents.transformer.runner test --test-type comprehensive
 
 # Run specific tests
+
+# echo "Running unit tests..."
 # srun python -m lean_rl.agents.transformer.runner test --test-type unit
+
+# echo "Running performance tests..."
 # srun python -m lean_rl.agents.transformer.runner test --test-type performance
+
+# echo "Running theorem proving tests (20 theorems)..."
 # srun python -m lean_rl.agents.transformer.runner test --test-type theorems --num-theorems 20
+
+echo "Test completed! Results saved to ${SCRATCH_SHARED}/test_reports/"
