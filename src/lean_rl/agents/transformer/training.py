@@ -23,7 +23,7 @@ from dataclasses import dataclass, asdict
 from collections import deque
 import logging
 
-from lean_dojo import LeanGitRepo, trace, TacticState
+from lean_dojo import LeanGitRepo, TacticState
 from lean_dojo.data_extraction.traced_data import TracedRepo
 from lean_dojo.data_extraction.trace import is_available_in_cache, get_traced_repo_path
 
@@ -395,17 +395,17 @@ class HierarchicalTransformerTrainer:
         self.repo = LeanGitRepo(self.config.repo_url, self.config.repo_commit)
 
         try:
-            # Check if traced repository is available in cache
-            if is_available_in_cache(self.repo):
-                self.logger.info("Loading repository from cache...")
-                traced_repo_path = get_traced_repo_path(self.repo)
-                self.traced_repo = TracedRepo.load_from_disk(traced_repo_path)
-                self.logger.info("Repository loaded from cache successfully")
-            else:
-                # Trace repository
-                self.logger.info("Tracing repository from Git...")
-                self.traced_repo = trace(self.repo)
-                self.logger.info("Repository traced successfully")
+            # Always use cache-only mode in HPC environment to prevent redundant tracing
+            if not is_available_in_cache(self.repo):
+                raise RuntimeError(
+                    f"Pre-traced repository not found in cache! "
+                    f"Please ensure the repository is properly traced and cached."
+                )
+            
+            self.logger.info("Loading repository from cache...")
+            traced_repo_path = get_traced_repo_path(self.repo)
+            self.traced_repo = TracedRepo.load_from_disk(traced_repo_path)
+            self.logger.info("Repository loaded from cache successfully")
         except Exception as e:
             self.logger.error(f"Failed to setup repository: {e}")
             raise
