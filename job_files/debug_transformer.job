@@ -27,6 +27,8 @@ export LOAD_USED_PACKAGES_ONLY=1
 # Additional safeguards against rebuilding
 export NO_LAKE_BUILD=1
 export SKIP_DEPENDENCIES=1
+export LEAN_NO_REBUILD=1
+export LEAN_PATH="${CACHE_DIR}"
 
 # Ensure cache directory exists
 mkdir -p "${CACHE_DIR}"
