@@ -171,6 +171,14 @@ def test_command(args):
 
         elif args.test_type == "theorems":
             tester = HierarchicalTransformerTester(args.model_path)
+            # Override number of theorems if specified
+            if hasattr(args, "num_theorems") and args.num_theorems:
+                # Override the method to use specified number
+                original_method = tester._get_test_theorems
+                tester._get_test_theorems = (
+                    lambda num_theorems=args.num_theorems: original_method(num_theorems)
+                )
+
             tester._run_theorem_proving_tests()
             print(
                 f"Proved {tester.results.theorems_proved}/{tester.results.total_theorems_tested} theorems"
@@ -460,6 +468,12 @@ Examples:
         choices=["comprehensive", "unit", "performance", "theorems"],
         default="comprehensive",
         help="Type of test to run",
+    )
+    test_parser.add_argument(
+        "--num-theorems",
+        type=int,
+        default=20,
+        help="Number of theorems for theorem testing",
     )
 
     # Evaluate command
