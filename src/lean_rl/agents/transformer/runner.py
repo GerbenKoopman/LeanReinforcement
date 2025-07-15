@@ -7,6 +7,7 @@ testing, and evaluating the hierarchical transformer agent.
 
 import argparse
 import logging
+import os
 import sys
 from pathlib import Path
 from typing import Optional
@@ -170,6 +171,14 @@ def test_command(args):
 
         elif args.test_type == "theorems":
             tester = HierarchicalTransformerTester(args.model_path)
+            # Override number of theorems if specified
+            if hasattr(args, "num_theorems") and args.num_theorems:
+                # Override the method to use specified number
+                original_method = tester._get_test_theorems
+                tester._get_test_theorems = (
+                    lambda num_theorems=args.num_theorems: original_method(num_theorems)
+                )
+
             tester._run_theorem_proving_tests()
             print(
                 f"Proved {tester.results.theorems_proved}/{tester.results.total_theorems_tested} theorems"
@@ -460,6 +469,12 @@ Examples:
         default="comprehensive",
         help="Type of test to run",
     )
+    test_parser.add_argument(
+        "--num-theorems",
+        type=int,
+        default=20,
+        help="Number of theorems for theorem testing",
+    )
 
     # Evaluate command
     eval_parser = subparsers.add_parser("evaluate", help="Evaluate the agent")
@@ -509,6 +524,15 @@ Examples:
 
     # Setup logging
     setup_logging(args.log_level, args.log_file)
+
+    # Log environment information for HPC deployments
+    logger = logging.getLogger(__name__)
+    if os.getenv("SCRATCH_SHARED"):
+        logger.info(f"SCRATCH_SHARED: {os.getenv('SCRATCH_SHARED')}")
+    if os.getenv("CACHE_DIR"):
+        logger.info(f"CACHE_DIR: {os.getenv('CACHE_DIR')}")
+    if os.getenv("SLURM_JOB_ID"):
+        logger.info(f"Running in SLURM job: {os.getenv('SLURM_JOB_ID')}")
 
     if args.command == "train":
         train_command(args)

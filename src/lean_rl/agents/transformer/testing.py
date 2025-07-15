@@ -242,6 +242,12 @@ class HierarchicalTransformerTester:
 
         try:
             self.logger.info("Setting up traced repository...")
+
+            # Check cache directory from environment
+            cache_dir = os.getenv("CACHE_DIR")
+            if cache_dir:
+                self.logger.info(f"Using cache directory: {cache_dir}")
+
             if is_available_in_cache(self.repo):
                 self.logger.info("Found existing trace in cache - using it!")
             else:
@@ -970,6 +976,12 @@ class HierarchicalTransformerTester:
             },
             "baseline_comparisons": self.results.baseline_comparisons,
             "unit_test_details": self.results.unit_test_details,
+            "environment_info": {
+                "cache_dir": os.getenv("CACHE_DIR", "Not set"),
+                "scratch_shared": os.getenv("SCRATCH_SHARED", "Not set"),
+                "device": str(self.device),
+                "cuda_available": torch.cuda.is_available(),
+            },
         }
 
         # Save report to SCRATCH_SHARED

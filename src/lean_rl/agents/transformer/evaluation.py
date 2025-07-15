@@ -196,9 +196,27 @@ class HierarchicalTransformerEvaluator:
         self.plots_dir = (
             Path(scratch_dir) / "evaluation_plots" / f"eval_{int(time.time())}"
         )
+        self.logs_dir = (
+            Path(scratch_dir) / "evaluation_logs" / f"eval_{int(time.time())}"
+        )
 
         self.results_dir.mkdir(parents=True, exist_ok=True)
         self.plots_dir.mkdir(parents=True, exist_ok=True)
+        self.logs_dir.mkdir(parents=True, exist_ok=True)
+
+        self.logger.info(f"Results directory: {self.results_dir}")
+        self.logger.info(f"Plots directory: {self.plots_dir}")
+        self.logger.info(f"Logs directory: {self.logs_dir}")
+
+        # Set up additional logging to file
+        log_file = self.logs_dir / "evaluation.log"
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setLevel(logging.INFO)
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
+        file_handler.setFormatter(formatter)
+        self.logger.addHandler(file_handler)
 
     def _setup_repository(self):
         """Setup repository and environment."""
@@ -208,6 +226,11 @@ class HierarchicalTransformerEvaluator:
         )
 
         try:
+            # Log cache directory information
+            cache_dir = os.getenv("CACHE_DIR")
+            if cache_dir:
+                self.logger.info(f"Using cache directory: {cache_dir}")
+
             # Check if traced repository is available in cache
             if is_available_in_cache(self.repo):
                 self.logger.info("Loading repository from cache...")

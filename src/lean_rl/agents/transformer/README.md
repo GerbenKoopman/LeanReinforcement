@@ -338,3 +338,74 @@ If you use this code, please cite:
   note={Transformer-based hierarchical RL architecture}
 }
 ```
+
+## HPC Deployment
+
+For running the transformer agent on High-Performance Computing (HPC) systems like Snellius, see the comprehensive [HPC Configuration Guide](../../../../HPC_TRANSFORMER_GUIDE.md).
+
+### Quick HPC Setup
+
+1. **Environment Configuration**: Set up environment variables in `.env`:
+
+   ```bash
+   SCRATCH_SHARED=/gpfs/scratch1/shared/lean-reinforcement
+   CACHE_DIR=/gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache
+   ```
+
+2. **Validate Cache**: Ensure the pre-traced mathlib4 repository is available:
+
+   ```bash
+   python scripts/validate_cache.py
+   ```
+
+   Expected output:
+
+   ```text
+   ✓ Cache directory exists: /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache
+   ✓ Mathlib4 repository found in cache: .../mathlib4
+   ✓ Mathlib directory exists
+   ✓ Essential file found: Mathlib.lean
+   ✓ Repository size: 18.08 GB
+   ✓ Cache validation successful!
+   ```
+
+3. **Submit Training Job**: Use the provided SLURM scripts:
+
+   ```bash
+   sbatch job_files/train_transformer.job
+   ```
+
+4. **Monitor Progress**: Track training with TensorBoard:
+
+   ```bash
+   tensorboard --logdir $SCRATCH_SHARED/tensorboard_logs
+   ```
+
+### HPC-Optimized Configurations
+
+- **GPU A100**: Use `configs/hpc_a100.yaml` for large-scale training
+- **GPU MIG**: Use `configs/hpc_mig.yaml` for smaller experiments
+- **Memory Management**: Automatic gradient checkpointing and mixed precision
+- **Distributed Training**: Ready for multi-GPU deployment
+
+### Repository Structure
+
+The pre-traced mathlib4 repository (18.08 GB) contains:
+
+```text
+mathlib4/
+├── Mathlib/           # Main mathematics library (~15 GB)
+├── Archive/           # Historical theorems and proofs
+├── Counterexamples/   # Mathematical counterexamples
+├── Mathlib.lean       # Main library entry point
+├── lakefile.lean      # Build configuration
+└── lean-toolchain     # Lean version specification
+```
+
+The HPC guide covers advanced topics including:
+
+- Memory optimization strategies
+- Distributed training setup
+- Resource monitoring
+- Hyperparameter tuning at scale
+- Cache management for large datasets
