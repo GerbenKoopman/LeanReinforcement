@@ -45,12 +45,10 @@ class RoPEPositionalEncoding(nn.Module):
         inv_freq = self.get_buffer("inv_freq")
         if inv_freq is None:
             # Fallback computation if buffer is not available
+            d_model = x.size(-1)
             inv_freq = 1.0 / (
                 self.base
-                ** (
-                    torch.arange(0, self.d_model, 2, device=x.device).float()
-                    / self.d_model
-                )
+                ** (torch.arange(0, d_model, 2, device=x.device).float() / d_model)
             )
         freqs = torch.outer(position, inv_freq)  # [seq_len, d_model//2]
 
@@ -98,25 +96,85 @@ class RoPEPositionalEncoding(nn.Module):
         if q.dim() == 4:  # [batch, n_heads, seq_len, d_k]
             batch_size, n_heads, seq_len, d_k = q.shape
 
-            # Reshape to apply RoPE
-            q_reshaped = q.transpose(1, 2).contiguous().view(batch_size, seq_len, -1)
-            k_reshaped = k.transpose(1, 2).contiguous().view(batch_size, seq_len, -1)
+            # Apply RoPE per head
+            q_list = []
+            k_list = []
 
-            # Apply RoPE
-            q_rotated = self.forward(q_reshaped)
-            k_rotated = self.forward(k_reshaped)
+            for head in range(n_heads):
+                # Extract single head: [batch, seq_len, d_k]
+                q_head = q[:, head, :, :]
+                k_head = k[:, head, :, :]
 
-            # Reshape back
-            q_rotated = q_rotated.view(batch_size, seq_len, n_heads, d_k).transpose(
-                1, 2
-            )
-            k_rotated = k_rotated.view(batch_size, seq_len, n_heads, d_k).transpose(
-                1, 2
-            )
+                # Apply RoPE to this head
+                q_head_rotated = self._apply_rope_to_head(q_head)
+                k_head_rotated = self._apply_rope_to_head(k_head)
+
+                q_list.append(q_head_rotated)
+                k_list.append(k_head_rotated)
+
+            # Stack heads back: [batch, n_heads, seq_len, d_k]
+            q_rotated = torch.stack(q_list, dim=1)
+            k_rotated = torch.stack(k_list, dim=1)
 
             return q_rotated, k_rotated
         else:  # [batch, seq_len, d_model]
             return self.forward(q), self.forward(k)
+
+    def _apply_rope_to_head(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Apply RoPE to a single attention head.
+
+        Args:
+            x: Input tensor [batch_size, seq_len, d_k]
+
+        Returns:
+            Tensor with RoPE applied [batch_size, seq_len, d_k]
+        """
+        batch_size, seq_len, d_k = x.shape
+
+        # Create position indices
+        position = torch.arange(seq_len, device=x.device, dtype=torch.float)
+
+        # Compute the rotation angles - use only the first d_k//2 frequencies
+        inv_freq = self.get_buffer("inv_freq")
+        if inv_freq is None:
+            # Fallback computation if buffer is not available
+            inv_freq = 1.0 / (
+                self.base ** (torch.arange(0, d_k, 2, device=x.device).float() / d_k)
+            )
+
+        # Use only the frequencies needed for this head dimension
+        # Make sure we don't exceed the available frequencies
+        needed_freqs = min(d_k // 2, inv_freq.size(0))
+        head_inv_freq = inv_freq[:needed_freqs]
+        freqs = torch.outer(position, head_inv_freq)  # [seq_len, d_k//2]
+
+        # Create cos and sin matrices
+        cos_freqs = torch.cos(freqs)  # [seq_len, d_k//2]
+        sin_freqs = torch.sin(freqs)  # [seq_len, d_k//2]
+
+        # Expand to match x dimensions
+        cos_freqs = cos_freqs.unsqueeze(0).expand(
+            batch_size, -1, -1
+        )  # [batch, seq_len, d_k//2]
+        sin_freqs = sin_freqs.unsqueeze(0).expand(
+            batch_size, -1, -1
+        )  # [batch, seq_len, d_k//2]
+
+        # Split x into pairs for rotation
+        x1 = x[..., 0::2]  # [batch, seq_len, d_k//2]
+        x2 = x[..., 1::2]  # [batch, seq_len, d_k//2]
+
+        # Apply rotation
+        rotated_x1 = x1 * cos_freqs - x2 * sin_freqs
+        rotated_x2 = x1 * sin_freqs + x2 * cos_freqs
+
+        # Interleave the rotated components
+        result = torch.zeros_like(x)
+        result[..., 0::2] = rotated_x1
+        result[..., 1::2] = rotated_x2
+
+        return result
 
 
 class MultiHeadAttention(nn.Module):
