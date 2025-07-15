@@ -6,7 +6,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=9
 #SBATCH --time=00:30:00
-#SBATCH --output=logs/test_transformer_%A.out
+#SBATCH --output=logs/validate_cache_%A.out
 
 module purge
 module load 2024
