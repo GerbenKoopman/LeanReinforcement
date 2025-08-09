@@ -146,29 +146,6 @@ class TacticalFamilies:
     ]
 
     @staticmethod
-    def get_family_description(family: str) -> str:
-        """Get a description of what tactics belong to each family."""
-        descriptions = {
-            "apply_family": "Application tactics: apply, exact, refine, use",
-            "rewrite_family": "Basic rewrite tactics: rw, simp, conv, rwa",
-            "intro_family": "Introduction tactics: intro, intros, rintro",
-            "case_family": "Case analysis tactics: cases, rcases, induction, split",
-            "calc_family": "Calculation tactics: calc, trans, symm",
-            "finish_family": "Finishing tactics: sorry, done, rfl, trivial",
-            "automation_family": "Automation tactics: aesop, tauto, ring, norm_num, linarith, nlinarith, omega, abel, polyrith, decide, norm_cast",
-            "proof_family": "Proof construction tactics: have, show, suffices, assert",
-            "structural_family": "Structural tactics: constructor, left, right, ext, exfalso, by_contra, contradiction, by_cases",
-            "assumption_family": "Assumption-based tactics: assumption, simp_all, hint",
-            "advanced_rewrite_family": "Advanced rewrite tactics: simp_rw, rw_mod_cast, simp_intro, field_simp, conv_lhs, conv_rhs",
-            "induction_family": "Advanced induction tactics: induction', cases', rcases, obtain, choose",
-            "quantifier_family": "Quantifier tactics: exists, use!, existsi, forall_intro",
-            "conversion_family": "Conversion tactics: change, convert, congr, show_term",
-            "goal_management_family": "Goal management tactics: swap, rotate_left, rotate_right, clear, rename, set",
-            "specialized_family": "Specialized tactics: interval_cases, fin_cases, mod_cases, lift, push_neg",
-        }
-        return descriptions.get(family, f"Unknown family: {family}")
-
-    @staticmethod
     def get_family_metadata() -> Dict[str, Dict[str, Any]]:
         """
         Get metadata for each tactic family matching parameter_generator.py structure.
