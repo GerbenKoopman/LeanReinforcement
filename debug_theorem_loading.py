@@ -2,7 +2,6 @@
 """Debug script to test theorem loading."""
 
 import os
-import sys
 import traceback
 
 # Set environment variables first
