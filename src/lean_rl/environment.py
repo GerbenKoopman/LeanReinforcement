@@ -6,8 +6,8 @@ This module provides a standardized RL environment interface for theorem proving
 using LeanDojo. It wraps the LeanDojo API to provide a gym-like interface for RL agents.
 """
 
-from typing import Dict, List, Tuple, Optional, Any
 from dataclasses import dataclass
+from typing import Dict, List, Tuple, Optional, Any
 
 from lean_dojo import (
     LeanGitRepo,
