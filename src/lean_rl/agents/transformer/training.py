@@ -23,9 +23,9 @@ from dataclasses import dataclass, asdict
 from collections import deque
 import logging
 
+from .repository import RepoManager
 from lean_dojo import LeanGitRepo, TacticState
 from lean_dojo.data_extraction.traced_data import TracedRepo
-from lean_dojo.data_extraction.trace import is_available_in_cache, get_traced_repo_path
 
 from .agent import HierarchicalTransformerAgent, HierarchicalAction
 from .hierarchy import (
@@ -392,23 +392,8 @@ class HierarchicalTransformerTrainer:
         """Setup Lean repository and trace data."""
         self.logger.info("Setting up repository...")
 
-        self.repo = LeanGitRepo(self.config.repo_url, self.config.repo_commit)
-
-        try:
-            # Always use cache-only mode in HPC environment to prevent redundant tracing
-            if not is_available_in_cache(self.repo):
-                raise RuntimeError(
-                    f"Pre-traced repository not found in cache! "
-                    f"Please ensure the repository is properly traced and cached."
-                )
-            
-            self.logger.info("Loading repository from cache...")
-            traced_repo_path = get_traced_repo_path(self.repo)
-            self.traced_repo = TracedRepo.load_from_disk(traced_repo_path)
-            self.logger.info("Repository loaded from cache successfully")
-        except Exception as e:
-            self.logger.error(f"Failed to setup repository: {e}")
-            raise
+        self.repo_manager = RepoManager(self.config.repo_url, self.config.repo_commit)
+        self.traced_repo = self.repo_manager.get_traced_repo()
 
         # Setup curriculum if enabled
         if self.config.curriculum and self.config.curriculum.use_curriculum:
@@ -503,7 +488,7 @@ class HierarchicalTransformerTrainer:
 
         # Environment
         self.env = LeanEnvironment(
-            repo=self.repo,
+            repo=self.repo_manager.repo,
             timeout=self.config.training.timeout,
             max_steps=self.config.training.max_steps_per_episode,
             reward_scheme=self.config.training.reward_scheme,
