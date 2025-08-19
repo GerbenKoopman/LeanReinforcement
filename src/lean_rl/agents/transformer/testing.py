@@ -19,11 +19,8 @@ import logging
 from unittest.mock import Mock
 import traceback
 
+from .repository import RepoManager
 from lean_dojo import LeanGitRepo, TacticState, Theorem
-from lean_dojo.data_extraction.trace import (
-    is_available_in_cache,
-    get_traced_repo_path,
-)
 from lean_dojo.data_extraction.traced_data import TracedRepo
 
 from .agent import (
@@ -302,47 +299,14 @@ class HierarchicalTransformerTester:
     def _setup_test_repository(self):
         """Setup test repository and environment using cached pre-traced repository."""
 
-        self.repo = LeanGitRepo(
+        self.repo_manager = RepoManager(
             "https://github.com/leanprover-community/mathlib4",
             "29dcec074de168ac2bf835a77ef68bbe069194c5",
         )
+        self.traced_repo = self.repo_manager.get_traced_repo()
+        self.repo = self.repo_manager.repo
 
         try:
-            self.logger.info("Setting up traced repository...")
-
-            # Check cache directory from environment
-            cache_dir = os.getenv("CACHE_DIR")
-            if cache_dir:
-                self.logger.info(f"Using cache directory: {cache_dir}")
-
-            # Always use cache-only mode in HPC environment to prevent redundant tracing
-            if not is_available_in_cache(self.repo):
-                raise RuntimeError(
-                    f"Pre-traced repository not found in cache! "
-                    f"Please ensure the repository is properly traced and cached. "
-                    f"Cache directory: {cache_dir}"
-                )
-
-            self.logger.info("Found existing trace in cache - loading it directly!")
-
-            # Load from cache without fallback to tracing
-            try:
-                cached_path = get_traced_repo_path(self.repo)
-
-                self.traced_repo = TracedRepo.load_from_disk(cached_path)
-
-                self.logger.info(f"Successfully loaded from cache: {cached_path}")
-
-            except Exception as e:
-                self.logger.error(f"Failed to load from cache: {e}")
-                self.logger.error(
-                    "This indicates the cache is corrupted or incomplete."
-                )
-                raise RuntimeError(
-                    f"Cannot load pre-traced repository from cache: {e}. "
-                    f"Please re-run the trace_repo.py script to rebuild the cache."
-                )
-
             # Create environment using the original repo object to ensure cache hits
             self.env = LeanEnvironment(
                 self.repo,
