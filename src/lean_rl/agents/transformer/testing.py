@@ -21,7 +21,12 @@ import traceback
 
 from .repository import RepoManager
 from lean_dojo import LeanGitRepo, TacticState, Theorem
-from lean_dojo.data_extraction.traced_data import TracedRepo
+from lean_dojo.data_extraction.traced_data import (
+    TracedRepo,
+    TracedTheorem,
+    TracedTheorem,
+    TracedTheorem,
+)
 
 from .agent import (
     HierarchicalTransformerAgent,
@@ -1287,17 +1292,30 @@ class HierarchicalTransformerTester:
                 self.logger.error("Repository not initialized, cannot fix theorems.")
                 return []
 
+            # Create new TracedTheorem objects with the correct repo reference.
+            fixed_theorems = []
             for traced_theorem in all_theorems:
                 original_theorem = traced_theorem.theorem
                 if original_theorem.repo != self.repo:
-                    traced_theorem.theorem = Theorem(
+                    # Create a new Theorem object with the correct repo
+                    new_theorem = Theorem(
                         repo=self.repo,
                         file_path=original_theorem.file_path,
                         full_name=original_theorem.full_name,
                     )
+                    new_traced_theorem = TracedTheorem(
+                        root_dir=traced_theorem.root_dir,
+                        theorem=new_theorem,
+                        ast=traced_theorem.ast,
+                        comments=traced_theorem.comments,
+                        traced_file=traced_theorem.traced_file,
+                    )
+                    fixed_theorems.append(new_traced_theorem)
+                else:
+                    fixed_theorems.append(traced_theorem)
 
             # Return up to the requested number of theorems
-            result_theorems = all_theorems[:num_theorems]
+            result_theorems = fixed_theorems[:num_theorems]
 
             # Cache the result for future use
             self.test_cache.cache_theorems(num_theorems, result_theorems)
