@@ -51,8 +51,20 @@ echo "LEAN_CACHE_ONLY: ${LEAN_CACHE_ONLY}"
 echo "DISABLE_BUILD_DEPS: ${DISABLE_BUILD_DEPS}"
 
 # Validate cache before testing
+echo "Validating environment and packages..."
+python3 -c "
+import torch
+import sys
+print(f'Python version: {sys.version}')
+print(f'PyTorch version: {torch.__version__}')
+print(f'CUDA available: {torch.cuda.is_available()}')
+if torch.cuda.is_available():
+    print(f'CUDA version: {torch.version.cuda}')
+    print(f'GPU name: {torch.cuda.get_device_name(0)}')
+"
+
 echo "Validating cache before testing..."
-python -c "
+python3 -c "
 from lean_dojo import LeanGitRepo
 from lean_dojo.data_extraction.trace import is_available_in_cache
 repo = LeanGitRepo('https://github.com/leanprover-community/mathlib4', '29dcec074de168ac2bf835a77ef68bbe069194c5')
@@ -70,7 +82,7 @@ fi
 
 # Run comprehensive tests with improved error handling
 echo "Running comprehensive transformer tests..."
-srun python -m lean_rl.agents.transformer.runner test --test-type comprehensive
+srun python3 -m lean_rl.agents.transformer.runner test --test-type comprehensive
 
 # Run specific tests (commented out to reduce redundant operations)
 
