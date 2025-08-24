@@ -212,7 +212,7 @@ class HierarchicalTransformerAgent(BaseAgent):
 
         Args:
             state: Current TacticState from LeanDojo
-            **kwargs: Additional arguments
+            **kwargs: Additional arguments (unused in this override, but allows compatibility)
 
         Returns:
             Selected tactic string or None if no action found
@@ -221,11 +221,14 @@ class HierarchicalTransformerAgent(BaseAgent):
         self.search_tree = HierarchicalSearchTree(state, self)
 
         # Perform hierarchical search
-        best_action = self.search_tree.search(
-            max_time=self.max_search_time, beam_width=self.beam_width
+        # Note: The return_log feature is internal to the testing loop now.
+        result = self.search_tree.search(
+            max_time=self.max_search_time, beam_width=self.beam_width, return_log=False
         )
 
-        return best_action
+        if isinstance(result, tuple):
+            return result[0]
+        return result
 
     def update(self, step_result: StepResult) -> None:
         """
@@ -668,16 +671,20 @@ class HierarchicalSearchTree:
         self.nodes_expanded = 0
         self.max_depth_reached = 0
 
-    def search(self, max_time: float = 60.0, beam_width: int = 16) -> Optional[str]:
+    def search(
+        self, max_time: float = 60.0, beam_width: int = 16, return_log: bool = False
+    ) -> Union[Optional[str], tuple[Optional[str], list]]:
         """
         Perform hierarchical best-first search.
 
         Args:
             max_time: Maximum search time in seconds
             beam_width: Maximum number of nodes to keep in beam
+            return_log: Whether to return logging information
 
         Returns:
-            Best action string or None if no action found
+            Best action string or None if no action found.
+            If return_log is True, returns (action, log_data).
         """
         start_time = time.time()
         best_action = None
@@ -696,6 +703,8 @@ class HierarchicalSearchTree:
                 action = self._construct_action_from_node(current_node)
                 if action:
                     best_action = action
+                    # Put the node back, it might be useful for logging
+                    self.open_nodes.put(current_node)
                     break
 
             # Expand node
@@ -705,7 +714,36 @@ class HierarchicalSearchTree:
             if self.open_nodes.qsize() > beam_width:
                 self._prune_beam(beam_width)
 
-        return best_action
+        if return_log:
+            log_data = self._get_search_log()
+            return best_action, log_data
+        else:
+            return best_action
+
+    def _get_search_log(self) -> list:
+        """Get top nodes from the search for logging."""
+        log_data = []
+        # Get top 5 nodes from the priority queue
+        nodes = []
+        temp_queue = PriorityQueue()
+
+        while not self.open_nodes.empty():
+            nodes.append(self.open_nodes.get())
+
+        # Re-populate the queue
+        for node in nodes:
+            temp_queue.put(node)
+        self.open_nodes = temp_queue
+
+        # Get top 5 nodes by value
+        for node in sorted(nodes, key=lambda x: x.value, reverse=True)[:5]:
+            action_str = (
+                self._construct_action_from_node(node)
+                or f"Incomplete ({node.level.name}, value={node.value:.3f})"
+            )
+            log_data.append((action_str, node.value))
+
+        return log_data
 
     def _expand_node(self, node: SearchNode) -> None:
         """Expand a search node by generating child nodes."""

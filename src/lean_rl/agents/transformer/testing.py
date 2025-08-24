@@ -518,6 +518,8 @@ class HierarchicalTransformerTester:
             return True
         except Exception as e:
             self.logger.error(f"Agent initialization test failed: {e}")
+            # Log the full traceback for detailed debugging
+            self.logger.debug(f"Full traceback: {traceback.format_exc()}")
             return False
 
     def _test_state_encoding(self) -> bool:
@@ -985,8 +987,22 @@ class HierarchicalTransformerTester:
                 while proof_length < 50:  # Max steps
                     if state is not None:
                         action = self.agent.select_action(state)
+
                         if action is None:
+                            self.logger.info("Agent returned no action.")
                             break
+
+                        # Get logging info after the action has been selected
+                        top_5_tactics = []
+                        if self.agent.search_tree:
+                            top_5_tactics = self.agent.search_tree._get_search_log()
+
+                        self.logger.info(f"Step {proof_length + 1}:")
+                        self.logger.info(f"  - Action: {action}")
+                        if top_5_tactics:
+                            self.logger.info("  - Top 5 considered tactics:")
+                            for tactic, prob in top_5_tactics:
+                                self.logger.info(f"    - {tactic}: {prob:.4f}")
 
                         result = self.env.step(action)
                         proof_length += 1
@@ -995,6 +1011,8 @@ class HierarchicalTransformerTester:
                             if result.action_result == "proof_finished":
                                 success = True
                                 proved_count += 1
+                            else:
+                                self.logger.info(f"Proof failed. Reason: {result.action_result}")
                             break
 
                         state = result.state
