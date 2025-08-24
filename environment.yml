@@ -22,7 +22,6 @@ dependencies:
   - deprecated
   # Dependencies for RL and testing
   - psutil
-  - nvidia-ml-py3
   - pip:
     - chardet
     - lean-dojo
