@@ -20,9 +20,8 @@ from unittest.mock import Mock
 import traceback
 
 from .repository import RepoManager
-from lean_dojo import LeanGitRepo, TacticState, Theorem
+from lean_dojo import TacticState, Theorem
 from lean_dojo.data_extraction.traced_data import (
-    TracedRepo,
     TracedTheorem,
     TracedTheorem,
     TracedTheorem,

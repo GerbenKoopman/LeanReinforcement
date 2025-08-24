@@ -24,7 +24,7 @@ from collections import deque
 import logging
 
 from .repository import RepoManager
-from lean_dojo import LeanGitRepo, TacticState
+from lean_dojo import TacticState
 from lean_dojo.data_extraction.traced_data import TracedRepo
 
 from .agent import HierarchicalTransformerAgent, HierarchicalAction
