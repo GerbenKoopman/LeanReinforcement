@@ -6,9 +6,7 @@ avoiding redundant tracing and building operations. The design is inspired by
 repository handling in LeanDojo, ReProver, and LeanAgent.
 """
 
-import os
 import logging
-from pathlib import Path
 from typing import Optional
 
 from lean_dojo import LeanGitRepo, TracedRepo, get_traced_repo_path
