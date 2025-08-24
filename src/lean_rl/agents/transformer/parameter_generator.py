@@ -311,6 +311,10 @@ class TacticParameterGenerator(nn.Module):
         Returns:
             Dictionary with generated parameters for the tactic family
         """
+        if proof_state.dim() == 2:
+            # Add a sequence length dimension for single states
+            proof_state = proof_state.unsqueeze(1)
+            
         batch_size, seq_len, _ = proof_state.size()
 
         # Get tactic family embedding
