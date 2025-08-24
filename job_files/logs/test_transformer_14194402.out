@@ -1,0 +1,68 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Testing environment:
+SCRATCH_SHARED: /gpfs/scratch1/shared/lean-reinforcement
+CACHE_DIR: /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache
+LEAN_CACHE_ONLY: 1
+DISABLE_BUILD_DEPS: 1
+Validating environment and packages...
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/torch/__init__.py", line 367, in <module>
+    from torch._C import *  # noqa: F403
+ImportError: /home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/torch/lib/libtorch_cpu.so: undefined symbol: iJIT_NotifyEvent
+Validating cache before testing...
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/__init__.py", line 3, in <module>
+    from .data_extraction.trace import (
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/trace.py", line 20, in <module>
+    from .lean import LeanGitRepo
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/lean.py", line 19, in <module>
+    from github import Github, Auth
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/github/__init__.py", line 54, in <module>
+    from . import Auth
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/github/Auth.py", line 41, in <module>
+    from github.InstallationAuthorization import InstallationAuthorization
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/github/InstallationAuthorization.py", line 47, in <module>
+    import github.NamedUser
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/github/NamedUser.py", line 62, in <module>
+    import github.Event
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/github/Event.py", line 48, in <module>
+    import github.Organization
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/github/Organization.py", line 93, in <module>
+    import github.CodeSecurityConfigRepository
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/github/CodeSecurityConfigRepository.py", line 30, in <module>
+    import github.Repository
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/github/Repository.py", line 170, in <module>
+    from deprecated import deprecated
+ModuleNotFoundError: No module named 'deprecated'
+Cache validation failed! Exiting.
+
+JOB STATISTICS
+==============
+Job ID: 14194402
+Cluster: snellius
+User/Group: gkoopman/gkoopman
+State: RUNNING
+Nodes: 1
+Cores per node: 18
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 00:03:00 core-walltime
+Job Wall-clock time: 00:00:10
+Memory Utilized: 0.00 MB
+Memory Efficiency: 0.00% of 120.00 GB (120.00 GB/node)
+WARNING: Efficiency statistics can only be obtained after the job has ended as seff tool is based on the accounting database data.

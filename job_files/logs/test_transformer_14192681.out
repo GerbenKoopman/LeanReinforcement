@@ -1,0 +1,59 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Testing environment:
+SCRATCH_SHARED: /gpfs/scratch1/shared/lean-reinforcement
+CACHE_DIR: /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache
+LEAN_CACHE_ONLY: 1
+DISABLE_BUILD_DEPS: 1
+Validating environment and packages...
+Python version: 3.10.18 (main, Jun  5 2025, 13:14:17) [GCC 11.2.0]
+PyTorch version: 2.6.0
+CUDA available: False
+Validating cache before testing...
+✓ Cache validation successful - repository available
+Running comprehensive transformer tests...
+2025-08-21 13:45:14,242 - __main__ - INFO - SCRATCH_SHARED: /gpfs/scratch1/shared/lean-reinforcement
+2025-08-21 13:45:14,242 - __main__ - INFO - CACHE_DIR: /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache
+2025-08-21 13:45:14,242 - __main__ - INFO - Running in SLURM job: 14192681
+2025-08-21 13:45:14,242 - __main__ - INFO - Starting testing...
+Agent validation completed successfully
+2025-08-21 13:45:18,655 - lean_rl.agents.transformer.testing - INFO - Initialized fresh agent for testing
+2025-08-21 13:45:18,661 - lean_rl.agents.transformer.repository - INFO - Initializing LeanGitRepo for https://github.com/leanprover-community/mathlib4 at commit 29dcec074de168ac2bf835a77ef68bbe069194c5
+2025-08-21 13:45:18,726 - lean_rl.agents.transformer.repository - INFO - Attempting to load traced repo from cache: /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/leanprover-community-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4 with build_deps=False
+2025-08-21 13:45:57,183	INFO worker.py:1879 -- Started a local Ray instance. View the dashboard at [1m[32m127.0.0.1:8265 [39m[22m
+  0%|          | 0/4448 [00:00<?, ?it/s]  0%|          | 1/4448 [00:00<49:41,  1.49it/s]  0%|          | 2/4448 [00:00<27:30,  2.69it/s]  0%|          | 7/4448 [00:01<08:00,  9.25it/s]  0%|          | 12/4448 [00:01<05:58, 12.38it/s]  0%|          | 17/4448 [00:01<05:44, 12.88it/s]  0%|          | 22/4448 [00:02<06:11, 11.92it/s]  1%|          | 28/4448 [00:02<06:23, 11.53it/s]  1%|          | 31/4448 [00:02<05:31, 13.32it/s]  1%|          | 33/4448 [00:03<08:13,  8.95it/s]  1%|          | 39/4448 [00:03<05:17, 13.88it/s]  1%|          | 42/4448 [00:04<07:56,  9.24it/s]  1%|          | 49/4448 [00:04<05:12, 14.09it/s]  1%|          | 52/4448 [00:05<09:03,  8.09it/s]  1%|▏         | 58/4448 [00:05<06:21, 11.51it/s]  1%|▏         | 61/4448 [00:06<10:30,  6.96it/s]  1%|▏         | 66/4448 [00:06<07:42,  9.48it/s]  2%|▏         | 69/4448 [00:06<06:37, 11.03it/s]  2%|▏         | 72/4448 [00:08<12:47,  5.70it/s]  2%|▏         | 76/4448 [00:08<09:19,  7.81it/s]  2%|▏         | 79/4448 [00:08<07:53,  9.23it/s]  2%|▏         | 84/4448 [00:08<05:29, 13.24it/s]  2%|▏         | 88/4448 [00:10<12:15,  5.93it/s]  2%|▏         | 92/4448 [00:10<09:18,  7.79it/s]  2%|▏         | 97/4448 [00:10<06:42, 10.82it/s]  2%|▏         | 101/4448 [00:10<05:20, 13.55it/s]  2%|▏         | 105/4448 [00:12<14:01,  5.16it/s]  2%|▏         | 108/4448 [00:12<12:46,  5.66it/s]  3%|▎         | 112/4448 [00:15<22:27,  3.22it/s]  3%|▎         | 115/4448 [00:15<18:09,  3.98it/s]  3%|▎         | 119/4448 [00:15<13:11,  5.47it/s]  3%|▎         | 124/4448 [00:15<08:54,  8.08it/s]  3%|▎         | 127/4448 [00:15<08:08,  8.84it/s]  3%|▎         | 130/4448 [00:18<23:17,  3.09it/s]  3%|▎         | 134/4448 [00:18<16:35,  4.33it/s]  3%|▎         | 143/4448 [00:19<08:51,  8.09it/s]  3%|▎         | 147/4448 [00:19<07:13,  9.93it/s]  3%|▎         | 152/4448 [00:19<05:42, 12.53it/s]  4%|▎         | 158/4448 [00:19<04:10, 17.11it/s]  4%|▎         | 162/4448 [00:19<03:46, 18.[2025-08-21T13:46:21.061] error: *** JOB 14192681 ON gcn41 CANCELLED AT 2025-08-21T13:46:21 DUE to SIGNAL Terminated ***
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+94it/s][2025-08-21T13:46:21.061] error: *** STEP 14192681.0 ON gcn41 CANCELLED AT 2025-08-21T13:46:21 DUE to SIGNAL Terminated ***
+*** SIGTERM received at time=1755776781 on cpu 7 ***
+PC: @           0x50f401  (unknown)  subtype_traverse
+    @     0x14ec6be316f0  (unknown)  (unknown)
+[2025-08-21 13:46:21,071 E 1904413 1904413] logging.cc:496: *** SIGTERM received at time=1755776781 on cpu 7 ***
+[2025-08-21 13:46:21,071 E 1904413 1904413] logging.cc:496: PC: @           0x50f401  (unknown)  subtype_traverse
+[2025-08-21 13:46:21,071 E 1904413 1904413] logging.cc:496:     @     0x14ec6be316f0  (unknown)  (unknown)
+
+JOB STATISTICS
+==============
+Job ID: 14192681
+Cluster: snellius
+User/Group: gkoopman/gkoopman
+State: CANCELLED (exit code 0)
+Nodes: 1
+Cores per node: 18
+CPU Utilized: 00:00:05
+CPU Efficiency: 0.31% of 00:26:42 core-walltime
+Job Wall-clock time: 00:01:29
+Memory Utilized: 9.46 GB
+Memory Efficiency: 7.89% of 120.00 GB (120.00 GB/node)
