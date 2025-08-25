@@ -115,20 +115,26 @@ class HierarchicalTransformerAgent(BaseAgent):
             n_heads=n_heads,
             n_layers=n_layers,
             dropout=dropout,
-        ).to(self.device)
+        )
 
         self.tactic_pointer = TacticPointerNetwork(
             embedding_dim=d_model, hidden_dim=d_model, n_heads=n_heads
-        ).to(self.device)
+        )
 
         self.parameter_generator = TacticParameterGenerator(
             vocab_size=vocab_size, d_model=d_model, n_heads=n_heads
-        ).to(self.device)
+        )
 
         # Additional parameter pointer network for more sophisticated parameter selection
         self.parameter_pointer = ParameterPointerNetwork(
             vocab_size=vocab_size, embedding_dim=d_model, hidden_dim=d_model
-        ).to(self.device)
+        )
+
+        # Move all sub-models to the correct device
+        self.hierarchical_policy.to(self.device)
+        self.tactic_pointer.to(self.device)
+        self.parameter_generator.to(self.device)
+        self.parameter_pointer.to(self.device)
 
         # Training components
         self.optimizer = torch.optim.AdamW(
