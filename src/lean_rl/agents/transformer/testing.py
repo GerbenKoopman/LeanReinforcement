@@ -508,7 +508,10 @@ class HierarchicalTransformerTester:
             assert hasattr(agent, "tokenizer")
 
             # Check device placement
-            assert next(agent.hierarchical_policy.parameters()).device.type == self.device.type
+            assert (
+                next(agent.hierarchical_policy.parameters()).device.type
+                == self.device.type
+            )
 
             return True
         except Exception:
