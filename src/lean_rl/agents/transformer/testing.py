@@ -1172,18 +1172,29 @@ class HierarchicalTransformerTester:
         try:
             self.logger.info("Getting test theorems from repository...")
 
-            # Try known good files that typically contain theorems
-            # These are files that work in demo_agent.py and test_mcts.py
-            known_good_files = [
-                "Mathlib/Algebra/BigOperators/Pi.lean",  # Used in working examples
-                "Mathlib/Data/Nat/Basic.lean",
-                "Mathlib/Logic/Basic.lean",
-                "Mathlib/Data/List/Basic.lean",
-                "Mathlib/Algebra/Group/Defs.lean",
-                "Mathlib/Data/Nat/Defs.lean",
+            # Dynamically get available traced files instead of a hardcoded list
+            available_files = []
+            if self.traced_repo and hasattr(self.traced_repo, "traced_files"):
+                available_files = [str(tf.path) for tf in self.traced_repo.traced_files]
+
+            # Filter for relevant mathlib files
+            mathlib_files = [
+                f
+                for f in available_files
+                if f.startswith("Mathlib/") and f.endswith(".lean")
             ]
 
-            for file_path in known_good_files:
+            if not mathlib_files:
+                self.logger.warning(
+                    "No traced files found in Mathlib/. Trying a few known good files as fallback."
+                )
+                # Fallback to a minimal list if dynamic discovery fails
+                mathlib_files = [
+                    "Mathlib/Algebra/Group/Defs.lean",
+                    "Mathlib/Logic/Basic.lean",
+                ]
+
+            for file_path in mathlib_files:
                 try:
                     self.logger.info(f"Attempting to load theorems from: {file_path}")
 
