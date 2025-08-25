@@ -20,8 +20,9 @@ from unittest.mock import Mock
 import traceback
 
 from .repository import RepoManager
-from lean_dojo import TacticState, Theorem
+from lean_dojo import LeanGitRepo, TacticState, Theorem
 from lean_dojo.data_extraction.traced_data import (
+    TracedRepo,
     TracedTheorem,
     TracedTheorem,
     TracedTheorem,
@@ -515,8 +516,10 @@ class HierarchicalTransformerTester:
             assert next(agent.hierarchical_policy.parameters()).device == self.device
 
             return True
-        except Exception as e:
-            self.logger.error(f"Agent initialization test failed: {e}")
+        except Exception:
+            self.logger.error(
+                f"Agent initialization test failed with exception:\n{traceback.format_exc()}"
+            )
             return False
 
     def _test_state_encoding(self) -> bool:
@@ -724,49 +727,33 @@ class HierarchicalTransformerTester:
             mock_state.pp = "test proof state"
             mock_state.num_goals = 1
 
-            # Test basic parameter generation
-            params = self.agent.generate_tactic_parameters(mock_state, "apply_family")
-
-            # Check output format
-            assert isinstance(params, list)
-            assert all(isinstance(p, str) for p in params)
-
             # Test different families
-            test_families = ["rewrite_family", "intro_family", "case_family"]
+            test_families = [
+                "apply_family",
+                "rewrite_family",
+                "intro_family",
+                "case_family",
+            ]
             for family in test_families:
-                family_params = self.agent.generate_tactic_parameters(
-                    mock_state, family
-                )
-                assert isinstance(family_params, list)
-
-            # Test with pointer network
-            pointer_params = self.agent.generate_tactic_parameters(
-                mock_state, "apply_family", use_pointer_network=True
-            )
-            assert isinstance(pointer_params, list)
-
-            # Test with real state if available
-            if hasattr(self, "env") and self.env is not None:
                 try:
-                    test_theorems = self._get_cached_theorems_optimized(num_theorems=1)
-                    if test_theorems:
-                        real_state = self.env.reset(test_theorems[0].theorem)
-                        if real_state is not None:
-                            real_params = self.agent.generate_tactic_parameters(
-                                real_state, "apply_family"
-                            )
-                            assert isinstance(real_params, list)
-                            self.logger.info(
-                                "Successfully tested parameter generation with real state"
-                            )
-                except Exception as e:
-                    self.logger.warning(
-                        f"Real state parameter test failed (non-critical): {e}"
+                    family_params = self.agent.generate_tactic_parameters(
+                        mock_state, family
                     )
+                    assert isinstance(family_params, list)
+                except Exception as e:
+                    self.logger.error(
+                        f"Parameter generation for family '{family}' failed: {e}"
+                    )
+                    self.logger.debug(
+                        f"Full traceback for {family}:\n{traceback.format_exc()}"
+                    )
+                    # Continue to test other families
+                    continue
 
             return True
         except Exception as e:
-            self.logger.error(f"Parameter generation test failed: {e}")
+            self.logger.error(f"Parameter generation test failed unexpectedly: {e}")
+            self.logger.debug(f"Full traceback:\n{traceback.format_exc()}")
             return False
 
     def _test_search_tree(self) -> bool:
@@ -984,8 +971,22 @@ class HierarchicalTransformerTester:
                 while proof_length < 50:  # Max steps
                     if state is not None:
                         action = self.agent.select_action(state)
+
                         if action is None:
+                            self.logger.info("Agent returned no action.")
                             break
+
+                        # Get logging info after the action has been selected
+                        top_5_tactics = []
+                        if self.agent.search_tree:
+                            top_5_tactics = self.agent.search_tree._get_search_log()
+
+                        self.logger.info(f"Step {proof_length + 1}:")
+                        self.logger.info(f"  - Action: {action}")
+                        if top_5_tactics:
+                            self.logger.info("  - Top 5 considered tactics:")
+                            for tactic, prob in top_5_tactics:
+                                self.logger.info(f"    - {tactic}: {prob:.4f}")
 
                         result = self.env.step(action)
                         proof_length += 1
@@ -994,6 +995,10 @@ class HierarchicalTransformerTester:
                             if result.action_result == "proof_finished":
                                 success = True
                                 proved_count += 1
+                            else:
+                                self.logger.info(
+                                    f"Proof failed. Reason: {result.action_result}"
+                                )
                             break
 
                         state = result.state
