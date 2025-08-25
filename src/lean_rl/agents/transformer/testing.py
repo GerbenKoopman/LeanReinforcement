@@ -21,16 +21,7 @@ import traceback
 
 from .repository import RepoManager
 from lean_dojo import TacticState, Theorem
-from lean_dojo.data_extraction.traced_data import (
-    TracedTheorem,
-    TracedTheorem,
-    (
-    TracedTheorem,
-),
-    TracedTheorem,
-    TracedTheorem,
-    TracedTheorem,
-)
+from lean_dojo.data_extraction.traced_data import TracedTheorem
 
 from .agent import (
     HierarchicalTransformerAgent,
