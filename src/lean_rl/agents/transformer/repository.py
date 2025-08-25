@@ -66,6 +66,9 @@ class RepoManager:
 
         Returns:
             TracedRepo: The traced repository object.
+
+        Raises:
+            RuntimeError: If the repository cannot be loaded or traced.
         """
         current_build_deps = build_deps if build_deps is not None else self.build_deps
 
@@ -80,26 +83,34 @@ class RepoManager:
             self.repo, build_deps=current_build_deps
         )
 
+        repo_to_return = None
         try:
             if traced_repo_path.exists():
                 logger.info(
                     f"Attempting to load traced repo from cache: {traced_repo_path} with build_deps={current_build_deps}"
                 )
-                self._traced_repo = TracedRepo.load_from_disk(traced_repo_path)
-                self._traced_repo_build_deps = current_build_deps
+                # from_traced_files is the modern, lazy-loading approach.
+                repo_to_return = TracedRepo.from_traced_files(traced_repo_path)
                 logger.info("Successfully loaded traced repo from cache.")
-                return self._traced_repo
             else:
                 logger.warning(
                     f"Traced repo not found in cache. Tracing repository: {self.repo.url}"
                 )
-                self._traced_repo = trace_repo(self.repo, build_deps=current_build_deps)
-                self._traced_repo_build_deps = current_build_deps
+                repo_to_return = trace_repo(self.repo, build_deps=current_build_deps)
                 logger.info("Successfully traced repository.")
-                return self._traced_repo
         except Exception as e:
             logger.error(f"Failed to load or trace repository: {e}")
-            logger.warning("Falling back to tracing without cache.")
-            self._traced_repo = trace_repo(self.repo, build_deps=current_build_deps)
-            self._traced_repo_build_deps = current_build_deps
-            return self._traced_repo
+            logger.warning("Falling back to tracing without cache as a last resort.")
+            try:
+                repo_to_return = trace_repo(self.repo, build_deps=current_build_deps)
+            except Exception as final_e:
+                raise RuntimeError(
+                    f"Fatal: Could not load or trace repository. Final error: {final_e}"
+                ) from final_e
+
+        if repo_to_return is None:
+            raise RuntimeError("Fatal: Repository tracing returned None unexpectedly.")
+
+        self._traced_repo = repo_to_return
+        self._traced_repo_build_deps = current_build_deps
+        return self._traced_repo
