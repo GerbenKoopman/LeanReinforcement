@@ -471,8 +471,7 @@ class HierarchicalTransformerTrainer:
         )
 
     def _setup_evaluation(self):
-        """Setup evaluation and logging."""
-
+        """Setup evaluation and logging, including a persistent evaluation environment."""
         # Get SCRATCH_SHARED from environment
         scratch_dir = os.getenv("SCRATCH_SHARED", ".")
 
@@ -493,6 +492,18 @@ class HierarchicalTransformerTrainer:
             Path(scratch_dir) / "checkpoints" / f"exp_{self.config.experiment_name}"
         )
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
+
+        # Create a persistent environment for evaluation to avoid re-initialization costs
+        if not self.no_evaluation:
+            self.logger.info("Setting up persistent evaluation environment...")
+            self.eval_env = LeanEnvironment(
+                repo=self.repo_manager.repo,
+                timeout=self.config.training.timeout,
+                max_steps=self.config.training.max_steps_per_episode,
+                reward_scheme=self.config.training.reward_scheme,
+            )
+        else:
+            self.eval_env = None
 
     def _get_agent_parameters(self):
         """Get all parameters from agent submodules."""
@@ -797,35 +808,69 @@ class HierarchicalTransformerTrainer:
             return None
 
     def _evaluate(self) -> float:
-        """Evaluate the agent's performance on a set of validation theorems."""
+        """
+        Evaluate the agent's performance on a set of validation theorems
+        using a persistent, pre-initialized environment for efficiency.
+        """
+        if self.eval_env is None:
+            self.logger.warning(
+                "Evaluation environment not initialized. Skipping evaluation."
+            )
+            return 0.0
+
         self.logger.info("Starting evaluation...")
-        self._set_agent_mode(self.agent, False)
+        self._set_agent_mode(self.agent, train_mode=False)
+        agent_module = self.agent.module if isinstance(self.agent, DDP) else self.agent
 
         if self.curriculum_manager:
+            # Get a fixed set of theorems for evaluation from the current stage
             eval_theorems = self.curriculum_manager.get_current_theorems()[
                 : self.config.training.eval_episodes
             ]
         else:
-            eval_theorems = self._get_all_theorems()[
-                : self.config.training.eval_episodes
-            ]
+            # Fallback to a random sample if curriculum is off
+            eval_theorems = random.sample(
+                self._get_all_theorems(), self.config.training.eval_episodes
+            )
 
         if not eval_theorems:
             self.logger.warning("No theorems available for evaluation.")
+            self._set_agent_mode(self.agent, train_mode=True)
             return 0.0
 
         proved_count = 0
         for theorem in eval_theorems:
-            _, _, success = self._run_episode(theorem)
-            if success:
-                proved_count += 1
+            try:
+                state = self.eval_env.reset(theorem)
+                agent_module.reset()
+                done = False
+                steps = 0
+
+                while not done and steps < self.config.training.max_steps_per_episode:
+                    if state is None:
+                        break
+                    action = agent_module.construct_full_action(state)
+                    if action is None:
+                        break
+                    result = self.eval_env.step(str(action))
+                    state = result.state
+                    done = result.done
+                    if result.action_result == "proof_finished":
+                        proved_count += 1
+                    steps += 1
+
+            except Exception as e:
+                self.logger.error(
+                    f"Error during evaluation with theorem {theorem.full_name}: {e}"
+                )
+                continue
 
         success_rate = (
             proved_count / len(eval_theorems) if len(eval_theorems) > 0 else 0.0
         )
         self.logger.info(f"Evaluation success rate: {success_rate:.3f}")
 
-        self._set_agent_mode(self.agent, True)
+        self._set_agent_mode(self.agent, train_mode=True)
         return success_rate
 
     def _log_progress(
@@ -1032,6 +1077,12 @@ def main():
         help="How often to save a periodic checkpoint (in episodes).",
     )
     parser.add_argument(
+        "--eval-episodes",
+        type=int,
+        default=50,
+        help="Number of theorems to use for each evaluation phase.",
+    )
+    parser.add_argument(
         "--no-evaluation",
         action="store_true",
         help="If set, disables the evaluation phase. Useful for debug runs.",
@@ -1048,6 +1099,7 @@ def main():
             max_episodes=args.max_episodes,
             max_steps_per_episode=args.max_steps_per_episode,
             eval_frequency=args.eval_frequency,
+            eval_episodes=args.eval_episodes,
             save_frequency=args.save_frequency,
             use_experience_replay=True,
         ),
