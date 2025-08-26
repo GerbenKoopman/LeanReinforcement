@@ -83,26 +83,34 @@ class RepoManager:
             self.repo, build_deps=current_build_deps
         )
 
-        repo_to_return = None
-        try:
-            if traced_repo_path.exists():
-                logger.info(
-                    f"Attempting to load traced repo from cache: {traced_repo_path} with build_deps={current_build_deps}"
-                )
-                # from_traced_files is the modern, lazy-loading approach.
+        if traced_repo_path.exists():
+            logger.info(
+                f"Attempting to lazily load traced repo from {traced_repo_path}"
+            )
+            try:
+                # This method is significantly faster as it lazy-loads the data.
                 repo_to_return = TracedRepo.from_traced_files(traced_repo_path)
-                logger.info("Successfully loaded traced repo from cache.")
-            else:
-                logger.warning(
-                    f"Traced repo not found in cache. Tracing repository: {self.repo.url}"
-                )
-                repo_to_return = trace_repo(self.repo, build_deps=current_build_deps)
-                logger.info("Successfully traced repository.")
-        except Exception as e:
-            logger.error(f"Failed to load or trace repository: {e}")
-            logger.warning("Falling back to tracing without cache as a last resort.")
+                logger.info("Successfully loaded traced repo using lazy loading.")
+            except Exception as e:
+                logger.error(f"Failed to load traced repo with from_traced_files: {e}")
+                logger.info("Falling back to older, slower load_from_disk method...")
+                try:
+                    repo_to_return = TracedRepo.load_from_disk(traced_repo_path)
+                    logger.info("Successfully loaded traced repo with fallback method.")
+                except Exception as e_fallback:
+                    logger.error(f"Fallback loading method also failed: {e_fallback}")
+                    # If loading from cache fails, fall through to tracing
+                    repo_to_return = None
+        else:
+            repo_to_return = None
+
+        if repo_to_return is None:
+            logger.warning(
+                f"Traced repo not found in cache or failed to load. Tracing repository: {self.repo.url}"
+            )
             try:
                 repo_to_return = trace_repo(self.repo, build_deps=current_build_deps)
+                logger.info("Successfully traced repository.")
             except Exception as final_e:
                 raise RuntimeError(
                     f"Fatal: Could not load or trace repository. Final error: {final_e}"

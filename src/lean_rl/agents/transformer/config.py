@@ -53,6 +53,7 @@ class TrainingConfig:
     batch_size: int = 32
     max_episodes: int = 10000
     max_steps_per_episode: int = 100
+    gamma: float = 0.99  # Discount factor for rewards
 
     # Optimization
     optimizer: str = "adamw"  # adamw, adam, sgd
@@ -68,6 +69,7 @@ class TrainingConfig:
     replay_buffer_size: int = 100000
     replay_batch_size: int = 64
     replay_start_size: int = 1000
+    train_frequency: int = 4  # Steps between training updates
 
     # Target network updates
     target_update_frequency: int = 1000
@@ -81,6 +83,7 @@ class TrainingConfig:
     # Evaluation
     eval_frequency: int = 500
     eval_episodes: int = 100
+    log_frequency: int = 100  # Episodes between logging
 
     # Checkpointing
     save_frequency: int = 1000
@@ -127,6 +130,7 @@ class DistributedConfig:
     use_distributed: bool = False
     world_size: int = 1
     rank: int = 0
+    local_rank: int = 0
     backend: str = "nccl"
     init_method: str = "env://"
 

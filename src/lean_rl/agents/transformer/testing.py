@@ -564,7 +564,7 @@ class HierarchicalTransformerTester:
                             self.logger.info("Successfully encoded real TacticState")
                         else:
                             self.logger.warning(
-                                "Could not get real TacticState - environment reset failed"
+                                "Could not get real TacticState - environment reset failed or timed out"
                             )
                     else:
                         self.logger.warning(
