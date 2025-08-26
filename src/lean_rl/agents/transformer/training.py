@@ -269,17 +269,17 @@ class CurriculumManager:
         ]
 
     def should_advance_stage(self, recent_success_rate: float) -> bool:
-        """Check if we should advance to next curriculum stage."""
+        """Check if we should advance to the next curriculum stage."""
         return (
             recent_success_rate >= self.config.difficulty_threshold
             and self.current_stage < len(self.curriculum_stages) - 1
         )
 
     def advance_stage(self):
-        """Advance to next curriculum stage."""
+        """Advance to the next curriculum stage."""
         if self.current_stage < len(self.curriculum_stages) - 1:
             self.current_stage += 1
-            logging.info(f"Advanced to curriculum stage {self.current_stage}")
+            self.logger.info(f"Advanced to curriculum stage {self.current_stage}")
 
 
 class HierarchicalTransformerTrainer:
