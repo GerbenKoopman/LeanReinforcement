@@ -591,78 +591,53 @@ class HierarchicalTransformerTrainer:
         recent_successes = deque(maxlen=100)
 
         while episode < self.config.training.max_episodes:
-            # Get theorems for current curriculum stage
-            if self.curriculum:
-                available_theorems = self.curriculum.get_current_theorems()
+            if self.curriculum_manager:
+                theorems = self.curriculum_manager.get_current_theorems()
+                if not theorems:
+                    self.logger.warning(
+                        f"No theorems in current curriculum stage {self.curriculum_manager.current_stage}. Ending training."
+                    )
+                    break
+                theorem = random.choice(theorems)
             else:
-                # Use all available theorems
-                available_theorems = self._get_all_theorems()
+                # Fallback if curriculum is disabled or fails
+                all_theorems = self._get_all_theorems()
+                if not all_theorems:
+                    self.logger.error("No theorems found to train on. Aborting.")
+                    break
+                theorem = random.choice(all_theorems)
 
-            if not available_theorems:
-                self.logger.warning("No theorems available for training")
-                break
+            reward, length, success = self._run_episode(theorem)
 
-            # Sample random theorem
-            theorem = random.choice(available_theorems)
+            # Logging and checkpointing
+            if self.config.distributed.rank == 0:
+                recent_rewards.append(reward)
+                recent_successes.append(success)
 
-            # Run episode
-            episode_reward, episode_length, success = self._run_episode(theorem)
+                if episode % self.config.training.log_frequency == 0:
+                    self._log_progress(episode, recent_rewards, recent_successes)
 
-            # Update metrics
-            self.metrics.episode = episode
-            self.metrics.total_steps += episode_length
-            if self.metrics.episode_rewards is not None:
-                self.metrics.episode_rewards.append(episode_reward)
-            if self.metrics.episode_lengths is not None:
-                self.metrics.episode_lengths.append(episode_length)
+                if episode % self.config.training.eval_frequency == 0:
+                    eval_success_rate = self._evaluate()
+                    if eval_success_rate > best_success_rate:
+                        best_success_rate = eval_success_rate
+                        self._save_checkpoint(episode, "best")
 
-            recent_rewards.append(episode_reward)
-            recent_successes.append(1.0 if success else 0.0)
+                if episode % self.config.training.save_frequency == 0:
+                    self._save_checkpoint(episode, "periodic")
 
-            # Update curriculum if needed
-            if self.curriculum and len(recent_successes) >= 50:
-                recent_success_rate = float(np.mean(recent_successes))
-                if self.curriculum.should_advance_stage(recent_success_rate):
-                    self.curriculum.advance_stage()
-                    recent_successes.clear()  # Reset for new stage
-
-            # Experience replay training
-            if (
-                self.config.training.use_experience_replay
-                and len(self.replay_buffer) >= self.config.training.replay_start_size
-            ):
-                self._train_from_replay()
-
-            # Logging
-            if episode % 100 == 0:  # Log every 100 episodes
-                self._log_progress(episode, recent_rewards, recent_successes)
-
-            # Evaluation
-            if episode % self.config.training.eval_frequency == 0:
-                success_rate = self._evaluate()
-                if success_rate > best_success_rate:
-                    best_success_rate = success_rate
-                    self._save_checkpoint(episode, "best")
-
-                # Update learning rate
-                self.scheduler.step(success_rate)
-
-            # Checkpointing
-            if episode % self.config.training.save_frequency == 0:
-                self._save_checkpoint(episode, "regular")
-
-            # Update target network
-            if episode % self.config.training.target_update_frequency == 0:
-                self._update_target_network()
-
-            # Memory cleanup every 20 episodes to prevent memory leaks
-            if episode % 20 == 0:
-                self._cleanup_memory()
+            # Update curriculum
+            if self.curriculum_manager and self.config.distributed.rank == 0:
+                if len(recent_successes) > 0:
+                    avg_success = sum(recent_successes) / len(recent_successes)
+                    if self.curriculum_manager.should_advance_stage(avg_success):
+                        self.curriculum_manager.advance_stage()
 
             episode += 1
 
         self.logger.info("Training completed!")
-        self._save_checkpoint(episode, "final")
+        if self.config.distributed.rank == 0:
+            self._save_checkpoint(episode, "final")
 
         if self.writer:
             self.writer.close()
