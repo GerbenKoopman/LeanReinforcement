@@ -314,9 +314,15 @@ class CurriculumManager:
 class HierarchicalTransformerTrainer:
     """Main trainer for the hierarchical transformer agent."""
 
-    def __init__(self, config: ExperimentConfig, no_evaluation: bool = False):
+    def __init__(
+        self,
+        config: ExperimentConfig,
+        no_evaluation: bool = False,
+        output_dir: Optional[str] = None,
+    ):
         self.config = config
         self.no_evaluation = no_evaluation
+        self.output_dir = Path(output_dir) if output_dir else None
         self.device = torch.device(
             f"cuda:{config.distributed.local_rank}"
             if torch.cuda.is_available() and config.distributed.use_distributed
@@ -354,10 +360,12 @@ class HierarchicalTransformerTrainer:
 
     def _setup_logging(self):
         """Setup logging configuration."""
-
-        # Get SCRATCH_SHARED from environment
-        scratch_dir = os.getenv("SCRATCH_SHARED", ".")
-        log_dir = Path(scratch_dir) / "training_logs"
+        if self.output_dir:
+            log_dir = self.output_dir / "training_logs"
+        else:
+            # Fallback to environment variable if output_dir is not provided
+            scratch_dir = os.getenv("SCRATCH_SHARED", ".")
+            log_dir = Path(scratch_dir) / "training_logs"
         log_dir.mkdir(parents=True, exist_ok=True)
 
         log_file = (
@@ -472,13 +480,16 @@ class HierarchicalTransformerTrainer:
 
     def _setup_evaluation(self):
         """Setup evaluation and logging, including a persistent evaluation environment."""
-        # Get SCRATCH_SHARED from environment
-        scratch_dir = os.getenv("SCRATCH_SHARED", ".")
+        if self.output_dir:
+            base_dir = self.output_dir
+        else:
+            # Fallback to environment variable if output_dir is not provided
+            base_dir = Path(os.getenv("SCRATCH_SHARED", "."))
 
         # Tensorboard writer
         if self.config.distributed.rank == 0:  # Only main process writes logs
             log_dir = (
-                Path(scratch_dir)
+                base_dir
                 / "tensorboard_logs"
                 / f"exp_{self.config.experiment_name}_{int(time.time())}"
             )
@@ -489,7 +500,7 @@ class HierarchicalTransformerTrainer:
 
         # Checkpoint directory
         self.checkpoint_dir = (
-            Path(scratch_dir) / "checkpoints" / f"exp_{self.config.experiment_name}"
+            base_dir / "checkpoints" / f"exp_{self.config.experiment_name}"
         )
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1077,6 +1088,12 @@ def main():
         help="How often to save a periodic checkpoint (in episodes).",
     )
     parser.add_argument(
+        "--output-dir",
+        type=str,
+        default=None,
+        help="Base directory to save logs, checkpoints, and other artifacts.",
+    )
+    parser.add_argument(
         "--eval-episodes",
         type=int,
         default=50,
@@ -1117,7 +1134,9 @@ def main():
     )
 
     # Initialize trainer
-    trainer = HierarchicalTransformerTrainer(config, no_evaluation=args.no_evaluation)
+    trainer = HierarchicalTransformerTrainer(
+        config, no_evaluation=args.no_evaluation, output_dir=args.output_dir
+    )
 
     # Start training
     trainer.train()
