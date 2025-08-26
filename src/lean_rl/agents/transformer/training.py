@@ -130,59 +130,28 @@ class ExperienceReplayBuffer:
 
     def _prepare_batch(self, experiences: List[Dict]) -> Dict[str, Any]:
         """Convert experiences to batched tensors."""
-        # Separate lists for different data types
-        states = []
-        actions = []
-        rewards = []
-        next_states = []
-        dones = []
-        strategic_actions = []
-        tactic_families = []
-        parameters = []
-        encoded_states = []
-        encoded_next_states = []
+        states = [exp["state"] for exp in experiences]
+        actions = [exp["action"] for exp in experiences]
+        rewards = [exp["reward"] for exp in experiences]
+        next_states = [exp["next_state"] for exp in experiences]
+        dones = [exp["done"] for exp in experiences]
 
-        for exp in experiences:
-            states.append(exp["state"])
-            actions.append(exp["action"])
-            rewards.append(exp["reward"])
-            next_states.append(exp["next_state"])
-            dones.append(exp["done"])
+        # Encode states on-the-fly
+        encoded_states = self._encode_state_batch(states)
+        encoded_next_states = self._encode_state_batch(
+            [s for s in next_states if s is not None]
+        )
 
-            # Extract hierarchical action components
-            action = exp["action"]
-            strategic_actions.append(action.strategic_action)
-            tactic_families.append(action.tactic_family)
-            parameters.append(action.parameters)
-
-            # Use pre-encoded states if available, otherwise None
-            encoded_states.append(exp.get("encoded_state"))
-            encoded_next_states.append(exp.get("encoded_next_state"))
-
-        # Create batch dictionary with proper types
+        # Create batch dictionary
         batch = {
             "states": states,
             "actions": actions,
-            "rewards": rewards,
+            "rewards": torch.tensor(rewards, dtype=torch.float32).to(self.device),
             "next_states": next_states,
-            "dones": dones,
-            "strategic_actions": strategic_actions,
-            "tactic_families": tactic_families,
-            "parameters": parameters,
+            "dones": torch.tensor(dones, dtype=torch.bool).to(self.device),
             "encoded_states": encoded_states,
             "encoded_next_states": encoded_next_states,
-            "rewards_tensor": torch.FloatTensor(rewards).to(self.device),
-            "dones_tensor": torch.BoolTensor(dones).to(self.device),
         }
-
-        # Encode states if not pre-encoded
-        if encoded_states[0] is None:
-            batch["encoded_states"] = self._encode_state_batch(states)
-
-        if encoded_next_states[0] is None and next_states[0] is not None:
-            batch["encoded_next_states"] = self._encode_state_batch(
-                [s for s in next_states if s is not None]
-            )
 
         return batch
 
