@@ -87,7 +87,7 @@ class HierarchicalTransformerAgent(BaseAgent):
 
         # Set device
         if device is None:
-            device = "cuda" if torch.cuda.is_available() else "cpu"
+            device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self.device = torch.device(device)
 
         # Model hyperparameters

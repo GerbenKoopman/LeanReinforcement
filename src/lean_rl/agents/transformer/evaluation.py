@@ -1091,7 +1091,7 @@ def run_evaluation(
         config = EvaluationConfig()
 
     # Load trained agent
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     checkpoint = torch.load(agent_path, map_location=device)
 
     agent_config = checkpoint.get("config", {})
