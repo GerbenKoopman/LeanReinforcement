@@ -109,18 +109,14 @@ class ExperienceReplayBuffer:
         reward: float,
         next_state: Optional[TacticState],
         done: bool,
-        encoded_state: Optional[Dict[str, torch.Tensor]] = None,
-        encoded_next_state: Optional[Dict[str, torch.Tensor]] = None,
     ):
-        """Add experience with optional pre-encoded states."""
+        """Add experience to the buffer."""
         experience = {
             "state": state,
             "action": action,
             "reward": reward,
             "next_state": next_state,
             "done": done,
-            "encoded_state": encoded_state,
-            "encoded_next_state": encoded_next_state,
         }
         self.buffer.append(experience)
 
