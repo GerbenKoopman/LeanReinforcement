@@ -120,10 +120,10 @@ class ExperienceReplayBuffer:
         }
         self.buffer.append(experience)
 
-    def sample(self, batch_size: int) -> Dict[str, Any]:
-        """Sample batch and return properly formatted tensors."""
+    def sample(self, batch_size: int) -> Optional[Dict[str, Any]]:
+        """Sample a batch and return properly formatted tensors."""
         if len(self.buffer) < batch_size:
-            batch_size = len(self.buffer)
+            return None
 
         experiences = random.sample(self.buffer, batch_size)
         return self._prepare_batch(experiences)
