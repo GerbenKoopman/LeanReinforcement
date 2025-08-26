@@ -173,11 +173,13 @@ class ExperienceReplayBuffer:
 class CurriculumManager:
     """Manages curriculum learning for theorem difficulty progression."""
 
-    def __init__(self, config: CurriculumConfig, traced_repo: TracedRepo):
+    def __init__(self, config: CurriculumConfig, traced_repo: TracedRepo, repo: Any):
         self.config = config
         self.traced_repo = traced_repo
+        self.repo = repo  # Store the original repo object
         self.current_stage = 0
         self.stage_success_rates = []
+        self.logger = logging.getLogger(__name__)
 
         # Organize theorems by difficulty
         self._organize_curriculum()
