@@ -184,11 +184,27 @@ class CurriculumManager:
         # Organize theorems by difficulty
         self._organize_curriculum()
 
-    def _organize_curriculum(self):
-        """Organize theorems into curriculum stages based on difficulty heuristics."""
-        all_theorems = []
+    def _get_theorem_path(self, theorem: Theorem) -> Path:
+        """Helper to get the path of a theorem from its file path."""
+        # The file_path in a Theorem object is relative to the repo root
+        return Path(self.repo.root_dir) / theorem.file_path
 
-        # Collect all theorems from traced repository
+    def _get_or_create_theorem_index(self) -> List[Dict[str, str]]:
+        """Get theorem index from cache or create it if it doesn't exist."""
+        cache_dir = os.getenv("CACHE_DIR")
+        if not cache_dir:
+            self.logger.error("CACHE_DIR environment variable not set!")
+            return []
+
+        index_path = Path(cache_dir) / "theorem_index.json"
+
+        if index_path.exists():
+            self.logger.info(f"Loading theorem index from {index_path}")
+            with open(index_path, "r") as f:
+                return json.load(f)
+
+        self.logger.info("Creating theorem index (one-time operation)...")
+        theorem_index = []
         for traced_file in self.traced_repo.traced_files:
             try:
                 theorems = traced_file.get_traced_theorems()
