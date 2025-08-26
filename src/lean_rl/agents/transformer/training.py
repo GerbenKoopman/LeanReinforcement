@@ -190,7 +190,10 @@ class CurriculumManager:
         return Path(self.repo.root_dir) / theorem.file_path
 
     def _get_or_create_theorem_index(self) -> List[Dict[str, str]]:
-        """Get theorem index from cache or create it if it doesn't exist."""
+        """
+        Get theorem index from cache or create a new one, ensuring all theorems
+        in the index have corresponding `.ast.json` files on disk.
+        """
         cache_dir = os.getenv("CACHE_DIR")
         if not cache_dir:
             self.logger.error("CACHE_DIR environment variable not set!")
@@ -203,13 +206,34 @@ class CurriculumManager:
             with open(index_path, "r") as f:
                 return json.load(f)
 
-        self.logger.info("Creating theorem index (one-time operation)...")
+        self.logger.info(
+            "Creating new theorem index. This is a one-time operation that may take several minutes."
+        )
+        self.logger.warning(
+            "If you see this message, it's recommended to manually delete the old 'theorem_index.json' "
+            f"from '{cache_dir}' to ensure a clean, validated index is created."
+        )
+
         theorem_index = []
+        # The IR files are expected in `.lake/build/ir` relative to the repo root.
+        ir_dir = Path(self.traced_repo.root_dir) / ".lake/build/ir"
+
+        if not ir_dir.exists():
+            self.logger.error(
+                f"IR directory not found at {ir_dir}. Cannot verify theorems. "
+                "Please ensure the repository was built correctly with 'lake build'."
+            )
+            return []
+
         for traced_file in self.traced_repo.traced_files:
             try:
                 theorems = traced_file.get_traced_theorems()
                 for thm in theorems:
-                    if thm.theorem.full_name:  # Check if full_name is not None or empty
+                    # The path in the theorem object is relative to the repo root.
+                    # We construct the expected path to the .ast.json file.
+                    ast_path = ir_dir / thm.theorem.file_path.with_suffix(".ast.json")
+
+                    if thm.theorem.full_name and ast_path.exists():
                         theorem_index.append(
                             {
                                 "file_path": str(thm.theorem.file_path),
@@ -225,7 +249,9 @@ class CurriculumManager:
         with open(index_path, "w") as f:
             json.dump(theorem_index, f)
 
-        self.logger.info(f"Saved theorem index to {index_path}")
+        self.logger.info(
+            f"Saved a new, validated theorem index to {index_path} with {len(theorem_index)} theorems."
+        )
         return theorem_index
 
     def _organize_curriculum(self):
@@ -694,15 +720,9 @@ class HierarchicalTransformerTrainer:
             return total_reward, steps, success
 
         except Exception as e:
-            if "Cannot find the *.ast.json file" in str(e):
-                self.logger.warning(
-                    f"Skipping episode for theorem {theorem.full_name}: missing traced data. Error: {e}"
-                )
-            else:
-                self.logger.error(
-                    f"Unexpected error during episode with theorem {theorem.full_name}: {e}",
-                    exc_info=True,
-                )
+            self.logger.error(
+                f"Error during episode with theorem {theorem.full_name}: {e}"
+            )
             return 0.0, 0, False
 
     def _train_from_replay(self):
@@ -861,7 +881,10 @@ class HierarchicalTransformerTrainer:
         return self._all_theorems_cache
 
     def _get_or_create_theorem_index(self) -> List[Dict[str, str]]:
-        """Helper to get theorem index, used if curriculum is off."""
+        """
+        Get theorem index from cache or create a new one, ensuring all theorems
+        in the index have corresponding `.ast.json` files on disk.
+        """
         cache_dir = os.getenv("CACHE_DIR")
         if not cache_dir:
             self.logger.error("CACHE_DIR environment variable not set!")
@@ -875,13 +898,29 @@ class HierarchicalTransformerTrainer:
                 return json.load(f)
 
         # If index doesn't exist, create it (this part is also in CurriculumManager)
-        self.logger.info("Creating theorem index (one-time operation)...")
+        self.logger.info(
+            "Creating new theorem index. This is a one-time operation that may take several minutes."
+        )
+        self.logger.warning(
+            "If you see this message, it's recommended to manually delete the old 'theorem_index.json' "
+            f"from '{cache_dir}' to ensure a clean, validated index is created."
+        )
         theorem_index = []
+        ir_dir = Path(self.traced_repo.root_dir) / ".lake/build/ir"
+
+        if not ir_dir.exists():
+            self.logger.error(
+                f"IR directory not found at {ir_dir}. Cannot verify theorems. "
+                "Please ensure the repository was built correctly with 'lake build'."
+            )
+            return []
+
         for traced_file in self.traced_repo.traced_files:
             try:
                 theorems = traced_file.get_traced_theorems()
                 for thm in theorems:
-                    if thm.theorem.full_name:  # Check if full_name is not None or empty
+                    ast_path = ir_dir / thm.theorem.file_path.with_suffix(".ast.json")
+                    if thm.theorem.full_name and ast_path.exists():
                         theorem_index.append(
                             {
                                 "file_path": str(thm.theorem.file_path),
@@ -897,7 +936,9 @@ class HierarchicalTransformerTrainer:
         with open(index_path, "w") as f:
             json.dump(theorem_index, f)
 
-        self.logger.info(f"Saved theorem index to {index_path}")
+        self.logger.info(
+            f"Saved a new, validated theorem index to {index_path} with {len(theorem_index)} theorems."
+        )
         return theorem_index
 
     def _cleanup_memory(self):
