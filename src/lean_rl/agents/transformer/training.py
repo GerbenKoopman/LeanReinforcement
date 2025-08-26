@@ -7,6 +7,11 @@ including curriculum learning, distributed training, and various learning paradi
 
 import os
 import gc
+import json
+import random
+import time
+import logging
+import os
 
 import torch
 import torch.nn as nn
@@ -14,20 +19,19 @@ import torch.nn.functional as F
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard.writer import SummaryWriter
-import numpy as np
-import random
-import time
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass, asdict
 from collections import deque
-import logging
 
 from .repository import RepoManager
-from lean_dojo import TacticState
-from lean_dojo.data_extraction.traced_data import TracedRepo
+from lean_dojo import TacticState, Theorem
+from lean_dojo.data_extraction.traced_data import TracedRepo, TracedTheorem
 
-from .agent import HierarchicalTransformerAgent, HierarchicalAction
+from .agent import (
+    HierarchicalTransformerAgent,
+    HierarchicalAction,
+)
 from .hierarchy import (
     HierarchyLevel,
 )
