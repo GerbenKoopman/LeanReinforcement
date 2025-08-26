@@ -21,7 +21,7 @@ from .evaluation import (
     run_evaluation,
     EvaluationConfig,
 )
-from .config import (
+from ..config import (
     ConfigManager,
     ExperimentConfig,
     ExperimentTracker,
@@ -412,25 +412,25 @@ def main():
         epilog="""
 Examples:
   # Train with default config
-  python -m lean_rl.agents.transformer.runner train --experiment-name my_experiment
+  python -m lean_rl.agents.transformer.process.runner train --experiment-name my_experiment
 
   # Train with custom config
-  python -m lean_rl.agents.transformer.runner train --config my_config.yaml
+  python -m lean_rl.agents.transformer.process.runner train --config my_config.yaml
 
   # Resume training from checkpoint
-  python -m lean_rl.agents.transformer.runner train --resume-from checkpoint.pt
+  python -m lean_rl.agents.transformer.process.runner train --resume-from checkpoint.pt
 
   # Run comprehensive tests
-  python -m lean_rl.agents.transformer.runner test --model-path model.pt --test-type comprehensive
+  python -m lean_rl.agents.transformer.process.runner test --model-path model.pt --test-type comprehensive
 
   # Evaluate trained model
-  python -m lean_rl.agents.transformer.runner evaluate --model-path model.pt --output-dir results
+  python -m lean_rl.agents.transformer.process.runner evaluate --model-path model.pt --output-dir results
 
   # Hyperparameter tuning
-  python -m lean_rl.agents.transformer.runner tune --n-trials 50
+  python -m lean_rl.agents.transformer.process.runner tune --n-trials 50
 
   # Create default configs
-  python -m lean_rl.agents.transformer.runner config create-defaults
+  python -m lean_rl.agents.transformer.process.runner config create-defaults
         """,
     )
 

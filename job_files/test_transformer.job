@@ -82,17 +82,17 @@ fi
 
 # Run comprehensive tests with improved error handling
 echo "Running comprehensive transformer tests..."
-srun python3 -m lean_rl.agents.transformer.runner test --test-type comprehensive
+srun python3 -m lean_rl.agents.transformer.process.runner test --test-type comprehensive
 
 # Run specific tests (commented out to reduce redundant operations)
 
 # echo "Running unit tests..."
-# srun python -m lean_rl.agents.transformer.runner test --test-type unit
+# srun python -m lean_rl.agents.transformer.process.runner test --test-type unit
 
 # echo "Running performance tests..."
-# srun python -m lean_rl.agents.transformer.runner test --test-type performance
+# srun python -m lean_rl.agents.transformer.process.runner test --test-type performance
 
 # echo "Running theorem proving tests (20 theorems)..."
-# srun python -m lean_rl.agents.transformer.runner test --test-type theorems --num-theorems 20
+# srun python -m lean_rl.agents.transformer.process.runner test --test-type theorems --num-theorems 20
 
 echo "Test completed! Results saved to ${SCRATCH_SHARED}/test_reports/"

@@ -27,10 +27,10 @@ from lean_dojo import LeanGitRepo
 from lean_dojo.data_extraction.traced_data import TracedRepo
 from lean_dojo.data_extraction.trace import is_available_in_cache, get_traced_repo_path
 
-from .agent import HierarchicalTransformerAgent, HierarchicalAction
-from ...environment import LeanEnvironment
-from ...agents.random import RandomAgent
-from ...agents.mcts import MCTSAgent
+from ..model.agent import HierarchicalTransformerAgent, HierarchicalAction
+from ....environment import LeanEnvironment
+from ....agents.random import RandomAgent
+from ....agents.mcts import MCTSAgent
 
 
 @dataclass

@@ -19,18 +19,18 @@ import logging
 from unittest.mock import Mock
 import traceback
 
-from .repository import RepoManager
+from ..data.repository import RepoManager
 from lean_dojo import TacticState, Theorem
 from lean_dojo.data_extraction.traced_data import TracedTheorem
 
-from .agent import (
+from ..model.agent import (
     HierarchicalTransformerAgent,
     HierarchicalAction,
     HierarchicalSearchTree,
 )
-from .hierarchy import HierarchyLevel, StrategicActions, TacticalFamilies
-from ...environment import LeanEnvironment
-from ...agents import RandomAgent, MCTSAgent
+from ..model.hierarchy import HierarchyLevel, StrategicActions, TacticalFamilies
+from ....environment import LeanEnvironment
+from ....agents import RandomAgent, MCTSAgent
 
 
 # Ensure cache-only mode is enforced when running tests

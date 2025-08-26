@@ -17,12 +17,12 @@ Components:
     - HierarchicalAgent: Main agent combining all components
 """
 
-from .attention import (
+from model.attention import (
     MathematicalAttentionEncoder,
     MultiHeadAttention,
 )
 
-from .hierarchy import (
+from model.hierarchy import (
     HierarchicalPolicyNetwork,
     StrategicPolicy,
     TacticalPolicy,
@@ -30,23 +30,23 @@ from .hierarchy import (
     HierarchyLevel,
 )
 
-from .pointer_network import (
+from model.pointer_network import (
     TacticPointerNetwork,
     ParameterPointerNetwork,
 )
 
-from .parameter_generator import (
+from model.parameter_generator import (
     TacticParameterGenerator,
     AutoregressiveTermGenerator,
     PremiseRetriever,
 )
 
-from .agent import (
+from model.agent import (
     HierarchicalTransformerAgent,
     HierarchicalSearchTree,
 )
 
-from .utils import (
+from model.utils import (
     ProofStateTokenizer,
     TacticEncoder,
 )
