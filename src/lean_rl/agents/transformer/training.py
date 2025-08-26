@@ -573,50 +573,12 @@ class HierarchicalTransformerTrainer:
     def _validate_config(self):
         """Validate configuration to prevent runtime errors."""
         try:
-            # Check required fields
-            if not hasattr(self.config, "training"):
-                raise ValueError("Missing training configuration")
-
-            if not hasattr(self.config, "model"):
-                raise ValueError("Missing model configuration")
-
-            # Check distributed configuration
-            if hasattr(self.config, "distributed") and self.config.distributed:
-                if self.config.distributed.use_distributed:
-                    if not hasattr(self.config.distributed, "rank"):
-                        self.config.distributed.rank = 0
-                        self.logger.warning("No rank specified, defaulting to 0")
-
-                    if not hasattr(self.config.distributed, "world_size"):
-                        self.config.distributed.world_size = 1
-                        self.logger.warning("No world_size specified, defaulting to 1")
-            else:
-                # Create default distributed config
-                self.config.distributed = DistributedConfig(
-                    use_distributed=False, rank=0, world_size=1
-                )
-
-            # Validate training parameters
-            if self.config.training.max_episodes <= 0:
-                raise ValueError("max_episodes must be positive")
-
-            if self.config.training.learning_rate <= 0:
-                raise ValueError("learning_rate must be positive")
-
-            # Set default values for missing optional parameters
-            if not hasattr(self.config.training, "target_update_frequency"):
-                self.config.training.target_update_frequency = 100
-
-            if not hasattr(self.config.training, "replay_start_size"):
-                self.config.training.replay_start_size = 1000
-
-            if not hasattr(self.config.training, "gradient_clip_norm"):
-                self.config.training.gradient_clip_norm = 0.5
-
-            self.logger.info("Configuration validation passed")
-
-        except Exception as e:
-            self.logger.error(f"Configuration validation failed: {e}")
+            assert self.config.training.max_episodes > 0
+            assert self.config.training.learning_rate > 0
+            if self.config.distributed.use_distributed:
+                assert self.config.distributed.world_size > 0
+        except AssertionError as e:
+            self.logger.error(f"Invalid configuration: {e}")
             raise
 
     def train(self):
