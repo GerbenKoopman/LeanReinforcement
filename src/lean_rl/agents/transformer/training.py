@@ -221,51 +221,42 @@ class CurriculumManager:
                 )
                 continue
 
-        # Sort by difficulty heuristics
-        def difficulty_score(theorem):
-            """Heuristic difficulty score based on theorem properties."""
-            score = 0
+        with open(index_path, "w") as f:
+            json.dump(theorem_index, f)
 
-            # Count proof steps (if available)
-            if hasattr(theorem, "traced_tactics") and theorem.traced_tactics:
-                score += len(theorem.traced_tactics) * 0.5
+        self.logger.info(f"Saved theorem index to {index_path}")
+        return theorem_index
 
-            # File-based difficulty (some files are known to be harder)
-            file_path = theorem.theorem.file_path
-            if any(
-                hard in str(file_path) for hard in ["Analysis", "Topology", "Geometry"]
-            ):
-                score += 5
-            elif any(medium in str(file_path) for medium in ["Algebra", "Data"]):
-                score += 2
+    def _organize_curriculum(self):
+        """Organize theorems into curriculum stages using the theorem index."""
+        theorem_index = self._get_or_create_theorem_index()
+        if not theorem_index:
+            self.curriculum_stages = []
+            return
 
-            # Name-based difficulty (longer names often indicate more complex theorems)
-            score += len(theorem.theorem.full_name.split(".")) * 0.2
+        # Convert index back to Theorem objects
+        all_theorems = [
+            Theorem(self.repo, Path(item["file_path"]), item["full_name"])
+            for item in theorem_index
+        ]
 
-            return score
+        # Sort by difficulty heuristics (e.g., by name length as a proxy)
+        def difficulty_score(theorem: Theorem):
+            return len(theorem.full_name)
 
-        # Sort theorems by difficulty
         all_theorems.sort(key=difficulty_score)
 
         # Divide into curriculum stages
-        stage_size = len(all_theorems) // self.config.curriculum_stages
-        self.curriculum_stages = []
+        num_stages = self.config.curriculum_stages
+        stage_size = len(all_theorems) // num_stages
+        self.curriculum_stages = [
+            all_theorems[i * stage_size : (i + 1) * stage_size]
+            for i in range(num_stages)
+        ]
 
-        for i in range(self.config.curriculum_stages):
-            start_idx = i * stage_size
-            end_idx = (
-                (i + 1) * stage_size
-                if i < self.config.curriculum_stages - 1
-                else len(all_theorems)
-            )
-            stage_theorems = all_theorems[start_idx:end_idx]
-            self.curriculum_stages.append(stage_theorems)
-
-        logging.info(
-            f"Organized {len(all_theorems)} theorems into {len(self.curriculum_stages)} curriculum stages"
+        self.logger.info(
+            f"Organized {len(all_theorems)} theorems into {len(self.curriculum_stages)} stages"
         )
-        for i, stage in enumerate(self.curriculum_stages):
-            logging.info(f"Stage {i}: {len(stage)} theorems")
 
     def get_current_theorems(self) -> List:
         """Get theorems for current curriculum stage."""
