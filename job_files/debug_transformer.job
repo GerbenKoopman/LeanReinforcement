@@ -75,4 +75,4 @@ srun python debug_theorem_loading.py
 # Run unit tests only to debug the parameter generation issue
 echo "Running unit tests only..."
 cd src
-srun python -m lean_rl.agents.transformer.runner test --test-type unit
+srun python -m lean_rl.agents.transformer.process.runner test --test-type unit

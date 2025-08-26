@@ -11,8 +11,8 @@ import numpy as np
 from typing import List, Dict, Any, Optional, Union
 
 from ...environment import StepResult
-from ..agents import BaseAgent
-from .node import MCTSNode
+from ...agents import BaseAgent
+from node import MCTSNode
 from ...heuristic import SimpleNeuralHeuristic
 
 

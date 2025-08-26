@@ -102,7 +102,7 @@ The system implements a three-level hierarchical RL architecture:
 ### Basic Usage
 
 ```python
-from lean_rl.agents.transformer.agent import HierarchicalTransformerAgent
+from lean_rl.agents.transformer.model.agent import HierarchicalTransformerAgent
 
 # Initialize agent
 agent = HierarchicalTransformerAgent(
@@ -123,7 +123,7 @@ action = agent.select_action(tactic_state)
 ```python
 from lean_dojo import Dojo, Theorem, LeanGitRepo
 from lean_rl.environment import LeanEnvironment
-from lean_rl.agents.transformer.agent import HierarchicalTransformerAgent
+from lean_rl.agents.transformer.model.agent import HierarchicalTransformerAgent
 
 # Setup
 repo = LeanGitRepo("https://github.com/leanprover-community/mathlib4", "commit_hash")
@@ -277,7 +277,7 @@ To test the agent components, you can use the existing modules directly:
 
 ```python
 # Test attention mechanisms
-from lean_rl.agents.transformer.attention import MathematicalAttentionEncoder
+from lean_rl.agents.transformer.model.attention import MathematicalAttentionEncoder
 
 encoder = MathematicalAttentionEncoder(vocab_size=10000, d_model=512)
 # encoder.forward(proof_state_tokens)

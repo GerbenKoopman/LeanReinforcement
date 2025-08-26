@@ -34,7 +34,7 @@ mkdir -p $TRAINING_OUTPUT_DIR
 cd $HOME/lean_reinforcement/src
 
 echo "Starting training run..."
-srun python3 -m lean_rl.agents.transformer.training \
+srun python3 -m lean_rl.agents.transformer.process.training \
     --repo-url https://github.com/leanprover-community/mathlib4 \
     --repo-commit 29dcec074de168ac2bf835a77ef68bbe069194c5 \
     --max-episodes 5000 \

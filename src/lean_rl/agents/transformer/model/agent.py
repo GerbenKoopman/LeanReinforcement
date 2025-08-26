@@ -17,8 +17,8 @@ import torch.nn.functional as F
 
 from lean_dojo import TacticState
 
-from ...environment import StepResult
-from ..agents import BaseAgent
+from ....environment import StepResult
+from ...agents import BaseAgent
 from .hierarchy import (
     HierarchicalPolicyNetwork,
     HierarchyLevel,

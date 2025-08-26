@@ -8,7 +8,7 @@ import random
 from typing import List, Dict, Any, Optional
 
 from ...environment import StepResult
-from ..agents import BaseAgent
+from ...agents import BaseAgent
 
 
 class RandomAgent(BaseAgent):

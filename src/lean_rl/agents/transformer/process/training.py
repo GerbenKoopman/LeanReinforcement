@@ -25,25 +25,25 @@ from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass, asdict
 from collections import deque
 
-from .repository import RepoManager
+from ..data.repository import RepoManager
 from lean_dojo import TacticState, Theorem
 from lean_dojo.data_extraction.traced_data import TracedRepo, TracedTheorem
 
-from .agent import (
+from ..model.agent import (
     HierarchicalTransformerAgent,
     HierarchicalAction,
 )
-from .hierarchy import (
+from ..model.hierarchy import (
     HierarchyLevel,
 )
-from .config import (
+from ..config import (
     TrainingConfig,
     ExperimentConfig,
     ModelConfig,
     CurriculumConfig,
     DistributedConfig,
 )
-from ...environment import LeanEnvironment
+from ....environment import LeanEnvironment
 
 
 @dataclass
