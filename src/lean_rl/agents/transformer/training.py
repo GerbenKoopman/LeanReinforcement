@@ -350,66 +350,53 @@ class HierarchicalTransformerTrainer:
 
         self.repo_manager = RepoManager(self.config.repo_url, self.config.repo_commit)
         self.traced_repo = self.repo_manager.get_traced_repo()
+        self.repo = self.repo_manager.repo
 
         # Setup curriculum if enabled
         if self.config.curriculum and self.config.curriculum.use_curriculum:
-            self.curriculum = CurriculumManager(
-                self.config.curriculum, self.traced_repo
+            self.curriculum_manager = CurriculumManager(
+                self.config.curriculum, self.traced_repo, self.repo
             )
         else:
-            self.curriculum = None
+            self.curriculum_manager = None
 
     def _setup_models(self):
         """Setup neural network models."""
         self.logger.info("Initializing models...")
 
+        model_config = self.config.model
         # Main agent
         self.agent = HierarchicalTransformerAgent(
-            vocab_size=self.config.model.vocab_size,
-            d_model=self.config.model.d_model,
-            n_heads=self.config.model.n_heads,
-            n_layers=self.config.model.n_layers,
-            dropout=self.config.model.dropout,
-            max_search_time=self.config.training.max_search_time,
-            beam_width=self.config.training.beam_width,
+            vocab_size=model_config.vocab_size,
+            d_model=model_config.d_model,
+            n_heads=model_config.n_heads,
+            n_layers=model_config.n_layers,
+            dropout=model_config.dropout,
             device=str(self.device),
         )
 
         # Target network for stability (optional)
         self.target_agent = HierarchicalTransformerAgent(
-            vocab_size=self.config.model.vocab_size,
-            d_model=self.config.model.d_model,
-            n_heads=self.config.model.n_heads,
-            n_layers=self.config.model.n_layers,
-            dropout=self.config.model.dropout,
-            max_search_time=self.config.training.max_search_time,
-            beam_width=self.config.training.beam_width,
+            vocab_size=model_config.vocab_size,
+            d_model=model_config.d_model,
+            n_heads=model_config.n_heads,
+            n_layers=model_config.n_layers,
+            dropout=model_config.dropout,
             device=str(self.device),
         )
 
-        # Copy weights to target network (if both agents have PyTorch modules)
-        if hasattr(self.agent, "hierarchical_policy") and hasattr(
-            self.target_agent, "hierarchical_policy"
-        ):
-            self.target_agent.hierarchical_policy.load_state_dict(
-                self.agent.hierarchical_policy.state_dict()
-            )
+        # Copy weights to target network
+        self._update_target_network(is_hard_update=True)
+
+        # Move models to the correct device
+        self._set_agent_device(self.agent)
+        self._set_agent_device(self.target_agent)
 
         # Setup distributed training
         if self.config.distributed and self.config.distributed.use_distributed:
-            # Wrap the entire agent with DDP instead of individual components
             self.agent = DDP(
-                self.agent,
-                device_ids=(
-                    [self.config.distributed.rank]
-                    if torch.cuda.is_available()
-                    else None
-                ),
+                self.agent, device_ids=[self.config.distributed.local_rank]
             )
-            self.use_distributed = True
-            self.logger.info("Distributed training enabled with DDP wrapping")
-        else:
-            self.use_distributed = False
 
     def _setup_training(self):
         """Setup training components."""
@@ -438,8 +425,8 @@ class HierarchicalTransformerTrainer:
         if self.config.training.use_experience_replay:
             self.replay_buffer = ExperienceReplayBuffer(
                 self.config.training.replay_buffer_size,
-                device=self.device,
-                agent=self.agent,
+                self.device,
+                agent=self.agent,  # Pass the agent (or DDP-wrapped agent)
             )
 
         # Environment
