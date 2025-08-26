@@ -550,7 +550,9 @@ class HierarchicalTransformerTester:
                     # Try to get a real theorem and its initial state using optimized caching
                     test_theorems = self._get_cached_theorems_optimized(num_theorems=1)
                     if test_theorems:
-                        real_state = self.env.reset(test_theorems[0].theorem)
+                        theorem_name = test_theorems[0].theorem.full_name
+                        real_state = self._get_cached_environment(theorem_name)
+
                         if real_state is not None:
                             real_encoded = self.agent.encode_state(real_state)
 
@@ -1239,7 +1241,7 @@ class HierarchicalTransformerTester:
                         if len(all_theorems) >= num_theorems:
                             break
                     else:
-                        self.logger.warning(
+                        self.logger.info(
                             f"No theorems found in {file_path} (got {type(theorems)})"
                         )
 
