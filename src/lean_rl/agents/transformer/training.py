@@ -642,154 +642,87 @@ class HierarchicalTransformerTrainer:
         if self.writer:
             self.writer.close()
 
-    def _run_episode(self, theorem) -> Tuple[float, int, bool]:
+    def _run_episode(self, theorem: Theorem) -> Tuple[float, int, bool]:
         """Run a single training episode."""
+        agent_module = self.agent.module if isinstance(self.agent, DDP) else self.agent
         try:
-            # Get the actual agent (unwrap DDP if needed)
-            agent = self.agent.module if isinstance(self.agent, DDP) else self.agent
+            state = self.env.reset(theorem)
+            agent_module.reset()
 
-            # Reset environment
-            state = self.env.reset(theorem.theorem)
-            agent.reset()
-
-            episode_reward = 0.0
-            episode_length = 0
+            total_reward = 0.0
+            done = False
+            steps = 0
             success = False
 
-            episode_experiences = []
+            while not done and steps < self.config.training.max_steps_per_episode:
+                if state is None:
+                    break  # End episode if state is None
 
-            while True:
-                # Select action
-                if state is not None:
-                    action_str = agent.select_action(state)
-                    if action_str is None:
-                        break
-
-                    # Take step
-                    step_result = self.env.step(action_str)
-
-                    # Update agent
-                    agent.update(step_result)
-
-                    # Store experience for replay
-                    if self.config.training.use_experience_replay:
-                        # Create hierarchical action object (simplified)
-                        hierarchical_action = HierarchicalAction(
-                            strategic_action="direct_proof",  # Simplified
-                            tactic_family="apply_family",  # Simplified
-                            specific_tactic=action_str,
-                            parameters=[],
-                            confidence=0.8,
-                        )
-
-                        episode_experiences.append(
-                            (
-                                state,
-                                hierarchical_action,
-                                step_result.reward,
-                                step_result.state,
-                                step_result.done,
-                            )
-                        )
-
-                    episode_reward += step_result.reward
-                    episode_length += 1
-
-                    if step_result.done:
-                        success = step_result.action_result == "proof_finished"
-                        break
-
-                    state = step_result.state
-
-                    if episode_length >= self.config.training.max_steps_per_episode:
-                        break
-                else:
+                # Construct the full hierarchical action
+                hierarchical_action = agent_module.construct_full_action(state)
+                if hierarchical_action is None:
                     break
 
-            # Add experiences to replay buffer
-            if self.config.training.use_experience_replay:
-                for experience in episode_experiences:
-                    self.replay_buffer.push(*experience)
+                # Get the string representation for the environment
+                action_str = str(hierarchical_action)
+                result = self.env.step(action_str)
+                next_state = result.state
+                reward = result.reward
+                done = result.done
 
-            return episode_reward, episode_length, success
+                if result.action_result == "proof_finished":
+                    success = True
+
+                if self.replay_buffer:
+                    # Store the full action object in the replay buffer
+                    self.replay_buffer.push(
+                        state, hierarchical_action, reward, next_state, done
+                    )
+
+                state = next_state
+                total_reward += reward
+                steps += 1
+
+                if (
+                    self.replay_buffer
+                    and steps % self.config.training.train_frequency == 0
+                ):
+                    self._train_from_replay()
+
+            return total_reward, steps, success
 
         except Exception as e:
-            self.logger.warning(f"Episode failed with error: {e}")
+            self.logger.error(
+                f"Error during episode with theorem {theorem.full_name}: {e}"
+            )
             return 0.0, 0, False
 
     def _train_from_replay(self):
         """Train the model using experience replay."""
-        if len(self.replay_buffer) < self.config.training.replay_batch_size:
+        if (
+            not self.replay_buffer
+            or len(self.replay_buffer) < self.config.training.replay_batch_size
+        ):
             return
 
-        # Sample batch
         batch = self.replay_buffer.sample(self.config.training.replay_batch_size)
+        if batch is None:
+            return
 
-        # Extract batch components
-        actions = batch["actions"]
-        rewards_tensor = batch["rewards_tensor"]
-        dones_tensor = batch["dones_tensor"]
-        encoded_states = batch["encoded_states"]
-        strategic_actions = batch["strategic_actions"]
-        tactic_families = batch["tactic_families"]
+        # Compute loss and update model
+        loss = self._compute_loss(batch)
+        if loss is None:
+            return
 
-        try:
-            # Compute current Q-values for each hierarchy level
-            current_q_values = self._compute_hierarchical_q_values(
-                encoded_states, strategic_actions, tactic_families
-            )
+        self.optimizer.zero_grad()
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(
+            self._get_agent_parameters(), self.config.training.gradient_clip_norm
+        )
+        self.optimizer.step()
 
-            # Compute target Q-values using target network
-            target_q_values = self._compute_target_q_values(
-                batch["encoded_next_states"], rewards_tensor, dones_tensor
-            )
-
-            # Compute losses for each hierarchy level
-            strategic_loss = self._compute_strategic_loss(
-                current_q_values["strategic"], target_q_values, strategic_actions
-            )
-
-            tactical_loss = self._compute_tactical_loss(
-                current_q_values["tactical"], target_q_values, tactic_families
-            )
-
-            parameter_loss = self._compute_parameter_loss(
-                current_q_values["parameters"], actions
-            )
-
-            # Total loss with weights
-            total_loss = (
-                0.4 * strategic_loss + 0.4 * tactical_loss + 0.2 * parameter_loss
-            )
-
-            # Backward pass
-            self.optimizer.zero_grad()
-            total_loss.backward()
-
-            # Gradient clipping
-            torch.nn.utils.clip_grad_norm_(
-                self._get_agent_parameters(), self.config.training.gradient_clip_norm
-            )
-
-            self.optimizer.step()
-
-            # Log loss
-            if self.metrics.loss_history is not None:
-                self.metrics.loss_history.append(total_loss.item())
-
-        except Exception as e:
-            self.logger.error(f"Training step failed: {e}")
-            # Track training failures
-            if not hasattr(self, "training_failures"):
-                self.training_failures = 0
-            self.training_failures += 1
-
-            # If too many consecutive failures, stop training
-            if self.training_failures > 50:
-                self.logger.error("Too many training failures, stopping training")
-                raise RuntimeError(
-                    f"Training failed with {self.training_failures} consecutive failures"
-                )
+        # Update target network
+        self._update_target_network()
 
     def _compute_hierarchical_q_values(
         self, encoded_states: List, strategic_actions: List, tactic_families: List
