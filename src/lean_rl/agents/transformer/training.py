@@ -208,9 +208,17 @@ class CurriculumManager:
         for traced_file in self.traced_repo.traced_files:
             try:
                 theorems = traced_file.get_traced_theorems()
-                all_theorems.extend(theorems)
+                for thm in theorems:
+                    theorem_index.append(
+                        {
+                            "file_path": str(thm.theorem.file_path),
+                            "full_name": thm.theorem.full_name,
+                        }
+                    )
             except Exception as e:
-                logging.warning(f"Failed to load theorems from {traced_file}: {e}")
+                self.logger.warning(
+                    f"Could not load theorems from {traced_file.path}: {e}"
+                )
                 continue
 
         # Sort by difficulty heuristics
