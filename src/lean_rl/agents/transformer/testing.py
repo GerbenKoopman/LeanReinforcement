@@ -1241,7 +1241,7 @@ class HierarchicalTransformerTester:
                         if len(all_theorems) >= num_theorems:
                             break
                     else:
-                        self.logger.warning(
+                        self.logger.info(
                             f"No theorems found in {file_path} (got {type(theorems)})"
                         )
 
