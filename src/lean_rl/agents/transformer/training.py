@@ -499,20 +499,30 @@ class HierarchicalTransformerTrainer:
 
     def _load_agent_state_dict(self, agent, state_dict):
         """Load state dict into agent submodules."""
+        agent_module = agent.module if isinstance(agent, DDP) else agent
         if (
-            hasattr(agent, "hierarchical_policy")
+            hasattr(agent_module, "hierarchical_policy")
             and "hierarchical_policy" in state_dict
         ):
-            agent.hierarchical_policy.load_state_dict(state_dict["hierarchical_policy"])
-        if hasattr(agent, "tactic_pointer") and "tactic_pointer" in state_dict:
-            agent.tactic_pointer.load_state_dict(state_dict["tactic_pointer"])
+            agent_module.hierarchical_policy.load_state_dict(
+                state_dict["hierarchical_policy"]
+            )
+        if hasattr(agent_module, "tactic_pointer") and "tactic_pointer" in state_dict:
+            agent_module.tactic_pointer.load_state_dict(state_dict["tactic_pointer"])
         if (
-            hasattr(agent, "parameter_generator")
+            hasattr(agent_module, "parameter_generator")
             and "parameter_generator" in state_dict
         ):
-            agent.parameter_generator.load_state_dict(state_dict["parameter_generator"])
-        if hasattr(agent, "parameter_pointer") and "parameter_pointer" in state_dict:
-            agent.parameter_pointer.load_state_dict(state_dict["parameter_pointer"])
+            agent_module.parameter_generator.load_state_dict(
+                state_dict["parameter_generator"]
+            )
+        if (
+            hasattr(agent_module, "parameter_pointer")
+            and "parameter_pointer" in state_dict
+        ):
+            agent_module.parameter_pointer.load_state_dict(
+                state_dict["parameter_pointer"]
+            )
 
     def _set_agent_mode(self, agent, train_mode):
         """Set train/eval mode for agent submodules."""
