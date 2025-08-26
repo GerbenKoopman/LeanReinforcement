@@ -795,13 +795,14 @@ class HierarchicalTransformerTrainer:
         self, episode: int, recent_rewards: deque, recent_successes: deque
     ):
         """Log training progress."""
-        avg_reward = np.mean(recent_rewards) if recent_rewards else 0.0
-        success_rate = np.mean(recent_successes) if recent_successes else 0.0
+        if not recent_rewards or not recent_successes:
+            return
+
+        avg_reward = sum(recent_rewards) / len(recent_rewards)
+        avg_success = sum(recent_successes) / len(recent_successes)
 
         self.logger.info(
-            f"Episode {episode}: Avg reward: {avg_reward:.3f}, "
-            f"Success rate: {success_rate:.3f}, "
-            f"Curriculum stage: {self.curriculum.current_stage if self.curriculum else 'N/A'}"
+            f"Episode {episode} | Avg Reward: {avg_reward:.3f} | Avg Success: {avg_success:.3f}"
         )
 
         # Tensorboard logging
