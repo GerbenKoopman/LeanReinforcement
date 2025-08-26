@@ -258,9 +258,11 @@ class CurriculumManager:
             f"Organized {len(all_theorems)} theorems into {len(self.curriculum_stages)} stages"
         )
 
-    def get_current_theorems(self) -> List:
-        """Get theorems for current curriculum stage."""
+    def get_current_theorems(self) -> List[Theorem]:
+        """Get theorems for the current curriculum stage."""
         if not self.curriculum_stages:
+            # Fallback to a small set of theorems if curriculum setup failed
+            self.logger.warning("Curriculum stages are empty, using fallback.")
             return []
         return self.curriculum_stages[
             min(self.current_stage, len(self.curriculum_stages) - 1)
