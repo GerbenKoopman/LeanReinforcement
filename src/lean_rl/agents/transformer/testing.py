@@ -142,7 +142,7 @@ class HierarchicalTransformerTester:
         Args:
             model_path: Path to trained model checkpoint (optional)
         """
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.logger = self._setup_logger()
 
         # Initialize agent

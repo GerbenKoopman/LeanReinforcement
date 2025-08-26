@@ -335,7 +335,7 @@ class HierarchicalTransformerTrainer:
 
     def __init__(self, config: ExperimentConfig):
         self.config = config
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         # Validate configuration
         self._validate_config()

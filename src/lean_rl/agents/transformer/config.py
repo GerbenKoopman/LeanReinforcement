@@ -278,7 +278,7 @@ class ConfigManager:
 
         # Device validation
         if config.device not in ["auto", "cpu"] and not config.device.startswith(
-            "cuda"
+            "cuda:0"
         ):
             warnings.append(f"Unknown device: {config.device}")
 
@@ -287,7 +287,7 @@ class ConfigManager:
     def get_device(self, config: ExperimentConfig) -> torch.device:
         """Get appropriate device based on config."""
         if config.device == "auto":
-            return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            return torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         else:
             return torch.device(config.device)
 
