@@ -925,6 +925,8 @@ def main():
     # Configuration
     config = ExperimentConfig(
         experiment_name="hierarchical_transformer_training",
+        repo_url="https://github.com/leanprover-community/mathlib4",
+        repo_commit="29dcec074de168ac2bf835a77ef68bbe069194c5",
         training=TrainingConfig(
             max_episodes=5000,
             eval_frequency=200,
@@ -932,13 +934,16 @@ def main():
             use_experience_replay=True,
         ),
         model=ModelConfig(
-            d_model=256,  # Smaller for faster training
+            d_model=256,
             n_heads=4,
             n_layers=4,
         ),
         curriculum=CurriculumConfig(
             use_curriculum=True,
+            curriculum_stages=10,
+            difficulty_threshold=0.6,
         ),
+        distributed=DistributedConfig(use_distributed=False),
     )
 
     # Initialize trainer
