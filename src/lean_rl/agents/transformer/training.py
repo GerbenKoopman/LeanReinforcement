@@ -760,83 +760,35 @@ class HierarchicalTransformerTrainer:
             return None
 
     def _evaluate(self) -> float:
-        """Evaluate the current model."""
-        self.logger.info("Running evaluation...")
+        """Evaluate the agent's performance on a set of validation theorems."""
+        self.logger.info("Starting evaluation...")
+        self._set_agent_mode(self.agent, False)
 
-        # Get evaluation theorems
-        if self.curriculum:
-            eval_theorems = self.curriculum.get_current_theorems()
+        if self.curriculum_manager:
+            eval_theorems = self.curriculum_manager.get_current_theorems()[
+                : self.config.training.eval_episodes
+            ]
         else:
-            eval_theorems = self._get_all_theorems()
+            eval_theorems = self._get_all_theorems()[
+                : self.config.training.eval_episodes
+            ]
 
         if not eval_theorems:
+            self.logger.warning("No theorems available for evaluation.")
             return 0.0
 
-        # Sample evaluation theorems
-        eval_theorems = random.sample(
-            eval_theorems, min(self.config.training.eval_episodes, len(eval_theorems))
+        proved_count = 0
+        for theorem in eval_theorems:
+            _, _, success = self._run_episode(theorem)
+            if success:
+                proved_count += 1
+
+        success_rate = (
+            proved_count / len(eval_theorems) if len(eval_theorems) > 0 else 0.0
         )
+        self.logger.info(f"Evaluation success rate: {success_rate:.3f}")
 
-        successes = 0
-        total_reward = 0.0
-
-        # Get the actual agent (unwrap DDP if needed)
-        agent = self.agent.module if isinstance(self.agent, DDP) else self.agent
-
-        # Set model to evaluation mode
-        self._set_agent_mode(agent, False)  # Set to eval mode
-
-        with torch.no_grad():
-            for theorem in eval_theorems:
-                try:
-                    state = self.env.reset(theorem.theorem)
-                    agent.reset()
-
-                    episode_reward = 0.0
-                    steps = 0
-
-                    while steps < self.config.training.max_steps_per_episode:
-                        if state is not None:
-                            action_str = agent.select_action(state)
-                            if action_str is None:
-                                break
-
-                            step_result = self.env.step(action_str)
-                            episode_reward += step_result.reward
-                            steps += 1
-
-                            if step_result.done:
-                                if step_result.action_result == "proof_finished":
-                                    successes += 1
-                                break
-
-                            state = step_result.state
-                        else:
-                            break
-
-                    total_reward += episode_reward
-
-                except Exception as e:
-                    self.logger.warning(f"Evaluation episode failed: {e}")
-                    continue
-
-        # Set model back to training mode
-        self._set_agent_mode(agent, True)  # Set to train mode
-
-        success_rate = successes / len(eval_theorems)
-        avg_reward = total_reward / len(eval_theorems)
-
-        self.logger.info(
-            f"Evaluation: Success rate: {success_rate:.3f}, Avg reward: {avg_reward:.3f}"
-        )
-
-        # Log to tensorboard
-        if self.writer:
-            self.writer.add_scalar(
-                "eval/success_rate", success_rate, self.metrics.episode
-            )
-            self.writer.add_scalar("eval/avg_reward", avg_reward, self.metrics.episode)
-
+        self._set_agent_mode(self.agent, True)
         return success_rate
 
     def _log_progress(
