@@ -831,47 +831,67 @@ class HierarchicalTransformerTrainer:
 
     def load_checkpoint(self, checkpoint_path: str):
         """Load model checkpoint."""
-        checkpoint = torch.load(checkpoint_path, map_location=self.device)
+        if not os.path.exists(checkpoint_path):
+            self.logger.warning(f"Checkpoint path not found: {checkpoint_path}")
+            return
 
-        # Load model state
-        if isinstance(self.agent, DDP):
-            self.agent.module.load_state_dict(checkpoint["agent_state_dict"])
-        else:
-            self._load_agent_state_dict(self.agent, checkpoint["agent_state_dict"])
+        state = torch.load(checkpoint_path, map_location=self.device)
+        self._load_agent_state_dict(self.agent, state["agent_state_dict"])
+        self.optimizer.load_state_dict(state["optimizer_state_dict"])
 
-        self._load_agent_state_dict(
-            self.target_agent, checkpoint["target_agent_state_dict"]
-        )
-        self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-        self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
+        self.logger.info(f"Loaded checkpoint from {checkpoint_path}")
 
-        # Load metrics
-        metrics_dict = checkpoint.get("metrics", {})
-        self.metrics = TrainingMetrics(**metrics_dict)
+    def _get_all_theorems(self) -> List[Theorem]:
+        """Get all theorems from the traced repository."""
+        if not hasattr(self, "_all_theorems_cache"):
+            all_theorems_info = self._get_or_create_theorem_index()
+            self._all_theorems_cache = [
+                Theorem(self.repo, Path(item["file_path"]), item["full_name"])
+                for item in all_theorems_info
+            ]
+        return self._all_theorems_cache
 
-        # Load curriculum state
-        if self.curriculum and "curriculum_stage" in checkpoint:
-            self.curriculum.current_stage = checkpoint["curriculum_stage"]
+    def _get_or_create_theorem_index(self) -> List[Dict[str, str]]:
+        """Helper to get theorem index, used if curriculum is off."""
+        cache_dir = os.getenv("CACHE_DIR")
+        if not cache_dir:
+            self.logger.error("CACHE_DIR environment variable not set!")
+            return []
 
-        self.logger.info(f"Loaded checkpoint from episode {checkpoint['episode']}")
-        return checkpoint["episode"]
+        index_path = Path(cache_dir) / "theorem_index.json"
 
-    def _get_all_theorems(self) -> List:
-        """Get all available theorems from traced repository."""
-        all_theorems = []
+        if index_path.exists():
+            self.logger.info(f"Loading theorem index from {index_path}")
+            with open(index_path, "r") as f:
+                return json.load(f)
 
+        # If index doesn't exist, create it (this part is also in CurriculumManager)
+        self.logger.info("Creating theorem index (one-time operation)...")
+        theorem_index = []
         for traced_file in self.traced_repo.traced_files:
             try:
                 theorems = traced_file.get_traced_theorems()
-                all_theorems.extend(theorems)
+                for thm in theorems:
+                    theorem_index.append(
+                        {
+                            "file_path": str(thm.theorem.file_path),
+                            "full_name": thm.theorem.full_name,
+                        }
+                    )
             except Exception as e:
-                self.logger.warning(f"Failed to load theorems from {traced_file}: {e}")
+                self.logger.warning(
+                    f"Could not load theorems from {traced_file.path}: {e}"
+                )
                 continue
 
-        return all_theorems
+        with open(index_path, "w") as f:
+            json.dump(theorem_index, f)
+
+        self.logger.info(f"Saved theorem index to {index_path}")
+        return theorem_index
 
     def _cleanup_memory(self):
-        """Clean up memory between episodes to prevent memory leaks."""
+        """Clean up memory, especially CUDA cache."""
         try:
             # Get the actual agent (unwrap DDP if needed)
             agent = self.agent.module if isinstance(self.agent, DDP) else self.agent
