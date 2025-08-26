@@ -36,11 +36,9 @@ cd $HOME/lean_reinforcement/src
 # Run the training script for a single, short episode
 echo "Starting debug training run..."
 srun python3 -m lean_rl.agents.transformer.training \
-    --repo-url https://github.com/leanprover-community/mathlib4 \
-    --repo-commit 29dcec074de168ac2bf835a77ef68bbe069194c5 \
     --max-episodes 1 \
     --max-steps-per-episode 50 \
     --run-name "debug_training_run_$(date +%s)" \
-    --output-dir "$TRAINING_OUTPUT_DIR"
+    --no-evaluation
 
 echo "Debug training run finished."
