@@ -209,12 +209,13 @@ class CurriculumManager:
             try:
                 theorems = traced_file.get_traced_theorems()
                 for thm in theorems:
-                    theorem_index.append(
-                        {
-                            "file_path": str(thm.theorem.file_path),
-                            "full_name": thm.theorem.full_name,
-                        }
-                    )
+                    if thm.theorem.full_name:  # Check if full_name is not None or empty
+                        theorem_index.append(
+                            {
+                                "file_path": str(thm.theorem.file_path),
+                                "full_name": thm.theorem.full_name,
+                            }
+                        )
             except Exception as e:
                 self.logger.warning(
                     f"Could not load theorems from {traced_file.path}: {e}"
@@ -238,6 +239,7 @@ class CurriculumManager:
         all_theorems = [
             Theorem(self.repo, Path(item["file_path"]), item["full_name"])
             for item in theorem_index
+            if item["full_name"]  # Ensure full_name is not None or empty
         ]
 
         # Sort by difficulty heuristics (e.g., by name length as a proxy)
@@ -848,6 +850,7 @@ class HierarchicalTransformerTrainer:
             self._all_theorems_cache = [
                 Theorem(self.repo, Path(item["file_path"]), item["full_name"])
                 for item in all_theorems_info
+                if item["full_name"]  # Ensure full_name is not None or empty
             ]
         return self._all_theorems_cache
 
@@ -872,12 +875,13 @@ class HierarchicalTransformerTrainer:
             try:
                 theorems = traced_file.get_traced_theorems()
                 for thm in theorems:
-                    theorem_index.append(
-                        {
-                            "file_path": str(thm.theorem.file_path),
-                            "full_name": thm.theorem.full_name,
-                        }
-                    )
+                    if thm.theorem.full_name:  # Check if full_name is not None or empty
+                        theorem_index.append(
+                            {
+                                "file_path": str(thm.theorem.file_path),
+                                "full_name": thm.theorem.full_name,
+                            }
+                        )
             except Exception as e:
                 self.logger.warning(
                     f"Could not load theorems from {traced_file.path}: {e}"
