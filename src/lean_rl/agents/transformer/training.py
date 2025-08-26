@@ -694,9 +694,15 @@ class HierarchicalTransformerTrainer:
             return total_reward, steps, success
 
         except Exception as e:
-            self.logger.error(
-                f"Error during episode with theorem {theorem.full_name}: {e}"
-            )
+            if "Cannot find the *.ast.json file" in str(e):
+                self.logger.warning(
+                    f"Skipping episode for theorem {theorem.full_name}: missing traced data. Error: {e}"
+                )
+            else:
+                self.logger.error(
+                    f"Unexpected error during episode with theorem {theorem.full_name}: {e}",
+                    exc_info=True,
+                )
             return 0.0, 0, False
 
     def _train_from_replay(self):
