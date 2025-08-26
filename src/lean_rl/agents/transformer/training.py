@@ -155,55 +155,19 @@ class ExperienceReplayBuffer:
 
         return batch
 
-    def _encode_state_batch(self, states: List) -> List[Dict[str, torch.Tensor]]:
-        """Encode a batch of states."""
-        encoded_states = []
+    def _encode_state_batch(
+        self, states: List[Optional[TacticState]]
+    ) -> List[Dict[str, torch.Tensor]]:
+        """Encode a batch of states, handling None values."""
+        agent_module = self.agent.module if isinstance(self.agent, DDP) else self.agent
+        if not agent_module:
+            raise RuntimeError("Agent reference not set in ExperienceReplayBuffer")
+
+        encoded_batch = []
         for state in states:
             if state is not None:
-                # Use the agent's tokenizer to encode the state
-                encoded = self._encode_single_state(state)
-                encoded_states.append(encoded)
-            else:
-                encoded_states.append(None)
-        return encoded_states
-
-    def _encode_single_state(self, state) -> Dict[str, torch.Tensor]:
-        """Encode a single state to tensors."""
-        try:
-            # Use agent's encoding method if available
-            if self.agent is not None and hasattr(self.agent, "encode_state"):
-                return self.agent.encode_state(state)
-
-            # Fallback: Simple encoding
-            state_str = str(state.pp) if hasattr(state, "pp") else str(state)
-            # Simple tokenization - in practice, use proper tokenizer
-            tokens = state_str.split()[:512]  # Truncate to max length
-            token_ids = [
-                hash(token) % 10000 for token in tokens
-            ]  # Simple hash-based vocab
-
-            # Pad to fixed length
-            max_len = 512
-            if len(token_ids) < max_len:
-                token_ids.extend([0] * (max_len - len(token_ids)))
-            else:
-                token_ids = token_ids[:max_len]
-
-            return {
-                "input_ids": torch.LongTensor(token_ids),
-                "attention_mask": torch.ones(len(token_ids), dtype=torch.bool),
-                "goal_mask": torch.zeros(len(token_ids), dtype=torch.bool),
-                "hypothesis_mask": torch.zeros(len(token_ids), dtype=torch.bool),
-            }
-        except Exception as e:
-            # Return dummy encoding on error
-            max_len = 512
-            return {
-                "input_ids": torch.zeros(max_len, dtype=torch.long),
-                "attention_mask": torch.zeros(max_len, dtype=torch.bool),
-                "goal_mask": torch.zeros(max_len, dtype=torch.bool),
-                "hypothesis_mask": torch.zeros(max_len, dtype=torch.bool),
-            }
+                encoded_batch.append(agent_module.encode_state(state))
+        return encoded_batch
 
 
 class CurriculumManager:
