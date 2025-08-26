@@ -463,50 +463,37 @@ class HierarchicalTransformerTrainer:
 
     def _get_agent_parameters(self):
         """Get all parameters from agent submodules."""
-        parameters = []
-        agent = self.agent.module if isinstance(self.agent, DDP) else self.agent
+        agent_module = self.agent.module if isinstance(self.agent, DDP) else self.agent
+        params = []
+        if hasattr(agent_module, "hierarchical_policy"):
+            params.extend(list(agent_module.hierarchical_policy.parameters()))
+        if hasattr(agent_module, "tactic_pointer"):
+            params.extend(list(agent_module.tactic_pointer.parameters()))
+        if hasattr(agent_module, "parameter_generator"):
+            params.extend(list(agent_module.parameter_generator.parameters()))
+        if hasattr(agent_module, "parameter_pointer"):
+            params.extend(list(agent_module.parameter_pointer.parameters()))
+        return params
 
-        if hasattr(agent, "hierarchical_policy"):
-            parameters.extend(agent.hierarchical_policy.parameters())
-        if hasattr(agent, "tactic_pointer"):
-            parameters.extend(agent.tactic_pointer.parameters())
-        if hasattr(agent, "parameter_generator"):
-            parameters.extend(agent.parameter_generator.parameters())
-        if hasattr(agent, "parameter_pointer"):
-            parameters.extend(agent.parameter_pointer.parameters())
-        return parameters
-
-    def _get_agent_state_dict(self):
+    def _get_agent_state_dict(self, agent_instance):
         """Get state dict from all agent submodules."""
+        agent_module = (
+            agent_instance.module if isinstance(agent_instance, DDP) else agent_instance
+        )
         state_dict = {}
-        agent = self.agent.module if isinstance(self.agent, DDP) else self.agent
-
-        if hasattr(agent, "hierarchical_policy"):
-            state_dict["hierarchical_policy"] = agent.hierarchical_policy.state_dict()
-        if hasattr(agent, "tactic_pointer"):
-            state_dict["tactic_pointer"] = agent.tactic_pointer.state_dict()
-        if hasattr(agent, "parameter_generator"):
-            state_dict["parameter_generator"] = agent.parameter_generator.state_dict()
-        if hasattr(agent, "parameter_pointer"):
-            state_dict["parameter_pointer"] = agent.parameter_pointer.state_dict()
-        return state_dict
-
-    def _get_target_agent_state_dict(self):
-        """Get state dict from all target agent submodules."""
-        state_dict = {}
-        if hasattr(self.target_agent, "hierarchical_policy"):
+        if hasattr(agent_module, "hierarchical_policy"):
             state_dict["hierarchical_policy"] = (
-                self.target_agent.hierarchical_policy.state_dict()
+                agent_module.hierarchical_policy.state_dict()
             )
-        if hasattr(self.target_agent, "tactic_pointer"):
-            state_dict["tactic_pointer"] = self.target_agent.tactic_pointer.state_dict()
-        if hasattr(self.target_agent, "parameter_generator"):
+        if hasattr(agent_module, "tactic_pointer"):
+            state_dict["tactic_pointer"] = agent_module.tactic_pointer.state_dict()
+        if hasattr(agent_module, "parameter_generator"):
             state_dict["parameter_generator"] = (
-                self.target_agent.parameter_generator.state_dict()
+                agent_module.parameter_generator.state_dict()
             )
-        if hasattr(self.target_agent, "parameter_pointer"):
+        if hasattr(agent_module, "parameter_pointer"):
             state_dict["parameter_pointer"] = (
-                self.target_agent.parameter_pointer.state_dict()
+                agent_module.parameter_pointer.state_dict()
             )
         return state_dict
 
