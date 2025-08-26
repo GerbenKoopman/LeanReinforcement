@@ -526,23 +526,49 @@ class HierarchicalTransformerTrainer:
 
     def _set_agent_mode(self, agent, train_mode):
         """Set train/eval mode for agent submodules."""
-        if hasattr(agent, "hierarchical_policy"):
-            agent.hierarchical_policy.train(train_mode)
-        if hasattr(agent, "tactic_pointer"):
-            agent.tactic_pointer.train(train_mode)
-        if hasattr(agent, "parameter_generator"):
-            agent.parameter_generator.train(train_mode)
-        if hasattr(agent, "parameter_pointer"):
-            agent.parameter_pointer.train(train_mode)
+        agent_module = agent.module if isinstance(agent, DDP) else agent
+        if hasattr(agent_module, "hierarchical_policy"):
+            agent_module.hierarchical_policy.train(train_mode)
+        if hasattr(agent_module, "tactic_pointer"):
+            agent_module.tactic_pointer.train(train_mode)
+        if hasattr(agent_module, "parameter_generator"):
+            agent_module.parameter_generator.train(train_mode)
+        if hasattr(agent_module, "parameter_pointer"):
+            agent_module.parameter_pointer.train(train_mode)
 
-    def _update_target_network(self):
+    def _set_agent_device(self, agent):
+        """Move all submodules of an agent to the correct device."""
+        agent_module = agent.module if isinstance(agent, DDP) else agent
+        if hasattr(agent_module, "hierarchical_policy"):
+            agent_module.hierarchical_policy.to(self.device)
+        if hasattr(agent_module, "tactic_pointer"):
+            agent_module.tactic_pointer.to(self.device)
+        if hasattr(agent_module, "parameter_generator"):
+            agent_module.parameter_generator.to(self.device)
+        if hasattr(agent_module, "parameter_pointer"):
+            agent_module.parameter_pointer.to(self.device)
+
+    def _update_target_network(self, is_hard_update: bool = False):
         """Update target network with current agent weights."""
         try:
-            agent_state_dict = self._get_agent_state_dict()
-            self._load_agent_state_dict(self.target_agent, agent_state_dict)
-            self.logger.debug("Target network updated successfully")
+            target_state_dict = self._get_agent_state_dict(self.target_agent)
+            agent_state_dict = self._get_agent_state_dict(self.agent)
+
+            if is_hard_update:
+                # Hard update
+                self._load_agent_state_dict(self.target_agent, agent_state_dict)
+            else:
+                # Soft update
+                tau = self.config.training.target_update_tau
+                updated_state_dict = {}
+                for key in target_state_dict:
+                    updated_state_dict[key] = (
+                        tau * agent_state_dict[key] + (1 - tau) * target_state_dict[key]
+                    )
+                self._load_agent_state_dict(self.target_agent, updated_state_dict)
+
         except Exception as e:
-            self.logger.warning(f"Target network update failed: {e}")
+            self.logger.warning(f"Could not update target network: {e}")
 
     def _validate_config(self):
         """Validate configuration to prevent runtime errors."""
