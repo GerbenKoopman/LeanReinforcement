@@ -805,63 +805,29 @@ class HierarchicalTransformerTrainer:
             f"Episode {episode} | Avg Reward: {avg_reward:.3f} | Avg Success: {avg_success:.3f}"
         )
 
-        # Tensorboard logging
         if self.writer:
-            self.writer.add_scalar("train/avg_reward", avg_reward, episode)
-            self.writer.add_scalar("train/success_rate", success_rate, episode)
+            self.writer.add_scalar("Reward/Average", avg_reward, episode)
+            self.writer.add_scalar("Success/Average", avg_success, episode)
             self.writer.add_scalar(
-                "train/episode_length",
-                (
-                    np.mean(self.metrics.episode_lengths[-100:])
-                    if self.metrics.episode_lengths
-                    else 0
-                ),
-                episode,
+                "LearningRate", self.optimizer.param_groups[0]["lr"], episode
             )
 
-            if self.curriculum:
-                self.writer.add_scalar(
-                    "curriculum/stage", self.curriculum.current_stage, episode
-                )
-
-            if self.metrics.loss_history:
-                self.writer.add_scalar(
-                    "train/loss", np.mean(self.metrics.loss_history[-100:]), episode
-                )
-
     def _save_checkpoint(self, episode: int, checkpoint_type: str):
-        """Save model checkpoint to SCRATCH_SHARED."""
-        if self.config.distributed.rank != 0:  # Only main process saves
+        """Save model checkpoint."""
+        if self.config.distributed.rank != 0:
             return
 
-        # Get SCRATCH_SHARED from environment
-        scratch_dir = os.getenv("SCRATCH_SHARED", ".")
-        checkpoint_dir = (
-            Path(scratch_dir) / "checkpoints" / f"exp_{self.config.experiment_name}"
+        checkpoint_path = (
+            self.checkpoint_dir / f"checkpoint_{checkpoint_type}_ep{episode}.pt"
         )
-        checkpoint_dir.mkdir(parents=True, exist_ok=True)
-
-        checkpoint_path = checkpoint_dir / f"checkpoint_{checkpoint_type}_{episode}.pt"
-
-        # Get state dict from potentially wrapped model
-        if isinstance(self.agent, DDP):
-            agent_state_dict = self.agent.module.state_dict()
-        else:
-            agent_state_dict = self._get_agent_state_dict()
-
-        checkpoint = {
+        state = {
             "episode": episode,
-            "agent_state_dict": agent_state_dict,
-            "target_agent_state_dict": self._get_target_agent_state_dict(),
+            "agent_state_dict": self._get_agent_state_dict(self.agent),
             "optimizer_state_dict": self.optimizer.state_dict(),
-            "scheduler_state_dict": self.scheduler.state_dict(),
             "config": asdict(self.config),
-            "metrics": asdict(self.metrics),
-            "curriculum_stage": self.curriculum.current_stage if self.curriculum else 0,
         }
-
-        torch.save(checkpoint, checkpoint_path)
-        self.logger.info(f"Saved checkpoint: {checkpoint_path}")
+        torch.save(state, checkpoint_path)
+        self.logger.info(f"Saved {checkpoint_type} checkpoint to {checkpoint_path}")
 
     def load_checkpoint(self, checkpoint_path: str):
         """Load model checkpoint."""
