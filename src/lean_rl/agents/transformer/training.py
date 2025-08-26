@@ -12,6 +12,7 @@ import random
 import time
 import logging
 import os
+import argparse
 
 import torch
 import torch.nn as nn
@@ -313,8 +314,9 @@ class CurriculumManager:
 class HierarchicalTransformerTrainer:
     """Main trainer for the hierarchical transformer agent."""
 
-    def __init__(self, config: ExperimentConfig):
+    def __init__(self, config: ExperimentConfig, no_evaluation: bool = False):
         self.config = config
+        self.no_evaluation = no_evaluation
         self.device = torch.device(
             f"cuda:{config.distributed.local_rank}"
             if torch.cuda.is_available() and config.distributed.use_distributed
@@ -346,6 +348,9 @@ class HierarchicalTransformerTrainer:
 
         # Validate configuration
         self._validate_config()
+
+        # Disable evaluation phase if specified
+        self.no_evaluation = no_evaluation
 
     def _setup_logging(self):
         """Setup logging configuration."""
@@ -645,7 +650,11 @@ class HierarchicalTransformerTrainer:
                 if episode % self.config.training.log_frequency == 0:
                     self._log_progress(episode, recent_rewards, recent_successes)
 
-                if episode % self.config.training.eval_frequency == 0:
+                if (
+                    not self.no_evaluation
+                    and episode > 0
+                    and episode % self.config.training.eval_frequency == 0
+                ):
                     eval_success_rate = self._evaluate()
                     if eval_success_rate > best_success_rate:
                         best_success_rate = eval_success_rate
@@ -973,15 +982,73 @@ class HierarchicalTransformerTrainer:
 
 def main():
     """Main training function."""
+    parser = argparse.ArgumentParser(
+        description="Train a Hierarchical Transformer Agent for Lean theorem proving."
+    )
+
+    # Repository and Experiment Config
+    parser.add_argument(
+        "--repo-url",
+        type=str,
+        default="https://github.com/leanprover-community/mathlib4",
+        help="URL of the Lean repository to use.",
+    )
+    parser.add_argument(
+        "--repo-commit",
+        type=str,
+        default="29dcec074de168ac2bf835a77ef68bbe069194c5",
+        help="Commit hash of the repository.",
+    )
+    parser.add_argument(
+        "--run-name",
+        type=str,
+        default=f"training_run_{int(time.time())}",
+        help="A name for the training run for logging purposes.",
+    )
+
+    # Training Hyperparameters
+    parser.add_argument(
+        "--max-episodes",
+        type=int,
+        default=5000,
+        help="Maximum number of training episodes.",
+    )
+    parser.add_argument(
+        "--max-steps-per-episode",
+        type=int,
+        default=100,
+        help="Maximum steps per episode.",
+    )
+    parser.add_argument(
+        "--eval-frequency",
+        type=int,
+        default=200,
+        help="How often to run evaluation (in episodes).",
+    )
+    parser.add_argument(
+        "--save-frequency",
+        type=int,
+        default=500,
+        help="How often to save a periodic checkpoint (in episodes).",
+    )
+    parser.add_argument(
+        "--no-evaluation",
+        action="store_true",
+        help="If set, disables the evaluation phase. Useful for debug runs.",
+    )
+
+    args = parser.parse_args()
+
     # Configuration
     config = ExperimentConfig(
-        experiment_name="hierarchical_transformer_training",
-        repo_url="https://github.com/leanprover-community/mathlib4",
-        repo_commit="29dcec074de168ac2bf835a77ef68bbe069194c5",
+        experiment_name=args.run_name,
+        repo_url=args.repo_url,
+        repo_commit=args.repo_commit,
         training=TrainingConfig(
-            max_episodes=5000,
-            eval_frequency=200,
-            save_frequency=500,
+            max_episodes=args.max_episodes,
+            max_steps_per_episode=args.max_steps_per_episode,
+            eval_frequency=args.eval_frequency,
+            save_frequency=args.save_frequency,
             use_experience_replay=True,
         ),
         model=ModelConfig(
@@ -998,7 +1065,7 @@ def main():
     )
 
     # Initialize trainer
-    trainer = HierarchicalTransformerTrainer(config)
+    trainer = HierarchicalTransformerTrainer(config, no_evaluation=args.no_evaluation)
 
     # Start training
     trainer.train()
