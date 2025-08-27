@@ -12,6 +12,7 @@ import torch.nn.functional as F
 from typing import Dict, Optional, Any, List
 from enum import Enum
 
+import torch.nn.functional as F
 from .attention import MultiHeadAttention, AttentionPooling
 
 
@@ -251,42 +252,71 @@ class TacticParameterGenerator(nn.Module):
         self, outputs: Dict[str, Any], targets: Dict[str, Any]
     ) -> torch.Tensor:
         """
-        Compute training loss for parameter generation.
+        Compute a comprehensive training loss for parameter generation.
+        This function handles various types of outputs: classification,
+        generation (autoregressive), and selection (attention-based).
 
         Args:
-            outputs: Model outputs from forward pass
-            targets: Target parameters and types
+            outputs: A dictionary of model outputs from the forward pass.
+            targets: A dictionary of target labels and values.
 
         Returns:
-            Combined loss tensor
+            A combined, weighted loss tensor.
         """
         total_loss = torch.tensor(0.0, device=next(self.parameters()).device)
+        loss_fns = {
+            "param_type": F.cross_entropy,
+            "generation": F.cross_entropy,
+            "selection": F.cross_entropy,
+            "rewrite": lambda log_probs, indices: F.nll_loss(
+                log_probs.reshape(-1, log_probs.size(-1)), indices.reshape(-1)
+            ),
+        }
 
-        # Parameter type classification loss
+        # 1. Parameter Type Classification Loss
         if "parameter_type_logits" in outputs and "target_param_type" in targets:
-            param_type_loss = F.cross_entropy(
+            param_type_loss = loss_fns["param_type"](
                 outputs["parameter_type_logits"], targets["target_param_type"]
             )
             total_loss += self.param_type_weight * param_type_loss
 
-        # Generation losses (if applicable)
+        # 2. Autoregressive Term Generation Loss
         if "generated_term" in outputs and "target_term" in targets:
-            if "logits" in outputs["generated_term"]:
-                gen_loss = F.cross_entropy(
-                    outputs["generated_term"]["logits"].view(-1, self.vocab_size),
-                    targets["target_term"].view(-1),
-                    ignore_index=0,  # Assuming 0 is padding token
+            gen_output = outputs["generated_term"]
+            if "logits" in gen_output:
+                logits = gen_output["logits"]
+                target = targets["target_term"]
+                # Align dimensions: [batch, seq_len, vocab] vs [batch, seq_len]
+                generation_loss = loss_fns["generation"](
+                    logits.view(-1, self.vocab_size), target.view(-1)
                 )
-                total_loss += self.generation_weight * gen_loss
+                total_loss += self.generation_weight * generation_loss
 
-        # Selection losses
+        # 3. Hypothesis Selection Loss
         if "hypothesis_selection" in outputs and "target_hypothesis" in targets:
-            if "selection_logits" in outputs["hypothesis_selection"]:
-                sel_loss = F.cross_entropy(
-                    outputs["hypothesis_selection"]["selection_logits"],
-                    targets["target_hypothesis"],
+            hyp_output = outputs["hypothesis_selection"]
+            if "selection_logits" in hyp_output:
+                selection_loss = loss_fns["selection"](
+                    hyp_output["selection_logits"], targets["target_hypothesis"]
                 )
-                total_loss += self.selection_weight * sel_loss
+                total_loss += self.selection_weight * selection_loss
+
+        # 4. Rewrite Sequence Loss
+        if "rewrite_sequence" in outputs and "target_rewrite_indices" in targets:
+            rewrite_output = outputs["rewrite_sequence"]
+            if "rewrite_log_probs" in rewrite_output:
+                log_probs = rewrite_output["rewrite_log_probs"]
+                target_indices = targets["target_rewrite_indices"]
+                rewrite_loss = loss_fns["rewrite"](log_probs, target_indices)
+                total_loss += (
+                    self.selection_weight * rewrite_loss
+                )  # Reuse selection weight
+
+        # 5. Premise Retrieval Loss (if applicable, e.g., using contrastive loss)
+        if "retrieved_premises" in outputs and "target_premises" in targets:
+            # This would require a more complex loss like contrastive loss,
+            # which is beyond a simple replacement here. For now, we skip this.
+            pass
 
         return total_loss
 
@@ -525,10 +555,10 @@ class TacticParameterGenerator(nn.Module):
         }
 
         # Generate rewrite sequence
-        rewrite_sequence = self.rewrite_generator(
+        rewrite_output = self.rewrite_generator(
             repr.unsqueeze(1), proof_state, available_terms
         )
-        result["rewrite_sequence"] = rewrite_sequence
+        result["rewrite_sequence"] = rewrite_output
 
         # Add simp lemmas for advanced rewrite tactics
         if include_simp_lemmas:
@@ -572,26 +602,30 @@ class TacticParameterGenerator(nn.Module):
 
         return result
 
-    # Simplified individual functions that call generic functions
     def _generate_intro_params(self, proof_state, repr, param_type_logits):
+        """Handles tactics like 'intro', which typically require no complex parameters."""
         return self._generate_no_params(proof_state, repr, param_type_logits, "intro")
 
     def _generate_automation_params(self, proof_state, repr, param_type_logits):
+        """Handles automation tactics that require no parameters."""
         return self._generate_no_params(
             proof_state, repr, param_type_logits, "automation"
         )
 
     def _generate_assumption_params(self, proof_state, repr, param_type_logits):
+        """Handles assumption tactics that require no parameters."""
         return self._generate_no_params(
             proof_state, repr, param_type_logits, "assumption"
         )
 
     def _generate_finish_params(self, proof_state, repr, param_type_logits):
+        """Handles finishing tactics that require no parameters."""
         return self._generate_no_params(proof_state, repr, param_type_logits, "finish")
 
     def _generate_case_params(
         self, proof_state, repr, available_hypotheses, param_type_logits
     ):
+        """Handles case-analysis tactics by selecting a hypothesis."""
         return self._generate_hypothesis_selection_params(
             proof_state, repr, available_hypotheses, param_type_logits, "cases"
         )
@@ -599,6 +633,7 @@ class TacticParameterGenerator(nn.Module):
     def _generate_structural_params(
         self, proof_state, repr, available_hypotheses, param_type_logits
     ):
+        """Handles structural tactics by selecting a hypothesis."""
         return self._generate_hypothesis_selection_params(
             proof_state, repr, available_hypotheses, param_type_logits, "structural"
         )
@@ -606,6 +641,7 @@ class TacticParameterGenerator(nn.Module):
     def _generate_induction_params(
         self, proof_state, repr, available_hypotheses, param_type_logits
     ):
+        """Handles induction by selecting a hypothesis and generating a pattern."""
         return self._generate_hypothesis_selection_params(
             proof_state,
             repr,
@@ -618,6 +654,7 @@ class TacticParameterGenerator(nn.Module):
     def _generate_goal_management_params(
         self, proof_state, repr, available_hypotheses, param_type_logits
     ):
+        """Handles goal management by selecting a hypothesis and generating a new name."""
         return self._generate_hypothesis_selection_params(
             proof_state,
             repr,
@@ -630,6 +667,7 @@ class TacticParameterGenerator(nn.Module):
     def _generate_specialized_params(
         self, proof_state, repr, available_hypotheses, param_type_logits
     ):
+        """Handles specialized tactics by selecting a hypothesis and generating bounds."""
         return self._generate_hypothesis_selection_params(
             proof_state,
             repr,
@@ -642,6 +680,7 @@ class TacticParameterGenerator(nn.Module):
     def _generate_calc_params(
         self, proof_state, repr, available_terms, param_type_logits
     ):
+        """Handles calculation tactics by generating calculation steps."""
         return self._generate_term_generation_params(
             proof_state, repr, param_type_logits, "calc", max_length=30
         )
@@ -649,6 +688,7 @@ class TacticParameterGenerator(nn.Module):
     def _generate_proof_params(
         self, proof_state, repr, available_terms, param_type_logits
     ):
+        """Handles proof construction tactics by generating a proof term."""
         return self._generate_term_generation_params(
             proof_state, repr, param_type_logits, "proof", max_length=25
         )
@@ -656,6 +696,7 @@ class TacticParameterGenerator(nn.Module):
     def _generate_conversion_params(
         self, proof_state, repr, available_terms, param_type_logits
     ):
+        """Handles conversion tactics by generating a target expression."""
         return self._generate_term_generation_params(
             proof_state, repr, param_type_logits, "conversion", max_length=20
         )
@@ -663,6 +704,7 @@ class TacticParameterGenerator(nn.Module):
     def _generate_quantifier_params(
         self, proof_state, repr, available_terms, param_type_logits
     ):
+        """Handles quantifier tactics by generating a witness term."""
         return self._generate_term_generation_params(
             proof_state,
             repr,
@@ -675,6 +717,7 @@ class TacticParameterGenerator(nn.Module):
     def _generate_advanced_rewrite_params(
         self, proof_state, repr, available_terms, knowledge_base, param_type_logits
     ):
+        """Handles advanced rewrite tactics by generating a rewrite sequence and selecting simp lemmas."""
         return self._generate_rewrite_params(
             proof_state,
             repr,
@@ -873,6 +916,7 @@ class RewriteSequenceGenerator(nn.Module):
 
         self.attention = MultiHeadAttention(d_model, n_heads)
         self.sequence_generator = nn.LSTM(d_model, d_model, batch_first=True)
+        self.output_projection = nn.Linear(d_model, d_model)
 
     def forward(
         self,
@@ -881,16 +925,68 @@ class RewriteSequenceGenerator(nn.Module):
         available_terms: Optional[torch.Tensor] = None,
     ) -> Dict[str, torch.Tensor]:
         """Generate rewrite sequence."""
+        batch_size = query.size(0)
+        device = query.device
 
-        # Use attention to focus on relevant parts
-        focused = self.attention(query, proof_state, proof_state)
+        # Use attention to focus on relevant parts of the proof state
+        focused_context = self.attention(query, proof_state, proof_state).mean(dim=1)
 
-        # Generate sequence (simplified)
-        sequence_repr = focused.mean(dim=1, keepdim=True)
+        # Initialize LSTM state
+        hidden = focused_context.unsqueeze(0)
+        cell = torch.zeros_like(hidden)
+
+        # Start token for generation (e.g., a zero vector)
+        current_input = torch.zeros(batch_size, 1, self.d_model, device=device)
+
+        generated_sequence_indices = []
+        generated_sequence_log_probs = []
+
+        if available_terms is None or available_terms.shape[1] == 0:
+            return {
+                "rewrite_indices": torch.tensor([], dtype=torch.long, device=device),
+                "rewrite_log_probs": torch.tensor([], device=device),
+                "sequence_length": torch.tensor([0] * batch_size, device=device),
+            }
+
+        for _ in range(self.max_length):
+            output, (hidden, cell) = self.sequence_generator(
+                current_input, (hidden, cell)
+            )
+
+            # Project output to match term embedding dimension
+            projected_output = self.output_projection(output.squeeze(1))
+
+            # Compute similarity with available terms to get logits
+            logits = torch.bmm(available_terms, projected_output.unsqueeze(-1)).squeeze(
+                -1
+            )
+            log_probs = F.log_softmax(logits, dim=-1)
+
+            # Sample the next term
+            next_term_index = torch.multinomial(log_probs.exp(), 1)
+
+            # Get the log probability of the chosen term
+            chosen_log_prob = log_probs.gather(1, next_term_index)
+
+            generated_sequence_indices.append(next_term_index)
+            generated_sequence_log_probs.append(chosen_log_prob)
+
+            # Prepare next input: the embedding of the chosen term
+            current_input = torch.gather(
+                available_terms,
+                1,
+                next_term_index.unsqueeze(-1).expand(-1, -1, self.d_model),
+            )
+
+        indices = torch.cat(generated_sequence_indices, dim=1)
+        log_probs = torch.cat(generated_sequence_log_probs, dim=1)
 
         return {
-            "rewrite_representation": sequence_repr,
-            "sequence_length": torch.tensor([3]),  # Placeholder
+            "rewrite_indices": indices,
+            "rewrite_log_probs": log_probs,
+            "sequence_length": torch.tensor(
+                [self.max_length] * batch_size, device=device
+            ),
         }
 
 
@@ -1018,110 +1114,76 @@ class BeamSearchGenerator:
 
     def beam_search_decode(
         self,
-        model: nn.Module,
+        model: "AutoregressiveTermGenerator",
         initial_context: torch.Tensor,
         max_length: int = 20,
-        vocab_size: int = 1000,
-    ) -> List[Dict[str, Any]]:
+    ) -> List[List[Dict[str, Any]]]:
         """
         Generate multiple parameter candidates using beam search.
-
         Args:
-            model: The autoregressive generator
-            initial_context: Initial context tensor
-            max_length: Maximum sequence length
-            vocab_size: Vocabulary size
-
+            model: The autoregressive generator model.
+            initial_context: Initial context tensor for the decoder.
+            max_length: Maximum generation length.
         Returns:
-            List of candidate sequences with scores
+            A list of lists of candidate sequences and their scores for each item in the batch.
         """
         batch_size = initial_context.size(0)
         device = initial_context.device
 
-        # Initialize beam
-        sequences = torch.zeros(
-            batch_size, self.beam_size, 1, dtype=torch.long, device=device
-        )
-        scores = torch.zeros(batch_size, self.beam_size, device=device)
+        # Initialize beams for each item in the batch
+        beams = [
+            [([], 0.0)] for _ in range(batch_size)
+        ]  # Each beam is a list of (sequence, score)
+        hidden = initial_context.unsqueeze(0)
+        cell = torch.zeros_like(hidden)
 
-        # Beam search decoding
-        for step in range(max_length):
-            if step == 0:
-                # First step: use initial context
-                with torch.no_grad():
-                    output = model(initial_context)
-                    if "logits" in output:
-                        logits = output["logits"][:, -1, :]  # Last token logits
+        for _ in range(max_length):
+            all_candidates = [[] for _ in range(batch_size)]
+            for i in range(batch_size):
+                for seq, score in beams[i]:
+                    if not seq or seq[-1] != 0:  # 0 is EOS token
+                        current_token = (
+                            torch.tensor([seq[-1]], device=device)
+                            if seq
+                            else torch.zeros(1, dtype=torch.long, device=device)
+                        )
+                        embedded = (
+                            model.token_embedding(current_token.unsqueeze(0))
+                            + model.positional_encoding[len(seq) : len(seq) + 1]
+                        )
+                        output, (h, c) = model.decoder(
+                            embedded,
+                            (
+                                hidden[:, i : i + 1, :].contiguous(),
+                                cell[:, i : i + 1, :].contiguous(),
+                            ),
+                        )
+                        logits = model.output_projection(output.squeeze(0))
                         log_probs = F.log_softmax(logits, dim=-1)
-
-                        # Get top-k tokens for first step
-                        top_scores, top_indices = torch.topk(
-                            log_probs, self.beam_size, dim=-1
+                        top_log_probs, top_indices = log_probs.topk(
+                            self.beam_size, dim=-1
                         )
 
-                        for i in range(batch_size):
-                            for j in range(self.beam_size):
-                                sequences[i, j, 0] = top_indices[i, j]
-                                scores[i, j] = top_scores[i, j]
-            else:
-                # Subsequent steps: expand each beam
-                all_candidates = []
+                        for j in range(self.beam_size):
+                            new_seq = seq + [top_indices[0, j].item()]
+                            new_score = score + top_log_probs[0, j].item()
+                            all_candidates[i].append((new_seq, new_score))
 
-                for beam_idx in range(self.beam_size):
-                    current_seq = sequences[:, beam_idx, : step + 1]
-                    current_score = scores[:, beam_idx]
+            # Update beams with the best candidates
+            for i in range(batch_size):
+                if all_candidates[i]:
+                    sorted_candidates = sorted(
+                        all_candidates[i], key=lambda x: x[1], reverse=True
+                    )
+                    beams[i] = sorted_candidates[: self.beam_size]
 
-                    # Generate next token probabilities
-                    with torch.no_grad():
-                        # This is simplified - in practice, you'd need to
-                        # properly format the input for the model
-                        dummy_output = torch.randn(
-                            batch_size, vocab_size, device=device
-                        )
-                        log_probs = F.log_softmax(dummy_output, dim=-1)
-
-                        # Get top-k next tokens
-                        top_scores, top_indices = torch.topk(
-                            log_probs, self.beam_size, dim=-1
-                        )
-
-                        for i in range(batch_size):
-                            for k in range(self.beam_size):
-                                new_seq = torch.cat(
-                                    [
-                                        current_seq[i : i + 1],
-                                        top_indices[i : i + 1, k : k + 1],
-                                    ],
-                                    dim=-1,
-                                )
-                                new_score = current_score[i] + top_scores[i, k]
-                                all_candidates.append((new_seq, new_score, i))
-
-                # Select top beam_size candidates for each batch element
-                for batch_idx in range(batch_size):
-                    batch_candidates = [
-                        (seq, score)
-                        for seq, score, b_idx in all_candidates
-                        if b_idx == batch_idx
-                    ]
-                    batch_candidates.sort(key=lambda x: x[1], reverse=True)
-
-                    for beam_idx in range(min(self.beam_size, len(batch_candidates))):
-                        seq, score = batch_candidates[beam_idx]
-                        sequences[batch_idx, beam_idx, : step + 2] = seq
-                        scores[batch_idx, beam_idx] = score
-
-        # Convert to list of dictionaries
+        # Prepare results
         results = []
-        for batch_idx in range(batch_size):
-            batch_results = []
-            for beam_idx in range(self.beam_size):
-                batch_results.append(
-                    {
-                        "sequence": sequences[batch_idx, beam_idx],
-                        "score": float(scores[batch_idx, beam_idx]),
-                    }
-                )
+        for i in range(batch_size):
+            batch_results = [
+                {"sequence": torch.tensor(seq), "score": score}
+                for seq, score in beams[i]
+            ]
             results.append(batch_results)
 
         return results

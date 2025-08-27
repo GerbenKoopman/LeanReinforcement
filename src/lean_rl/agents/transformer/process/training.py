@@ -158,17 +158,23 @@ class ExperienceReplayBuffer:
 
     def _encode_state_batch(
         self, states: List[Optional[TacticState]]
-    ) -> List[Dict[str, torch.Tensor]]:
-        """Encode a batch of states, handling None values."""
+    ) -> Dict[str, torch.Tensor]:
+        """Encode a batch of states, handling None values, and collate them."""
         agent_module = self.agent.module if isinstance(self.agent, DDP) else self.agent
         if not agent_module:
             raise RuntimeError("Agent reference not set in ExperienceReplayBuffer")
 
-        encoded_batch = []
-        for state in states:
-            if state is not None:
-                encoded_batch.append(agent_module.encode_state(state))
-        return encoded_batch
+        encoded_list = [agent_module.encode_state(s) for s in states if s is not None]
+
+        if not encoded_list:
+            return {}
+
+        # Collate the list of dicts into a single dict of batched tensors
+        collated_batch = {
+            key: torch.cat([d[key] for d in encoded_list], dim=0)
+            for key in encoded_list[0]
+        }
+        return collated_batch
 
 
 class CurriculumManager:
@@ -784,38 +790,94 @@ class HierarchicalTransformerTrainer:
         self._update_target_network()
 
     def _compute_loss(self, batch: Dict[str, Any]) -> Optional[torch.Tensor]:
-        """Compute total loss for a batch of experiences."""
+        """
+        Compute a fully hierarchical loss for a batch of experiences using an Actor-Critic style loss.
+        This implementation correctly handles the multi-level nature of the agent's actions.
+        """
         agent_module = self.agent.module if isinstance(self.agent, DDP) else self.agent
+        target_agent_module = (
+            self.target_agent.module
+            if isinstance(self.target_agent, DDP)
+            else self.target_agent
+        )
 
-        # This is a simplified placeholder for an actor-critic style loss.
-        # A full implementation would be more complex.
         try:
-            # Get Q-values for current states and actions
-            # This requires the agent to have a method to evaluate actions
-            # For simplicity, we'll use a placeholder loss
+            rewards = batch["rewards"]
+            dones = batch["dones"]
+            actions = batch["actions"]
             encoded_states = batch["encoded_states"]
+            encoded_next_states = batch["encoded_next_states"]
+
             if not encoded_states:
                 return None
 
-            # Example: just train the strategic model for simplicity
-            output = agent_module.hierarchical_forward(
-                encoded_states[0], HierarchyLevel.STRATEGIC
-            )
-            policy_logits = output["policy_logits"]
+            # --- Get action log-probabilities and state values from the agent ---
+            (
+                action_log_probs,
+                values,
+                entropy,
+                param_loss,
+            ) = agent_module.evaluate_action(encoded_states, actions)
+            values = values.squeeze(-1)
 
-            # Dummy loss - this needs to be replaced with a proper objective
-            # e.g., based on rewards and target network estimates
-            dummy_target = torch.randint(
-                0,
-                policy_logits.shape[-1],
-                (policy_logits.shape[0],),
-                device=self.device,
-            )
-            loss = self.policy_loss_fn(policy_logits, dummy_target)
+            # --- Get values for next states from the target network ---
+            next_values = torch.zeros_like(rewards, device=self.device)
+            if encoded_next_states:
+                with torch.no_grad():
+                    next_output = target_agent_module.hierarchical_forward(
+                        encoded_next_states, HierarchyLevel.STRATEGIC
+                    )
+                    next_state_values = next_output["value"].squeeze(-1)
 
-            return loss
+                # Create a mask for non-final states
+                non_final_mask = torch.tensor(
+                    [s is not None for s in batch["next_states"]],
+                    device=self.device,
+                    dtype=torch.bool,
+                )
+                next_values[non_final_mask] = next_state_values
+
+            # --- Compute target Q-values and advantage ---
+            target_q_values = rewards + (
+                ~dones * self.config.training.gamma * next_values
+            )
+            advantages = target_q_values - values
+
+            # --- Calculate losses ---
+            policy_loss = -(action_log_probs * advantages.detach()).mean()
+            value_loss = self.value_loss_fn(values, target_q_values.detach())
+            entropy_loss = -self.config.training.entropy_coefficient * entropy.mean()
+
+            # Total Loss
+            total_loss = (
+                policy_loss
+                + self.config.training.value_loss_coefficient * value_loss
+                + entropy_loss
+                + self.config.training.parameter_loss_coefficient * param_loss
+            )
+
+            # Log losses
+            if self.writer and self.config.distributed.rank == 0:
+                self.writer.add_scalar(
+                    "Loss/Policy", policy_loss.item(), self.metrics.total_steps
+                )
+                self.writer.add_scalar(
+                    "Loss/Value", value_loss.item(), self.metrics.total_steps
+                )
+                self.writer.add_scalar(
+                    "Loss/Entropy", entropy_loss.item(), self.metrics.total_steps
+                )
+                self.writer.add_scalar(
+                    "Loss/Parameter", param_loss.item(), self.metrics.total_steps
+                )
+                self.writer.add_scalar(
+                    "Loss/Total", total_loss.item(), self.metrics.total_steps
+                )
+
+            return total_loss
+
         except Exception as e:
-            self.logger.error(f"Error during loss computation: {e}")
+            self.logger.error(f"Error during loss computation: {e}", exc_info=True)
             return None
 
     def _evaluate(self) -> float:
@@ -1119,6 +1181,7 @@ def main():
             eval_episodes=args.eval_episodes,
             save_frequency=args.save_frequency,
             use_experience_replay=True,
+            parameter_loss_coefficient=0.05,  # Coefficient for parameter loss
         ),
         model=ModelConfig(
             d_model=256,

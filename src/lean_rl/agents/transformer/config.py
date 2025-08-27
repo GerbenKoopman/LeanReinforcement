@@ -79,6 +79,9 @@ class TrainingConfig:
     use_dropout: bool = True
     use_weight_decay: bool = True
     use_gradient_clipping: bool = True
+    entropy_coefficient: float = 0.01
+    value_loss_coefficient: float = 0.5
+    parameter_loss_coefficient: float = 0.05
 
     # Evaluation
     eval_frequency: int = 500

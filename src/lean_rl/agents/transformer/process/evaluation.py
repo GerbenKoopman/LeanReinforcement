@@ -85,7 +85,7 @@ class TheoremResult:
     hierarchical_actions: List[HierarchicalAction] = field(default_factory=list)
     state_sequence: List[str] = field(
         default_factory=list
-    )  # Simplified state representations
+    )  # String representations of states for logging
 
     # Failure analysis
     failure_reason: Optional[str] = None
@@ -167,6 +167,7 @@ class HierarchicalTransformerEvaluator:
         self.agent = agent
         self.config = config
         self.device = agent.device
+        self.traced_repo_path: Optional[Path] = None
 
         # Setup logging
         self.logger = self._setup_logger()
@@ -241,9 +242,9 @@ class HierarchicalTransformerEvaluator:
                 )
 
             self.logger.info("Loading repository from cache...")
-            traced_repo_path = get_traced_repo_path(self.repo, build_deps=False)
+            self.traced_repo_path = get_traced_repo_path(self.repo, build_deps=False)
             self.traced_repo = TracedRepo.load_from_disk(
-                traced_repo_path, build_deps=False
+                self.traced_repo_path, build_deps=False
             )
             self.logger.info("Repository loaded from cache successfully")
 
@@ -304,58 +305,49 @@ class HierarchicalTransformerEvaluator:
         all_theorems = []
 
         if self.config.use_mathlib_benchmark:
-            # Get diverse set of theorems from mathlib
-            theorem_files = [
-                "Mathlib/Data/Nat/Basic.lean",
-                "Mathlib/Data/List/Basic.lean",
-                "Mathlib/Logic/Basic.lean",
-                "Mathlib/Algebra/Group/Defs.lean",
-                "Mathlib/Algebra/Ring/Defs.lean",
-                "Mathlib/Data/Set/Basic.lean",
-                "Mathlib/Order/Basic.lean",
-                "Mathlib/Topology/Basic.lean",
-            ]
+            # Scan for theorem files in mathlib instead of using a hardcoded list
+            try:
+                if self.traced_repo_path is None:
+                    raise ValueError("Traced repository path is not set.")
 
-            for file_path in theorem_files:
-                try:
-                    traced_file = self.traced_repo.get_traced_file(file_path)
+                mathlib_path = self.traced_repo_path / "Mathlib"
+                lean_files = list(mathlib_path.glob("**/*.lean"))
+                self.logger.info(f"Found {len(lean_files)} .lean files in Mathlib.")
+
+                # Sample a subset of files to avoid excessively long evaluations
+                num_files_to_sample = min(len(lean_files), 50)  # Increased sample size
+                sampled_files = random.sample(lean_files, num_files_to_sample)
+
+                for file_path in sampled_files:
+                    relative_path = file_path.relative_to(self.traced_repo_path)
+                    traced_file = self.traced_repo.get_traced_file(str(relative_path))
                     if traced_file is None:
                         self.logger.warning(
-                            f"Failed to load theorems from {file_path}: traced_file is None"
+                            f"Failed to load theorems from {relative_path}: traced_file is None"
                         )
                         continue
 
                     theorems = traced_file.get_traced_theorems()
                     if theorems is None:
                         self.logger.warning(
-                            f"Failed to load theorems from {file_path}: get_traced_theorems returned None"
+                            f"Failed to load theorems from {relative_path}: get_traced_theorems returned None"
                         )
                         continue
 
                     # Sample theorems to avoid overwhelming evaluation
-                    max_per_file = 10
+                    max_per_file = 5  # Reduced sample per file for broader coverage
                     if len(theorems) > max_per_file:
                         random.seed(42)  # Reproducible sampling
                         theorems = random.sample(theorems, max_per_file)
 
                     all_theorems.extend(theorems)
                     self.logger.info(
-                        f"Loaded {len(theorems)} theorems from {file_path}"
+                        f"Loaded {len(theorems)} theorems from {relative_path}"
                     )
 
-                except Exception as e:
-                    self.logger.warning(
-                        f"Failed to load theorems from {file_path}: {type(e).__name__}: {str(e)}"
-                    )
-                    self.logger.debug(f"Full traceback: {traceback.format_exc()}")
-                    continue
-
-        # Add competition problems and custom benchmarks
-        competition_problems = self._load_competition_problems()
-        all_theorems.extend(competition_problems)
-
-        custom_benchmarks = self._load_custom_benchmarks()
-        all_theorems.extend(custom_benchmarks)
+            except Exception as e:
+                self.logger.error(f"Error scanning mathlib directory: {e}")
+                self.logger.debug(f"Full traceback: {traceback.format_exc()}")
 
         self.logger.info(f"Collected {len(all_theorems)} evaluation theorems")
         return all_theorems
@@ -423,11 +415,15 @@ class HierarchicalTransformerEvaluator:
                     result.stuck_at_step = step
                     break
 
-                    # Record hierarchical action if available - simplified tracking
-                    # Note: This would need to be implemented in the agent if needed
-                    result.hierarchical_actions.append(
-                        self.agent.last_hierarchical_action
-                    )
+                # Record hierarchical action if available
+                if (
+                    hasattr(self.agent, "_last_action_info")
+                    and self.agent._last_action_info
+                    and "hierarchical_action" in self.agent._last_action_info
+                ):
+                    hier_action = self.agent._last_action_info["hierarchical_action"]
+                    if hier_action:
+                        result.hierarchical_actions.append(hier_action)
 
                 # Take step
                 step_result = self.env.step(action)

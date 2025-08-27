@@ -4,9 +4,37 @@ Testing Module for Hierarchical Transformer Agent.
 This module provides comprehensive testing capabilities for the HierarchicalTransformerAgent,
 including unit tests, integration tests, performance benchmarks, and evaluation metrics.
 """
+import os
+import time
+import torch
+import numpy as np
+import logging
+import traceback
+import tempfile
+import random
+import json
+import argparse
+from pathlib import Path
+from typing import Dict, List, Optional, Union
+from dataclasses import dataclass, field
+from unittest.mock import Mock
+
+from ..data.repository import RepoManager
+from lean_dojo import TacticState, Theorem
+from lean_dojo.data_extraction.traced_data import TracedTheorem
+
+from ..model.agent import (
+    HierarchicalTransformerAgent,
+    HierarchicalAction,
+    HierarchicalSearchTree,
+)
+from ..model.hierarchy import HierarchyLevel, StrategicActions, TacticalFamilies
+from ....environment import LeanEnvironment
+from ....agents import RandomAgent, MCTSAgent
 
 import argparse
 import os
+import random
 import torch
 import numpy as np
 import time
@@ -331,7 +359,7 @@ class HierarchicalTransformerTester:
                 if not self.test_cache.get_theorems(size):
                     self.logger.info(f"Pre-loading {size} test theorems...")
                     # This will cache the theorems for future use
-                    self._get_cached_theorems_optimized(size)
+                    self._get_test_theorems(size)
         except Exception as e:
             self.logger.warning(f"Failed to pre-load test theorems: {e}")
 
@@ -346,7 +374,7 @@ class HierarchicalTransformerTester:
         try:
             if hasattr(self, "env") and self.env is not None:
                 # Find the theorem object by name
-                test_theorems = self._get_cached_theorems_optimized(
+                test_theorems = self._get_test_theorems(
                     50
                 )  # Get a larger set to find by name
                 theorem_obj = None
@@ -370,19 +398,6 @@ class HierarchicalTransformerTester:
             )
 
         return None
-
-    def _get_cached_theorems_optimized(self, num_theorems: int) -> List:
-        """Optimized method to get theorems with minimal repository access."""
-        # Check cache first - this is the main optimization
-        cached_theorems = self.test_cache.get_theorems(num_theorems)
-        if cached_theorems is not None:
-            self.logger.debug(
-                f"Using {len(cached_theorems)} cached theorems (no repository access)"
-            )
-            return cached_theorems
-
-        # If not cached, delegate to the main method (which will cache the result)
-        return self._get_test_theorems(num_theorems)
 
     def verify_optimizations(self) -> dict:
         """Verify that optimizations are working correctly."""
@@ -548,7 +563,7 @@ class HierarchicalTransformerTester:
 
                 if cache_only_mode and hasattr(self, "env") and self.env is not None:
                     # Try to get a real theorem and its initial state using optimized caching
-                    test_theorems = self._get_cached_theorems_optimized(num_theorems=1)
+                    test_theorems = self._get_test_theorems(num_theorems=1)
                     if test_theorems:
                         theorem_name = test_theorems[0].theorem.full_name
                         real_state = self._get_cached_environment(theorem_name)
@@ -643,7 +658,7 @@ class HierarchicalTransformerTester:
             # Test with real state if available - use cached environment
             if hasattr(self, "env") and self.env is not None:
                 try:
-                    test_theorems = self._get_cached_theorems_optimized(num_theorems=1)
+                    test_theorems = self._get_test_theorems(num_theorems=1)
                     if test_theorems:
                         theorem_name = test_theorems[0].theorem.full_name
 
@@ -689,7 +704,7 @@ class HierarchicalTransformerTester:
             # Test with real state if available - use cached environment
             if hasattr(self, "env") and self.env is not None:
                 try:
-                    test_theorems = self._get_cached_theorems_optimized(num_theorems=1)
+                    test_theorems = self._get_test_theorems(num_theorems=1)
                     if test_theorems:
                         theorem_name = test_theorems[0].theorem.full_name
 
@@ -763,7 +778,7 @@ class HierarchicalTransformerTester:
             mock_state.pp = "test proof state"
             mock_state.num_goals = 1
 
-            search_tree = HierarchicalSearchTree(mock_state, self.agent)
+            search_tree = HierarchicalSearchTree(self.agent, mock_state)
 
             # Check initialization
             assert search_tree.root is not None
@@ -941,7 +956,7 @@ class HierarchicalTransformerTester:
             return
 
         # Get test theorems using optimized caching
-        test_theorems = self._get_cached_theorems_optimized(num_theorems=20)
+        test_theorems = self._get_test_theorems(num_theorems=20)
 
         if not test_theorems:
             self.logger.warning("No test theorems available")
@@ -1041,7 +1056,7 @@ class HierarchicalTransformerTester:
             self.logger.warning("Environment not available for baseline comparisons")
             return
 
-        test_theorems = self._get_cached_theorems_optimized(num_theorems=10)
+        test_theorems = self._get_test_theorems(num_theorems=10)
 
         if not test_theorems:
             self.logger.warning("No test theorems for baseline comparison")
@@ -1111,7 +1126,7 @@ class HierarchicalTransformerTester:
             self.logger.warning("Environment not available for hierarchical analysis")
             return
 
-        test_theorems = self._get_cached_theorems_optimized(num_theorems=5)
+        test_theorems = self._get_test_theorems(num_theorems=5)
 
         if not test_theorems:
             return
@@ -1156,192 +1171,85 @@ class HierarchicalTransformerTester:
             self.results.tactical_accuracy = tactical_correct / total_decisions
             self.results.parameter_accuracy = parameter_correct / total_decisions
 
-    def _get_test_theorems(self, num_theorems: int = 20) -> List:
-        """Get test theorems from the repository with improved caching to avoid repeated access."""
-
-        # Check cache first
+    def _get_test_theorems(self, num_theorems: int = 20) -> List[TracedTheorem]:
+        """
+        Get a list of traced theorems for testing. This method is designed to be
+        robust and efficient, using caching and dynamic file discovery.
+        """
+        # 1. Check cache first
         cached_theorems = self.test_cache.get_theorems(num_theorems)
-        if cached_theorems is not None:
-            self.logger.info(f"Returning {len(cached_theorems)} cached theorems")
+        if cached_theorems:
+            self.logger.debug(f"Returning {len(cached_theorems)} cached theorems.")
             return cached_theorems
 
-        # Check if repository is available
-        if self.traced_repo is None:
-            self.logger.error("Traced repository is not available")
+        # 2. Ensure repository is available
+        if not self.traced_repo or not self.repo:
+            self.logger.error("Traced repository or repo object is not available.")
             return []
 
-        # If not in cache, fetch from repository
-        all_theorems = []
+        # 3. Fetch from repository if not cached
+        self.logger.info(f"Fetching {num_theorems} theorems from the repository.")
+        all_theorems: List[TracedTheorem] = []
 
-        # Check if we can safely access traced files
         try:
-            self.logger.info("Getting test theorems from repository...")
+            # Get a list of all traced files from the repository
+            traced_files = list(self.traced_repo.traced_files)
+            random.shuffle(traced_files)  # Shuffle for variety
 
-            # Dynamically get available traced files instead of a hardcoded list
-            available_files = []
-            if self.traced_repo and hasattr(self.traced_repo, "traced_files"):
-                available_files = [str(tf.path) for tf in self.traced_repo.traced_files]
-
-            # Filter for relevant mathlib files
-            mathlib_files = [
-                f
-                for f in available_files
-                if f.startswith("Mathlib/") and f.endswith(".lean")
-            ]
-
-            if not mathlib_files:
-                self.logger.warning(
-                    "No traced files found in Mathlib/. Trying a few known good files as fallback."
-                )
-                # Fallback to a minimal list if dynamic discovery fails
-                mathlib_files = [
-                    "Mathlib/Algebra/Group/Defs.lean",
-                    "Mathlib/Logic/Basic.lean",
-                ]
-
-            for file_path in mathlib_files:
+            for traced_file in traced_files:
                 try:
-                    self.logger.info(f"Attempting to load theorems from: {file_path}")
-
-                    # Check if the file exists in traced repo first
-                    try:
-                        traced_file = self.traced_repo.get_traced_file(file_path)
-                    except Exception as e:
-                        self.logger.warning(
-                            f"File {file_path} not found in traced repo: {e}"
-                        )
+                    # Skip non-Mathlib or non-Lean files
+                    if not str(traced_file.path).startswith("Mathlib/") or not str(
+                        traced_file.path
+                    ).endswith(".lean"):
                         continue
 
-                    if traced_file is None:
-                        self.logger.warning(f"Traced file is None for {file_path}")
-                        continue
-
-                    # Try to get theorems using the method that works in demo_agent.py
-                    try:
-                        theorems = traced_file.get_traced_theorems()
-                    except Exception as e:
-                        self.logger.warning(
-                            f"Error calling get_traced_theorems() for {file_path}: {e}"
-                        )
-                        continue
-
-                    if theorems is None:
-                        self.logger.warning(
-                            f"get_traced_theorems returned None for {file_path}"
-                        )
-                        continue
-
-                    if isinstance(theorems, list) and len(theorems) > 0:
-                        self.logger.info(
-                            f"Found {len(theorems)} theorems in {file_path}"
-                        )
+                    theorems = traced_file.get_traced_theorems()
+                    if theorems:
                         all_theorems.extend(theorems)
 
-                        # Early exit if we have enough theorems
-                        if len(all_theorems) >= num_theorems:
-                            break
-                    else:
-                        self.logger.info(
-                            f"No theorems found in {file_path} (got {type(theorems)})"
-                        )
-
+                    if len(all_theorems) >= num_theorems:
+                        break
                 except Exception as e:
-                    self.logger.warning(f"Error loading theorems from {file_path}: {e}")
-                    # Log the full exception for debugging
-                    self.logger.debug(f"Full traceback: {traceback.format_exc()}")
+                    self.logger.warning(
+                        f"Could not load theorems from {traced_file.path}: {e}"
+                    )
                     continue
 
-            # If we still don't have enough theorems, try a broader search
-            if len(all_theorems) < num_theorems and self.traced_repo is not None:
-                self.logger.info(
-                    f"Only found {len(all_theorems)} theorems, trying broader search..."
-                )
-
-                # Get first few traced files and try them
-                try:
-                    traced_files = list(self.traced_repo.traced_files)[
-                        :20
-                    ]  # Try first 20 files
-                    for tf in traced_files:
-                        try:
-                            file_path = str(tf.path)
-                            # Skip problematic files
-                            if any(
-                                skip_pattern in file_path
-                                for skip_pattern in [
-                                    "ExtractData",
-                                    "Build",
-                                    "build",
-                                    "extract",
-                                    "Extract",
-                                    "test",
-                                    "Test",
-                                ]
-                            ):
-                                continue
-
-                            if (
-                                not file_path.endswith(".lean")
-                                or "Mathlib" not in file_path
-                            ):
-                                continue
-
-                            theorems = tf.get_traced_theorems()
-                            if theorems and len(theorems) > 0:
-                                self.logger.info(
-                                    f"Found {len(theorems)} additional theorems in {file_path}"
-                                )
-                                all_theorems.extend(theorems)
-
-                                if len(all_theorems) >= num_theorems:
-                                    break
-
-                        except Exception as e:
-                            # Silent failure for broad search
-                            continue
-
-                except Exception as e:
-                    self.logger.warning(f"Broader search failed: {e}")
-
-            if self.repo is None:
-                self.logger.error("Repository not initialized, cannot fix theorems.")
+            if not all_theorems:
+                self.logger.warning("No theorems found in the repository.")
                 return []
 
-            # Create new TracedTheorem objects with the correct repo reference.
+            # 4. Fix repository references if necessary
+            # This step is crucial if the repo object used by the environment is different
+            # from the one the theorems were originally traced with.
             fixed_theorems = []
-            for traced_theorem in all_theorems:
-                original_theorem = traced_theorem.theorem
-                if original_theorem.repo != self.repo:
-                    # Create a new Theorem object with the correct repo
-                    new_theorem = Theorem(
-                        repo=self.repo,
-                        file_path=original_theorem.file_path,
-                        full_name=original_theorem.full_name,
+            for thm in all_theorems:
+                if thm.theorem.repo is not self.repo:
+                    new_thm = Theorem(
+                        self.repo, thm.theorem.file_path, thm.theorem.full_name
                     )
-                    new_traced_theorem = TracedTheorem(
-                        root_dir=traced_theorem.root_dir,
-                        theorem=new_theorem,
-                        ast=traced_theorem.ast,
-                        comments=traced_theorem.comments,
-                        traced_file=traced_theorem.traced_file,
+                    fixed_theorems.append(
+                        TracedTheorem(
+                            root_dir=thm.root_dir,
+                            theorem=new_thm,
+                            ast=thm.ast,
+                            comments=thm.comments,
+                            traced_file=thm.traced_file,
+                        )
                     )
-                    fixed_theorems.append(new_traced_theorem)
                 else:
-                    fixed_theorems.append(traced_theorem)
+                    fixed_theorems.append(thm)
 
-            # Return up to the requested number of theorems
             result_theorems = fixed_theorems[:num_theorems]
 
-            # Cache the result for future use
+            # 5. Cache the result
             self.test_cache.cache_theorems(num_theorems, result_theorems)
-
-            self.logger.info(
-                f"Returning {len(result_theorems)} test theorems (now cached and fixed)"
-            )
+            self.logger.info(f"Returning and caching {len(result_theorems)} theorems.")
             return result_theorems
 
         except Exception as e:
-            self.logger.error(f"Critical error in _get_test_theorems: {e}")
+            self.logger.error(f"A critical error occurred in _get_test_theorems: {e}")
             self.logger.debug(f"Full traceback: {traceback.format_exc()}")
             return []
 
