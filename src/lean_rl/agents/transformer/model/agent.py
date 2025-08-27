@@ -10,7 +10,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 from queue import PriorityQueue
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Any, overload, Literal, Tuple
 
 import torch
 import torch.nn.functional as F
@@ -48,6 +48,7 @@ class SearchNode:
     strategic_action: Optional[str] = None
     tactic_family: Optional[str] = None
     depth: int = 0
+    log_prob: float = 0.0
 
     def __lt__(self, other):
         """For priority queue ordering."""
@@ -213,31 +214,35 @@ class HierarchicalTransformerAgent(BaseAgent):
 
     def select_action(self, state: TacticState, **kwargs) -> Union[str, None]:
         """
-        Select action using hierarchical search.
-
-        Args:
-            state: Current TacticState from LeanDojo
-            **kwargs: Additional arguments (unused in this override, but allows compatibility)
-
-        Returns:
-            Selected tactic string or None if no action found
+        Select an action using a full hierarchical search. This method
+        initializes and runs a search, storing detailed information about the
+        chosen action for subsequent learning updates.
         """
-        # Initialize search tree
-        self.search_tree = HierarchicalSearchTree(state, self)
-
-        # Perform hierarchical search
-        # Note: The return_log feature is internal to the testing loop now.
-        result = self.search_tree.search(
-            max_time=self.max_search_time, beam_width=self.beam_width, return_log=False
+        self.search_tree = HierarchicalSearchTree(self, state)
+        search_result = self.search_tree.search(
+            max_time=self.max_search_time, beam_width=self.beam_width
         )
 
-        if isinstance(result, tuple):
-            return result[0]
-        return result
+        if search_result:
+            action_str, best_node, hierarchical_action = search_result
+            if action_str and best_node and hierarchical_action:
+                # Store comprehensive information for the learning update
+                self._last_action_info = {
+                    "log_prob": torch.tensor(best_node.log_prob, device=self.device),
+                    "value": torch.tensor(best_node.value, device=self.device),
+                    "action_str": action_str,
+                    "hierarchical_action": hierarchical_action,
+                    "encoded_state": self.encode_state(state),
+                }
+                return action_str
+
+        # Fallback if search yields no action
+        self._last_action_info = {}
+        return "sorry"
 
     def update(self, step_result: StepResult) -> None:
         """
-        Update the agent based on step result.
+        Update the agent based on step result
 
         Args:
             step_result: Result from environment step
@@ -646,39 +651,207 @@ class HierarchicalTransformerAgent(BaseAgent):
         family_info = metadata.get(tactic_family, {})
         return family_info.get("tactics", [])
 
+    def get_strategic_action_map(self):
+        """Returns the strategic action to index mapping."""
+        return self.hierarchical_policy.strategic_policy.action_to_idx
+
+    def evaluate_action(
+        self,
+        encoded_state: Dict[str, torch.Tensor],
+        actions: List[Optional[HierarchicalAction]],
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        """
+        Evaluate a batch of hierarchical actions and return their log probabilities,
+        the state value, policy entropies, and the parameter generation loss.
+        This is used during training to compute the loss for actions taken in the past.
+        """
+        batch_size = encoded_state["input_ids"].size(0)
+        device = encoded_state["input_ids"].device
+
+        # --- Strategic Level ---
+        # This is always computed for all states in the batch.
+        strategic_output = self.hierarchical_forward(
+            encoded_state, HierarchyLevel.STRATEGIC
+        )
+        strategic_logits = strategic_output["policy_logits"]
+        value = strategic_output["value"]  # Value is estimated at the strategic level.
+
+        strategic_log_probs = F.log_softmax(strategic_logits, dim=-1)
+        strategic_probs = F.softmax(strategic_logits, dim=-1)
+
+        strategic_action_map = {
+            act: i for i, act in enumerate(StrategicActions.ALL_ACTIONS)
+        }
+        # Handle None actions for next_state evaluation, default to index 0.
+        strategic_action_indices = torch.tensor(
+            [
+                strategic_action_map.get(a.strategic_action, 0) if a else 0
+                for a in actions
+            ],
+            device=device,
+            dtype=torch.long,
+        )
+
+        chosen_strategic_log_prob = strategic_log_probs.gather(
+            1, strategic_action_indices.unsqueeze(1)
+        ).squeeze(1)
+        strategic_entropy = -(strategic_probs * strategic_log_probs).sum(-1)
+
+        # --- Tactical and Execution Levels (Grouped by action) ---
+        # Initialize tensors to store results for the whole batch.
+        total_tactical_log_prob = torch.zeros(batch_size, device=device)
+        total_tactical_entropy = torch.zeros(batch_size, device=device)
+        total_param_loss = torch.tensor(0.0, device=device)
+
+        # Group actions by (strategic_action, tactic_family) to process them in batches.
+        action_groups = {}
+        for i, action in enumerate(actions):
+            if action is None:  # Skip if no action (e.g., for terminal states)
+                continue
+            key = (action.strategic_action, action.tactic_family)
+            if key not in action_groups:
+                action_groups[key] = []
+            action_groups[key].append((i, action))  # Store original index and action
+
+        # Process each group
+        for (strategic_action, tactic_family), group in action_groups.items():
+            indices = torch.tensor(
+                [item[0] for item in group], device=device, dtype=torch.long
+            )
+            group_actions = [item[1] for item in group]
+
+            # --- Tactical Level ---
+            # Select the states corresponding to the current group
+            group_encoded_state = {k: v[indices] for k, v in encoded_state.items()}
+
+            tactical_output = self.hierarchical_forward(
+                group_encoded_state,
+                HierarchyLevel.TACTICAL,
+                strategic_action=strategic_action,
+            )
+            tactical_logits = tactical_output["policy_logits"]
+            tactical_log_probs = F.log_softmax(tactical_logits, dim=-1)
+            tactical_probs = F.softmax(tactical_logits, dim=-1)
+
+            tactic_family_map = {
+                fam: i for i, fam in enumerate(TacticalFamilies.ALL_FAMILIES)
+            }
+            # All actions in this group have the same tactic family
+            tactic_family_idx = torch.tensor(
+                [tactic_family_map.get(tactic_family, 0)],
+                device=device,
+                dtype=torch.long,
+            ).expand(len(group))
+
+            chosen_tactical_log_prob_group = tactical_log_probs.gather(
+                1, tactic_family_idx.unsqueeze(1)
+            ).squeeze(1)
+            tactical_entropy_group = -(tactical_probs * tactical_log_probs).sum(-1)
+
+            # Use scatter_add_ to place results back in correct batch positions
+            total_tactical_log_prob.scatter_add_(
+                0, indices, chosen_tactical_log_prob_group
+            )
+            total_tactical_entropy.scatter_add_(0, indices, tactical_entropy_group)
+
+            # --- Execution (Parameter) Level ---
+            if (
+                self.parameter_generator.tactic_families.get(tactic_family, {}).get(
+                    "max_params", 0
+                )
+                > 0
+            ):
+                proof_encoding = tactical_output["representation"]
+
+                param_outputs = self.parameter_generator(
+                    proof_state=proof_encoding.unsqueeze(1),
+                    tactic_family=tactic_family,
+                )
+
+                if (
+                    "generated_term" in param_outputs
+                    and "logits" in param_outputs["generated_term"]
+                ):
+                    target_params_str = [
+                        " ".join(a.parameters) for a in group_actions if a.parameters
+                    ]
+                    if target_params_str:
+                        target_tokens_list = [
+                            torch.tensor(self.tokenizer.encode(s), device=device)
+                            for s in target_params_str
+                        ]
+                        padded_targets = torch.nn.utils.rnn.pad_sequence(
+                            target_tokens_list, batch_first=True, padding_value=0
+                        )
+
+                        # Ensure batch sizes match for loss calculation
+                        if padded_targets.size(0) == param_outputs["generated_term"][
+                            "logits"
+                        ].size(0):
+                            targets = {"target_term": padded_targets}
+                            total_param_loss += self.parameter_generator.compute_loss(
+                                param_outputs, targets
+                            )
+
+        # --- Combine ---
+        total_log_prob = chosen_strategic_log_prob + total_tactical_log_prob
+        total_entropy = strategic_entropy + total_tactical_entropy
+
+        return total_log_prob, value, total_entropy, total_param_loss
+
 
 class HierarchicalSearchTree:
     """
-    Hierarchical search tree for best-first proof search.
+    A hierarchical best-first search tree for finding the best action.
 
-    This implements a search algorithm that considers hierarchical action
-    decomposition and uses neural heuristics for node evaluation.
+    The tree has three levels:
+    1. Strategic: High-level proof strategies (e.g., induction, direct proof).
+    2. Tactical: Families of tactics (e.g., rewriting, applying lemmas).
+    3. Execution: Specific tactics with parameters.
     """
 
-    def __init__(self, initial_state: TacticState, agent: HierarchicalTransformerAgent):
+    def __init__(self, agent: "HierarchicalTransformerAgent", state: TacticState):
         self.agent = agent
         self.root = SearchNode(
-            state=initial_state,
+            state=state,
             parent=None,
             children=[],
             level=HierarchyLevel.STRATEGIC,
             action=None,
             value=0.0,
             visits=0,
+            strategic_action=None,
             depth=0,
+            log_prob=0.0,
         )
-
-        # Priority queue for best-first search
-        self.open_nodes = PriorityQueue()
+        self.open_nodes: PriorityQueue[SearchNode] = PriorityQueue()
         self.open_nodes.put(self.root)
-
-        # Track search statistics
         self.nodes_expanded = 0
-        self.max_depth_reached = 0
+
+    @overload
+    def search(
+        self, max_time: float, beam_width: int, return_log: Literal[True]
+    ) -> Tuple[Optional[Tuple[str, SearchNode, HierarchicalAction]], list]: ...
+
+    @overload
+    def search(
+        self, max_time: float, beam_width: int, return_log: Literal[False]
+    ) -> Optional[Tuple[str, SearchNode, HierarchicalAction]]: ...
+
+    @overload
+    def search(
+        self, max_time: float, beam_width: int
+    ) -> Optional[Tuple[str, SearchNode, HierarchicalAction]]: ...
+
+    @overload
+    def search(self) -> Optional[Tuple[str, SearchNode, HierarchicalAction]]: ...
 
     def search(
         self, max_time: float = 60.0, beam_width: int = 16, return_log: bool = False
-    ) -> Union[Optional[str], tuple[Optional[str], list]]:
+    ) -> Union[
+        Optional[Tuple[str, SearchNode, HierarchicalAction]],
+        Tuple[Optional[Tuple[str, SearchNode, HierarchicalAction]], list],
+    ]:
         """
         Perform hierarchical best-first search.
 
@@ -688,63 +861,72 @@ class HierarchicalSearchTree:
             return_log: Whether to return logging information
 
         Returns:
-            Best action string or None if no action found.
-            If return_log is True, returns (action, log_data).
+            A tuple (best action string, best node, hierarchical action) or None.
+            If return_log is True, returns ((action, node, hier_action), log_data).
         """
         start_time = time.time()
-        best_action = None
+        best_action_str: Optional[str] = None
+        best_node: Optional[SearchNode] = None
+        best_hierarchical_action: Optional[HierarchicalAction] = None
+
+        candidate_nodes: List[tuple[str, SearchNode, HierarchicalAction]] = []
 
         while (
             not self.open_nodes.empty()
             and time.time() - start_time < max_time
             and self.nodes_expanded < 1000
-        ):  # Max iterations
-
-            # Get best node from priority queue
+        ):
             current_node = self.open_nodes.get()
 
-            # Check if we can generate a complete action from this node
-            if current_node.depth >= 2:  # Strategic + Tactical levels
-                action = self._construct_action_from_node(current_node)
-                if action:
-                    best_action = action
-                    # Put the node back, it might be useful for logging
-                    self.open_nodes.put(current_node)
-                    break
+            if current_node.depth >= 2:
+                action_obj = self._construct_action_from_node(current_node)
+                if action_obj:
+                    action_str = self.format_action_to_string(action_obj)
+                    candidate_nodes.append((action_str, current_node, action_obj))
+                    # Continue searching for better options within the time limit.
 
-            # Expand node
             self._expand_node(current_node)
 
-            # Limit beam width
             if self.open_nodes.qsize() > beam_width:
                 self._prune_beam(beam_width)
 
+        if candidate_nodes:
+            # Select the best candidate based on value
+            best_action_str, best_node, best_hierarchical_action = max(
+                candidate_nodes, key=lambda item: item[1].value
+            )
+
+        result = (
+            (best_action_str, best_node, best_hierarchical_action)
+            if best_action_str and best_node and best_hierarchical_action
+            else None
+        )
+
         if return_log:
             log_data = self._get_search_log()
-            return best_action, log_data
+            return result, log_data
         else:
-            return best_action
+            return result
 
     def _get_search_log(self) -> list:
         """Get top nodes from the search for logging."""
         log_data = []
-        # Get top 5 nodes from the priority queue
         nodes = []
         temp_queue = PriorityQueue()
 
         while not self.open_nodes.empty():
             nodes.append(self.open_nodes.get())
 
-        # Re-populate the queue
         for node in nodes:
             temp_queue.put(node)
         self.open_nodes = temp_queue
 
-        # Get top 5 nodes by value
         for node in sorted(nodes, key=lambda x: x.value, reverse=True)[:5]:
+            action_obj = self._construct_action_from_node(node)
             action_str = (
-                self._construct_action_from_node(node)
-                or f"Incomplete ({node.level.name}, value={node.value:.3f})"
+                self.format_action_to_string(action_obj)
+                if action_obj
+                else f"Incomplete ({node.level.name}, value={node.value:.3f})"
             )
             log_data.append((action_str, node.value))
 
@@ -755,43 +937,47 @@ class HierarchicalSearchTree:
         self.nodes_expanded += 1
 
         if node.level == HierarchyLevel.STRATEGIC:
-            # Generate strategic actions
-            for action in StrategicActions.ALL_ACTIONS[:3]:  # Limit for efficiency
+            for action in StrategicActions.ALL_ACTIONS[:3]:
+                value, log_prob = self._evaluate_strategic_action(node.state, action)
                 child = SearchNode(
                     state=node.state,
                     parent=node,
                     children=[],
                     level=HierarchyLevel.TACTICAL,
                     action=action,
-                    value=self._evaluate_strategic_action(node.state, action),
+                    value=value,
                     visits=0,
                     strategic_action=action,
                     depth=node.depth + 1,
+                    log_prob=log_prob,
                 )
                 node.children.append(child)
                 self.open_nodes.put(child)
 
         elif node.level == HierarchyLevel.TACTICAL:
-            # Generate tactical families given strategic action
-            for family in TacticalFamilies.ALL_FAMILIES[:3]:  # Limit for efficiency
+            for family in TacticalFamilies.ALL_FAMILIES[:3]:
+                value, log_prob = self._evaluate_tactical_family(
+                    node.state, node.strategic_action or "direct_proof", family
+                )
                 child = SearchNode(
                     state=node.state,
                     parent=node,
                     children=[],
                     level=HierarchyLevel.EXECUTION,
                     action=family,
-                    value=self._evaluate_tactical_family(
-                        node.state, node.strategic_action or "direct_proof", family
-                    ),
+                    value=value,
                     visits=0,
                     strategic_action=node.strategic_action,
                     tactic_family=family,
                     depth=node.depth + 1,
+                    log_prob=node.log_prob + log_prob,
                 )
                 node.children.append(child)
                 self.open_nodes.put(child)
 
-    def _evaluate_strategic_action(self, state: TacticState, action: str) -> float:
+    def _evaluate_strategic_action(
+        self, state: TacticState, action: str
+    ) -> tuple[float, float]:
         """Evaluate strategic action using neural network."""
         try:
             encoded_state = self.agent.encode_state(state)
@@ -799,14 +985,20 @@ class HierarchicalSearchTree:
                 output = self.agent.hierarchical_forward(
                     encoded_state, HierarchyLevel.STRATEGIC
                 )
-                # Simple evaluation - use value network output
-                return output["value"].item()
+                value = output["value"].item()
+                logits = output["policy_logits"]
+                log_probs = F.log_softmax(logits, dim=-1)
+                action_idx = StrategicActions.ALL_ACTIONS.index(action)
+                log_prob = log_probs[0, action_idx].item()
+                return value, log_prob
+        except (ValueError, IndexError):
+            return 0.0, -10.0  # Penalize if action not found
         except Exception:
-            return 0.5  # Default value
+            return 0.5, 0.0
 
     def _evaluate_tactical_family(
         self, state: TacticState, strategic_action: str, tactic_family: str
-    ) -> float:
+    ) -> tuple[float, float]:
         """Evaluate tactical family given strategic action."""
         try:
             encoded_state = self.agent.encode_state(state)
@@ -816,225 +1008,122 @@ class HierarchicalSearchTree:
                     HierarchyLevel.TACTICAL,
                     strategic_action=strategic_action,
                 )
-                return output["value"].item()
+                value = output["value"].item()
+                logits = output["policy_logits"]
+                log_probs = F.log_softmax(logits, dim=-1)
+                family_idx = TacticalFamilies.ALL_FAMILIES.index(tactic_family)
+                log_prob = log_probs[0, family_idx].item()
+                return value, log_prob
+        except (ValueError, IndexError):
+            return 0.0, -10.0
         except Exception:
-            return 0.5  # Default value
+            return 0.5, 0.0
 
-    def _construct_action_from_node(self, node: SearchNode) -> Optional[str]:
-        """Construct concrete tactic from search node."""
-        if node.tactic_family is None:
+    def _construct_action_from_node(
+        self, node: SearchNode
+    ) -> Optional[HierarchicalAction]:
+        """
+        Construct a HierarchicalAction object from a search node by combining
+        the tactic with its generated parameters.
+        """
+        if node.tactic_family is None or node.strategic_action is None:
             return None
 
-        # Map tactic family to specific tactics with intelligent selection (updated for all 16 families)
-        family_to_tactics = {
-            "apply_family": ["apply", "exact", "refine", "use"],
-            "rewrite_family": ["rw", "simp", "conv", "rwa"],
-            "intro_family": ["intro", "intros", "rintro"],
-            "case_family": ["cases", "rcases", "induction", "split"],
-            "calc_family": ["calc", "trans", "symm"],
-            "finish_family": ["sorry", "done", "rfl", "trivial"],
-            "automation_family": [
-                "aesop",
-                "tauto",
-                "ring",
-                "norm_num",
-                "linarith",
-                "nlinarith",
-                "omega",
-            ],
-            "proof_family": ["have", "show", "suffices", "assert"],
-            "structural_family": [
-                "constructor",
-                "left",
-                "right",
-                "ext",
-                "exfalso",
-                "by_contra",
-            ],
-            "assumption_family": ["assumption", "simp_all", "hint"],
-            "advanced_rewrite_family": [
-                "simp_rw",
-                "rw_mod_cast",
-                "simp_intro",
-                "field_simp",
-            ],
-            "induction_family": ["induction'", "cases'", "rcases", "obtain", "choose"],
-            "quantifier_family": ["exists", "use!", "existsi", "forall_intro"],
-            "conversion_family": ["change", "convert", "congr", "show_term"],
-            "goal_management_family": [
-                "swap",
-                "rotate_left",
-                "rotate_right",
-                "clear",
-                "rename",
-            ],
-            "specialized_family": [
-                "interval_cases",
-                "fin_cases",
-                "mod_cases",
-                "lift",
-                "push_neg",
-            ],
-        }
+        # Dynamically select a tactic from the family based on the goal
+        tactic = self._select_tactic_from_family(node.tactic_family, node.state)
 
-        # Select best tactic from family based on context (expanded for all families)
-        available_tactics = family_to_tactics.get(node.tactic_family, ["sorry"])
-
-        # Enhanced heuristic: choose based on proof state structure
-        if node.tactic_family == "apply_family":
-            # Prefer 'exact' for simple goals, 'apply' for complex ones
-            goal_str = str(node.state.pp) if hasattr(node.state, "pp") else ""
-            if "=" in goal_str and len(goal_str) < 50:
-                tactic = "exact"
-            else:
-                tactic = "apply"
-        elif node.tactic_family == "rewrite_family":
-            # Prefer 'simp' for arithmetic, 'rw' for manual rewriting
-            goal_str = str(node.state.pp) if hasattr(node.state, "pp") else ""
-            if any(op in goal_str for op in ["+", "*", "-", "/"]):
-                tactic = "simp"
-            else:
-                tactic = "rw"
-        elif node.tactic_family == "intro_family":
-            # Use 'rintro' for complex patterns, 'intro' otherwise
-            goal_str = str(node.state.pp) if hasattr(node.state, "pp") else ""
-            if "∃" in goal_str or "∧" in goal_str:
-                tactic = "rintro"
-            else:
-                tactic = "intro"
-        elif node.tactic_family == "case_family":
-            goal_str = str(node.state.pp) if hasattr(node.state, "pp") else ""
-            if "induction" in goal_str.lower():
-                tactic = "induction"
-            elif "∨" in goal_str:
-                tactic = "split"
-            else:
-                tactic = "cases"
-        elif node.tactic_family == "automation_family":
-            goal_str = str(node.state.pp) if hasattr(node.state, "pp") else ""
-            if any(op in goal_str for op in ["+", "*", "-", "^"]):
-                tactic = "ring"
-            elif any(op in goal_str for op in ["≤", "≥", "<", ">"]):
-                tactic = "linarith"
-            else:
-                tactic = "aesop"
-        elif node.tactic_family == "structural_family":
-            goal_str = str(node.state.pp) if hasattr(node.state, "pp") else ""
-            if "∃" in goal_str:
-                tactic = "constructor"
-            elif "∨" in goal_str:
-                tactic = "left"  # or "right" based on heuristic
-            else:
-                tactic = "constructor"
-        elif node.tactic_family == "quantifier_family":
-            goal_str = str(node.state.pp) if hasattr(node.state, "pp") else ""
-            if "∃" in goal_str:
-                tactic = "exists"
-            else:
-                tactic = "use!"
-        else:
-            tactic = available_tactics[0]
-
-        # Generate parameters using the agent's parameter generator
+        # Generate parameters for the chosen tactic
         parameters = self.agent.generate_tactic_parameters(
             node.state, node.tactic_family
         )
 
-        # Construct tactic string with parameters (expanded for more tactics)
-        if tactic == "apply" and parameters:
-            if parameters[0].strip():
-                return f"apply {parameters[0]}"
+        return HierarchicalAction(
+            strategic_action=node.strategic_action,
+            tactic_family=node.tactic_family,
+            specific_tactic=tactic,
+            parameters=parameters,
+            confidence=node.value,
+        )
+
+    @staticmethod
+    def format_action_to_string(action: HierarchicalAction) -> str:
+        """Formats a HierarchicalAction object into a tactic string."""
+        param_str = " ".join(action.parameters) if action.parameters else ""
+        tactic = action.specific_tactic
+
+        # Format the final tactic string
+        if param_str:
+            # Tactics that require parameters in brackets
+            if tactic in ["rw", "simp", "simp_rw"]:
+                return f"{tactic} [{param_str}]"
+            # Tactics that take a list of identifiers
+            elif tactic in ["intro", "intros", "rintro", "clear", "rename"]:
+                return f"{tactic} {param_str}"
+            # Tactics with a 'have' clause
+            elif tactic == "have":
+                return f"have h : {param_str}"
+            # Default formatting for tactics with parameters
             else:
-                return "apply h"  # Default hypothesis name
-        elif tactic == "exact" and parameters:
-            if parameters[0].strip():
-                return f"exact {parameters[0]}"
-            else:
-                return "exact h"
-        elif tactic == "rw" and parameters:
-            if parameters[0].strip():
-                return f"rw [{parameters[0]}]"
-            else:
-                return "rw [h]"  # Default rewrite rule
-        elif tactic == "simp" and parameters:
-            if parameters[0].strip():
-                return f"simp [{parameters[0]}]"
-            else:
-                return "simp"
-        elif tactic == "intro" and parameters:
-            if parameters[0].strip():
-                return f"intro {parameters[0]}"
-            else:
-                return "intro"
-        elif tactic == "cases" and parameters:
-            if parameters[0].strip():
-                return f"cases {parameters[0]}"
-            else:
-                return "cases h"
-        elif tactic == "induction" and parameters:
-            if parameters[0].strip():
-                return f"induction {parameters[0]}"
-            else:
-                return "induction n"  # Common induction variable
-        elif tactic in ["constructor", "left", "right", "ext", "exfalso", "by_contra"]:
-            return tactic  # These typically don't need parameters
-        elif tactic in [
-            "ring",
-            "linarith",
-            "norm_num",
-            "omega",
-            "abel",
-            "aesop",
-            "tauto",
-        ]:
-            return tactic  # Automation tactics don't need parameters
-        elif tactic in ["assumption", "simp_all", "hint"]:
-            return tactic  # Assumption tactics don't need parameters
-        elif tactic == "have" and parameters:
-            if parameters[0].strip():
-                return f"have h : {parameters[0]}"
-            else:
-                return "have h : _"
-        elif tactic == "exists" and parameters:
-            if parameters[0].strip():
-                return f"exists {parameters[0]}"
-            else:
-                return "exists _"
-        elif tactic == "change" and parameters:
-            if parameters[0].strip():
-                return f"change {parameters[0]}"
-            else:
-                return "change _"
-        elif tactic in ["swap", "rotate_left", "rotate_right", "clear", "rename"]:
-            if tactic == "clear" and parameters:
-                return f"clear {parameters[0]}" if parameters[0].strip() else "clear h"
-            elif tactic == "rename" and parameters:
-                return (
-                    f"rename {parameters[0]}"
-                    if parameters[0].strip()
-                    else "rename h h'"
-                )
-            else:
-                return tactic
-        elif tactic in ["interval_cases", "fin_cases", "mod_cases"] and parameters:
-            if parameters[0].strip():
-                return f"{tactic} {parameters[0]}"
-            else:
-                return f"{tactic} h"
+                return f"{tactic} {param_str}"
         else:
+            # Return tactic without parameters
             return tactic
+
+    def _select_tactic_from_family(self, tactic_family: str, state: TacticState) -> str:
+        """
+        Select a specific tactic from a family based on heuristics applied
+        to the current proof state.
+        """
+        family_to_tactics = TacticalFamilies.get_family_metadata()
+        available_tactics = family_to_tactics.get(
+            tactic_family, {"tactics": ["sorry"]}
+        )["tactics"]
+        goal_str = str(state.pp) if hasattr(state, "pp") else ""
+
+        # Heuristics for tactic selection
+        if tactic_family == "apply_family":
+            return "exact" if "=" in goal_str and len(goal_str) < 50 else "apply"
+        elif tactic_family == "rewrite_family":
+            return (
+                "simp" if any(op in goal_str for op in ["+", "*", "-", "/"]) else "rw"
+            )
+        elif tactic_family == "intro_family":
+            return "rintro" if "∃" in goal_str or "∧" in goal_str else "intro"
+        elif tactic_family == "case_family":
+            if "induction" in goal_str.lower():
+                return "induction"
+            elif "∨" in goal_str:
+                return "split"
+            else:
+                return "cases"
+        elif tactic_family == "automation_family":
+            if any(op in goal_str for op in ["+", "*", "-", "^"]):
+                return "ring"
+            elif any(op in goal_str for op in ["≤", "≥", "<", ">"]):
+                return "linarith"
+            else:
+                return "aesop"
+        elif tactic_family == "structural_family":
+            if "∃" in goal_str:
+                return "constructor"
+            elif "∨" in goal_str:
+                return "left"
+            else:
+                return "constructor"
+        elif tactic_family == "quantifier_family":
+            return "exists" if "∃" in goal_str else "use!"
+        else:
+            # Default to the first tactic in the family list
+            return available_tactics[0] if available_tactics else "sorry"
 
     def _prune_beam(self, beam_width: int) -> None:
         """Prune search beam to maintain size limit."""
-        # Convert priority queue to list, sort, and rebuild
         nodes = []
         while not self.open_nodes.empty():
             nodes.append(self.open_nodes.get())
 
-        # Keep only top beam_width nodes
         nodes = sorted(nodes, key=lambda x: x.value, reverse=True)[:beam_width]
 
-        # Rebuild priority queue
         self.open_nodes = PriorityQueue()
         for node in nodes:
             self.open_nodes.put(node)
