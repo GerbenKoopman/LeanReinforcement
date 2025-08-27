@@ -230,36 +230,21 @@ class ProofStateTokenizer:
 
     def tokenize(self, text: str) -> List[str]:
         """
-        Tokenize Lean proof state text.
-
-        Args:
-            text: Raw proof state text
-
-        Returns:
-            List of tokens
+        Tokenize Lean proof state text using a regex-based approach
+        that handles common Lean syntax, including nested structures.
         """
-        # Normalize whitespace
-        text = re.sub(r"\s+", " ", text.strip())
-
-        # Split on special mathematical symbols and operators
-        # This is a simplified tokenization - a real implementation would be more sophisticated
-        tokens = []
-        current_token = ""
-
-        for char in text:
-            if char in self.math_symbols or char.isspace():
-                if current_token:
-                    tokens.append(current_token)
-                    current_token = ""
-                if not char.isspace():
-                    tokens.append(char)
-            else:
-                current_token += char
-
-        if current_token:
-            tokens.append(current_token)
-
-        return tokens
+        # Regex to capture identifiers, numbers, operators, and special symbols
+        token_pattern = re.compile(
+            r"""
+            (?:[a-zA-Z_][a-zA-Z0-9_]*) |  # Identifiers
+            (?:[0-9]+) |                  # Numbers
+            (?:∀|∃|→|∧|∨|¬|∈|∉|⊆|⊇|∩|∪|∅|ℕ|ℤ|ℚ|ℝ|ℂ|≤|≥|<|>|≠|≈|≡|∼|∝|∞) | # Unicode symbols
+            (?:[+\-*/^=_\[\]{}()|.,:]) |    # Operators and delimiters
+            (?:⊢)                         # Turnstile
+            """,
+            re.VERBOSE,
+        )
+        return token_pattern.findall(text)
 
     def encode(self, text: str) -> List[int]:
         """
@@ -303,59 +288,43 @@ class ProofStateTokenizer:
 
     def parse_proof_state(self, text: str) -> ProofState:
         """
-        Parse proof state text into structured format.
-
-        Args:
-            text: Raw proof state text
-
-        Returns:
-            Structured ProofState object
+        Parse proof state text into a structured format using more robust
+        regex-based parsing to identify goals and hypotheses.
         """
-        # This is a simplified parser - real implementation would be more robust
-        lines = text.strip().split("\n")
-
         goals = []
         hypotheses = []
-        context = ""
         goal_positions = []
         hypothesis_positions = []
 
-        current_position = 0
-        in_goal = False
-        in_hypothesis = False
+        # Regex to find goals (e.g., `⊢ GoalType`)
+        goal_pattern = re.compile(r"⊢\s*(.*)")
+        # Regex to find hypotheses (e.g., `h : HypothesisType`)
+        hyp_pattern = re.compile(r"([a-zA-Z0-9_]+)\s*:\s*(.*)")
 
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
+        # Tokenize the full text to get token positions
+        all_tokens = self.tokenize(text)
+        current_pos = 0
 
-            # Check for goal marker
-            if "⊢" in line:
-                goals.append(line)
-                goal_start = current_position
-                goal_end = current_position + len(self.encode(line))
-                goal_positions.append((goal_start, goal_end))
-                current_position = goal_end
-                in_goal = True
-                in_hypothesis = False
+        for line in text.strip().split("\n"):
+            line_tokens = self.tokenize(line)
+            line_len = len(line_tokens)
 
-            # Check for hypothesis (simple heuristic)
-            elif ":" in line and not in_goal:
-                hypotheses.append(line)
-                hyp_start = current_position
-                hyp_end = current_position + len(self.encode(line))
-                hypothesis_positions.append((hyp_start, hyp_end))
-                current_position = hyp_end
-                in_hypothesis = True
+            goal_match = goal_pattern.search(line)
+            hyp_match = hyp_pattern.search(line)
 
-            else:
-                context += line + " "
-                current_position += len(self.encode(line))
+            if goal_match:
+                goals.append(goal_match.group(1).strip())
+                goal_positions.append((current_pos, current_pos + line_len))
+            elif hyp_match:
+                hypotheses.append(hyp_match.group(0).strip())
+                hypothesis_positions.append((current_pos, current_pos + line_len))
+
+            current_pos += line_len
 
         return ProofState(
             goals=goals,
             hypotheses=hypotheses,
-            context=context.strip(),
+            context="",  # Context extraction can be added if needed
             raw_text=text,
             goal_positions=goal_positions,
             hypothesis_positions=hypothesis_positions,
@@ -548,48 +517,34 @@ class TacticEncoder:
 
     def parse_tactic(self, tactic_string: str) -> TacticInfo:
         """
-        Parse a tactic string into structured information.
-
-        Args:
-            tactic_string: Raw tactic string (e.g., "apply h", "rw [eq1, eq2]")
-
-        Returns:
-            TacticInfo object with parsed information
+        Parse a tactic string into structured information using regex to handle
+        various parameter formats, including nested brackets and lists.
         """
-        # Simple parsing - real implementation would be more sophisticated
-        parts = tactic_string.strip().split()
-        if not parts:
+        tactic_string = tactic_string.strip()
+        # Regex to capture the tactic name and its arguments
+        match = re.match(r"([a-zA-Z0-9_']+)\s*(.*)", tactic_string)
+        if not match:
             return TacticInfo("", "", [], [], 0.0)
 
-        tactic_name = parts[0]
+        tactic_name, params_str = match.groups()
         parameters = []
-        parameter_types = []
 
-        # Extract parameters (simplified)
-        if len(parts) > 1:
-            param_text = " ".join(parts[1:])
+        # Handle different parameter structures
+        if params_str:
+            # Regex to split parameters, respecting brackets and quotes
+            param_pattern = re.compile(r"\[.*?\]|\".*?\"|\S+")
+            parameters = param_pattern.findall(params_str)
 
-            # Handle bracket notation for rewrite tactics
-            if "[" in param_text and "]" in param_text:
-                bracket_content = re.findall(r"\[(.*?)\]", param_text)
-                if bracket_content:
-                    params = bracket_content[0].split(",")
-                    parameters = [p.strip() for p in params]
-                    parameter_types = ["term"] * len(parameters)
-            else:
-                # Simple space-separated parameters
-                parameters = parts[1:]
-                parameter_types = ["term"] * len(parameters)
-
-        # Determine tactic family
         family = self.tactic_families.get(tactic_name, "unknown_family")
+        # Parameter types would require a more sophisticated type inference system
+        parameter_types = ["unknown"] * len(parameters)
 
         return TacticInfo(
             name=tactic_name,
             family=family,
             parameters=parameters,
             parameter_types=parameter_types,
-            confidence=1.0,
+            confidence=1.0,  # Confidence estimation would be part of the model
         )
 
     def get_strategic_action(self, tactic_name: str) -> str:
