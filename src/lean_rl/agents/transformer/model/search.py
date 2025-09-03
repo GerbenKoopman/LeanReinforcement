@@ -5,7 +5,7 @@ Implements the HierarchicalSearchTree for finding the best proof tactic.
 import time
 from dataclasses import dataclass
 from queue import PriorityQueue
-from typing import List, Optional, Union, overload, Literal, Tuple
+from typing import List, Optional, Union, overload, Literal, Tuple, TYPE_CHECKING
 
 import torch
 import torch.nn.functional as F
@@ -14,7 +14,8 @@ from lean_dojo import TacticState
 from .action import HierarchicalAction, format_action_to_string
 from .hierarchy import HierarchyLevel, StrategicActions, TacticalFamilies
 
-from .agent import HierarchicalTransformerAgent
+if TYPE_CHECKING:
+    from .agent import HierarchicalTransformerAgent
 
 
 @dataclass
