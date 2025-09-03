@@ -4,6 +4,7 @@ Testing Module for Hierarchical Transformer Agent.
 This module provides comprehensive testing capabilities for the HierarchicalTransformerAgent,
 including unit tests, integration tests, performance benchmarks, and evaluation metrics.
 """
+
 import os
 import time
 import torch
@@ -58,6 +59,7 @@ from ..model.agent import (
 )
 from ..model.hierarchy import HierarchyLevel, StrategicActions, TacticalFamilies
 from ....environment import LeanEnvironment
+from .environment_wrapper import LeanEnvWrapper
 from ....agents import RandomAgent, MCTSAgent
 
 
@@ -336,11 +338,13 @@ class HierarchicalTransformerTester:
 
         try:
             # Create environment using the original repo object to ensure cache hits
-            self.env = LeanEnvironment(
-                self.repo,
-                max_steps=50,
-                timeout=30,
-                additional_imports=[],  # Minimize imports to avoid build triggers
+            self.env = LeanEnvWrapper(
+                LeanEnvironment(
+                    self.repo,
+                    max_steps=50,
+                    timeout=30,
+                    additional_imports=[],  # Minimize imports to avoid build triggers
+                )
             )
             self.logger.info("Test repository setup completed")
         except Exception as e:
@@ -1003,10 +1007,10 @@ class HierarchicalTransformerTester:
                             for tactic, prob in top_5_tactics:
                                 self.logger.info(f"    - {tactic}: {prob:.4f}")
 
-                        result = self.env.step(action)
+                        state, _, done, result = self.env.step(action)
                         proof_length += 1
 
-                        if result.done:
+                        if done:
                             if result.action_result == "proof_finished":
                                 success = True
                                 proved_count += 1
@@ -1015,8 +1019,6 @@ class HierarchicalTransformerTester:
                                     f"Proof failed. Reason: {result.action_result}"
                                 )
                             break
-
-                        state = result.state
                     else:
                         break
 
@@ -1086,19 +1088,16 @@ class HierarchicalTransformerTester:
                         if action is None:
                             break
 
-                        result = self.env.step(action)
+                        state, reward, done, result = self.env.step(action)
                         baseline_agent.update(result)
 
-                        episode_reward += result.reward
+                        episode_reward += reward
                         steps += 1
 
-                        if result.done:
+                        if done:
                             if result.action_result == "proof_finished":
                                 success_count += 1
                             break
-
-                        state = result.state
-
                     total_reward += episode_reward
 
                 except Exception as e:
@@ -1141,6 +1140,11 @@ class HierarchicalTransformerTester:
                 state = self.env.reset(theorem.theorem)
 
                 # Analyze one step of decision making
+                if state is None:
+                    self.logger.warning(
+                        "State is None, skipping hierarchical analysis step."
+                    )
+                    continue
                 hierarchical_action = self.agent.construct_full_action(state)
 
                 # Mock ground truth validation (simplified)
