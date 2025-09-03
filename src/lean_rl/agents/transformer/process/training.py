@@ -19,6 +19,7 @@ import torch.nn as nn
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard.writer import SummaryWriter
+from torch.profiler import profile, record_function, ProfilerActivity, schedule
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass, asdict
@@ -566,54 +567,76 @@ class HierarchicalTransformerTrainer:
         recent_rewards = deque(maxlen=100)
         recent_successes = deque(maxlen=100)
 
-        while episode < self.config.training.max_episodes:
-            if self.curriculum_manager:
-                theorems = self.curriculum_manager.get_current_theorems()
-                if not theorems:
-                    self.logger.warning(
-                        f"No theorems in current curriculum stage {self.curriculum_manager.current_stage}. Ending training."
-                    )
-                    break
-                theorem = random.choice(theorems)
-            else:
-                # Fallback if curriculum is disabled or fails
-                all_theorems = self._get_all_theorems()
-                if not all_theorems:
-                    self.logger.error("No theorems found to train on. Aborting.")
-                    break
-                theorem = random.choice(all_theorems)
+        def trace_handler(p):
+            output = p.key_averages().table(sort_by="self_cpu_time_total", row_limit=20)
+            self.logger.info(f"Profiler output for step {p.step_num}:\n{output}")
+            if self.output_dir:
+                trace_file = self.output_dir / f"profiler_trace_{p.step_num}.json"
+                p.export_chrome_trace(str(trace_file))
+                self.logger.info(f"Saved profiler trace to {trace_file}")
 
-            reward, length, success = self._run_episode(theorem)
+        profiler_schedule = schedule(wait=5, warmup=1, active=3, repeat=2)
+        activities = [ProfilerActivity.CPU]
+        if torch.cuda.is_available():
+            activities.append(ProfilerActivity.CUDA)
 
-            # Logging and checkpointing
-            if self.config.distributed.rank == 0:
-                recent_rewards.append(reward)
-                recent_successes.append(success)
+        with profile(
+            activities=activities,
+            schedule=profiler_schedule,
+            on_trace_ready=trace_handler,
+            record_shapes=True,
+            with_stack=True,
+        ) as prof:
+            while episode < self.config.training.max_episodes:
+                if self.curriculum_manager:
+                    theorems = self.curriculum_manager.get_current_theorems()
+                    if not theorems:
+                        self.logger.warning(
+                            f"No theorems in current curriculum stage {self.curriculum_manager.current_stage}. Ending training."
+                        )
+                        break
+                    theorem = random.choice(theorems)
+                else:
+                    # Fallback if curriculum is disabled or fails
+                    all_theorems = self._get_all_theorems()
+                    if not all_theorems:
+                        self.logger.error("No theorems found to train on. Aborting.")
+                        break
+                    theorem = random.choice(all_theorems)
 
-                if episode % self.config.training.log_frequency == 0:
-                    self._log_progress(episode, recent_rewards, recent_successes)
+                reward, length, success = self._run_episode(theorem)
 
-                if (
-                    not self.no_evaluation
-                    and episode > 0
-                    and episode % self.config.training.eval_frequency == 0
-                ):
-                    eval_success_rate = self._evaluate()
-                    if eval_success_rate > best_success_rate:
-                        best_success_rate = eval_success_rate
-                        self._save_checkpoint(episode, "best")
+                # Logging and checkpointing
+                if self.config.distributed.rank == 0:
+                    recent_rewards.append(reward)
+                    recent_successes.append(success)
 
-                if episode % self.config.training.save_frequency == 0:
-                    self._save_checkpoint(episode, "periodic")
+                    if episode % self.config.training.log_frequency == 0:
+                        self._log_progress(episode, recent_rewards, recent_successes)
 
-            # Update curriculum
-            if self.curriculum_manager and self.config.distributed.rank == 0:
-                if len(recent_successes) > 0:
-                    avg_success = sum(recent_successes) / len(recent_successes)
-                    if self.curriculum_manager.should_advance_stage(avg_success):
-                        self.curriculum_manager.advance_stage()
+                    if (
+                        not self.no_evaluation
+                        and episode > 0
+                        and episode % self.config.training.eval_frequency == 0
+                    ):
+                        eval_success_rate = self._evaluate()
+                        if eval_success_rate > best_success_rate:
+                            best_success_rate = eval_success_rate
+                            self._save_checkpoint(episode, "best")
 
-            episode += 1
+                    if episode % self.config.training.save_frequency == 0:
+                        self._save_checkpoint(episode, "periodic")
+
+                # Update curriculum
+                if self.curriculum_manager and self.config.distributed.rank == 0:
+                    if len(recent_successes) > 0:
+                        avg_success = sum(recent_successes) / len(recent_successes)
+                        if self.curriculum_manager.should_advance_stage(avg_success):
+                            self.curriculum_manager.advance_stage()
+
+                episode += 1
+                if prof:
+                    prof.step()
 
         self.logger.info("Training completed!")
         if self.config.distributed.rank == 0:
@@ -626,7 +649,8 @@ class HierarchicalTransformerTrainer:
         """Run a single training episode."""
         agent_module = self.agent.module if isinstance(self.agent, DDP) else self.agent
         try:
-            state = self.env.reset(theorem)
+            with record_function("reset_env"):
+                state = self.env.reset(theorem)
             agent_module.reset()
 
             total_reward = 0.0
@@ -639,22 +663,25 @@ class HierarchicalTransformerTrainer:
                     break  # End episode if state is None
 
                 # Construct the full hierarchical action
-                hierarchical_action = agent_module.construct_full_action(state)
+                with record_function("agent_action_construction"):
+                    hierarchical_action = agent_module.construct_full_action(state)
                 if hierarchical_action is None:
                     break
 
                 # Get the string representation for the environment
                 action_str = str(hierarchical_action)
-                next_state, reward, done, result = self.env.step(action_str)
+                with record_function("env_step"):
+                    next_state, reward, done, result = self.env.step(action_str)
 
                 if result.action_result == "proof_finished":
                     success = True
 
                 if self.replay_buffer:
                     # Store the full action object in the replay buffer
-                    self.replay_buffer.push(
-                        state, hierarchical_action, reward, next_state, done
-                    )
+                    with record_function("replay_buffer_push"):
+                        self.replay_buffer.push(
+                            state, hierarchical_action, reward, next_state, done
+                        )
 
                 state = next_state
                 total_reward += reward
@@ -664,7 +691,8 @@ class HierarchicalTransformerTrainer:
                     self.replay_buffer
                     and steps % self.config.training.train_frequency == 0
                 ):
-                    self._train_from_replay()
+                    with record_function("train_from_replay"):
+                        self._train_from_replay()
 
             return total_reward, steps, success
 
@@ -682,24 +710,27 @@ class HierarchicalTransformerTrainer:
         ):
             return
 
-        batch = self.replay_buffer.sample(self.config.training.replay_batch_size)
+        with record_function("sample_from_replay"):
+            batch = self.replay_buffer.sample(self.config.training.replay_batch_size)
         if batch is None:
             return
 
         # Compute loss and update model
-        loss = self._compute_loss(batch)
-        if loss is None:
-            return
+        with record_function("compute_loss_and_update"):
+            loss = self._compute_loss(batch)
+            if loss is None:
+                return
 
-        self.optimizer.zero_grad()
-        loss.backward()
-        torch.nn.utils.clip_grad_norm_(
-            self._get_agent_parameters(), self.config.training.gradient_clip_norm
-        )
-        self.optimizer.step()
+            self.optimizer.zero_grad()
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(
+                self._get_agent_parameters(), self.config.training.gradient_clip_norm
+            )
+            self.optimizer.step()
 
         # Update target network
-        self._update_target_network()
+        with record_function("update_target_network"):
+            self._update_target_network()
 
     def _compute_loss(self, batch: Dict[str, Any]) -> Optional[torch.Tensor]:
         """
