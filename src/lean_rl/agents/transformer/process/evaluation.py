@@ -29,6 +29,7 @@ from lean_dojo.data_extraction.trace import is_available_in_cache, get_traced_re
 
 from ..model.agent import HierarchicalTransformerAgent, HierarchicalAction
 from ....environment import LeanEnvironment
+from .environment_wrapper import LeanEnvWrapper
 from ....agents.random import RandomAgent
 from ....agents.mcts import MCTSAgent
 
@@ -248,10 +249,12 @@ class HierarchicalTransformerEvaluator:
             )
             self.logger.info("Repository loaded from cache successfully")
 
-            self.env = LeanEnvironment(
-                self.repo,
-                max_steps=self.config.max_steps_per_theorem,
-                timeout=self.config.timeout_per_theorem,
+            self.env = LeanEnvWrapper(
+                LeanEnvironment(
+                    self.repo,
+                    max_steps=self.config.max_steps_per_theorem,
+                    timeout=self.config.timeout_per_theorem,
+                )
             )
             self.logger.info("Repository setup completed")
         except Exception as e:
@@ -426,21 +429,19 @@ class HierarchicalTransformerEvaluator:
                         result.hierarchical_actions.append(hier_action)
 
                 # Take step
-                step_result = self.env.step(action)
+                state, reward, done, step_result = self.env.step(action)
 
                 # Update tracking
                 result.action_sequence.append(action)
-                result.state_sequence.append(
-                    str(step_result.state)[:100] if step_result.state else "None"
-                )
+                result.state_sequence.append(str(state)[:100] if state else "None")
 
-                total_reward += step_result.reward
+                total_reward += reward
                 step += 1
 
                 # Update agent
                 self.agent.update(step_result)
 
-                if step_result.done:
+                if done:
                     if step_result.action_result == "proof_finished":
                         result.proved = True
                         self.logger.info(f"✓ Proved in {step} steps")
@@ -448,8 +449,6 @@ class HierarchicalTransformerEvaluator:
                         result.failure_reason = step_result.action_result
                         self.logger.info(f"✗ Failed: {step_result.action_result}")
                     break
-
-                state = step_result.state
 
             # Finalize result
             result.proof_length = step
@@ -516,18 +515,16 @@ class HierarchicalTransformerEvaluator:
                         if action is None:
                             break
 
-                        step_result = self.env.step(action)
+                        state, reward, done, step_result = self.env.step(action)
                         baseline_agent.update(step_result)
 
-                        episode_reward += step_result.reward
+                        episode_reward += reward
                         steps += 1
 
-                        if step_result.done:
+                        if done:
                             if step_result.action_result == "proof_finished":
                                 successes += 1
                             break
-
-                        state = step_result.state
 
                     total_reward += episode_reward
                     total_steps += steps
@@ -979,95 +976,6 @@ class HierarchicalTransformerEvaluator:
 
         df = pd.DataFrame(summary_data)
         df.to_csv(self.results_dir / "theorem_results_summary.csv", index=False)
-
-    def _load_competition_problems(self) -> List:
-        """Load mathematical competition problems for evaluation."""
-        competition_problems = []
-
-        # IMO problems (simplified examples)
-        imo_problems = [
-            {
-                "name": "IMO_2023_P1",
-                "statement": "For positive integers a, b, c, prove that a² + b² + c² ≥ ab + bc + ca",
-                "difficulty": "hard",
-                "source": "International Mathematical Olympiad",
-            },
-            {
-                "name": "IMO_2022_P2",
-                "statement": "Let n be a positive integer. Prove that the equation x² + y² = 2ⁿ has a solution in positive integers if and only if n is even",
-                "difficulty": "hard",
-                "source": "International Mathematical Olympiad",
-            },
-        ]
-
-        # USAMO problems
-        usamo_problems = [
-            {
-                "name": "USAMO_2023_P1",
-                "statement": "Prove that for any triangle ABC, the sum of the squares of the sides is at least 4√3 times the area",
-                "difficulty": "medium",
-                "source": "USA Mathematical Olympiad",
-            }
-        ]
-
-        competition_problems.extend(imo_problems)
-        competition_problems.extend(usamo_problems)
-
-        self.logger.info(f"Loaded {len(competition_problems)} competition problems")
-        return competition_problems
-
-    def _load_custom_benchmarks(self) -> List:
-        """Load custom benchmark problems for evaluation."""
-        custom_benchmarks = []
-
-        # Basic algebra benchmarks
-        algebra_benchmarks = [
-            {
-                "name": "quadratic_formula",
-                "statement": "For a quadratic equation ax² + bx + c = 0 with a ≠ 0, prove that x = (-b ± √(b² - 4ac)) / 2a",
-                "difficulty": "easy",
-                "category": "algebra",
-            },
-            {
-                "name": "fundamental_theorem_algebra",
-                "statement": "Every non-constant polynomial with complex coefficients has at least one complex root",
-                "difficulty": "hard",
-                "category": "algebra",
-            },
-        ]
-
-        # Number theory benchmarks
-        number_theory_benchmarks = [
-            {
-                "name": "infinitude_primes",
-                "statement": "There are infinitely many prime numbers",
-                "difficulty": "medium",
-                "category": "number_theory",
-            },
-            {
-                "name": "fermat_little_theorem",
-                "statement": "If p is prime and a is not divisible by p, then aᵖ⁻¹ ≡ 1 (mod p)",
-                "difficulty": "medium",
-                "category": "number_theory",
-            },
-        ]
-
-        # Analysis benchmarks
-        analysis_benchmarks = [
-            {
-                "name": "intermediate_value_theorem",
-                "statement": "If f is continuous on [a,b] and y is between f(a) and f(b), then there exists c ∈ [a,b] such that f(c) = y",
-                "difficulty": "medium",
-                "category": "analysis",
-            }
-        ]
-
-        custom_benchmarks.extend(algebra_benchmarks)
-        custom_benchmarks.extend(number_theory_benchmarks)
-        custom_benchmarks.extend(analysis_benchmarks)
-
-        self.logger.info(f"Loaded {len(custom_benchmarks)} custom benchmark problems")
-        return custom_benchmarks
 
 
 def run_evaluation(
