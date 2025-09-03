@@ -12,7 +12,7 @@ from typing import List, Dict, Any, Optional, Union
 
 from ...environment import StepResult
 from ...agents import BaseAgent
-from node import MCTSNode
+from .node import MCTSNode
 from ...heuristic import SimpleNeuralHeuristic
 
 
