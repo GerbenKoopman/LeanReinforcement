@@ -16,7 +16,6 @@ import argparse
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard.writer import SummaryWriter
@@ -27,12 +26,11 @@ from collections import deque
 
 from ..data.repository import RepoManager
 from ..data.replay_buffer import ExperienceReplayBuffer
-from lean_dojo import TacticState, Theorem
-from lean_dojo.data_extraction.traced_data import TracedRepo, TracedTheorem
+from lean_dojo import Theorem
+from lean_dojo.data_extraction.traced_data import TracedRepo
 
 from ..model.agent import (
     HierarchicalTransformerAgent,
-    HierarchicalAction,
 )
 from ..model.hierarchy import (
     HierarchyLevel,

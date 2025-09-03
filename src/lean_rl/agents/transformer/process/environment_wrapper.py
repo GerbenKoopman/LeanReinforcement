@@ -2,7 +2,7 @@
 A wrapper for the LeanEnvironment to standardize agent-environment interaction.
 """
 
-from typing import Optional, Tuple, Any
+from typing import Optional, Tuple
 
 from lean_dojo import TacticState, Theorem
 from ....environment import LeanEnvironment, StepResult

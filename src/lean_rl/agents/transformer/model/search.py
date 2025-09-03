@@ -5,7 +5,7 @@ Implements the HierarchicalSearchTree for finding the best proof tactic.
 import time
 from dataclasses import dataclass
 from queue import PriorityQueue
-from typing import List, Optional, Union, Any, overload, Literal, Tuple, TYPE_CHECKING
+from typing import List, Optional, Union, overload, Literal, Tuple, TYPE_CHECKING
 
 import torch
 import torch.nn.functional as F

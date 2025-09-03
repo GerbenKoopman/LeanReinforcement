@@ -7,10 +7,8 @@ all components of the transformer-based hierarchical RL architecture.
 
 import os
 import time
-from dataclasses import dataclass
 from pathlib import Path
-from queue import PriorityQueue
-from typing import Dict, List, Optional, Union, Any, overload, Literal, Tuple
+from typing import Dict, List, Optional, Union, Tuple
 
 import torch
 import torch.nn.functional as F
