@@ -44,7 +44,6 @@ from ..config import (
     DistributedConfig,
 )
 from ....environment import LeanEnvironment
-from .environment_wrapper import LeanEnvWrapper
 
 
 @dataclass
@@ -390,16 +389,6 @@ class HierarchicalTransformerTrainer:
                 agent=self.agent,  # Pass the agent (or DDP-wrapped agent)
             )
 
-        # Environment
-        self.env = LeanEnvWrapper(
-            LeanEnvironment(
-                repo=self.repo_manager.repo,
-                timeout=self.config.training.timeout,
-                max_steps=self.config.training.max_steps_per_episode,
-                reward_scheme=self.config.training.reward_scheme,
-            )
-        )
-
     def _setup_evaluation(self):
         """Setup evaluation and logging, including a persistent evaluation environment."""
         if self.output_dir:
@@ -426,17 +415,39 @@ class HierarchicalTransformerTrainer:
         )
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
-        # Create a persistent environment for evaluation to avoid re-initialization costs
-        if not self.no_evaluation:
-            self.logger.info("Setting up persistent evaluation environment...")
-            self.eval_env = LeanEnvironment(
-                repo=self.repo_manager.repo,
-                timeout=self.config.training.timeout,
-                max_steps=self.config.training.max_steps_per_episode,
-                reward_scheme=self.config.training.reward_scheme,
-            )
+        # Environments will be initialized lazily in the process that uses them.
+        self.train_env = None
+        self.eval_env = None
+
+    def _get_or_create_env(self, is_eval: bool = False) -> LeanEnvironment:
+        """
+        Lazily initializes and returns the appropriate environment (training or evaluation),
+        ensuring it's created in the correct process (e.g., a Ray worker).
+        """
+        if is_eval:
+            if self.eval_env is None:
+                self.logger.info(
+                    "Initializing persistent evaluation environment in new process..."
+                )
+                self.eval_env = LeanEnvironment(
+                    repo=self.repo_manager.repo,
+                    timeout=self.config.training.timeout,
+                    max_steps=self.config.training.max_steps_per_episode,
+                    reward_scheme=self.config.training.reward_scheme,
+                )
+            return self.eval_env
         else:
-            self.eval_env = None
+            if self.train_env is None:
+                self.logger.info(
+                    "Initializing persistent training environment in new process..."
+                )
+                self.train_env = LeanEnvironment(
+                    repo=self.repo_manager.repo,
+                    timeout=self.config.training.timeout,
+                    max_steps=self.config.training.max_steps_per_episode,
+                    reward_scheme=self.config.training.reward_scheme,
+                )
+            return self.train_env
 
     def _get_agent_parameters(self):
         """Get all parameters from agent submodules."""
@@ -663,8 +674,11 @@ class HierarchicalTransformerTrainer:
         """Run a single training episode."""
         agent_module = self.agent.module if isinstance(self.agent, DDP) else self.agent
         try:
+            # Lazily get or create the environment for the current process
+            env = self._get_or_create_env(is_eval=False)
+
             with record_function("reset_env"):
-                state = self.env.reset(theorem)
+                state = env.reset(theorem)
             agent_module.reset()
 
             total_reward = 0.0
@@ -685,7 +699,9 @@ class HierarchicalTransformerTrainer:
                 # Get the string representation for the environment
                 action_str = str(hierarchical_action)
                 with record_function("env_step"):
-                    next_state, reward, done, result = self.env.step(action_str)
+                    result = env.step(action_str)
+
+                next_state, reward, done = result.state, result.reward, result.done
 
                 if result.action_result == "proof_finished":
                     success = True
@@ -732,15 +748,15 @@ class HierarchicalTransformerTrainer:
         # Compute loss and update model
         with record_function("compute_loss_and_update"):
             loss = self._compute_loss(batch)
-            if loss is None:
-                return
-
-            self.optimizer.zero_grad()
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(
-                self._get_agent_parameters(), self.config.training.gradient_clip_norm
-            )
-            self.optimizer.step()
+            if loss is not None:
+                self.optimizer.zero_grad()
+                loss.backward()
+                if self.config.training.use_gradient_clipping:
+                    torch.nn.utils.clip_grad_norm_(
+                        self._get_agent_parameters(),
+                        self.config.training.gradient_clip_norm,
+                    )
+                self.optimizer.step()
 
         # Update target network
         with record_function("update_target_network"):
@@ -796,7 +812,7 @@ class HierarchicalTransformerTrainer:
 
             # --- Compute target Q-values and advantage ---
             target_q_values = rewards + (
-                ~dones * self.config.training.gamma * next_values
+                ~dones.bool() * self.config.training.gamma * next_values
             )
             advantages = target_q_values - values
 
@@ -842,7 +858,8 @@ class HierarchicalTransformerTrainer:
         Evaluate the agent's performance on a set of validation theorems
         using a persistent, pre-initialized environment for efficiency.
         """
-        if self.eval_env is None:
+        eval_env = self._get_or_create_env(is_eval=True)
+        if eval_env is None:
             self.logger.warning(
                 "Evaluation environment not initialized. Skipping evaluation."
             )
@@ -871,7 +888,7 @@ class HierarchicalTransformerTrainer:
         proved_count = 0
         for theorem in eval_theorems:
             try:
-                state = self.eval_env.reset(theorem)
+                state = eval_env.reset(theorem)
                 agent_module.reset()
                 done = False
                 steps = 0
@@ -882,7 +899,7 @@ class HierarchicalTransformerTrainer:
                     action = agent_module.construct_full_action(state)
                     if action is None:
                         break
-                    result = self.eval_env.step(str(action))
+                    result = eval_env.step(str(action))
                     state = result.state
                     done = result.done
                     if result.action_result == "proof_finished":
