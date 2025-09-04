@@ -568,6 +568,20 @@ class HierarchicalTransformerTrainer:
         recent_successes = deque(maxlen=100)
 
         def trace_handler(p):
+            self.logger.info("Handling profiler trace...")
+            output_dir = self.output_dir or Path(os.getenv("SCRATCH_SHARED", "."))
+            trace_dir = output_dir / "profiler_traces"
+            trace_dir.mkdir(parents=True, exist_ok=True)
+
+            timestamp = int(time.time())
+            trace_filename = trace_dir / f"profiler_trace_{timestamp}.json"
+
+            try:
+                p.export_chrome_trace(str(trace_filename))
+                self.logger.info(f"Profiler trace saved to {trace_filename}")
+            except Exception as e:
+                self.logger.error(f"Failed to save profiler trace: {e}")
+
             output = p.key_averages().table(sort_by="self_cpu_time_total", row_limit=20)
             self.logger.info(f"Profiler output for step {p.step_num}:\n{output}")
             if self.output_dir:
@@ -584,8 +598,8 @@ class HierarchicalTransformerTrainer:
             activities=activities,
             schedule=profiler_schedule,
             on_trace_ready=trace_handler,
-            record_shapes=True,
-            with_stack=True,
+            record_shapes=False,  # Disabled to reduce trace size
+            with_stack=False,  # Disabled to reduce trace size
         ) as prof:
             while episode < self.config.training.max_episodes:
                 if self.curriculum_manager:
