@@ -17,6 +17,14 @@ import argparse
 import torch
 import torch.nn as nn
 import torch.distributed as dist
+import logging
+import time
+import os
+import json
+import torch
+import torch.nn as nn
+import torch.distributed as dist
+import argparse
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard.writer import SummaryWriter
 from torch.profiler import profile, record_function, ProfilerActivity, schedule
@@ -44,6 +52,39 @@ from ..config import (
     DistributedConfig,
 )
 from ....environment import LeanEnvironment
+
+
+def trace_handler(p: profile, output_dir: Optional[Path]):
+    """Handles the profiler trace, saving it to a file."""
+    logger = logging.getLogger(__name__)
+    logger.info("Handling profiler trace...")
+
+    if output_dir:
+        trace_dir = output_dir / "profiler_traces"
+    else:
+        scratch_dir = os.getenv("SCRATCH_SHARED", ".")
+        trace_dir = Path(scratch_dir) / "training_runs" / "profiler_traces"
+
+    trace_dir.mkdir(parents=True, exist_ok=True)
+    trace_file = trace_dir / f"profiler_trace_{int(time.time())}.json"
+
+    try:
+        p.export_chrome_trace(str(trace_file))
+        logger.info(f"Profiler trace saved to {trace_file}")
+    except RuntimeError as e:
+        # This can happen if the trace is already saved, which is not a fatal error.
+        logger.warning(
+            f"Could not save profiler trace (it might already be saved): {e}"
+        )
+    except Exception as e:
+        logger.error(f"Failed to save profiler trace: {e}")
+
+    # Also print a summary to the console
+    try:
+        summary = p.key_averages().table(sort_by="self_cpu_time_total", row_limit=20)
+        logger.info(f"Profiler output for step {p.step_num}:\n{summary}")
+    except Exception as e:
+        logger.error(f"Failed to generate profiler summary: {e}")
 
 
 @dataclass
@@ -578,28 +619,6 @@ class HierarchicalTransformerTrainer:
         recent_rewards = deque(maxlen=100)
         recent_successes = deque(maxlen=100)
 
-        def trace_handler(p):
-            self.logger.info("Handling profiler trace...")
-            output_dir = self.output_dir or Path(os.getenv("SCRATCH_SHARED", "."))
-            trace_dir = output_dir / "profiler_traces"
-            trace_dir.mkdir(parents=True, exist_ok=True)
-
-            timestamp = int(time.time())
-            trace_filename = trace_dir / f"profiler_trace_{timestamp}.json"
-
-            try:
-                p.export_chrome_trace(str(trace_filename))
-                self.logger.info(f"Profiler trace saved to {trace_filename}")
-            except Exception as e:
-                self.logger.error(f"Failed to save profiler trace: {e}")
-
-            output = p.key_averages().table(sort_by="self_cpu_time_total", row_limit=20)
-            self.logger.info(f"Profiler output for step {p.step_num}:\n{output}")
-            if self.output_dir:
-                trace_file = self.output_dir / f"profiler_trace_{p.step_num}.json"
-                p.export_chrome_trace(str(trace_file))
-                self.logger.info(f"Saved profiler trace to {trace_file}")
-
         profiler_schedule = schedule(wait=5, warmup=1, active=3, repeat=2)
         activities = [ProfilerActivity.CPU]
         if torch.cuda.is_available():
@@ -608,49 +627,55 @@ class HierarchicalTransformerTrainer:
         with profile(
             activities=activities,
             schedule=profiler_schedule,
-            on_trace_ready=trace_handler,
-            record_shapes=False,  # Disabled to reduce trace size
-            with_stack=False,  # Disabled to reduce trace size
+            on_trace_ready=lambda p: trace_handler(p, self.output_dir),
+            record_shapes=False,
+            with_stack=False,
         ) as prof:
             while episode < self.config.training.max_episodes:
-                if self.curriculum_manager:
-                    theorems = self.curriculum_manager.get_current_theorems()
-                    if not theorems:
-                        self.logger.warning(
-                            f"No theorems in current curriculum stage {self.curriculum_manager.current_stage}. Ending training."
-                        )
-                        break
-                    theorem = random.choice(theorems)
-                else:
-                    # Fallback if curriculum is disabled or fails
-                    all_theorems = self._get_all_theorems()
-                    if not all_theorems:
-                        self.logger.error("No theorems found to train on. Aborting.")
-                        break
-                    theorem = random.choice(all_theorems)
+                with record_function("training_loop_iteration"):
+                    # Determine theorem for the episode
+                    if self.curriculum_manager:
+                        theorems = self.curriculum_manager.get_current_theorems()
+                        if not theorems:
+                            self.logger.warning(
+                                f"No theorems in current curriculum stage {self.curriculum_manager.current_stage}. Ending training."
+                            )
+                            break
+                        theorem = random.choice(theorems)
+                    else:
+                        # Fallback if curriculum is disabled or fails
+                        all_theorems = self._get_all_theorems()
+                        if not all_theorems:
+                            self.logger.error(
+                                "No theorems found to train on. Aborting."
+                            )
+                            break
+                        theorem = random.choice(all_theorems)
 
-                reward, length, success = self._run_episode(theorem)
+                    reward, length, success = self._run_episode(theorem)
 
-                # Logging and checkpointing
-                if self.config.distributed.rank == 0:
-                    recent_rewards.append(reward)
-                    recent_successes.append(success)
+                    # Logging and checkpointing
+                    if self.config.distributed.rank == 0:
+                        recent_rewards.append(reward)
+                        recent_successes.append(success)
 
-                    if episode % self.config.training.log_frequency == 0:
-                        self._log_progress(episode, recent_rewards, recent_successes)
+                        if episode % self.config.training.log_frequency == 0:
+                            self._log_progress(
+                                episode, recent_rewards, recent_successes
+                            )
 
-                    if (
-                        not self.no_evaluation
-                        and episode > 0
-                        and episode % self.config.training.eval_frequency == 0
-                    ):
-                        eval_success_rate = self._evaluate()
-                        if eval_success_rate > best_success_rate:
-                            best_success_rate = eval_success_rate
-                            self._save_checkpoint(episode, "best")
+                        if (
+                            not self.no_evaluation
+                            and episode > 0
+                            and episode % self.config.training.eval_frequency == 0
+                        ):
+                            eval_success_rate = self._evaluate()
+                            if eval_success_rate > best_success_rate:
+                                best_success_rate = eval_success_rate
+                                self._save_checkpoint(episode, "best")
 
-                    if episode % self.config.training.save_frequency == 0:
-                        self._save_checkpoint(episode, "periodic")
+                        if episode % self.config.training.save_frequency == 0:
+                            self._save_checkpoint(episode, "periodic")
 
                 # Update curriculum
                 if self.curriculum_manager and self.config.distributed.rank == 0:
