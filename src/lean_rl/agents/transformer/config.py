@@ -96,6 +96,11 @@ class TrainingConfig:
     timeout: int = 600
     reward_scheme: str = "dense"  # sparse, dense, shaped
 
+    # Distributed environment
+    use_distributed_env: bool = True
+    num_env_workers: int = 4
+    parallel_episodes_per_batch: int = 8
+
 
 @dataclass
 class CurriculumConfig:

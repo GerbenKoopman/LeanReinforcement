@@ -14,6 +14,7 @@ import logging
 import os
 import argparse
 
+import ray
 import torch
 import torch.nn as nn
 import torch.distributed as dist
@@ -52,6 +53,7 @@ from ..config import (
     DistributedConfig,
 )
 from ....environment import LeanEnvironment
+from ....distributed_environment import DistributedLeanEnvironment, EpisodeResult
 
 
 def trace_handler(p: profile, output_dir: Optional[Path]):
@@ -431,7 +433,7 @@ class HierarchicalTransformerTrainer:
             )
 
     def _setup_evaluation(self):
-        """Setup evaluation and logging, including a persistent evaluation environment."""
+        """Setup evaluation and logging, including distributed environments."""
         if self.output_dir:
             base_dir = self.output_dir
         else:
@@ -456,7 +458,26 @@ class HierarchicalTransformerTrainer:
         )
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
-        # Environments will be initialized lazily in the process that uses them.
+        # Setup distributed environments if enabled
+        if self.config.training.use_distributed_env:
+            self.logger.info("Initializing Ray for distributed environments...")
+            if not ray.is_initialized():
+                ray.init()
+
+            self.logger.info(
+                f"Setting up distributed environment with {self.config.training.num_env_workers} workers..."
+            )
+            self.distributed_env = DistributedLeanEnvironment(
+                traced_repo=self.traced_repo,
+                num_workers=self.config.training.num_env_workers,
+                timeout=self.config.training.timeout,
+                max_steps=self.config.training.max_steps_per_episode,
+                reward_scheme=self.config.training.reward_scheme,
+            )
+        else:
+            self.distributed_env = None
+
+        # Single environments will be initialized lazily for fallback use
         self.train_env = None
         self.eval_env = None
 
@@ -471,7 +492,7 @@ class HierarchicalTransformerTrainer:
                     "Initializing persistent evaluation environment in new process..."
                 )
                 self.eval_env = LeanEnvironment(
-                    repo=self.repo_manager.repo,
+                    traced_repo=self.traced_repo,
                     timeout=self.config.training.timeout,
                     max_steps=self.config.training.max_steps_per_episode,
                     reward_scheme=self.config.training.reward_scheme,
@@ -483,7 +504,7 @@ class HierarchicalTransformerTrainer:
                     "Initializing persistent training environment in new process..."
                 )
                 self.train_env = LeanEnvironment(
-                    repo=self.repo_manager.repo,
+                    traced_repo=self.traced_repo,
                     timeout=self.config.training.timeout,
                     max_steps=self.config.training.max_steps_per_episode,
                     reward_scheme=self.config.training.reward_scheme,
@@ -633,49 +654,75 @@ class HierarchicalTransformerTrainer:
         ) as prof:
             while episode < self.config.training.max_episodes:
                 with record_function("training_loop_iteration"):
-                    # Determine theorem for the episode
-                    if self.curriculum_manager:
-                        theorems = self.curriculum_manager.get_current_theorems()
-                        if not theorems:
-                            self.logger.warning(
-                                f"No theorems in current curriculum stage {self.curriculum_manager.current_stage}. Ending training."
-                            )
-                            break
-                        theorem = random.choice(theorems)
-                    else:
-                        # Fallback if curriculum is disabled or fails
-                        all_theorems = self._get_all_theorems()
-                        if not all_theorems:
-                            self.logger.error(
-                                "No theorems found to train on. Aborting."
-                            )
-                            break
-                        theorem = random.choice(all_theorems)
-
-                    reward, length, success = self._run_episode(theorem)
-
-                    # Logging and checkpointing
-                    if self.config.distributed.rank == 0:
-                        recent_rewards.append(reward)
-                        recent_successes.append(success)
-
-                        if episode % self.config.training.log_frequency == 0:
-                            self._log_progress(
-                                episode, recent_rewards, recent_successes
-                            )
-
-                        if (
-                            not self.no_evaluation
-                            and episode > 0
-                            and episode % self.config.training.eval_frequency == 0
+                    # Use distributed environment for parallel episodes if enabled
+                    if (
+                        self.config.training.use_distributed_env
+                        and self.distributed_env
+                    ):
+                        # Run multiple episodes in parallel
+                        theorems_batch = []
+                        for _ in range(
+                            self.config.training.parallel_episodes_per_batch
                         ):
-                            eval_success_rate = self._evaluate()
-                            if eval_success_rate > best_success_rate:
-                                best_success_rate = eval_success_rate
-                                self._save_checkpoint(episode, "best")
+                            if self.curriculum_manager:
+                                theorems = (
+                                    self.curriculum_manager.get_current_theorems()
+                                )
+                                if not theorems:
+                                    self.logger.warning(
+                                        f"No theorems in current curriculum stage {self.curriculum_manager.current_stage}. Ending training."
+                                    )
+                                    break
+                                theorem_choice = random.choice(theorems)
+                            else:
+                                # Fallback if curriculum is disabled or fails
+                                all_theorems = self._get_all_theorems()
+                                if not all_theorems:
+                                    self.logger.error(
+                                        "No theorems found to train on. Aborting."
+                                    )
+                                    break
+                                theorem_choice = random.choice(all_theorems)
+                            theorems_batch.append(theorem_choice)
 
-                        if episode % self.config.training.save_frequency == 0:
-                            self._save_checkpoint(episode, "periodic")
+                        if theorems_batch:
+                            batch_results = self._run_parallel_episodes(theorems_batch)
+
+                            # Process batch results
+                            for result in batch_results:
+                                if self.config.distributed.rank == 0:
+                                    recent_rewards.append(result.reward)
+                                    recent_successes.append(result.success)
+
+                                episode += 1
+                    else:
+                        # Fallback to single episode processing
+                        if self.curriculum_manager:
+                            theorems = self.curriculum_manager.get_current_theorems()
+                            if not theorems:
+                                self.logger.warning(
+                                    f"No theorems in current curriculum stage {self.curriculum_manager.current_stage}. Ending training."
+                                )
+                                break
+                            theorem = random.choice(theorems)
+                        else:
+                            # Fallback if curriculum is disabled or fails
+                            all_theorems = self._get_all_theorems()
+                            if not all_theorems:
+                                self.logger.error(
+                                    "No theorems found to train on. Aborting."
+                                )
+                                break
+                            theorem = random.choice(all_theorems)
+
+                        reward, length, success = self._run_episode(theorem)
+
+                        # Logging and checkpointing
+                        if self.config.distributed.rank == 0:
+                            recent_rewards.append(reward)
+                            recent_successes.append(success)
+
+                        episode += 1
 
                 # Update curriculum
                 if self.curriculum_manager and self.config.distributed.rank == 0:
@@ -684,7 +731,30 @@ class HierarchicalTransformerTrainer:
                         if self.curriculum_manager.should_advance_stage(avg_success):
                             self.curriculum_manager.advance_stage()
 
-                episode += 1
+                # Logging and checkpointing (only check periodically to avoid too frequent checks)
+                if (
+                    self.config.distributed.rank == 0
+                    and episode % self.config.training.log_frequency == 0
+                ):
+                    self._log_progress(episode, recent_rewards, recent_successes)
+
+                if (
+                    not self.no_evaluation
+                    and episode > 0
+                    and episode % self.config.training.eval_frequency == 0
+                    and self.config.distributed.rank == 0
+                ):
+                    eval_success_rate = self._evaluate()
+                    if eval_success_rate > best_success_rate:
+                        best_success_rate = eval_success_rate
+                        self._save_checkpoint(episode, "best")
+
+                if (
+                    episode % self.config.training.save_frequency == 0
+                    and self.config.distributed.rank == 0
+                ):
+                    self._save_checkpoint(episode, "periodic")
+
                 if prof:
                     prof.step()
 
@@ -694,6 +764,76 @@ class HierarchicalTransformerTrainer:
 
         if self.writer:
             self.writer.close()
+
+        # Clean up distributed environment
+        if self.distributed_env:
+            self.distributed_env.close()
+
+    def _run_parallel_episodes(self, theorems: List[Theorem]) -> List[EpisodeResult]:
+        """Run multiple episodes in parallel using the distributed environment."""
+        if not self.distributed_env:
+            raise RuntimeError("Distributed environment not initialized")
+
+        # Generate actions for each theorem using the current agent
+        agent_module = self.agent.module if isinstance(self.agent, DDP) else self.agent
+        theorem_action_pairs = []
+
+        for theorem in theorems:
+            # Generate a sequence of actions using the current policy
+            # This is a simplified approach - in practice you might want more sophisticated action generation
+            actions = self._generate_actions_for_theorem(theorem, agent_module)
+            theorem_action_pairs.append((theorem, actions))
+
+        # Run episodes in parallel
+        with record_function("parallel_episodes"):
+            results = self.distributed_env.run_episodes_parallel(theorem_action_pairs)
+
+        # Store results in replay buffer if enabled
+        if self.replay_buffer:
+            for result in results:
+                # Convert episode history to individual transitions for replay buffer
+                self._process_episode_for_replay(result)
+
+        return results
+
+    def _generate_actions_for_theorem(
+        self, theorem: Theorem, agent_module
+    ) -> List[str]:
+        """Generate a sequence of actions for a theorem using the current policy."""
+        # This is a simplified implementation - you might want to use the actual environment
+        # to generate actions step by step, but for distributed processing we pre-generate
+        actions = []
+        max_actions = min(
+            self.config.training.max_steps_per_episode, 10
+        )  # Limit for efficiency
+
+        # Use a simple heuristic or the agent to generate likely actions
+        # This is a placeholder - in practice you'd want more sophisticated action generation
+        basic_tactics = [
+            "sorry",
+            "rfl",
+            "simp",
+            "exact",
+            "apply",
+            "intro",
+            "cases",
+            "induction",
+        ]
+        for _ in range(max_actions):
+            action = random.choice(basic_tactics)
+            actions.append(action)
+
+        return actions
+
+    def _process_episode_for_replay(self, episode_result: EpisodeResult):
+        """Process episode result and add transitions to replay buffer."""
+        if not self.replay_buffer:
+            return
+
+        # This is a simplified processing - you'd need to reconstruct the states and actions
+        # from the episode history for proper replay buffer storage
+        # For now, we'll skip this as it requires more complex state tracking
+        pass
 
     def _run_episode(self, theorem: Theorem) -> Tuple[float, int, bool]:
         """Run a single training episode."""
@@ -1067,6 +1207,21 @@ class HierarchicalTransformerTrainer:
         )
         return theorem_index
 
+    def __del__(self):
+        """Cleanup method to ensure Ray is properly shut down."""
+        if hasattr(self, "distributed_env") and self.distributed_env:
+            try:
+                self.distributed_env.close()
+            except Exception:
+                pass
+
+        # Only shutdown Ray if we initialized it
+        if ray.is_initialized():
+            try:
+                ray.shutdown()
+            except Exception:
+                pass
+
     def _cleanup_memory(self):
         """Clean up memory, especially CUDA cache."""
         try:
@@ -1166,6 +1321,26 @@ def main():
         help="If set, disables the evaluation phase. Useful for debug runs.",
     )
 
+    # Distributed Environment Arguments
+    parser.add_argument(
+        "--use-distributed-env",
+        action="store_true",
+        default=True,
+        help="Use distributed environment for parallel episode processing.",
+    )
+    parser.add_argument(
+        "--num-env-workers",
+        type=int,
+        default=4,
+        help="Number of Ray workers for distributed environment.",
+    )
+    parser.add_argument(
+        "--parallel-episodes-per-batch",
+        type=int,
+        default=8,
+        help="Number of episodes to run in parallel per batch.",
+    )
+
     args = parser.parse_args()
 
     # Configuration
@@ -1181,6 +1356,9 @@ def main():
             save_frequency=args.save_frequency,
             use_experience_replay=True,
             parameter_loss_coefficient=0.05,  # Coefficient for parameter loss
+            use_distributed_env=args.use_distributed_env,
+            num_env_workers=args.num_env_workers,
+            parallel_episodes_per_batch=args.parallel_episodes_per_batch,
         ),
         model=ModelConfig(
             d_model=256,

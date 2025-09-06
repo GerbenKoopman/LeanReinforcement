@@ -17,6 +17,7 @@ from lean_dojo import (
     ProofGivenUp,
     LeanError,
     Theorem,
+    TracedRepo,
 )
 
 # Result mapping for RL interface - using LeanDojo types directly
@@ -44,12 +45,13 @@ class LeanEnvironment:
     Gym-like environment for theorem proving with LeanDojo.
 
     This environment provides a standardized interface for RL agents to interact
-    with Lean theorem proving through LeanDojo.
+    with Lean theorem proving through LeanDojo. It maintains a persistent Lean
+    process to avoid costly re-initialization for each episode.
     """
 
     def __init__(
         self,
-        repo: LeanGitRepo,
+        traced_repo: TracedRepo,
         timeout: int = 600,
         max_steps: int = 100,
         reward_scheme: str = "sparse",
@@ -59,24 +61,25 @@ class LeanEnvironment:
         Initialize the Lean environment.
 
         Args:
-            repo: LeanGitRepo instance for the repository to work with
-            timeout: Maximum time in seconds for each tactic execution
-            max_steps: Maximum number of steps allowed per episode
-            reward_scheme: Reward scheme ("sparse", "dense", or "shaped")
-            additional_imports: Additional Lean imports to include
+            traced_repo: TracedRepo instance for the repository to work with.
+            timeout: Maximum time in seconds for each tactic execution.
+            max_steps: Maximum number of steps allowed per episode.
+            reward_scheme: Reward scheme ("sparse", "dense", or "shaped").
+            additional_imports: Additional Lean imports to include.
         """
-        self.repo = repo
+        self.traced_repo = traced_repo
         self.timeout = timeout
         self.max_steps = max_steps
         self.reward_scheme = reward_scheme
         self.additional_imports = additional_imports or []
 
+        self.dojo: Optional[Dojo] = None
+
         # Episode tracking
         self.current_theorem: Optional[Theorem] = None
-        self.dojo: Optional[Dojo] = None
-        self.current_state: Optional[TacticState] = None  # Use TacticState directly
+        self.current_state: Optional[TacticState] = None
         self.step_count: int = 0
-        self.episode_history: List[Tuple[str, str]] = []  # (tactic, result)
+        self.episode_history: List[Tuple[str, str]] = []
 
         # Reward tracking
         self.initial_num_goals: int = 0
@@ -92,31 +95,28 @@ class LeanEnvironment:
         Returns:
             Initial state of the theorem
         """
+        if self.dojo is not None:
+            try:
+                self.dojo.__exit__(None, None, None)
+            except Exception:
+                pass
+
         self.current_theorem = theorem
         self.step_count = 0
         self.episode_history = []
 
-        # Clean up previous dojo if it exists
-        if self.dojo is not None:
-            try:
-                self.dojo.__exit__(None, None, None)
-            except:
-                pass
-
-        # Initialize new dojo
         self.dojo = Dojo(
-            theorem, timeout=self.timeout, additional_imports=self.additional_imports
+            theorem,
+            timeout=self.timeout,
+            additional_imports=self.additional_imports,
         )
-
-        # Get initial state
-        dojo, initial_state = self.dojo.__enter__()
-        self.dojo = dojo
+        _, initial_state = self.dojo.__enter__()
 
         # initial_state should be a TacticState when using tactics
         if not isinstance(initial_state, TacticState):
             raise ValueError(f"Expected TacticState, got {type(initial_state)}")
 
-        self.current_state = initial_state  # No conversion needed
+        self.current_state = initial_state
 
         # Track initial goals for reward calculation
         self.initial_num_goals = self.current_state.num_goals
@@ -308,7 +308,7 @@ class LeanEnvironment:
         if self.dojo is not None:
             try:
                 self.dojo.__exit__(None, None, None)
-            except:
+            except Exception:
                 pass
             self.dojo = None
 

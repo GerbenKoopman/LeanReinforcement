@@ -28,18 +28,25 @@ export LOAD_USED_PACKAGES_ONLY=1
 export NO_LAKE_BUILD=1
 export SKIP_DEPENDENCIES=1
 
+# Ray configuration for distributed environment
+export RAY_DISABLE_IMPORT_WARNING=1
+export RAY_DEDUP_LOGS=0
+
 # Ensure the output directory exists
 mkdir -p $TRAINING_OUTPUT_DIR
 
 cd $HOME/lean_reinforcement/src
 
-echo "Starting training run..."
+echo "Starting training run with distributed environment..."
 srun python3 -m lean_rl.agents.transformer.process.training \
     --repo-url https://github.com/leanprover-community/mathlib4 \
     --repo-commit 29dcec074de168ac2bf835a77ef68bbe069194c5 \
     --max-episodes 1000 \
     --max-steps-per-episode 64 \
     --run-name "training_run_$(date +%s)" \
-    --output-dir "$TRAINING_OUTPUT_DIR"
+    --output-dir "$TRAINING_OUTPUT_DIR" \
+    --use-distributed-env \
+    --num-env-workers 8 \
+    --parallel-episodes-per-batch 16
 
 echo "Training run finished."
