@@ -43,9 +43,16 @@ class HPCConfig:
 
     def __post_init__(self):
         """Auto-configure from environment variables."""
-        # HPC directory setup
-        self.scratch_shared = self.scratch_shared or os.getenv("SCRATCH_SHARED")
-        self.cache_dir = self.cache_dir or os.getenv("CACHE_DIR")
+        # HPC directory setup - only use if available
+        scratch_env = os.getenv("SCRATCH_SHARED")
+        cache_env = os.getenv("CACHE_DIR")
+
+        # Only set HPC paths if they actually exist or we're on HPC
+        if scratch_env and (Path(scratch_env).exists() or os.getenv("SLURM_JOB_ID")):
+            self.scratch_shared = scratch_env
+
+        if cache_env and (Path(cache_env).parent.exists() or os.getenv("SLURM_JOB_ID")):
+            self.cache_dir = cache_env
 
         # SLURM environment
         self.job_id = os.getenv("SLURM_JOB_ID")
@@ -58,13 +65,13 @@ class HPCConfig:
             timestamp = int(time.time())
             self.experiment_name = f"simplified_training_{timestamp}"
 
-        # Directory setup
+        # Directory setup - only if HPC paths are available
         if self.scratch_shared:
             base_dir = Path(self.scratch_shared)
             self.checkpoint_dir = self.checkpoint_dir or str(base_dir / "checkpoints")
             self.log_dir = self.log_dir or str(base_dir / "training_logs")
 
-        # Create directories
+        # Create directories - gracefully handle failures
         self._create_directories()
 
         # Setup HPC environment variables
@@ -117,6 +124,15 @@ class HPCConfig:
         os.environ["LOAD_USED_PACKAGES_ONLY"] = "1"
         os.environ["NO_LAKE_BUILD"] = "1"
         os.environ["SKIP_DEPENDENCIES"] = "1"
+
+        # Set cache directory to local fallback if HPC not available
+        if self.cache_dir and Path(self.cache_dir).parent.exists():
+            os.environ["LEAN_DOJO_CACHE_DIR"] = self.cache_dir
+        else:
+            # Use local cache directory that we can actually create
+            local_cache = Path.home() / ".cache" / "lean_dojo"
+            local_cache.mkdir(parents=True, exist_ok=True)
+            os.environ["LEAN_DOJO_CACHE_DIR"] = str(local_cache)
 
         # Ray configuration for distributed env
         os.environ["RAY_DISABLE_IMPORT_WARNING"] = "1"
