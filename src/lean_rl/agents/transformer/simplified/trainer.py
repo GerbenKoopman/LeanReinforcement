@@ -21,6 +21,7 @@ from lean_dojo import (
     ProofFinished,
     LeanError,
     TacticState,
+    TracedRepo,
     get_traced_repo_path,
 )
 
@@ -42,12 +43,94 @@ class TrainingMetrics:
     timestamp: float = 0.0
 
 
+class RepoManager:
+    """
+    Manages LeanGitRepo and TracedRepo for simplified trainer.
+    Avoids unnecessary tracing by using cached versions when available.
+    """
+
+    def __init__(
+        self,
+        repo_url: str = "https://github.com/leanprover-community/mathlib4",
+        repo_commit: str = "v4.8.0",
+    ):
+        self.repo_url = repo_url
+        self.repo_commit = repo_commit
+        self._repo: Optional[LeanGitRepo] = None
+        self._traced_repo = None
+
+    @property
+    def repo(self) -> LeanGitRepo:
+        """Get the LeanGitRepo, initializing if needed."""
+        if self._repo is None:
+            logging.info(
+                f"Initializing LeanGitRepo for {self.repo_url} at {self.repo_commit}"
+            )
+            self._repo = LeanGitRepo(self.repo_url, self.repo_commit)
+        return self._repo
+
+    def get_traced_repo(self):
+        """
+        Get traced repo from cache if available, otherwise skip tracing for HPC efficiency.
+
+        Returns:
+            TracedRepo if available in cache, None otherwise
+        """
+        if self._traced_repo is not None:
+            return self._traced_repo
+
+        try:
+            # First check if we're in an environment where cache might be available
+            # Check for HPC cache directory or use local fallback
+            cache_paths = [
+                Path(
+                    "/gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache"
+                ),
+                Path.home() / ".cache" / "lean_dojo",
+                Path("/tmp/lean_cache"),
+            ]
+
+            cache_available = any(
+                path.exists() and path.is_dir() for path in cache_paths
+            )
+
+            if not cache_available:
+                logging.info(
+                    "No LeanDojo cache directory found - skipping repo loading for efficiency"
+                )
+                return None
+
+            # Only call get_traced_repo_path if cache might be available
+            traced_repo_path = get_traced_repo_path(self.repo, build_deps=False)
+
+            if traced_repo_path.exists():
+                logging.info(f"Loading traced repo from cache: {traced_repo_path}")
+                # Use lazy loading method
+                from lean_dojo import TracedRepo
+
+                self._traced_repo = TracedRepo.from_traced_files(traced_repo_path)
+                logging.info("Successfully loaded traced repo from cache")
+                return self._traced_repo
+            else:
+                logging.warning(
+                    f"Traced repo not found in cache at: {traced_repo_path}"
+                )
+                logging.info("Skipping tracing for HPC efficiency - will use test mode")
+                return None
+
+        except Exception as e:
+            logging.error(f"Failed to load traced repo from cache: {e}")
+            logging.info("Skipping tracing for HPC efficiency - will use test mode")
+            return None
+
+
 class LeanEnvironment:
     """Wrapper for LeanDojo environment with proper resource management."""
 
     def __init__(self, config: SimpleHPCConfig):
         self.config = config
-        self.repo = None
+        self.repo_manager = RepoManager()
+        self.traced_repo = None
         self.dojo = None
         self.current_theorem = None
         self.setup_completed = False
@@ -60,28 +143,29 @@ class LeanEnvironment:
         try:
             logging.info("Setting up LeanDojo environment...")
 
-            # Use cache-only mode for HPC
+            # Check cache directory
             try:
                 cache_dir = self.config.get_cache_dir()
                 logging.info(f"Using cache directory: {cache_dir}")
             except RuntimeError as e:
                 logging.warning(f"Cache directory issue: {e}")
 
-            self.repo = LeanGitRepo(
-                "https://github.com/leanprover-community/mathlib4",
-                "v4.8.0",  # Stable version for reproducibility
-            )
+            # Try to get traced repo from cache (no tracing)
+            self.traced_repo = self.repo_manager.get_traced_repo()
 
-            # Get traced repo (should use cache)
-            traced_repo = get_traced_repo_path(self.repo)
-            logging.info(f"Using traced repo: {traced_repo}")
+            if self.traced_repo:
+                logging.info("LeanDojo environment setup completed with cached repo")
+            else:
+                logging.info(
+                    "LeanDojo environment setup completed without traced repo (test mode)"
+                )
 
             self.setup_completed = True
-            logging.info("LeanDojo environment setup completed")
 
         except Exception as e:
             logging.error(f"Failed to setup LeanDojo environment: {e}")
-            raise
+            # Don't raise - allow test mode
+            self.setup_completed = True
 
     def create_dojo(self, theorem: Theorem) -> Dojo:
         """Create a new Dojo instance for a theorem."""
@@ -190,31 +274,27 @@ class LeanDojoTrainer:
             # Setup environment first
             self.environment.setup()
 
-            if not self.environment.repo:
-                logging.error("Repository not initialized")
-                return []
-
-            # Get traced repo path
-            traced_repo = get_traced_repo_path(self.environment.repo)
-            theorems_file = traced_repo / "theorems.json"
-
-            if not theorems_file.exists():
-                logging.warning(f"Theorems file not found: {theorems_file}")
-                # Return some test theorems as fallback
+            if not self.environment.traced_repo:
+                logging.warning("No traced repository available - using test mode")
                 return self._get_test_theorems()
 
-            # Load a subset for HPC efficiency
-            import json
+            # Load theorems from traced repo
+            traced_theorems = list(self.environment.traced_repo.get_traced_theorems())
 
-            with open(theorems_file, "r") as f:
-                theorem_data = json.load(f)
+            # Convert TracedTheorem to Theorem and limit for HPC efficiency
+            theorems = [
+                traced_thm.theorem
+                for traced_thm in traced_theorems[: self.config.max_theorems]
+            ]
 
-            theorems = [Theorem(**t) for t in theorem_data[: self.config.max_theorems]]
-            logging.info(f"Loaded {len(theorems)} theorems for training")
+            logging.info(
+                f"Loaded {len(theorems)} theorems from traced repository (out of {len(traced_theorems)} total)"
+            )
             return theorems
 
         except Exception as e:
             logging.error(f"Failed to load theorems: {e}")
+            logging.warning("Falling back to test mode")
             return self._get_test_theorems()
 
     def _get_test_theorems(self) -> List[Theorem]:
