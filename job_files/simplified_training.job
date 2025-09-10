@@ -1,0 +1,79 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=1
+#SBATCH --job-name=simple_train
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=18
+#SBATCH --time=12:00:00
+#SBATCH --output=logs/simple_training_%A.out
+
+module purge
+module load 2024
+module load Anaconda3/2024.06-1
+
+source activate lean-reinforcement
+
+# Source environment variables
+set -a
+source $HOME/lean_reinforcement/.env
+set +a
+
+# === HPC Environment Setup ===
+echo "Starting Simplified LeanDojo RL Training - Job ID: $SLURM_JOB_ID"
+echo "Node: $SLURM_NODEID, Task: $SLURM_PROCID"
+echo "GPU allocation: $SLURM_GPUS"
+
+# === Critical Environment Variables ===
+export LEAN_CACHE_ONLY=1
+export DISABLE_BUILD_DEPS=1  
+export LOAD_USED_PACKAGES_ONLY=1
+export NO_LAKE_BUILD=1
+export SKIP_DEPENDENCIES=1
+
+# HPC directories (auto-configured in Python)
+export SCRATCH_SHARED="${SCRATCH_SHARED:-/scratch/shared}"
+export CACHE_DIR="${CACHE_DIR:-$SCRATCH_SHARED/cache}"
+
+# Ray configuration
+export RAY_DISABLE_IMPORT_WARNING=1
+export RAY_DEDUP_LOGS=0
+
+# PyTorch optimizations
+export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+
+
+# === Validate Environment ===
+echo "Python version: $(python --version)"
+echo "PyTorch version: $(python -c 'import torch; print(torch.__version__)')"
+echo "CUDA available: $(python -c 'import torch; print(torch.cuda.is_available())')"
+echo "Cache directory: $CACHE_DIR"
+
+# === Validate Cache Directory ===
+if [ ! -d "$CACHE_DIR" ]; then
+    echo "ERROR: Cache directory not found: $CACHE_DIR"
+    echo "Available directories in SCRATCH_SHARED:"
+    ls -la "$SCRATCH_SHARED" || echo "SCRATCH_SHARED not accessible"
+    exit 1
+fi
+
+# === Check Cache Size ===
+cache_size=$(du -sh "$CACHE_DIR" | cut -f1)
+echo "Cache directory size: $cache_size"
+
+# === Run Training ===
+echo "Starting simplified LeanDojo RL training..."
+cd $HOME/lean_reinforcement/src
+
+srun python3 -m lean_rl.agents.transformer.simplified.trainer \
+    --config hpc_a100 \
+    --max_episodes 1000 \
+    --experiment_name "simplified_run_${SLURM_JOB_ID}" \
+    --checkpoint_frequency 50 \
+    --verbose
+
+# === Cleanup ===
+echo "Training completed. Job ID: $SLURM_JOB_ID"
+echo "Checkpoint location: $SCRATCH_SHARED/checkpoints/"
+echo "Logs location: $SCRATCH_SHARED/training_logs/"
