@@ -58,10 +58,6 @@ if [ ! -d "$CACHE_DIR" ]; then
     exit 1
 fi
 
-# === Check Cache Size ===
-cache_size=$(du -sh "$CACHE_DIR" | cut -f1)
-echo "Cache directory size: $cache_size"
-
 # === Run Training ===
 echo "Starting simplified LeanDojo RL training..."
 cd $HOME/lean_reinforcement/src
