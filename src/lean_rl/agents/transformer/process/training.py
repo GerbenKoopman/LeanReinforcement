@@ -5,27 +5,18 @@ This module implements comprehensive training strategies for the HierarchicalTra
 including curriculum learning, distributed training, and various learning paradigms.
 """
 
-import os
+import argparse
 import gc
 import json
-import random
-import time
 import logging
 import os
-import argparse
+import random
+import time
 
 import ray
 import torch
 import torch.nn as nn
 import torch.distributed as dist
-import logging
-import time
-import os
-import json
-import torch
-import torch.nn as nn
-import torch.distributed as dist
-import argparse
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard.writer import SummaryWriter
 from torch.profiler import profile, record_function, ProfilerActivity, schedule
@@ -53,6 +44,7 @@ from ..config import (
     DistributedConfig,
 )
 from ....environment import LeanEnvironment
+from ....environments.persistent_environment import PersistentLeanEnvironment
 from ....distributed_environment import DistributedLeanEnvironment, EpisodeResult
 
 

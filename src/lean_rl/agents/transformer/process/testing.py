@@ -30,7 +30,6 @@ from ..model.agent import (
     HierarchicalSearchTree,
 )
 from ..model.hierarchy import HierarchyLevel, StrategicActions, TacticalFamilies
-from ....environment import LeanEnvironment
 from ....agents import RandomAgent, MCTSAgent
 
 import argparse
@@ -58,7 +57,9 @@ from ..model.agent import (
     HierarchicalSearchTree,
 )
 from ..model.hierarchy import HierarchyLevel, StrategicActions, TacticalFamilies
-from ....environment import LeanEnvironment
+
+# Import environment classes (same as environment_wrapper.py)
+from ....environment import LeanEnvironment, StepResult
 from .environment_wrapper import LeanEnvWrapper
 from ....agents import RandomAgent, MCTSAgent
 
@@ -337,10 +338,10 @@ class HierarchicalTransformerTester:
         self.repo = self.repo_manager.repo
 
         try:
-            # Create environment using the original repo object to ensure cache hits
+            # Create environment using the traced repo object to ensure cache hits
             self.env = LeanEnvWrapper(
                 LeanEnvironment(
-                    self.repo,
+                    self.traced_repo,
                     max_steps=50,
                     timeout=30,
                     additional_imports=[],  # Minimize imports to avoid build triggers
