@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from typing import Dict, List, Tuple, Optional, Any
 
 from lean_dojo import (
-    LeanGitRepo,
     Dojo,
     TacticState,
     ProofFinished,
