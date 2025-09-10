@@ -20,13 +20,15 @@ Usage:
 """
 
 from .core import SimplifiedTransformerAgent, SimpleTokenizer
-from .config import SimpleConfig
+from .hpc_config import SimpleHPCConfig, HPC_A100_CONFIG, HPC_MIG_CONFIG
 from .trainer import LeanDojoTrainer, create_leandojo_trainer
 
 __all__ = [
     "SimplifiedTransformerAgent",
     "SimpleTokenizer",
-    "SimpleConfig",
+    "SimpleHPCConfig",
+    "HPC_A100_CONFIG",
+    "HPC_MIG_CONFIG",
     "LeanDojoTrainer",
     "create_leandojo_trainer",
 ]
