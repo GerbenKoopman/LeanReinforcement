@@ -328,3 +328,7 @@ class LeanEnvironment:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
+
+
+# Export classes for external use
+__all__ = ["LeanEnvironment", "StepResult"]

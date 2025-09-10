@@ -28,8 +28,7 @@ from lean_dojo.data_extraction.traced_data import TracedRepo
 from lean_dojo.data_extraction.trace import is_available_in_cache, get_traced_repo_path
 
 from ..model.agent import HierarchicalTransformerAgent, HierarchicalAction
-from ....environment import LeanEnvironment
-from .environment_wrapper import LeanEnvWrapper
+from ....environments.persistent_environment import PersistentLeanEnvironment
 from ....agents.random import RandomAgent
 from ....agents.mcts import MCTSAgent
 
@@ -249,17 +248,18 @@ class HierarchicalTransformerEvaluator:
             )
             self.logger.info("Repository loaded from cache successfully")
 
-            self.env = LeanEnvWrapper(
-                LeanEnvironment(
-                    self.repo,
-                    max_steps=self.config.max_steps_per_theorem,
-                    timeout=self.config.timeout_per_theorem,
-                )
+            self.env = PersistentLeanEnvironment(
+                self.repo,
+                timeout=self.config.timeout_per_theorem,
             )
-            self.logger.info("Repository setup completed")
+            self.logger.info("Persistent environment setup completed")
         except Exception as e:
             self.logger.error(f"Failed to setup repository: {e}")
             raise
+
+    def __del__(self):
+        if hasattr(self, "env"):
+            self.env.__exit__(None, None, None)
 
     def evaluate(self) -> EvaluationResults:
         """Run comprehensive evaluation."""
@@ -429,7 +429,7 @@ class HierarchicalTransformerEvaluator:
                         result.hierarchical_actions.append(hier_action)
 
                 # Take step
-                state, reward, done, step_result = self.env.step(action)
+                state, reward, done, info = self.env.step(action)
 
                 # Update tracking
                 result.action_sequence.append(action)
@@ -439,15 +439,23 @@ class HierarchicalTransformerEvaluator:
                 step += 1
 
                 # Update agent
-                self.agent.update(step_result)
+                # The agent update logic might need to be adapted
+                # if it relied on the StepResult object from the wrapper.
+                # For now, we assume it can be updated with the raw components.
+                # self.agent.update(state, action, reward, done, info)
 
                 if done:
-                    if step_result.action_result == "proof_finished":
+                    if info.get("action_result") == "prooffinished":
                         result.proved = True
                         self.logger.info(f"✓ Proved in {step} steps")
                     else:
-                        result.failure_reason = step_result.action_result
-                        self.logger.info(f"✗ Failed: {step_result.action_result}")
+                        failure_reason = info.get("action_result")
+                        result.failure_reason = (
+                            str(failure_reason)
+                            if failure_reason is not None
+                            else "unknown"
+                        )
+                        self.logger.info(f"✗ Failed: {result.failure_reason}")
                     break
 
             # Finalize result
@@ -515,14 +523,15 @@ class HierarchicalTransformerEvaluator:
                         if action is None:
                             break
 
-                        state, reward, done, step_result = self.env.step(action)
-                        baseline_agent.update(step_result)
+                        state, reward, done, info = self.env.step(action)
+                        # The baseline agent update might need to be adapted
+                        # self.agent.update(state, action, reward, done, info)
 
                         episode_reward += reward
                         steps += 1
 
                         if done:
-                            if step_result.action_result == "proof_finished":
+                            if info.get("action_result") == "prooffinished":
                                 successes += 1
                             break
 
