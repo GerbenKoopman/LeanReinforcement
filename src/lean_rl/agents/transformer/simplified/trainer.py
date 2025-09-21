@@ -16,13 +16,10 @@ import traceback
 # LeanDojo integration
 from lean_dojo import (
     Dojo,
-    LeanGitRepo,
     Theorem,
     ProofFinished,
     LeanError,
     TacticState,
-    TracedRepo,
-    get_traced_repo_path,
 )
 from ..data.repository import RepoManager
 
