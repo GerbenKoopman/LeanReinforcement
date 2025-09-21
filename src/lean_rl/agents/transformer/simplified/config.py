@@ -34,6 +34,8 @@ class SimpleConfig:
     cache_dir: Optional[str] = None  # LeanDojo cache directory
 
     # Mathlib4 specific
+    repo_url: str = "https://github.com/leanprover-community/mathlib4"
+    repo_commit: str = "29dcec074de168ac2bf835a77ef68bbe069194c5"
     max_theorems: int = 100  # Limit number of theorems for training
     theorem_difficulty: str = "basic"  # basic, intermediate, advanced
 

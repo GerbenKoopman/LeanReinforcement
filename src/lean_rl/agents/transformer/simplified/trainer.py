@@ -24,6 +24,8 @@ from lean_dojo import (
     TracedRepo,
     get_traced_repo_path,
 )
+from ..data.repository import RepoManager
+
 
 # Simplified agent components
 from .core import SimplifiedTransformerAgent
@@ -43,93 +45,14 @@ class TrainingMetrics:
     timestamp: float = 0.0
 
 
-class RepoManager:
-    """
-    Manages LeanGitRepo and TracedRepo for simplified trainer.
-    Avoids unnecessary tracing by using cached versions when available.
-    """
-
-    def __init__(
-        self,
-        repo_url: str = "https://github.com/leanprover-community/mathlib4",
-        repo_commit: str = "v4.8.0",
-    ):
-        self.repo_url = repo_url
-        self.repo_commit = repo_commit
-        self._repo: Optional[LeanGitRepo] = None
-        self._traced_repo = None
-
-    @property
-    def repo(self) -> LeanGitRepo:
-        """Get the LeanGitRepo, initializing if needed."""
-        if self._repo is None:
-            logging.info(
-                f"Initializing LeanGitRepo for {self.repo_url} at {self.repo_commit}"
-            )
-            self._repo = LeanGitRepo(self.repo_url, self.repo_commit)
-        return self._repo
-
-    def get_traced_repo(self):
-        """
-        Get traced repo from cache if available, otherwise skip tracing for HPC efficiency.
-
-        Returns:
-            TracedRepo if available in cache, None otherwise
-        """
-        if self._traced_repo is not None:
-            return self._traced_repo
-
-        try:
-            # First check if we're in an environment where cache might be available
-            # Check for HPC cache directory or use local fallback
-            cache_paths = [
-                Path(
-                    "/gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache"
-                ),
-                Path.home() / ".cache" / "lean_dojo",
-                Path("/tmp/lean_cache"),
-            ]
-
-            cache_available = any(
-                path.exists() and path.is_dir() for path in cache_paths
-            )
-
-            if not cache_available:
-                logging.info(
-                    "No LeanDojo cache directory found - skipping repo loading for efficiency"
-                )
-                return None
-
-            # Only call get_traced_repo_path if cache might be available
-            traced_repo_path = get_traced_repo_path(self.repo, build_deps=False)
-
-            if traced_repo_path.exists():
-                logging.info(f"Loading traced repo from cache: {traced_repo_path}")
-                # Use lazy loading method
-                from lean_dojo import TracedRepo
-
-                self._traced_repo = TracedRepo.from_traced_files(traced_repo_path)
-                logging.info("Successfully loaded traced repo from cache")
-                return self._traced_repo
-            else:
-                logging.warning(
-                    f"Traced repo not found in cache at: {traced_repo_path}"
-                )
-                logging.info("Skipping tracing for HPC efficiency - will use test mode")
-                return None
-
-        except Exception as e:
-            logging.error(f"Failed to load traced repo from cache: {e}")
-            logging.info("Skipping tracing for HPC efficiency - will use test mode")
-            return None
-
-
 class LeanEnvironment:
     """Wrapper for LeanDojo environment with proper resource management."""
 
     def __init__(self, config: SimpleHPCConfig):
         self.config = config
-        self.repo_manager = RepoManager()
+        self.repo_manager = RepoManager(
+            repo_url=config.repo_url, repo_commit=config.repo_commit
+        )
         self.traced_repo = None
         self.dojo = None
         self.current_theorem = None
