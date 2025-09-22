@@ -2,11 +2,11 @@
 
 #SBATCH --partition=gpu_a100
 #SBATCH --gpus=1
-#SBATCH --job-name=training
+#SBATCH --job-name=transformer_training
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=18
 #SBATCH --time=12:00:00
-#SBATCH --output=logs/training_%A.out
+#SBATCH --output=logs/transformer_training_%A.out
 
 module purge
 module load 2024
@@ -37,16 +37,7 @@ mkdir -p $TRAINING_OUTPUT_DIR
 
 cd $HOME/lean_reinforcement/src
 
-echo "Starting training run with distributed environment..."
-srun python3 -m lean_rl.agents.transformer.process.training \
-    --repo-url https://github.com/leanprover-community/mathlib4 \
-    --repo-commit 29dcec074de168ac2bf835a77ef68bbe069194c5 \
-    --max-episodes 1000 \
-    --max-steps-per-episode 64 \
-    --run-name "training_run_$(date +%s)" \
-    --output-dir "$TRAINING_OUTPUT_DIR" \
-    --use-distributed-env \
-    --num-env-workers 8 \
-    --parallel-episodes-per-batch 16
+echo "Starting simplified transformer training run..."
+srun python3 -m lean_rl.agents.transformer.main
 
 echo "Training run finished."

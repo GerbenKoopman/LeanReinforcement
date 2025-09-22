@@ -1,0 +1,53 @@
+"""
+A simple training script for the TransformerAgent.
+"""
+
+import logging
+from tqdm import tqdm
+from lean_dojo import TracedTheorem
+
+from ...environment import LeanEnvironment
+from .model.agent import TransformerAgent
+
+logger = logging.getLogger(__name__)
+
+
+def train(
+    agent: TransformerAgent,
+    env: LeanEnvironment,
+    theorems: list[TracedTheorem],
+    num_epochs: int,
+):
+    """
+    Main training loop.
+
+    Args:
+        agent: The agent to train.
+        env: The Lean environment.
+        theorems: A list of theorems to use for training.
+        num_epochs: The number of epochs to train for.
+    """
+    for epoch in range(num_epochs):
+        logger.info(f"Epoch {epoch + 1}/{num_epochs}")
+        total_reward = 0
+        for theorem in tqdm(theorems, desc=f"Epoch {epoch + 1}"):
+            state = env.reset(theorem)
+            done = False
+            episode_reward = 0
+
+            while not done:
+                if state is None:
+                    break
+                action = agent.select_action(state)
+                if action is None:
+                    break  # Agent decided to stop or failed to generate
+
+                step_result = env.step(action)
+                agent.update(step_result)
+
+                state = step_result.state
+                done = step_result.done
+                episode_reward += step_result.reward if step_result.reward else 0
+
+            total_reward += episode_reward
+        logger.info(f"Epoch {epoch + 1} finished. Total reward: {total_reward}")
