@@ -181,6 +181,10 @@ class SimpleHPCConfig:
 
     def __post_init__(self):
         """Validate and setup configuration."""
+        # Prioritize environment variables for repository, like the main agent.
+        self.repo_url = os.getenv("LEAN_REPO_URL", self.repo_url)
+        self.repo_commit = os.getenv("LEAN_REPO_COMMIT", self.repo_commit)
+
         # Model validation
         if self.d_model % self.n_heads != 0:
             raise ValueError("d_model must be divisible by n_heads")
@@ -193,6 +197,17 @@ class SimpleHPCConfig:
                 self.device = f"cuda:0"
             else:
                 self.device = "cpu"
+
+        # HPC override for repo_url if it's a local path
+        if self.hpc.cache_dir:
+            cache_dir = Path(self.hpc.cache_dir)
+            # This assumes a standard naming convention for the cloned repo.
+            repo_name = (
+                "leanprover-community-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5"
+            )
+            repo_path = cache_dir / repo_name
+            if repo_path.exists():
+                self.repo_url = str(repo_path)
 
         # Model save path with HPC directories
         if self.model_save_path is None:
