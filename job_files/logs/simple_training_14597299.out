@@ -1,0 +1,320 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Starting Simplified LeanDojo RL Training - Job ID: 14597299
+Node: 0, Task: 0
+GPU allocation: 1
+Python version: Python 3.10.18
+PyTorch version: 2.7.1+cu126
+CUDA available: True
+Cache directory: /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache
+Starting simplified LeanDojo RL training...
+/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/runpy.py:126: RuntimeWarning: 'lean_rl.agents.transformer.simplified.trainer' found in sys.modules after import of package 'lean_rl.agents.transformer.simplified', but prior to execution of 'lean_rl.agents.transformer.simplified.trainer'; this may result in unpredictable behaviour
+  warn(RuntimeWarning(msg))
+2025-09-10 20:11:24.433 | INFO     | lean_dojo.data_extraction.trace:get_traced_repo_path:210 - Tracing LeanGitRepo(url='https://github.com/leanprover-community/mathlib4', commit='b5eba595428809e96f3ed113bc7ba776c5f801ac')
+info: batteries: cloning https://github.com/leanprover-community/batteries to '././.lake/packages/batteries'
+info: Qq: cloning https://github.com/leanprover-community/quote4 to '././.lake/packages/Qq'
+info: aesop: cloning https://github.com/leanprover-community/aesop to '././.lake/packages/aesop'
+info: proofwidgets: cloning https://github.com/leanprover-community/ProofWidgets4 to '././.lake/packages/proofwidgets'
+info: Cli: cloning https://github.com/leanprover/lean4-cli to '././.lake/packages/Cli'
+info: importGraph: cloning https://github.com/leanprover-community/import-graph.git to '././.lake/packages/importGraph'
+✔ [1/10] Fetched proofwidgets:optRelease
+✔ [2/10] Built Cache.IO
+✔ [3/10] Built Cache.Hashing
+✔ [4/10] Built Cache.Hashing:c.o
+✔ [5/10] Built Cache.Requests
+✔ [6/10] Built Cache.Main
+✔ [7/10] Built Cache.IO:c.o
+✔ [8/10] Built Cache.Requests:c.o
+✔ [9/10] Built Cache.Main:c.o
+✔ [10/10] Built cache
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+100 6519k  100 6519k    0     0  13.4M      0 --:--:-- --:--:-- --:--:-- 13.4M
+
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+100 1906k  100 1906k    0     0  6272k      0 --:--:-- --:--:-- --:--:-- 6272k
+
+curl is too old; downloading more recent version
+installing leantar 0.1.11
+Attempting to download 4608 file(s)
+Downloaded: 0 file(s) [attempted 1/4608 = 0%], 1 failedDownloaded: 0 file(s) [attempted 2/4608 = 0%], 2 failedDownloaded: 0 file(s) [attempted 3/4608 = 0%], 3 failedDownloaded: 0 file(s) [attempted 4/4608 = 0%], 4 failedDownloaded: 0 file(s) [attempted 5/4608 = 0%], 5 failedDownloaded: 0 file(s) [attempted 6/4608 = 0%], 6 failedDownloaded: 0 file(s) [attempted 7/4608 = 0%], 7 failedDownloaded: 0 file(s) [attempted 8/4608 = 0%], 8 failedDownloaded: 0 file(s) [attempted 9/4608 = 0%], 9 failedDownloaded: 0 file(s) [attempted 10/4608 = 0%], 10 failedDownloaded: 0 file(s) [attempted 11/4608 = 0%], 11 failedDownloaded: 0 file(s) [attempted 12/4608 = 0%], 12 failedDownloaded: 0 file(s) [attempted 13/4608 = 0%], 13 failedDownloaded: 0 file(s) [attempted 14/4608 = 0%], 14 failedDownloaded: 0 file(s) [attempted 15/4608 = 0%], 15 failedDownloaded: 0 file(s) [attempted 16/4608 = 0%], 16 failedDownloaded: 0 file(s) [attempted 17/4608 = 0%], 17 failedDownloaded: 0 file(s) [attempted 18/4608 = 0%], 18 failedDownloaded: 0 file(s) [attempted 19/4608 = 0%], 19 failedDownloaded: 0 file(s) [attempted 20/4608 = 0%], 20 failedDownloaded: 0 file(s) [attempted 21/4608 = 0%], 21 failedDownloaded: 0 file(s) [attempted 22/4608 = 0%], 22 failedDownloaded: 0 file(s) [attempted 23/4608 = 0%], 23 failedDownloaded: 0 file(s) [attempted 24/4608 = 0%], 24 failedDownloaded: 0 file(s) [attempted 25/4608 = 0%], 25 failedDownloaded: 0 file(s) [attempted 26/4608 = 0%], 26 failedDownloaded: 0 file(s) [attempted 27/4608 = 0%], 27 failedDownloaded: 0 file(s) [attempted 28/4608 = 0%], 28 failedDownloaded: 0 file(s) [attempted 29/4608 = 0%], 29 failedDownloaded: 0 file(s) [attempted 30/4608 = 0%], 30 failedDownloaded: 0 file(s) [attempted 31/4608 = 0%], 31 failedDownloaded: 0 file(s) [attempted 32/4608 = 0%], 32 failedDownloaded: 0 file(s) [attempted 33/4608 = 0%], 33 failedDownloaded: 0 file(s) [attempted 34/4608 = 0%], 34 failedDownloaded: 0 file(s) [attempted 35/4608 = 0%], 35 failedDownloaded: 0 file(s) [attempted 36/4608 = 0%], 36 failedDownloaded: 0 file(s) [attempted 37/4608 = 0%], 37 failedDownloaded: 0 file(s) [attempted 38/4608 = 0%], 38 failedDownloaded: 0 file(s) [attempted 39/4608 = 0%], 39 failedDownloaded: 0 file(s) [attempted 40/4608 = 0%], 40 failedDownloaded: 0 file(s) [attempted 41/4608 = 0%], 41 failedDownloaded: 0 file(s) [attempted 42/4608 = 0%], 42 failedDownloaded: 0 file(s) [attempted 43/4608 = 0%], 43 failedDownloaded: 0 file(s) [attempted 44/4608 = 0%], 44 failedDownloaded: 0 file(s) [attempted 45/4608 = 0%], 45 failedDownloaded: 0 file(s) [attempted 46/4608 = 0%], 46 failedDownloaded: 0 file(s) [attempted 47/4608 = 1%], 47 failedDownloaded: 0 file(s) [attempted 48/4608 = 1%], 48 failedDownloaded: 0 file(s) [attempted 49/4608 = 1%], 49 failedDownloaded: 0 file(s) [attempted 50/4608 = 1%], 50 failedDownloaded: 0 file(s) [attempted 51/4608 = 1%], 51 failedDownloaded: 0 file(s) [attempted 52/4608 = 1%], 52 failedDownloaded: 0 file(s) [attempted 53/4608 = 1%], 53 failedDownloaded: 0 fOpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+ile(s) [attempted 54/4608 = 1%], 54 failedDownloaded: 0 file(s) [attempted 55/4608 = 1%], 55 failedDownloaded: 0 file(s) [attempted 56/4608 = 1%], 56 failedDownloaded: 0 file(s) [attempted 57/4608 = 1%], 57 failedDownloaded: 0 file(s) [attempted 58/4608 = 1%], 58 failedDownloaded: 0 file(s) [attempted 59/4608 = 1%], 59 failedDownloaded: 0 file(s) [attempted 60/4608 = 1%], 60 failedDownloaded: 0 file(s) [attempted 61/4608 = 1%], 61 failedDownloaded: 0 file(s) [attempted 62/4608 = 1%], 62 failedDownloaded: 0 file(s) [attempted 63/4608 = 1%], 63 failedDownloaded: 0 file(s) [attempted 64/4608 = 1%], 64 failedDownloaded: 0 file(s) [attempted 65/4608 = 1%], 65 failedDownloaded: 0 file(s) [attempted 66/4608 = 1%], 66 failedDownloaded: 0 file(s) [attempted 67/4608 = 1%], 67 failedDownloaded: 0 file(s) [attempted 68/4608 = 1%], 68 failedDownloaded: 0 file(s) [attempted 69/4608 = 1%], 69 failedDownloaded: 0 file(s) [attempted 70/4608 = 1%], 70 failedDownloaded: 0 file(s) [attempted 71/4608 = 1%], 71 failedDownloaded: 0 file(s) [attempted 72/4608 = 1%], 72 failedDownloaded: 0 file(s) [attempted 73/4608 = 1%], 73 failedDownloaded: 0 file(s) [attempted 74/4608 = 1%], 74 failedDownloaded: 0 file(s) [attempted 75/4608 = 1%], 75 failedDownloaded: 0 file(s) [attempted 76/4608 = 1%], 76 failedDownloaded: 0 file(s) [attempted 77/4608 = 1%], 77 failedDownloaded: 0 file(s) [attempted 78/4608 = 1%], 78 failedDownloaded: 0 file(s) [attempted 79/4608 = 1%], 79 failedDownloaded: 0 file(s) [attempted 80/4608 = 1%], 80 failedDownloaded: 0 file(s) [attempted 81/4608 = 1%], 81 failedDownloaded: 0 file(s) [attempted 82/4608 = 1%], 82 failedDownloaded: 0 file(s) [attempted 83/4608 = 1%], 83 failedDownloaded: 0 file(s) [attempted 84/4608 = 1%], 84 failedDownloaded: 0 file(s) [attempted 85/4608 = 1%], 85 failedDownloaded: 0 file(s) [attempted 86/4608 = 1%], 86 failedDownloaded: 0 file(s) [attempted 87/4608 = 1%], 87 failedDownloaded: 0 file(s) [attempted 88/4608 = 1%], 88 failedDownloaded: 0 file(s) [attempted 89/4608 = 1%], 89 failedDownloaded: 0 file(s) [attempted 90/4608 = 1%], 90 failedDownloaded: 0 file(s) [attempted 91/4608 = 1%], 91 failedDownloaded: 0 file(s) [attempted 92/4608 = 1%], 92 failedDownloaded: 0 file(s) [attempted 93/4608 = 2%], 93 failedDownloaded: 0 file(s) [attempted 94/4608 = 2%], 94 failedDownloaded: 0 file(s) [attempted 95/4608 = 2%], 95 failedDownloaded: 0 file(s) [attempted 96/4608 = 2%], 96 failedDownloaded: 0 file(s) [attempted 97/4608 = 2%], 97 failedDownloaded: 0 file(s) [attempted 98/4608 = 2%], 98 failedDownloaded: 0 file(s) [attempted 99/4608 = 2%], 99 failedDownloaded: 0 file(s) [attempted 100/4608 = 2%], 100 failedDownloaded: 0 file(s) [attempted 101/4608 = 2%], 101 failedDownloaded: 0 file(s) [attempted 102/4608 = 2%], 102 failedDownloaded: 0 file(s) [attempted 103/4608 = 2%], 103 failedDownloaded: 0 file(s) [attempted 104/4608 = 2%], 104 failedDownloaded: 0 file(s) [attempted 105/4608 = 2%], 105 failedDownloaded: 0 file(s) [attempted 106/4608 = 2%], 106 failedDownloaded: 0 file(s) [attempted 107/4608 = 2%], 107 failedDownloaded: 0 file(s) [attempted 108/4608 = 2%], 108 failedDownloaded: 0 file(s) [attempted 109/4608 = 2%], 109 failedDownloaded: 0 file(s) [attempted 110/4608 = 2%], 110 failedDownloaded: 0 file(s) [attempted 111/4608 = 2%], 111 failedDownloaded: 0 file(s) [attempted 112/4608 = 2%], 112 failedDownloaded: 0 file(s) [attempted 113/4608 = 2%], 113 failedDownloaded: 0 file(s) [attempted 114/4608 = 2%], 114 failedDownloaded: 0 file(s) [attempted 115/4608 = 2%], 115 failedDownloaded: 0 file(s) [attempted 116/4608 = 2%], 116 failedDownloaded: 0 file(s) [attempted 117/4608 = 2%], 117 failedDownloaded: 0 file(s) [attempted 118/4608 = 2%], 118 failedDownloaded: 0 file(s) [attempted 119/4608 = 2%], 119 failedDownloaded: 0 file(s) [attempted 120/4608 = 2%], 120 failedDownloaded: 0 file(s) [attempted 121/4608 = 2%], 121 failedDownloaded: 0 file(s) [attempted 122/4608 = 2%], 122 failedDownloaded: 0 file(s) [attempted 123/4608 = 2%], 123 failedDowOpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+nloaded: 0 file(s) [attempted 124/4608 = 2%], 124 failedDownloaded: 0 file(s) [attempted 125/4608 = 2%], 125 failedDownloaded: 0 file(s) [attempted 126/4608 = 2%], 126 failedDownloaded: 0 file(s) [attempted 127/4608 = 2%], 127 failedDownloaded: 0 file(s) [attempted 128/4608 = 2%], 128 failedDownloaded: 0 file(s) [attempted 129/4608 = 2%], 129 failedDownloaded: 0 file(s) [attempted 130/4608 = 2%], 130 failedDownloaded: 0 file(s) [attempted 131/4608 = 2%], 131 failedDownloaded: 0 file(s) [attempted 132/4608 = 2%], 132 failedDownloaded: 0 file(s) [attempted 133/4608 = 2%], 133 failedDownloaded: 0 file(s) [attempted 134/4608 = 2%], 134 failedDownloaded: 0 file(s) [attempted 135/4608 = 2%], 135 failedDownloaded: 0 file(s) [attempted 136/4608 = 2%], 136 failedDownloaded: 0 file(s) [attempted 137/4608 = 2%], 137 failedDownloaded: 0 file(s) [attempted 138/4608 = 2%], 138 failedDownloaded: 0 file(s) [attempted 139/4608 = 3%], 139 failedDownloaded: 0 file(s) [attempted 140/4608 = 3%], 140 failedDownloaded: 0 file(s) [attempted 141/4608 = 3%], 141 failedDownloaded: 0 file(s) [attempted 142/4608 = 3%], 142 failedDownloaded: 0 file(s) [attempted 143/4608 = 3%], 143 failedDownloaded: 0 file(s) [attempted 144/4608 = 3%], 144 failedDownloaded: 0 file(s) [attempted 145/4608 = 3%], 145 failedDownloaded: 0 file(s) [attempted 146/4608 = 3%], 146 failedDownloaded: 0 file(s) [attempted 147/4608 = 3%], 147 failedDownloaded: 0 file(s) [attempted 148/4608 = 3%], 148 failedDownloaded: 0 file(s) [attempted 149/4608 = 3%], 149 failedDownloaded: 0 file(s) [attempted 150/4608 = 3%], 150 failedDownloaded: 0 file(s) [attempted 151/4608 = 3%], 151 failedDownloaded: 0 file(s) [attempted 152/4608 = 3%], 152 failedDownloaded: 0 file(s) [attempted 153/4608 = 3%], 153 failedDownloaded: 0 file(s) [attempted 154/4608 = 3%], 154 failedDownloaded: 0 file(s) [attempted 155/4608 = 3%], 155 failedDownloaded: 0 file(s) [attempted 156/4608 = 3%], 156 failedDownloaded: 0 file(s) [attempted 157/4608 = 3%], 157 failedDownloaded: 0 file(s) [attempted 158/4608 = 3%], 158 failedDownloaded: 0 file(s) [attempted 159/4608 = 3%], 159 failedDownloaded: 0 file(s) [attempted 160/4608 = 3%], 160 failedDownloaded: 0 file(s) [attempted 161/4608 = 3%], 161 failedDownloaded: 0 file(s) [attempted 162/4608 = 3%], 162 failedDownloaded: 0 file(s) [attempted 163/4608 = 3%], 163 failedDownloaded: 0 file(s) [attempted 164/4608 = 3%], 164 failedDownloaded: 0 file(s) [attempted 165/4608 = 3%], 165 failedDownloaded: 0 file(s) [attempted 166/4608 = 3%], 166 failedDownloaded: 0 file(s) [attempted 167/4608 = 3%], 167 failedDownloaded: 0 file(s) [attempted 168/4608 = 3%], 168 failedDownloaded: 0 file(s) [attempted 169/4608 = 3%], 169 failedDownloaded: 0 file(s) [attempted 170/4608 = 3%], 170 failedDownloaded: 0 file(s) [attempted 171/4608 = 3%], 171 failedDownloaded: 0 file(s) [attempted 172/4608 = 3%], 172 failedDownloaded: 0 file(s) [attempted 173/4608 = 3%], 173 failedDownloaded: 0 file(s) [attempted 174/4608 = 3%], 174 failedDownloaded: 0 fOpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+ile(s) [attempted 175/4608 = 3%], 175 failedDownloaded: 0 file(s) [attempted 176/4608 = 3%], 176 failedDownloaded: 0 file(s) [attempted 177/4608 = 3%], 177 failedDownloaded: 0 file(s) [attempted 178/4608 = 3%], 178 failedDownloaded: 0 file(s) [attempted 179/4608 = 3%], 179 failedDownloaded: 0 file(s) [attempted 180/4608 = 3%], 180 failedDownloaded: 0 file(s) [attempted 181/4608 = 3%], 181 failedDownloaded: 0 file(s) [attempted 182/4608 = 3%], 182 failedDownloaded: 0 file(s) [attempted 183/4608 = 3%], 183 failedDownloaded: 0 file(s) [attempted 184/4608 = 3%], 184 failedDownloaded: 0 file(s) [attempted 185/4608 = 4%], 185 failedDownloaded: 0 file(s) [attempted 186/4608 = 4%], 186 failedDownloaded: 0 file(s) [attempted 187/4608 = 4%], 187 failedDownloaded: 0 file(s) [attempted 188/4608 = 4%], 188 failedDownloaded: 0 file(s) [attempted 189/4608 = 4%], 189 failedDownloaded: 0 file(s) [attempted 190/4608 = 4%], 190 failedDownloaded: 0 file(s) [attempted 191/4608 = 4%], 191 failedDownloaded: 0 file(s) [attempted 192/4608 = 4%], 192 failedDownloaded: 0 file(s) [attempted 193/4608 = 4%], 193 failedDownloaded: 0 file(s) [attempted 194/4608 = 4%], 194 failedDownloaded: 0 file(s) [attempted 195/4608 = 4%], 195 failedDownloaded: 0 file(s) [attempted 196/4608 = 4%], 196 failedDownloaded: 0 file(s) [attempted 197/4608 = 4%], 197 failedDownloaded: 0 file(s) [attempted 198/4608 = 4%], 198 failedDownloaded: 0 file(s) [attempted 199/4608 = 4%], 199 failedDownloaded: 0 file(s) [attempted 200/4608 = 4%], 200 failedDownloaded: 0 file(s) [attempted 201/4608 = 4%], 201 failedDownloaded: 0 file(s) [attempted 202/4608 = 4%], 202 failedDownloaded: 0 file(s) [attempted 203/4608 = 4%], 203 failedDownloaded: 0 file(s) [attempted 204/4608 = 4%], 204 failedDownloaded: 0 file(s) [attempted 205/4608 = 4%], 205 failedDownloaded: 0 file(s) [attempted 206/4608 = 4%], 206 failedDownloaded: 0 file(s) [attempted 207/4608 = 4%], 207 failedDownloaded: 0 file(s) [attempted 208/4608 = 4%], 208 failedDownloaded: 0 file(s) [attempted 209/4608 = 4%], 209 failedDownloaded: 0 file(s) [attempted 210/4608 = 4%], 210 failedDownloaded: 0 file(s) [attempted 211/4608 = 4%], 211 failedDownloaded: 0 file(s) [attempted 212/4608 = 4%], 212 failedDownloaded: 0 file(s) [attempted 213/4608 = 4%], 213 failedDownloaded: 0 file(s) [attempted 214/4608 = 4%], 214 failedDownloaded: 0 file(s) [attempted 215/4608 = 4%], 215 failedDownloaded: 0 file(s) [attempted 216/4608 = 4%], 216 failedDownloaded: 0 file(s) [attempted 217/4608 = 4%], 217 failedDownloaded: 0 file(s) [attempted 218/4608 = 4%], 218 failedDownloaded: 0 file(s) [attempted 219/4608 = 4%], 219 failedDownloaded: 0 file(s) [attempted 220/4608 = 4%], 220 failedDownloaded: 0 file(s) [attempted 221/4608 = 4%], 221 failedDownloaded: 0 file(s) [attempted 222/4608 = 4%], 222 failedDownloaded: 0 file(s) [attempted 223/4608 = 4%], 223 failedDownloaded: 0 file(s) [attempted 224/4608 = 4%], 224 failedDownloaded: 0 file(s) [attempted 225/4608 = 4%], 225 failedDownloaded: 0 file(s) [attempted 226/4608 = 4%], 226 failedDownloaded: 0 file(s) [attempted 227/4608 = 4%], 227 failedDownloaded: 0 file(s) [attempted 228/4608 = 4%], 228 failedDownloaded: 0 file(s) [attempted 229/4608 = 4%], 229 failedDownloaded: 0 file(s) [attempted 230/4608 = 4%], 230 failedDownloaded: 0 file(s) [attempted 231/4608 = 5%], 231 failedDownloaded: 0 file(s) [attempted 232/4608 = 5%], 232 failedDownloaded: 0 file(s) [attempted 233/4608 = 5%], 233 failedDownloaded: 0 file(s) [attempted 234/4608 = 5%], 234 failedDownloaded: 0 file(s) [attempted 235/4608 = 5%], 235 failedDownloaded: 0 file(s) [attempted 236/4608 = 5%], 236 failedDownloaded: 0 file(s) [attempted 237/4608 = 5%], 237 failedDownloaded: 0 file(s) [attempted 238/4608 = 5%], 238 failedDownloaded: 0 file(s) [attempted 239/4608 = 5%], 239 failedDownloaded: 0 file(s) [attempted 240/4608 = 5%], 240 failedDownloaded: 0 file(s) [attempted 241/4608 = 5%], 241 failedDownloaded: 0 file(s) [attempted 242/4608 = 5%], 242 failedDownloaded: 0 file(s) [attempteOpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+OpenSSL/3.0.8: error:16000069:STORE routines::unregistered scheme
+d 243/4608 = 5%], 243 failedDownloaded: 0 file(s) [attempted 244/4608 = 5%], 244 failedDownloaded: 0 file(s) [attempted 245/4608 = 5%], 245 failedDownloaded: 0 file(s) [attempted 246/4608 = 5%], 246 failedDownloaded: 0 file(s) [attempted 247/4608 = 5%], 247 failedDownloaded: 0 file(s) [attempted 248/4608 = 5%], 248 failedDownloaded: 0 file(s) [attempted 249/4608 = 5%], 249 failedDownloaded: 0 file(s) [attempted 250/4608 = 5%], 250 failedDownloaded: 0 file(s) [attempted 251/4608 = 5%], 251 failedDownloaded: 0 file(s) [attempted 252/4608 = 5%], 252 failedDownloaded: 0 file(s) [attempted 253/4608 = 5%], 253 failedDownloaded: 0 file(s) [attempted 254/4608 = 5%], 254 failedDownloaded: 0 file(s) [attempted 255/4608 = 5%], 255 failedDownloaded: 0 file(s) [attempted 256/4608 = 5%], 256 failedDownloaded: 0 file(s) [attempted 257/4608 = 5%], 257 failedDownloaded: 0 file(s) [attempted 258/4608 = 5%], 258 failedDownloaded: 0 file(s) [attempted 259/4608 = 5%], 259 failedDownloaded: 0 file(s) [attempted 26srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+0/4608 = 5%], 260 failedDownloaded: 0 file(s) [attempted 261/4608 = 5%], 261 failedDownloaded: 0 file(s) [attempted 262/4608 = 5%], 262 failedDownloaded: 0 file(s) [attempted 263/4608 = 5%], 263 failedDownloaded: 0 file(s) [attempted 264/4608 = 5%], 264 failedDownloaded: 0 file(s) [attempted 265/4608 = 5%], 265 failedDownloaded: 0 file(s) [attempted 266/4608 = 5%], 266 failed[2025-09-10T20:13:42.914] error: *** STEP 14597299.0 ON gcn36 CANCELLED AT 2025-09-10T20:13:42 DUE to SIGNAL Terminated ***
+[2025-09-10T20:13:42.915] error: *** JOB 14597299 ON gcn36 CANCELLED AT 2025-09-10T20:13:42 DUE to SIGNAL Terminated ***
+
+JOB STATISTICS
+==============
+Job ID: 14597299
+Cluster: snellius
+User/Group: gkoopman/gkoopman
+State: CANCELLED (exit code 0)
+Nodes: 1
+Cores per node: 18
+CPU Utilized: 00:00:05
+CPU Efficiency: 0.17% of 00:47:42 core-walltime
+Job Wall-clock time: 00:02:39
+Memory Utilized: 943.41 MB
+Memory Efficiency: 0.77% of 120.00 GB (120.00 GB/node)
