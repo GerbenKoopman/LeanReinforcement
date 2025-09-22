@@ -38,6 +38,8 @@ class StepResult:
     done: bool
     info: Dict[str, Any]
     action_result: str  # String representation from RESULT_MAPPING
+    before_state: TacticState # The state before the action was taken
+    action: str # The action that was taken
 
 
 class LeanEnvironment:
@@ -170,6 +172,8 @@ class LeanEnvironment:
                 done=done,
                 info=info,
                 action_result=action_result,
+                before_state=self.current_state,
+                action=action,
             )
 
         except Exception as e:
@@ -182,6 +186,8 @@ class LeanEnvironment:
                 done=True,
                 info=info,
                 action_result="error",
+                before_state=self.current_state,
+                action=action,
             )
 
     def _process_result(self, result) -> Tuple[str, float, bool, Optional[TacticState]]:
