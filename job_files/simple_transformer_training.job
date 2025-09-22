@@ -32,5 +32,5 @@ cd $HOME/lean_reinforcement
 
 # Run the training script
 echo "Starting simple transformer training run..."
-srun python3 src/lean_rl/agents/simple_transformer/main.py
+srun python3 -m src.lean_rl.agents.simple_transformer.main
 echo "Simple transformer training run finished."
