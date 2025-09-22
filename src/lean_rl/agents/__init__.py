@@ -6,7 +6,7 @@ from .agents import BaseAgent
 from .random.agent import RandomAgent
 from .weighted.agent import WeightedRandomAgent
 from .mcts.agent import MCTSAgent
-from .transformer.model.agent import HierarchicalTransformerAgent
+from .transformer.model.agent import TransformerAgent
 from .simple_transformer.agent import SimpleTransformerAgent
 
 __all__ = [
@@ -14,6 +14,6 @@ __all__ = [
     "RandomAgent",
     "WeightedRandomAgent",
     "MCTSAgent",
-    "HierarchicalTransformerAgent",
+    "TransformerAgent",
     "SimpleTransformerAgent",
 ]

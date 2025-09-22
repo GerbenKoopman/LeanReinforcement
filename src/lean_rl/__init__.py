@@ -13,7 +13,7 @@ from .agents import (
     RandomAgent,
     WeightedRandomAgent,
     MCTSAgent,
-    HierarchicalTransformerAgent,
+    TransformerAgent,
 )
 from .config import Config, get_default_config, setup_logging
 from .exceptions import LeanRLError, EnvironmentError, AgentError, TrainingError
@@ -30,7 +30,7 @@ __all__ = [
     "RandomAgent",
     "WeightedRandomAgent",
     "MCTSAgent",
-    "HierarchicalTransformerAgent",
+    "TransformerAgent",
     # Configuration
     "Config",
     "get_default_config",
