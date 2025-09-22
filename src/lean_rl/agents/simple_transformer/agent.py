@@ -18,9 +18,7 @@ class SimpleTransformerAgent(BaseAgent):
     def __init__(self, config: SimpleTransformerConfig):
         super().__init__()
         self.config = config
-        self.repo_manager = RepoManager(
-            config.repo_url, config.repo_commit, config.build_deps
-        )
+        self.repo_manager = RepoManager(config.repo_url, config.repo_commit)
 
         # In a real scenario, the vocab would be built from the data
         self.vocab = {"<pad>": 0, "<sos>": 1, "<eos>": 2, "<unk>": 3}

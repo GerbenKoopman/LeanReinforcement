@@ -11,8 +11,7 @@ class SimpleTransformerConfig:
 
     # Repository settings
     repo_url: str = "https://github.com/leanprover-community/mathlib4"
-    repo_commit: str = "29dcec074de168ac2bf835a77ef68bbe069194c5"  # A recent commit
-    build_deps: bool = False
+    repo_commit: str = "29dcec074de168ac2bf835a77ef68bbe069194c5"
 
     # Model hyperparameters
     vocab_size: int = 10000
