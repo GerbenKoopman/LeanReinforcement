@@ -60,32 +60,11 @@ class LeanEnvironment:
         if self.setup_completed:
             return
 
-        try:
-            logging.info("Setting up LeanDojo environment...")
-
-            # Check cache directory
-            try:
-                cache_dir = self.config.get_cache_dir()
-                logging.info(f"Using cache directory: {cache_dir}")
-            except RuntimeError as e:
-                logging.warning(f"Cache directory issue: {e}")
-
-            # Try to get traced repo from cache (no tracing)
-            self.traced_repo = self.repo_manager.get_traced_repo()
-
-            if self.traced_repo:
-                logging.info("LeanDojo environment setup completed with cached repo")
-            else:
-                logging.info(
-                    "LeanDojo environment setup completed without traced repo (test mode)"
-                )
-
-            self.setup_completed = True
-
-        except Exception as e:
-            logging.error(f"Failed to setup LeanDojo environment: {e}")
-            # Don't raise - allow test mode
-            self.setup_completed = True
+        logging.info("Setting up LeanDojo environment...")
+        # The RepoManager will handle caching and tracing.
+        self.traced_repo = self.repo_manager.get_traced_repo()
+        logging.info("LeanDojo environment setup completed.")
+        self.setup_completed = True
 
     def create_dojo(self, theorem: Theorem) -> Dojo:
         """Create a new Dojo instance for a theorem."""
@@ -190,32 +169,26 @@ class LeanDojoTrainer:
 
     def load_theorems(self) -> List[Theorem]:
         """Load theorems from the traced repository."""
-        try:
-            # Setup environment first
-            self.environment.setup()
+        # Setup environment first
+        self.environment.setup()
 
-            if not self.environment.traced_repo:
-                logging.warning("No traced repository available - using test mode")
-                return self._get_test_theorems()
+        if not self.environment.traced_repo:
+            logging.warning("No traced repository available.")
+            return []
 
-            # Load theorems from traced repo
-            traced_theorems = list(self.environment.traced_repo.get_traced_theorems())
+        # Load theorems from traced repo
+        traced_theorems = list(self.environment.traced_repo.get_traced_theorems())
 
-            # Convert TracedTheorem to Theorem and limit for HPC efficiency
-            theorems = [
-                traced_thm.theorem
-                for traced_thm in traced_theorems[: self.config.max_theorems]
-            ]
+        # Convert TracedTheorem to Theorem and limit for HPC efficiency
+        theorems = [
+            traced_thm.theorem
+            for traced_thm in traced_theorems[: self.config.max_theorems]
+        ]
 
-            logging.info(
-                f"Loaded {len(theorems)} theorems from traced repository (out of {len(traced_theorems)} total)"
-            )
-            return theorems
-
-        except Exception as e:
-            logging.error(f"Failed to load theorems: {e}")
-            logging.warning("Falling back to test mode")
-            return self._get_test_theorems()
+        logging.info(
+            f"Loaded {len(theorems)} theorems from traced repository (out of {len(traced_theorems)} total)"
+        )
+        return theorems
 
     def _get_test_theorems(self) -> List[Theorem]:
         """Get a small set of test theorems for basic functionality."""
