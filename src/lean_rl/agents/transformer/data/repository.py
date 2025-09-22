@@ -8,7 +8,6 @@ repository handling in LeanDojo, ReProver, and LeanAgent.
 
 import logging
 from typing import Optional
-from pathlib import Path
 
 from lean_dojo import LeanGitRepo, TracedRepo, get_traced_repo_path
 from lean_dojo.data_extraction.trace import trace as trace_repo
@@ -45,19 +44,12 @@ class RepoManager:
     def repo(self) -> LeanGitRepo:
         """
         Returns the LeanGitRepo object, initializing it if necessary.
-        It checks if the repository already exists locally to avoid re-cloning.
         """
         if self._repo is None:
-            # Check if the repo has already been cloned by a previous run.
-            repo_path = Path(self.repo_url)
-            if repo_path.exists() and repo_path.is_dir():
-                logger.info(f"Using existing LeanGitRepo from local path: {repo_path}")
-                self._repo = LeanGitRepo(str(repo_path), self.repo_commit)
-            else:
-                logger.info(
-                    f"Initializing LeanGitRepo for {self.repo_url} at commit {self.repo_commit}"
-                )
-                self._repo = LeanGitRepo(self.repo_url, self.repo_commit)
+            logger.info(
+                f"Initializing LeanGitRepo for {self.repo_url} at commit {self.repo_commit}"
+            )
+            self._repo = LeanGitRepo(self.repo_url, self.repo_commit)
         return self._repo
 
     def get_traced_repo(self, build_deps: Optional[bool] = None) -> TracedRepo:
