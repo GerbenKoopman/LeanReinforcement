@@ -1,111 +1,79 @@
-#!/usr/bin/env python3
-"""Validate that the LeanDojo cache is properly configured for HPC use."""
+"""
+This script validates the integrity of a cached and traced Lean repository.
 
-import os
+It initializes a RepoManager, loads the traced repository, and iterates through
+all traced theorems to ensure they are readable and not corrupted.
+"""
+
+import logging
 import sys
 from pathlib import Path
-from lean_dojo import LeanGitRepo
-from lean_dojo.data_extraction.trace import is_available_in_cache, get_traced_repo_path
+from tqdm import tqdm
+
+# Add the source directory to the Python path
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+
+from src.lean_rl.agents.transformer.data.repository import RepoManager
+from src.lean_rl.agents.transformer.simplified.hpc_config import create_hpc_config
 
 
-def main():
-    # Load environment variables
-    cache_dir = os.getenv("CACHE_DIR")
-    if not cache_dir:
-        print("ERROR: CACHE_DIR environment variable not set")
-        sys.exit(1)
-
-    cache_path = Path(cache_dir)
-    if not cache_path.exists():
-        print(f"ERROR: Cache directory does not exist: {cache_dir}")
-        sys.exit(1)
-
-    print(f"✓ Cache directory exists: {cache_dir}")
-
-    # Check for mathlib4 repository
-    repo = LeanGitRepo(
-        "https://github.com/leanprover-community/mathlib4",
-        "29dcec074de168ac2bf835a77ef68bbe069194c5",
+def validate_repository_cache():
+    """
+    Validates the traced repository cache by attempting to load all theorems.
+    """
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
     )
+    logger = logging.getLogger(__name__)
 
-    if is_available_in_cache(repo):
-        traced_path = get_traced_repo_path(repo)
-        print(f"✓ Mathlib4 repository found in cache: {traced_path}")
+    try:
+        logger.info("Loading HPC configuration...")
+        config = create_hpc_config()
 
-        # Check key directories and files
-        repo_root = Path(traced_path)
-        mathlib_dir = repo_root / "Mathlib"
+        logger.info(f"Repo URL: {config.repo_url}")
+        logger.info(f"Repo Commit: {config.repo_commit}")
 
-        if mathlib_dir.exists():
-            print(f"✓ Mathlib directory exists")
-        else:
-            print(f"⚠ Mathlib directory not found at: {mathlib_dir}")
+        repo_manager = RepoManager(
+            repo_url=config.repo_url, repo_commit=config.repo_commit
+        )
 
-        # Check for essential files in the repository root
-        essential_files = ["Mathlib.lean", "lakefile.lean", "lean-toolchain"]
-        for file in essential_files:
-            file_path = repo_root / file
-            if file_path.exists():
-                print(f"✓ Essential file found: {file}")
-            else:
-                print(f"⚠ Missing file: {file}")
+        logger.info("Accessing the traced repository...")
+        traced_repo = repo_manager.get_traced_repo()
 
-        # Check some key subdirectories
-        key_subdirs = ["Mathlib", "Archive", "Counterexamples"]
-        for subdir in key_subdirs:
-            subdir_path = repo_root / subdir
-            if subdir_path.exists():
-                print(f"✓ Key directory found: {subdir}")
-            else:
-                print(f"⚠ Missing directory: {subdir}")
+        if not traced_repo:
+            logger.error("Failed to load or trace the repository.")
+            return
 
-        # Check directory sizes
-        try:
-            repo_size = sum(
-                f.stat().st_size for f in repo_root.rglob("*") if f.is_file()
+        logger.info("Successfully loaded traced repository. Now validating theorems...")
+        theorems = list(traced_repo.get_traced_theorems())
+
+        corrupted_theorems = []
+
+        for theorem in tqdm(theorems, desc="Validating theorems"):
+            try:
+                # Accessing properties of the theorem can trigger lazy loading
+                _ = theorem.file_path
+                _ = theorem.theorem
+            except Exception as e:
+                logger.error(f"Corruption detected in theorem: {str(theorem.theorem)}")
+                logger.error(f"Error: {e}")
+                corrupted_theorems.append(str(theorem.theorem))
+
+        if corrupted_theorems:
+            logger.warning(
+                f"Validation finished. Found {len(corrupted_theorems)} corrupted theorems."
             )
-            print(f"✓ Repository size: {repo_size / (1024**3):.2f} GB")
-        except Exception as e:
-            print(f"⚠ Could not determine repository size: {e}")
-
-    else:
-        print("ERROR: Mathlib4 repository not available in cache")
-        print("Run trace_repo.py to generate the cache first")
-        sys.exit(1)
-
-    # Check SCRATCH_SHARED directory structure
-    scratch_dir = os.getenv("SCRATCH_SHARED")
-    if scratch_dir:
-        scratch_path = Path(scratch_dir)
-        if scratch_path.exists():
-            print(f"✓ SCRATCH_SHARED directory exists: {scratch_dir}")
-
-            # Check required subdirectories
-            required_dirs = [
-                "checkpoints",
-                "evaluation_results",
-                "evaluation_plots",
-                "tensorboard_logs",
-                "training_logs",
-                "saved_models",
-                "experiments",
-                "test_reports",
-            ]
-
-            for dir_name in required_dirs:
-                dir_path = scratch_path / dir_name
-                if dir_path.exists():
-                    print(f"✓ Required directory exists: {dir_name}")
-                else:
-                    print(f"⚠ Creating missing directory: {dir_name}")
-                    dir_path.mkdir(parents=True, exist_ok=True)
+            logger.warning("Corrupted theorems: " + ", ".join(corrupted_theorems))
         else:
-            print(f"⚠ SCRATCH_SHARED directory does not exist: {scratch_dir}")
-    else:
-        print("⚠ SCRATCH_SHARED environment variable not set")
+            logger.info(
+                f"Validation successful. All {len(theorems)} theorems are intact."
+            )
 
-    print("\n✓ Cache validation successful!")
+    except Exception as e:
+        logger.fatal(
+            f"An unexpected error occurred during validation: {e}", exc_info=True
+        )
 
 
 if __name__ == "__main__":
-    main()
+    validate_repository_cache()
