@@ -6,7 +6,7 @@ for processing Lean proof states and tactics.
 """
 
 import torch
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 import re
 from dataclasses import dataclass
 
@@ -228,6 +228,16 @@ class ProofStateTokenizer:
                 self.id_to_token[current_id] = keyword
                 current_id += 1
 
+        # Add properties for special tokens
+        self.pad_token = "<pad>"
+        self.pad_token_id = self.special_tokens["<pad>"]
+        self.unk_token = "<unk>"
+        self.unk_token_id = self.special_tokens["<unk>"]
+        self.bos_token = "<proof>"
+        self.bos_token_id = self.special_tokens["<proof>"]
+        self.eos_token = "<end>"
+        self.eos_token_id = self.special_tokens["<end>"]
+
     def tokenize(self, text: str) -> List[str]:
         """
         Tokenize Lean proof state text using a regex-based approach
@@ -236,7 +246,7 @@ class ProofStateTokenizer:
         # Regex to capture identifiers, numbers, operators, and special symbols
         token_pattern = re.compile(
             r"""
-            (?:[a-zA-Z_][a-zA-Z0-9_]*) |  # Identifiers
+            (?:[a-zA-Z_][a-zA-Z0-9_']*) |  # Identifiers with apostrophes
             (?:[0-9]+) |                  # Numbers
             (?:∀|∃|→|∧|∨|¬|∈|∉|⊆|⊇|∩|∪|∅|ℕ|ℤ|ℚ|ℝ|ℂ|≤|≥|<|>|≠|≈|≡|∼|∝|∞) | # Unicode symbols
             (?:[+\-*/^=_\[\]{}()|.,:]) |    # Operators and delimiters
@@ -246,43 +256,33 @@ class ProofStateTokenizer:
         )
         return token_pattern.findall(text)
 
-    def encode(self, text: str) -> List[int]:
+    def encode(
+        self, text: str, max_length: Optional[int] = None, padding: bool = False
+    ) -> List[int]:
         """
-        Encode text to token IDs.
-
-        Args:
-            text: Input text
-
-        Returns:
-            List of token IDs
+        Encode text to token IDs with padding and truncation.
         """
         tokens = self.tokenize(text)
-        token_ids = []
+        token_ids = [self.token_to_id.get(token, self.unk_token_id) for token in tokens]
 
-        for token in tokens:
-            if token in self.token_to_id:
-                token_ids.append(self.token_to_id[token])
-            else:
-                token_ids.append(self.token_to_id["<unk>"])
+        if max_length:
+            if len(token_ids) > max_length:
+                token_ids = token_ids[:max_length]
+            elif padding and len(token_ids) < max_length:
+                token_ids.extend([self.pad_token_id] * (max_length - len(token_ids)))
 
         return token_ids
 
-    def decode(self, token_ids: List[int]) -> str:
+    def decode(self, token_ids: List[int], skip_special_tokens: bool = False) -> str:
         """
         Decode token IDs to text.
-
-        Args:
-            token_ids: List of token IDs
-
-        Returns:
-            Decoded text
         """
         tokens = []
         for token_id in token_ids:
-            if token_id in self.id_to_token:
-                tokens.append(self.id_to_token[token_id])
-            else:
-                tokens.append("<unk>")
+            token = self.id_to_token.get(token_id, self.unk_token)
+            if skip_special_tokens and token in self.special_tokens:
+                continue
+            tokens.append(token)
 
         return " ".join(tokens)
 
@@ -329,6 +329,48 @@ class ProofStateTokenizer:
             goal_positions=goal_positions,
             hypothesis_positions=hypothesis_positions,
         )
+
+    def encode_proof_state(
+        self, proof_state: ProofState, max_length: int = 512
+    ) -> Dict[str, torch.Tensor]:
+        """
+        Encode proof state as tensors for the transformer.
+        """
+        token_ids = self.encode(
+            proof_state.raw_text, max_length=max_length, padding=True
+        )
+
+        goal_mask, hypothesis_mask = self.create_masks(proof_state, token_ids)
+
+        # Pad masks to max_length
+        if len(goal_mask) < max_length:
+            goal_mask = torch.cat(
+                [goal_mask, torch.zeros(max_length - len(goal_mask), dtype=torch.bool)]
+            )
+        else:
+            goal_mask = goal_mask[:max_length]
+
+        if len(hypothesis_mask) < max_length:
+            hypothesis_mask = torch.cat(
+                [
+                    hypothesis_mask,
+                    torch.zeros(max_length - len(hypothesis_mask), dtype=torch.bool),
+                ]
+            )
+        else:
+            hypothesis_mask = hypothesis_mask[:max_length]
+
+        attention_mask = torch.tensor(
+            [1 if token_id != self.pad_token_id else 0 for token_id in token_ids],
+            dtype=torch.bool,
+        )
+
+        return {
+            "input_ids": torch.tensor(token_ids, dtype=torch.long),
+            "attention_mask": attention_mask,
+            "goal_mask": goal_mask,
+            "hypothesis_mask": hypothesis_mask,
+        }
 
     def create_masks(
         self, proof_state: ProofState, token_ids: List[int]

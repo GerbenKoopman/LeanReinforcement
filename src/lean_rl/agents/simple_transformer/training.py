@@ -10,7 +10,7 @@ from ....lean_rl.agents.simple_transformer.agent import SimpleTransformerAgent
 
 logger = logging.getLogger(__name__)
 
-from lean_dojo import Theorem, TracedTheorem
+from lean_dojo import TracedTheorem
 
 
 def train(
