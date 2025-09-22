@@ -48,7 +48,9 @@ class LeanEnvironment:
     def __init__(self, config: SimpleHPCConfig):
         self.config = config
         self.repo_manager = RepoManager(
-            repo_url=config.repo_url, repo_commit=config.repo_commit
+            repo_url=config.repo_url,
+            repo_commit=config.repo_commit,
+            build_deps=True,  # Match the tracing process
         )
         self.traced_repo = None
         self.dojo = None
