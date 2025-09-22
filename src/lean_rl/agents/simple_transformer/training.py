@@ -31,12 +31,7 @@ def train(
     for epoch in range(num_epochs):
         logger.info(f"Epoch {epoch + 1}/{num_epochs}")
         total_reward = 0
-        for theorem_traced in tqdm(theorems, desc=f"Epoch {epoch + 1}"):
-            theorem = Theorem(
-                theorem_traced.repo,
-                theorem_traced.file_path,
-                str(theorem_traced.theorem),
-            )
+        for theorem in tqdm(theorems, desc=f"Epoch {epoch + 1}"):
             state = env.reset(theorem)
             done = False
             episode_reward = 0
@@ -53,5 +48,4 @@ def train(
                 episode_reward += step_result.reward
 
             total_reward += episode_reward
-
         logger.info(f"Epoch {epoch + 1} finished. Total reward: {total_reward}")

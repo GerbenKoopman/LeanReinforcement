@@ -7,7 +7,7 @@ using LeanDojo. It wraps the LeanDojo API to provide a gym-like interface for RL
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Tuple, Optional, Any
+from typing import Dict, List, Tuple, Optional, Any, Union
 
 from lean_dojo import (
     Dojo,
@@ -17,6 +17,7 @@ from lean_dojo import (
     LeanError,
     Theorem,
     TracedRepo,
+    TracedTheorem,
 )
 
 # Result mapping for RL interface - using LeanDojo types directly
@@ -77,7 +78,7 @@ class LeanEnvironment:
         self.dojo: Optional[Dojo] = None
 
         # Episode tracking
-        self.current_theorem: Optional[Theorem] = None
+        self.current_theorem: Optional[Union[Theorem, TracedTheorem]] = None
         self.current_state: Optional[TacticState] = None
         self.step_count: int = 0
         self.episode_history: List[Tuple[str, str]] = []
@@ -86,12 +87,12 @@ class LeanEnvironment:
         self.initial_num_goals: int = 0
         self.prev_num_goals: int = 0
 
-    def reset(self, theorem: Theorem) -> TacticState:
+    def reset(self, theorem: Union[Theorem, TracedTheorem]) -> TacticState:
         """
         Reset the environment with a new theorem.
 
         Args:
-            theorem: The theorem to prove
+            theorem: The theorem to prove, can be a Theorem or TracedTheorem
 
         Returns:
             Initial state of the theorem
@@ -106,8 +107,12 @@ class LeanEnvironment:
         self.step_count = 0
         self.episode_history = []
 
+        theorem_to_prove = (
+            theorem.theorem if isinstance(theorem, TracedTheorem) else theorem
+        )
+
         self.dojo = Dojo(
-            theorem,
+            theorem_to_prove,
             timeout=self.timeout,
             additional_imports=self.additional_imports,
         )

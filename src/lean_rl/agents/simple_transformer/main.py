@@ -32,7 +32,7 @@ def main():
     theorems = traced_repo.get_traced_theorems()
 
     # For debugging, let's use a small subset of theorems
-    theorems_subset = theorems[:10]
+    theorems_subset = traced_repo.get_traced_theorems()[:10]
 
     # Initialize environment
     env = LeanEnvironment(
