@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from typing import Dict, List, Tuple, Optional, Any
 
 from lean_dojo import (
-    LeanGitRepo,
     Dojo,
     TacticState,
     ProofFinished,
@@ -38,8 +37,8 @@ class StepResult:
     done: bool
     info: Dict[str, Any]
     action_result: str  # String representation from RESULT_MAPPING
-    before_state: TacticState # The state before the action was taken
-    action: str # The action that was taken
+    before_state: TacticState  # The state before the action was taken
+    action: str  # The action that was taken
 
 
 class LeanEnvironment:

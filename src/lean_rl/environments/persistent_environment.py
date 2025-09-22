@@ -4,7 +4,6 @@ to reduce the overhead of starting a new Lean process for each theorem.
 """
 
 import logging
-from pathlib import Path
 from typing import Optional, Tuple, Dict, Union
 
 from lean_dojo import (

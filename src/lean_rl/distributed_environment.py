@@ -7,12 +7,12 @@ Lean processes in parallel, following the pattern used by ReProver and LeanAgent
 
 import ray
 import time
-from typing import List, Optional, Dict, Any, cast, Tuple
+from typing import List, cast, Tuple
 from dataclasses import dataclass
 from ray.util.actor_pool import ActorPool
 
 from lean_dojo import Theorem, TracedRepo
-from .environment import LeanEnvironment, StepResult
+from .environment import LeanEnvironment
 
 
 @dataclass

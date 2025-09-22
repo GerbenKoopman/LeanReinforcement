@@ -4,12 +4,14 @@ Configuration for the Simple Transformer Agent.
 
 from dataclasses import dataclass
 
+
 @dataclass
 class SimpleTransformerConfig:
     """Hyperparameters for the SimpleTransformerAgent."""
+
     # Repository settings
     repo_url: str = "https://github.com/leanprover-community/mathlib4"
-    repo_commit: str = "5424a3b568f65093b302da057a233327b9845424" # A recent commit
+    repo_commit: str = "29dcec074de168ac2bf835a77ef68bbe069194c5"  # A recent commit
     build_deps: bool = False
 
     # Model hyperparameters
@@ -25,6 +27,6 @@ class SimpleTransformerConfig:
     batch_size: int = 32
     num_epochs: int = 10
     max_steps_per_episode: int = 30
-    
+
     # Environment settings
     timeout: int = 300

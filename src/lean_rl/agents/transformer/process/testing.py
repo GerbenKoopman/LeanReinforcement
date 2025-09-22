@@ -59,7 +59,7 @@ from ..model.agent import (
 from ..model.hierarchy import HierarchyLevel, StrategicActions, TacticalFamilies
 
 # Import environment classes (same as environment_wrapper.py)
-from ....environment import LeanEnvironment, StepResult
+from ....environment import LeanEnvironment
 from .environment_wrapper import LeanEnvWrapper
 from ....agents import RandomAgent, MCTSAgent
 

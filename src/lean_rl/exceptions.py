@@ -5,7 +5,7 @@ This module defines a hierarchy of custom exceptions for better error handling
 and debugging throughout the codebase.
 """
 
-from typing import Optional, Any
+from typing import Optional
 
 
 class LeanRLError(Exception):
@@ -25,67 +25,56 @@ class LeanRLError(Exception):
 class EnvironmentError(LeanRLError):
     """Base class for environment-related errors."""
 
-    pass
 
 
 class DojoEnvironmentError(EnvironmentError):
     """Errors related to Dojo environment operations."""
 
-    pass
 
 
 class EnvironmentInitializationError(EnvironmentError):
     """Error during environment initialization."""
 
-    pass
 
 
 class EnvironmentResetError(EnvironmentError):
     """Error during environment reset."""
 
-    pass
 
 
 class AgentError(LeanRLError):
     """Base class for agent-related errors."""
 
-    pass
 
 
 class ModelError(AgentError):
     """Errors related to model operations."""
 
-    pass
 
 
 class TrainingError(LeanRLError):
     """Base class for training-related errors."""
 
-    pass
 
 
 class ConfigurationError(LeanRLError):
     """Errors related to configuration."""
 
-    pass
 
 
 class DataError(LeanRLError):
     """Errors related to data processing."""
 
-    pass
 
 
 class RepositoryError(DataError):
     """Errors related to repository operations."""
 
-    pass
 
 
 class TheoremError(LeanRLError):
     """Errors related to theorem operations."""
 
-    pass
 
 
 # Convenience functions for creating specific errors

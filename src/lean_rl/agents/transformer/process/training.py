@@ -44,7 +44,6 @@ from ..config import (
     DistributedConfig,
 )
 from ....environment import LeanEnvironment
-from ....environments.persistent_environment import PersistentLeanEnvironment
 from ....distributed_environment import DistributedLeanEnvironment, EpisodeResult
 
 
@@ -825,7 +824,6 @@ class HierarchicalTransformerTrainer:
         # This is a simplified processing - you'd need to reconstruct the states and actions
         # from the episode history for proper replay buffer storage
         # For now, we'll skip this as it requires more complex state tracking
-        pass
 
     def _run_episode(self, theorem: Theorem) -> Tuple[float, int, bool]:
         """Run a single training episode."""

@@ -8,7 +8,6 @@ from lean_dojo import Theorem
 
 from lean_rl.environment import LeanEnvironment
 from lean_rl.agents.simple_transformer.agent import SimpleTransformerAgent
-from lean_rl.agents.simple_transformer.config import SimpleTransformerConfig
 
 logger = logging.getLogger(__name__)
 
