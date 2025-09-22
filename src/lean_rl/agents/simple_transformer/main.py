@@ -5,10 +5,10 @@ Main script to run training for the SimpleTransformerAgent.
 import logging
 import argparse
 
-from lean_rl.environment import LeanEnvironment
-from lean_rl.agents.simple_transformer.agent import SimpleTransformerAgent
-from lean_rl.agents.simple_transformer.config import SimpleTransformerConfig
-from lean_rl.agents.simple_transformer.training import train
+from ....lean_rl.environment import LeanEnvironment
+from ....lean_rl.agents.simple_transformer.agent import SimpleTransformerAgent
+from ....lean_rl.agents.simple_transformer.config import SimpleTransformerConfig
+from ....lean_rl.agents.simple_transformer.training import train
 
 
 def main():
