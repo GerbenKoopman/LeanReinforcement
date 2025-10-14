@@ -9,3 +9,13 @@ This repository builds on the gym-like [LeanDojo](<https://github.com/lean-dojo/
 ## Hierarchical Reinforcement Learning
 
 For an overview of hierarchical reinforcement learning, see [Hierarchical Reinforcement Learning: A Comprehensive Survey](https://spateria.github.io/data/hrlsurvey_paper.pdf). Relevant sources will be added here as the project progresses.
+
+## TODO
+
+- [ ] Import ReProver encoder weights to Snellius
+- [ ] Set up premise retrieval code
+- [ ] Create gym environment with LeanDojo and OpenAI Gym
+- [ ] Decide PPO vs MCTS
+- [ ] Update Snellius environment
+- [ ] Import LeanDojo benchmark to Snellius
+- [ ] Look into LeanDojo step time, value functions, etc.
