@@ -1,0 +1,3 @@
+[submodule "ReProver"]
+	path = ReProver
+	url = https://github.com/lean-dojo/ReProver
