@@ -1,0 +1,32 @@
+name: lean-reinforcement
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - numpy
+  - matplotlib
+  - jupyter
+  - ipykernel
+  - pytorch
+  - pytorch-cuda=12.1
+  - loguru
+  - networkx
+  - lxml
+  - pygithub
+  - deprecated
+  - pip:
+    - lean-dojo
+    - torch
+    - tqdm
+    - deepspeed
+    - pytorch-lightning[extra]
+    - transformers
+    - wandb
+    - openai
+    - rank_bm25
+    - vllm
+    - -e ReProver/
