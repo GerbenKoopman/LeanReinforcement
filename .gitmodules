@@ -1,3 +1,3 @@
 [submodule "ReProver"]
 	path = ReProver
-	url = https://github.com/lean-dojo/ReProver
+	url = git@github.com:GerbenKoopman/ReProver.git
