@@ -1,3 +1,7 @@
+"""
+Data loader for LeanDojo traced repositories and theorems.
+"""
+
 from typing import List, Tuple
 from lean_dojo import LeanGitRepo, TracedRepo, TracedTheorem, trace
 

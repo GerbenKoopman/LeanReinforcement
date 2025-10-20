@@ -1,3 +1,7 @@
+"""
+Simple testing script to load and display theorem data from a traced LeanDojo repository.
+"""
+
 from dataloader import trace_repo, load_theorems
 
 repo = trace_repo()
