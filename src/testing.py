@@ -2,7 +2,7 @@
 Simple testing script to load and display theorem data from a traced LeanDojo repository.
 """
 
-from dataloader import DataLoader
+from utilities.dataloader import DataLoader
 
 dataloader = DataLoader()
 
