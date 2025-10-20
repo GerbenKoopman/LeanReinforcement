@@ -10,10 +10,8 @@ from lean_dojo import (
     Dojo,
     TacticState,
     Theorem,
-    TacticState,
     ProofFinished,
     LeanError,
-    TacticState,
 )
 from ReProver.common import Pos
 from dataloader import DataLoader

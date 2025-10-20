@@ -8,7 +8,6 @@ from transformers import AutoTokenizer, AutoModelForTextEncoding
 
 from lean_dojo import Theorem
 from ReProver.common import Pos
-
 from dataloader import DataLoader
 
 
