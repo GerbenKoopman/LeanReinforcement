@@ -2,10 +2,12 @@
 Simple testing script to load and display theorem data from a traced LeanDojo repository.
 """
 
-from dataloader import trace_repo, load_theorems
+from dataloader import DataLoader
 
-repo = trace_repo()
-tactic_theorems, statement_theorems = load_theorems(repo)
+dataloader = DataLoader()
+
+repo = dataloader.trace_repo()
+tactic_theorems, statement_theorems = dataloader.load_theorems(repo)
 
 print(f"Number of tactic theorems: {len(tactic_theorems)}")
 print(f"Number of statement theorems: {len(statement_theorems)}\n\n")
