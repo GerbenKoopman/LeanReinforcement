@@ -1,9 +1,15 @@
-from typing import List
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from typing import List, Optional
+from typing_extensions import Self
+from transformers import (
+    AutoTokenizer,
+    AutoModelForSeq2SeqLM,
+)
+import torch.nn as nn
 
 
-class TacticGenerator:
+class TacticGenerator(nn.Module):
     def __init__(self):
+        super().__init__()
         self.tokenizer = AutoTokenizer.from_pretrained(
             "kaiyuy/leandojo-lean4-retriever-tacgen-byt5-small"
         )
@@ -11,23 +17,57 @@ class TacticGenerator:
             "kaiyuy/leandojo-lean4-retriever-tacgen-byt5-small"
         )
 
-    def generate_tactics(self, state: str, retrieved_premises: List[str], n: int = 1):
-        input = "\n\n".join(retrieved_premises + [state])
-        tokenized_input = self.tokenizer(
-            input, return_tensors="pt", max_length=2300, truncation=True
-        )
 
-        # Generate n tactics.
-        tactic_ids = self.model.generate(
-            tokenized_input.input_ids, max_length=1024, num_return_sequences=n
-        )
-        tactics = self.tokenizer.batch_decode(tactic_ids, skip_special_tokens=True)
-        return tactics
-
-    def trains(self):
+    def save_checkpoint(self, folder, filename):
+        """
+        Saves the current neural network (with its parameters) in folder/filename
+        """
         pass
 
+    def load_checkpoint(self, folder, filename):
+        """
+        Loads parameters of the neural network from folder/filename
+        """
+        pass
 
-class ValueHead:
+    def train(self, mode: bool = True) -> Self:
+        super().train(mode)
+        self.model.train(mode)
+        return self
+
+    def eval(self) -> Self:
+        super().eval()
+        self.model.eval()
+        return self
+
+
+class ValueHead(nn.Module):
     def __init__(self):
+        super().__init__()
+        self.dense = nn.Linear(1024, 1)
+
+    def forward(self, x):
+        return self.dense(x)
+
+    def save_checkpoint(self, folder, filename):
+        """
+        Saves the current neural network (with its parameters) in
+        folder/filename
+        """
         pass
+
+    def load_checkpoint(self, folder, filename):
+        """
+        Loads parameters of the neural network from folder/filename
+        """
+        pass
+
+    def train(self, mode: bool = True) -> Self:
+        super().train(mode)
+        self.dense.train(mode)
+        return self
+
+    def eval(self) -> Self:
+        super().eval()
+        self.dense.eval()
+        return self
