@@ -50,11 +50,11 @@ class PremiseSelector:
 
     @torch.no_grad()
     def retrieve_premises_top_k(
-        self, state: str, theorem: Theorem, theorem_pos: Pos
+        self, state: str, theorem: Theorem, theorem_pos: Pos, k: int = 10
     ) -> List[str]:
         """Retrieve the top-k premises given a state and a theorem."""
 
         premise_list = self.dataloader.get_premises(theorem, theorem_pos)
-        retrieved_premises = self._retrieve(state, premise_list, len(premise_list))
+        retrieved_premises = self._retrieve(state, premise_list, k)
 
         return retrieved_premises
