@@ -2,17 +2,20 @@
 Premise selection module using a ByT5-based text encoder from ReProver.
 """
 
+from typing_extensions import Self
 import torch
 from typing import Union, List
 from transformers import AutoTokenizer, AutoModelForTextEncoding
+import torch.nn as nn
 
 from lean_dojo import Theorem
 from ReProver.common import Pos
 from ..utilities.dataloader import DataLoader
 
 
-class PremiseSelector:
+class PremiseSelector(nn.Module):
     def __init__(self):
+        super().__init__()
         self.tokenizer = AutoTokenizer.from_pretrained(
             "kaiyuy/leandojo-lean4-retriever-byt5-small"
         )
@@ -49,7 +52,7 @@ class PremiseSelector:
         return [premises[i] for i in topk]
 
     @torch.no_grad()
-    def retrieve_premises_top_k(
+    def forward(
         self, state: str, theorem: Theorem, theorem_pos: Pos, k: int = 10
     ) -> List[str]:
         """Retrieve the top-k premises given a state and a theorem."""
@@ -58,3 +61,26 @@ class PremiseSelector:
         retrieved_premises = self._retrieve(state, premise_list, k)
 
         return retrieved_premises
+
+    def save_checkpoint(self, folder, filename):
+        """
+        Saves the current neural network (with its parameters) in
+        folder/filename
+        """
+        pass
+
+    def load_checkpoint(self, folder, filename):
+        """
+        Loads parameters of the neural network from folder/filename
+        """
+        pass
+
+    def train(self, mode: bool = True) -> Self:
+        super().train(mode)
+        self.model.train(mode)
+        return self
+
+    def eval(self) -> Self:
+        super().eval()
+        self.model.eval()
+        return self
