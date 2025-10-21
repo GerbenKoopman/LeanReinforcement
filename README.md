@@ -1,21 +1,21 @@
 # LeanReinforcement
 
-Repository for LeanReinforcement (LR), a hierarchical reinforcement learning agent that learns to write proofs in Lean.
+Repository for LeanReinforcement (LR), a Monte Carlo Tree Search (MCTS) agent building on the [ReProver](https://github.com/lean-dojo/ReProver) system.
 
 ## Gym-like
 
 This repository builds on the gym-like [LeanDojo](<https://github.com/lean-dojo/LeanDojo>) interface for interacting with Lean. See the [LeanDojo documentation](https://leandojo.readthedocs.io/en/latest/index.html/) for more information on how to use it.
 
-## Hierarchical Reinforcement Learning
+## Monte Carlo Tree Search
 
-For an overview of hierarchical reinforcement learning, see [Hierarchical Reinforcement Learning: A Comprehensive Survey](https://spateria.github.io/data/hrlsurvey_paper.pdf). Relevant sources will be added here as the project progresses.
+Relevant sources will be added here as the project progresses.
 
 ## TODO
 
 - [ ] Import ReProver encoder weights to Snellius
-- [ ] Set up premise retrieval code
-- [ ] Create gym environment with LeanDojo and OpenAI Gym
-- [ ] Decide PPO vs MCTS
+- [x] Set up premise retrieval code
+- [x] Create gym environment with LeanDojo and OpenAI Gym
+- [x] Decide PPO vs MCTS => MCTS on top of ReProver
 - [ ] Update Snellius environment
 - [ ] Import LeanDojo benchmark to Snellius
 - [ ] Look into LeanDojo step time, value functions, etc.
