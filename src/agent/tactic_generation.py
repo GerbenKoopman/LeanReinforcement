@@ -24,6 +24,9 @@ class TacticGenerator:
         tactics = self.tokenizer.batch_decode(tactic_ids, skip_special_tokens=True)
         return tactics
 
+    def trains(self):
+        pass
+
 
 class ValueHead:
     def __init__(self):
