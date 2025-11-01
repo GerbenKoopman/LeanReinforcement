@@ -83,6 +83,7 @@ class TacticGenerator:
         return list(zip(tactics, probs.tolist()))
 
 
+# TODO: Add to its own file
 class ValueHead(nn.Module):
     """
     A value head that uses a pre-trained encoder to predict the
