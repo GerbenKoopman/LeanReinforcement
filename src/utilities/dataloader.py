@@ -2,16 +2,38 @@
 Data loader for LeanDojo traced repositories and theorems.
 """
 
-from typing import List, Tuple
-from lean_dojo import LeanGitRepo, TracedRepo, TracedTheorem, trace
+import os
+import json
+from typing import List, Optional
 
-from lean_dojo import Theorem
+from lean_dojo import LeanGitRepo, trace, Theorem
 from ReProver.common import Corpus, Pos
 
 
 class DataLoader:
-    def __init__(self, jsonl_path: str = "corpus.jsonl"):
+    def __init__(
+        self,
+        dataset_path: str = "leandojo_benchmark_4",
+        data_type: str = "novel_premises",
+        jsonl_path: Optional[str] = None,
+    ):
+        if jsonl_path is None:
+            jsonl_path = os.path.join(dataset_path, "corpus.jsonl")
         self.corpus = Corpus(jsonl_path)
+        self.dataset_path = dataset_path
+        self.data_type = data_type
+
+        self.train_data = self._load_split("train")
+        self.test_data = self._load_split("test")
+        self.val_data = self._load_split("val")
+
+    def _load_split(self, split: str) -> List:
+        """
+        Loads a specific split of the dataset (train, test, or val).
+        """
+        file_path = os.path.join(self.dataset_path, self.data_type, f"{split}.json")
+        with open(file_path, "r") as f:
+            return json.load(f)
 
     def trace_repo(
         self,
@@ -27,26 +49,6 @@ class DataLoader:
         traced_repo = trace(repo)
 
         return traced_repo
-
-    def load_theorems(
-        self,
-        repo: TracedRepo,
-    ) -> Tuple[List[TracedTheorem], List[TracedTheorem]]:
-        """
-        Loads theorems and seperates them into tactic proof theorems and statement theorems.
-        """
-
-        traced_theorems = repo.get_traced_theorems()
-        tactic_theorems = []
-        statement_theorems = []
-
-        for theorem in traced_theorems:
-            if theorem.get_tactic_proof() is not None:
-                tactic_theorems.append(theorem)
-            else:
-                statement_theorems.append(theorem)
-
-        return tactic_theorems, statement_theorems
 
     def get_premises(self, theorem: Theorem, theorem_pos: Pos) -> List[str]:
         """Retrieve all accessible premises given a theorem."""
