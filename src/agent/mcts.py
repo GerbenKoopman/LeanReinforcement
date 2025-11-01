@@ -51,8 +51,8 @@ class Node:
 
 class BaseMCTS:
     """
-    A base class for MCTS, containing the shared logic for
-    selection, expansion, and backpropagation.
+    A base class for MCTS, containing the shared logic for the MCTS algorithm framework.
+    Subclasses must implement the expansion and simulation strategies.
     """
 
     def __init__(
@@ -108,81 +108,36 @@ class BaseMCTS:
                     self._backpropagate(leaf, -1.0)
                 continue
 
-            child = self._expand(leaf)
-            reward = self._simulate(child)
-            self._backpropagate(child, reward)
-
-    def _ucb1(self, node: Node) -> float:
-        """Calculates the UCB1 score for a node."""
-        if node.visit_count == 0:
-            return float("inf")
-
-        if (
-            node.parent is None
-        ):  # Should not happen for nodes in _select, but as a safeguard.
-            return node.value()
-
-        # Exploitation term
-        exploitation = node.value()
-
-        # Exploration term
-        exploration = self.exploration_weight * math.sqrt(
-            math.log(node.parent.visit_count) / node.visit_count
-        )
-
-        return exploitation + exploration
+            simulation_node = self._expand(leaf)
+            reward = self._simulate(simulation_node)
+            self._backpropagate(simulation_node, reward)
 
     def _select(self, node: Node) -> Node:
         """
         Phase 1: Selection
-        Traverse the tree from the root, picking the best child
-        (according to UCB1) until a leaf node is reached.
+        Traverse the tree from the root, picking the best child until a leaf node is reached.
         """
         current = node
         while not current.is_terminal and current.is_fully_expanded():
             if not current.children:
                 return current
-            current = max(current.children, key=self._ucb1)
+            current = self._get_best_child(current)
         return current
+
+    def _get_best_child(self, node: Node) -> Node:
+        """
+        Selects the best child based on the specific MCTS strategy (e.g., UCB1, PUCT).
+        This method should be implemented by subclasses.
+        """
+        raise NotImplementedError
 
     def _expand(self, node: Node) -> Node:
         """
         Phase 2: Expansion
-        If the node hasn't been expanded yet, generate tactics,
-        pick one untried tactic, and create a new child node for it.
+        This method should be implemented by subclasses. It should expand the
+        tree from the given node and return the node from which to start the simulation.
         """
-        if not isinstance(node.state, TacticState):
-            raise TypeError("Cannot expand a node without a TacticState.")
-
-        if node.untried_actions is None:
-            # First visit to this node: get premises and generate tactics
-            state_str = node.state.pp
-
-            retrieved = self.premise_selector.retrieve(
-                state_str, self.all_premises, k=10
-            )
-
-            # Use the tactic generator to get N promising tactics
-            node.untried_actions = self.tactic_generator.generate_tactics(
-                state_str, retrieved, n=NUM_TACTICS_TO_EXPAND
-            )
-            if node.untried_actions:
-                random.shuffle(node.untried_actions)  # Add randomness
-
-        # Pop one untried action
-        tactic = ""
-        if node.untried_actions:
-            tactic = node.untried_actions.pop()
-
-        # Run the tactic in the environment to get the next state
-        # This is fast as it doesn't modify the main env, just computes the next state
-        next_state_or_result = self.env.dojo_instance.run_tac(node.state, tactic)
-
-        # Create the new child node
-        child = Node(next_state_or_result, parent=node, action=tactic)
-        node.children.append(child)
-
-        return child
+        raise NotImplementedError
 
     def _simulate(self, node: Node) -> float:
         """
@@ -245,6 +200,69 @@ class MCTS_GuidedRollout(BaseMCTS):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    def _ucb1(self, node: Node) -> float:
+        """Calculates the UCB1 score for a node."""
+        if node.visit_count == 0:
+            return float("inf")
+
+        if (
+            node.parent is None
+        ):  # Should not happen for nodes in _select, but as a safeguard.
+            return node.value()
+
+        # Exploitation term
+        exploitation = node.value()
+
+        # Exploration term
+        exploration = self.exploration_weight * math.sqrt(
+            math.log(node.parent.visit_count) / node.visit_count
+        )
+
+        return exploitation + exploration
+
+    def _get_best_child(self, node: Node) -> Node:
+        """Selects the best child based on the UCB1 score."""
+        return max(node.children, key=self._ucb1)
+
+    def _expand(self, node: Node) -> Node:
+        """
+        Phase 2: Expansion
+        If the node hasn't been expanded yet, generate tactics,
+        pick one untried tactic, and create a new child node for it.
+        """
+        if not isinstance(node.state, TacticState):
+            raise TypeError("Cannot expand a node without a TacticState.")
+
+        if node.untried_actions is None:
+            # First visit to this node: get premises and generate tactics
+            state_str = node.state.pp
+
+            retrieved = self.premise_selector.retrieve(
+                state_str, self.all_premises, k=10
+            )
+
+            # Use the tactic generator to get N promising tactics
+            node.untried_actions = self.tactic_generator.generate_tactics(
+                state_str, retrieved, n=NUM_TACTICS_TO_EXPAND
+            )
+            if node.untried_actions:
+                random.shuffle(node.untried_actions)  # Add randomness
+
+        # Pop one untried action
+        tactic = ""
+        if node.untried_actions:
+            tactic = node.untried_actions.pop()
+
+        # Run the tactic in the environment to get the next state
+        # This is fast as it doesn't modify the main env, just computes the next state
+        next_state_or_result = self.env.dojo_instance.run_tac(node.state, tactic)
+
+        # Create the new child node
+        child = Node(next_state_or_result, parent=node, action=tactic)
+        node.children.append(child)
+
+        return child
 
     def _simulate(self, node: Node) -> float:
         """
@@ -321,18 +339,9 @@ class MCTS_AlphaZero(BaseMCTS):
 
         return q_value + exploration
 
-    def _select(self, node: Node) -> Node:
-        """
-        Phase 1: Selection (using PUCT)
-        Traverse the tree from the root, picking the best child
-        (according to PUCT score) until a leaf node is reached.
-        """
-        current = node
-        while not current.is_terminal:
-            if not current.children:
-                return current  # Reached a leaf
-            current = max(current.children, key=self._puct_score)
-        return current
+    def _get_best_child(self, node: Node) -> Node:
+        """Selects the best child based on the PUCT score."""
+        return max(node.children, key=self._puct_score)
 
     def _expand(self, node: Node) -> Node:
         """
