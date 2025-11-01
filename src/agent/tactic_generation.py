@@ -147,13 +147,11 @@ class ValueHead(nn.Module):
         Saves the current neural network (with its parameters) in
         folder/filename
         """
-        pass
 
     def load_checkpoint(self, folder, filename):
         """
         Loads parameters of the neural network from folder/filename
         """
-        pass
 
     def train(self, mode: bool = True) -> Self:
         return super().train(mode)
