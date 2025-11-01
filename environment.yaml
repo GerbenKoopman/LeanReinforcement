@@ -30,3 +30,4 @@ dependencies:
     - rank_bm25
     - vllm
     - -e ReProver/
+    - pre-commit

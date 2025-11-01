@@ -1,0 +1,37 @@
+minimum_pre_commit_version: 2.18.0
+default_language_version:
+  python: python3.10
+files: '\.(py|md|yaml|job)$'
+
+repos:
+  # 1. Black
+  # Forces consistent code style, fixing most errors automatically.
+  - repo: https://github.com/psf/black
+    rev: 24.3.0
+    hooks:
+      - id: black
+        language_version: python3.10
+
+  # 2. Autoflake
+  # Cleans up imports automatically before the commit.
+  - repo: https://github.com/PyCQA/autoflake
+    rev: v2.3.1
+    hooks:
+      - id: autoflake
+        args: ['--in-place', '--remove-all-unused-imports', '--remove-unused-variables']
+
+  # 3. Flake8 (Linter for style and simple errors like Pyflakes)
+  # Checks for common code quality issues and style guide violations.
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+
+  # 4. Mypy (Type Checker for Pylance-like attribute warnings)
+  # Essential for catching issues like the "Cannot access attribute...".
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        # You may need to install typing stubs for popular libraries
+        additional_dependencies: ['types-requests', 'types-dataclasses']
