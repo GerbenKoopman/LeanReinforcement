@@ -1,0 +1,51 @@
+{
+"url":"https://github.com/leanprover-community/mathlib4",
+"commit": "29dcec074de168ac2bf835a77ef68bbe069194c5",
+"file_path": "Mathlib/AlgebraicGeometry/PrimeSpectrum/Basic.lean",
+"full_name": "PrimeSpectrum.range_comap_of_surjective",
+"start": [750, 1],
+"end": [754, 21],
+"traced_tactics": [
+    {
+        "tactic": "rw [← Set.image_univ]",
+        "annotated_tactic": 
+            ["rw [← <a>Set.image_univ</a>]",
+                [{
+                    "full_name": "Set.image_univ",
+                    "def_path": "Mathlib/Data/Set/Image.lean",
+                    "def_pos": [701, 9],
+                    "def_end_pos": [701, 19]
+                }]
+            ],
+        "state_before": "R : Type u\nS : Type v\ninst✝¹ : CommRing R\ninst✝ : CommRing S\nf : R →+* S\nhf : Surjective ⇑f\n⊢ Set.range ⇑(comap f) = zeroLocus ↑(ker f)",
+        "state_after": "R : Type u\nS : Type v\ninst✝¹ : CommRing R\ninst✝ : CommRing S\nf : R →+* S\nhf : Surjective ⇑f\n⊢ ⇑(comap f) '' Set.univ = zeroLocus ↑(ker f)"
+    },
+    {
+        "tactic": "convert image_comap_zeroLocus_eq_zeroLocus_comap _ _ hf _",
+        "annotated_tactic":
+            ["convert <a>image_comap_zeroLocus_eq_zeroLocus_comap</a> _ _ hf _",
+                [{
+                    "full_name": "PrimeSpectrum.image_comap_zeroLocus_eq_zeroLocus_comap",
+                    "def_path": "Mathlib/AlgebraicGeometry/PrimeSpectrum/Basic.lean",
+                    "def_pos": [731, 9],
+                    "def_end_pos": [731, 49]
+                }]
+            ],
+        "state_before": "R : Type u\nS : Type v\ninst✝¹ : CommRing R\ninst✝ : CommRing S\nf : R →+* S\nhf : Surjective ⇑f\n⊢ ⇑(comap f) '' Set.univ = zeroLocus ↑(ker f)",
+        "state_after": "case h.e'_2.h.e'_4\nR : Type u\nS : Type v\ninst✝¹ : CommRing R\ninst✝ : CommRing S\nf : R →+* S\nhf : Surjective ⇑f\n⊢ Set.univ = zeroLocus ↑⊥"
+    },
+    {
+        "tactic": "rw [zeroLocus_bot]",
+        "annotated_tactic":
+            ["rw [<a>zeroLocus_bot</a>]",
+                [{
+                        "full_name": "PrimeSpectrum.zeroLocus_bot",
+                        "def_path": "Mathlib/AlgebraicGeometry/PrimeSpectrum/Basic.lean",
+                        "def_pos": [267, 9],
+                        "def_end_pos": [267, 22]
+                }]
+            ],
+        "state_before": "case h.e'_2.h.e'_4\nR : Type u\nS : Type v\ninst✝¹ : CommRing R\ninst✝ : CommRing S\nf : R →+* S\nhf : Surjective ⇑f\n⊢ Set.univ = zeroLocus ↑⊥",
+        "state_after": "no goals"}
+    ]
+}
