@@ -19,3 +19,7 @@ Relevant sources will be added here as the project progresses.
 - [ ] Update Snellius environment
 - [ ] Import LeanDojo benchmark to Snellius
 - [ ] Look into LeanDojo step time, value functions, etc.
+- [ ] Implement runner script to run MCTS agent on LeanDojo environment
+- [ ] Implement appropriate DataLoader training and evaluation
+- [ ] Implement training loop
+- [ ] Run experiments on Snellius
