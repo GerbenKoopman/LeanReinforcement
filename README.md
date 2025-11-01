@@ -12,7 +12,7 @@ Relevant sources will be added here as the project progresses.
 
 ## TODO
 
-- [ ] Import ReProver encoder weights to Snellius
+- [x] Import ReProver weights to Snellius
 - [x] Set up premise retrieval code
 - [x] Create gym environment with LeanDojo and OpenAI Gym
 - [x] Decide PPO vs MCTS => MCTS on top of ReProver
