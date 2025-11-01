@@ -6,7 +6,7 @@ import os
 import json
 from typing import List, Optional
 
-from lean_dojo import LeanGitRepo, trace, Theorem
+from lean_dojo import LeanGitRepo, TracedRepo, trace, Theorem
 from ReProver.common import Corpus, Pos
 
 
@@ -27,7 +27,9 @@ class DataLoader:
         self.test_data = self._load_split("test")
         self.val_data = self._load_split("val")
 
-    def _load_split(self, split: str) -> List:
+    # TODO: Verify that output is indeed technically a dict. See
+    # structure_example.json for reference
+    def _load_split(self, split: str) -> List[dict]:
         """
         Loads a specific split of the dataset (train, test, or val).
         """
@@ -39,7 +41,7 @@ class DataLoader:
         self,
         url: str = "https://github.com/leanprover-community/mathlib4",
         commit: str = "29dcec074de168ac2bf835a77ef68bbe069194c5",
-    ):
+    ) -> TracedRepo:
         """
         Traces a Lean Repository using the LeanDojo library.
         """
