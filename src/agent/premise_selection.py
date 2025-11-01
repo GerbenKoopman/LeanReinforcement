@@ -43,24 +43,13 @@ class PremiseSelector(nn.Module):
         return features
 
     @torch.no_grad()
-    def _retrieve(self, state: str, premises: List[str], k: int) -> List[str]:
+    def retrieve(self, state: str, premises: List[str], k: int) -> List[str]:
         """Retrieve the top-k premises from a list given a state."""
         state_emb = self._encode(state)
         premise_embs = self._encode(premises)
         scores = state_emb @ premise_embs.T
         topk = scores.topk(k).indices.tolist()
         return [premises[i] for i in topk]
-
-    @torch.no_grad()
-    def forward(
-        self, state: str, theorem: Theorem, theorem_pos: Pos, k: int = 10
-    ) -> List[str]:
-        """Retrieve the top-k premises given a state and a theorem."""
-
-        premise_list = self.dataloader.get_premises(theorem, theorem_pos)
-        retrieved_premises = self._retrieve(state, premise_list, k)
-
-        return retrieved_premises
 
     def save_checkpoint(self, folder, filename):
         """
