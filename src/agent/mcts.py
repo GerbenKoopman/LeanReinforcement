@@ -5,7 +5,8 @@ from typing import List, Optional
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
 from src.utilities.gym import LeanDojoEnv
-from .tactic_generation import TacticGenerator, ValueHead
+from .tactic_generation import TacticGenerator
+from .value_head import ValueHead
 from .premise_selection import PremiseSelector
 
 # Max depth for a single rollout in Part 1
@@ -152,8 +153,7 @@ class BaseMCTS:
         Update visit counts and value sums from the given node
         all the way back up to the root.
         """
-        # Optional because current.parent is later assigned,
-        # which can be None
+        # Optional because current.parent is later assigned, which can be None
         current: Optional[Node] = node
         while current is not None:
             current.visit_count += 1
