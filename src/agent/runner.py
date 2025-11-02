@@ -8,8 +8,8 @@ from typing import Type, Optional
 from loguru import logger
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
-from .mcts import BaseMCTS, MCTS_GuidedRollout
-from ..utilities.gym import LeanDojoEnv
+from .mcts import BaseMCTS, MCTS_GuidedRollout, Node
+from src.utilities.gym import LeanDojoEnv
 from .tactic_generation import TacticGenerator
 from .premise_selection import PremiseSelector
 
@@ -49,22 +49,24 @@ class AgentRunner:
         self.num_iterations = num_iterations
         self.max_steps = max_steps
 
-    def run(self) -> tuple[bool, int]:
+    def run(self) -> tuple[bool, list[tuple[TacticState, Node]]]:
         """
         Run the proof search loop.
 
         Returns:
             A tuple containing:
             - bool: True if the proof was successful, False otherwise.
-            - int: The number of steps taken.
+            - list: A trajectory of (state, MCTS_root_node) tuples.
         """
         start_time = time.time()
         logger.info(f"Starting proof search for: {self.env.theorem.full_name}")
 
+        trajectory = []
         step_num = 0
         for step_num in range(1, self.max_steps + 1):
             # Check if the proof is already finished or has failed
-            if not isinstance(self.env.current_state, TacticState):
+            current_state = self.env.current_state
+            if not isinstance(current_state, TacticState):
                 break
 
             # Create a new MCTS tree for the current state
@@ -83,6 +85,9 @@ class AgentRunner:
             mcts_instance.search(self.num_iterations)
             best_action = mcts_instance.get_best_action()
 
+            # Store data for training
+            trajectory.append((current_state, mcts_instance.root))
+
             if best_action is None:
                 logger.warning("MCTS search returned no action. Stopping.")
                 break
@@ -100,11 +105,11 @@ class AgentRunner:
             logger.success(
                 f"Proof finished in {step_num} steps and {elapsed_time:.2f}s."
             )
-            return True, step_num
+            return True, trajectory
         else:
             logger.error(
                 f"Proof failed after {step_num} steps and {elapsed_time:.2f}s."
             )
             if isinstance(self.env.current_state, (LeanError, ProofGivenUp)):
                 logger.warning(f"Final state: {self.env.current_state}")
-            return False, step_num
+            return False, trajectory
