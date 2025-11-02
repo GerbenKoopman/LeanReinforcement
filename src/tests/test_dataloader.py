@@ -1,0 +1,118 @@
+import unittest
+import os
+from unittest.mock import patch, mock_open, MagicMock
+
+from lean_dojo import Theorem
+from ReProver.common import Pos
+
+from src.utilities.dataloader import DataLoader
+
+
+class TestDataLoader(unittest.TestCase):
+    def setUp(self):
+        self.dataset_path = "test_dataset"
+        self.data_type = "test_type"
+        self.jsonl_path = os.path.join(self.dataset_path, "corpus.jsonl")
+
+        # Mock the file system
+        self.mock_fs = {
+            self.jsonl_path: '{"key": "value"}',
+            os.path.join(
+                self.dataset_path, self.data_type, "train.json"
+            ): '[{"id": 1}]',
+            os.path.join(self.dataset_path, self.data_type, "test.json"): '[{"id": 2}]',
+            os.path.join(self.dataset_path, self.data_type, "val.json"): '[{"id": 3}]',
+        }
+
+    @patch("builtins.open", new_callable=mock_open)
+    @patch("src.utilities.dataloader.Corpus")
+    def test_initialization(self, MockCorpus, mock_file):
+        # Arrange
+        mock_file.side_effect = lambda path, *args, **kwargs: mock_open(
+            read_data=self.mock_fs.get(path, "")
+        )().read()
+
+        # Act
+        loader = DataLoader(dataset_path=self.dataset_path, data_type=self.data_type)
+
+        # Assert
+        MockCorpus.assert_called_once_with(self.jsonl_path)
+        self.assertEqual(loader.train_data, [{"id": 1}])
+        self.assertEqual(loader.test_data, [{"id": 2}])
+        self.assertEqual(loader.val_data, [{"id": 3}])
+
+    @patch("src.utilities.dataloader.LeanGitRepo")
+    @patch("src.utilities.dataloader.Theorem")
+    def test_extract_theorem(self, MockTheorem, MockLeanGitRepo):
+        # Arrange
+        loader = DataLoader(jsonl_path="/dev/null")  # Avoid file reads
+        data = {
+            "url": "test_url",
+            "commit": "test_commit",
+            "file_path": "test_file.lean",
+            "full_name": "test_theorem",
+        }
+
+        # Act
+        loader.extract_theorem(data)
+
+        # Assert
+        MockLeanGitRepo.assert_called_once_with("test_url", "test_commit")
+        MockTheorem.assert_called_once_with(
+            MockLeanGitRepo.return_value, "test_file.lean", "test_theorem"
+        )
+
+    def test_extract_tactics(self):
+        # Arrange
+        loader = DataLoader(jsonl_path="/dev/null")
+        data = {
+            "traced_tactics": [
+                {"tactic": "tactic1"},
+                {"tactic": "tactic2"},
+            ]
+        }
+
+        # Act
+        tactics = loader.extract_tactics(data)
+
+        # Assert
+        self.assertEqual(tactics, ["tactic1", "tactic2"])
+
+    @patch("src.utilities.dataloader.trace")
+    @patch("src.utilities.dataloader.LeanGitRepo")
+    def test_trace_repo(self, MockLeanGitRepo, mock_trace):
+        # Arrange
+        loader = DataLoader(jsonl_path="/dev/null")
+        url = "test_url"
+        commit = "test_commit"
+
+        # Act
+        loader.trace_repo(url, commit)
+
+        # Assert
+        MockLeanGitRepo.assert_called_once_with(url, commit)
+        mock_trace.assert_called_once_with(MockLeanGitRepo.return_value)
+
+    def test_get_premises(self):
+        # Arrange
+        mock_corpus = MagicMock()
+        mock_corpus.get_accessible_premises.return_value = ["p1", "p2"]
+        loader = DataLoader(jsonl_path="/dev/null")
+        loader.corpus = mock_corpus
+
+        mock_theorem = MagicMock(spec=Theorem)
+        mock_theorem.file_path = "path/to/file.lean"
+        theorem_pos = Pos(1, 0)
+
+        # Act
+        premises = loader.get_premises(mock_theorem, theorem_pos)
+
+        # Assert
+        self.assertEqual(premises, ["p1", "p2"])
+        mock_corpus.get_accessible_premises.assert_called_once_with(
+            "path/to/file.lean", theorem_pos
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()
