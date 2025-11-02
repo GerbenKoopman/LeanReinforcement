@@ -37,6 +37,23 @@ class DataLoader:
         with open(file_path, "r") as f:
             return json.load(f)
 
+    def extract_theorem(self, data: dict) -> Theorem:
+        url = data["url"]
+        commit = data["commit"]
+        file_path = data["file_path"]
+        full_name = data["full_name"]
+
+        repo = LeanGitRepo(url, commit)
+        theorem = Theorem(repo, file_path, full_name)
+
+        return theorem
+
+    def extract_tactics(self, data: dict) -> List[str]:
+        traced_tactics = data["traced_tactics"]
+        tactics_list = [verbose_tactic["tactic"] for verbose_tactic in traced_tactics]
+
+        return tactics_list
+
     def trace_repo(
         self,
         url: str = "https://github.com/leanprover-community/mathlib4",
