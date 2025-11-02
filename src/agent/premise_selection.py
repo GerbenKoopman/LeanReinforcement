@@ -6,8 +6,6 @@ import torch
 from typing import Union, List
 from transformers import AutoTokenizer, AutoModelForTextEncoding
 
-from ..utilities.dataloader import DataLoader
-
 
 class PremiseSelector:
     def __init__(self):
@@ -17,7 +15,6 @@ class PremiseSelector:
         self.model = AutoModelForTextEncoding.from_pretrained(
             "kaiyuy/leandojo-lean4-retriever-byt5-small"
         )
-        self.dataloader = DataLoader()
 
     @torch.no_grad()
     def _encode(self, s: Union[str, List[str]]) -> torch.Tensor:
