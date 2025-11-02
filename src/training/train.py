@@ -4,7 +4,7 @@ import torch
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 
-from reprover.common import Pos
+from ReProver.common import Pos
 
 from utilities.dataloader import LeanDataLoader as LeanDataLoader
 from src.utilities.gym import LeanDojoEnv

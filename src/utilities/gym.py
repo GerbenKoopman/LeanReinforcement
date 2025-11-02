@@ -13,7 +13,7 @@ from lean_dojo import (
     ProofFinished,
     LeanError,
 )
-from reprover.common import Pos
+from ReProver.common import Pos
 from .dataloader import LeanDataLoader
 
 

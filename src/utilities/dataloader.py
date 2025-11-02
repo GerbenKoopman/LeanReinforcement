@@ -7,7 +7,7 @@ import json
 from typing import List, Optional
 
 from lean_dojo import LeanGitRepo, TracedRepo, trace, Theorem
-from reprover.common import Corpus, Pos
+from ReProver.common import Corpus, Pos
 
 
 class LeanDataLoader:

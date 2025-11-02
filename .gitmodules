@@ -1,3 +1,3 @@
-[submodule "reprover"]
-	path = reprover
+[submodule "ReProver"]
+	path = ReProver
 	url = git@github.com:GerbenKoopman/ReProver.git
