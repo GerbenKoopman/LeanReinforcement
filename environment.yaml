@@ -28,5 +28,5 @@ dependencies:
     - openai
     - rank_bm25
     - vllm
-    - -e ReProver/
+    - -e reprover/
     - pre-commit

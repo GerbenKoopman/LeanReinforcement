@@ -4,9 +4,9 @@ import torch
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 
-from ReProver.common import Pos
+from reprover.common import Pos
 
-from src.utilities.dataloader import DataLoader as LeanDataLoader
+from utilities.dataloader import LeanDataLoader as LeanDataLoader
 from src.utilities.gym import LeanDojoEnv
 from src.agent.runner import AgentRunner
 from src.agent.mcts import MCTS_AlphaZero, MCTS_GuidedRollout

@@ -7,10 +7,10 @@ import json
 from typing import List, Optional
 
 from lean_dojo import LeanGitRepo, TracedRepo, trace, Theorem
-from ReProver.common import Corpus, Pos
+from reprover.common import Corpus, Pos
 
 
-class DataLoader:
+class LeanDataLoader:
     def __init__(
         self,
         dataset_path: str = "leandojo_benchmark_4",
