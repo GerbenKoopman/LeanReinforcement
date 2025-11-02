@@ -14,7 +14,7 @@ from lean_dojo import (
     LeanError,
 )
 from ReProver.common import Pos
-from dataloader import DataLoader
+from .dataloader import DataLoader
 
 
 class LeanDojoEnv(gym.Env):
