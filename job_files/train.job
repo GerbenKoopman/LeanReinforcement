@@ -27,4 +27,4 @@ set +a
 cd $HOME/lean_reinforcement
 
 echo "Starting training run with distributed environment..."
-srun python3 src/training/train.py --data-type novel_premises --num-epochs 1 --mcts-type guided_rollout
+srun python3 -m src.training.train --data-type novel_premises --num-epochs 1 --mcts-type guided_rollout
