@@ -19,7 +19,7 @@ set -a
 source $HOME/lean_reinforcement/.env
 set +a
 
-cd $HOME/lean_reinforcement/src
+cd $HOME/lean_reinforcement
 
 echo "Starting training run with distributed environment..."
-srun python3 training/train.py --data-type novel_premises --num-epochs 1 --mcts-type guided_rollout
+srun python3 src/training/train.py --data-type novel_premises --num-epochs 1 --mcts-type guided_rollout
