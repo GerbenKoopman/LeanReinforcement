@@ -14,5 +14,5 @@ module load Anaconda3/2024.06-1
 
 cd $HOME/lean_reinforcement
 
-# conda env create -f environment.yml
-conda env update --file environment.yml --prune
+# conda env create -f environment.yaml
+conda env update --file environment.yaml --prune
