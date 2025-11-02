@@ -30,3 +30,4 @@ dependencies:
     - vllm
     - -e ReProver/
     - pre-commit
+    - gymnasium
