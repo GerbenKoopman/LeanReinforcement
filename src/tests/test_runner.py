@@ -14,11 +14,27 @@ class TestAgentRunner(unittest.TestCase):
     def setUp(self):
         self.env = MagicMock(spec=LeanDojoEnv)
         self.premise_selector = Mock(spec=PremiseSelector)
+        self.premise_selector.retrieve.return_value = ["premise1", "premise2"]
         self.tactic_generator = Mock(spec=TacticGenerator)
+
+        # Mock generate_tactics to always return a list with at least one tactic
+        def mock_generate_tactics(state_str, retrieved, n=1):
+            return ["tactic1", "tactic2", "tactic3"][:n] if n > 0 else ["tactic1"]
+
+        self.tactic_generator.generate_tactics.side_effect = mock_generate_tactics
 
         # Mock the environment's theorem and initial state
         self.env.theorem = Mock(full_name="test_theorem")
+        self.env.theorem_pos = "mock_pos"
+        self.env.dataloader = Mock()
+        self.env.dataloader.get_premises.return_value = ["p1", "p2"]
+        self.env.dojo_instance = Mock()
+        # Mock run_tac to return a TacticState with pp attribute
+        mock_tactic_state = Mock(spec=TacticState)
+        mock_tactic_state.pp = "mock_state_pp"
+        self.env.dojo_instance.run_tac.return_value = mock_tactic_state
         self.initial_state = Mock(spec=TacticState)
+        self.initial_state.pp = "initial_state_pp"
         self.env.current_state = self.initial_state
 
         self.runner = AgentRunner(
@@ -36,27 +52,38 @@ class TestAgentRunner(unittest.TestCase):
         # Mock the MCTS instance and its methods
         mock_mcts_instance = MockMCTS.return_value
         mock_mcts_instance.get_best_action.return_value = "best_tactic"
+        mock_mcts_instance.root = Mock()
 
-        # Simulate the environment's step function
-        # First step: not terminated
-        # Second step: terminated (proof finished)
-        self.env.step.side_effect = [
-            (Mock(spec=TacticState), 0, False, False, {}),
-            (Mock(spec=ProofFinished), 1, True, False, {}),
-        ]
+        # Create a new runner with the mocked MCTS class
+        runner = AgentRunner(
+            self.env,
+            self.premise_selector,
+            self.tactic_generator,
+            mcts_class=MockMCTS,
+            num_iterations=10,
+            max_steps=5,
+        )
+
+        # Keep track of step count
+        step_count = [0]
 
         # Update current_state after each step
-        def update_state(*args, **kwargs):
-            if self.env.step.call_count == 1:
-                self.env.current_state = Mock(spec=TacticState)
+        def mock_step(*args, **kwargs):
+            step_count[0] += 1
+            if step_count[0] == 1:
+                next_state = Mock(spec=TacticState)
+                next_state.pp = "next_state_pp"
+                self.env.current_state = next_state
+                return (next_state, 0, False, False, {})
             else:
-                self.env.current_state = Mock(spec=ProofFinished)
-            return self.env.step.side_effect[self.env.step.call_count - 1]
+                proof_finished = Mock(spec=ProofFinished)
+                self.env.current_state = proof_finished
+                return (proof_finished, 1, True, False, {})
 
-        self.env.step.side_effect = update_state
+        self.env.step.side_effect = mock_step
 
         # Act
-        success, trajectory = self.runner.run()
+        success, trajectory = runner.run()
 
         # Assert
         self.assertTrue(success)
@@ -70,16 +97,28 @@ class TestAgentRunner(unittest.TestCase):
         # Arrange
         mock_mcts_instance = MockMCTS.return_value
         mock_mcts_instance.get_best_action.return_value = "best_tactic"
-        self.env.step.return_value = (
-            Mock(spec=TacticState),
-            0,
-            False,
-            False,
-            {},
+        mock_mcts_instance.root = Mock()
+
+        # Create a new runner with the mocked MCTS class
+        runner = AgentRunner(
+            self.env,
+            self.premise_selector,
+            self.tactic_generator,
+            mcts_class=MockMCTS,
+            num_iterations=10,
+            max_steps=5,
         )
 
+        def mock_step(*args, **kwargs):
+            next_state = Mock(spec=TacticState)
+            next_state.pp = "next_state_pp"
+            self.env.current_state = next_state
+            return (next_state, 0, False, False, {})
+
+        self.env.step.side_effect = mock_step
+
         # Act
-        success, trajectory = self.runner.run()
+        success, trajectory = runner.run()
 
         # Assert
         self.assertFalse(success)
@@ -91,9 +130,23 @@ class TestAgentRunner(unittest.TestCase):
         # Arrange
         mock_mcts_instance = MockMCTS.return_value
         mock_mcts_instance.get_best_action.return_value = None
+        mock_mcts_instance.root = Mock()
+
+        # Create a new runner with the mocked MCTS class
+        runner = AgentRunner(
+            self.env,
+            self.premise_selector,
+            self.tactic_generator,
+            mcts_class=MockMCTS,
+            num_iterations=10,
+            max_steps=5,
+        )
+
+        # Define step mock even though it shouldn't be called
+        self.env.step.return_value = (Mock(spec=TacticState), 0, False, False, {})
 
         # Act
-        success, trajectory = self.runner.run()
+        success, trajectory = runner.run()
 
         # Assert
         self.assertFalse(success)

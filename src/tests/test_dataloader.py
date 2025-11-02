@@ -30,7 +30,7 @@ class TestDataLoader(unittest.TestCase):
         # Arrange
         mock_file.side_effect = lambda path, *args, **kwargs: mock_open(
             read_data=self.mock_fs.get(path, "")
-        )().read()
+        ).return_value
 
         # Act
         loader = DataLoader(dataset_path=self.dataset_path, data_type=self.data_type)

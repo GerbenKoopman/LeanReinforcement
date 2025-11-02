@@ -1,3 +1,4 @@
+import math
 import unittest
 from unittest.mock import Mock, MagicMock
 
@@ -106,7 +107,7 @@ class TestMCTSGuidedRollout(unittest.TestCase):
         child.visit_count = 1
         child.value_sum = 0.5
         score = self.mcts._ucb1(child)
-        expected_score = 0.5 + self.mcts.exploration_weight * ((10.0) ** 0.5 / 1.0)
+        expected_score = 0.5 + self.mcts.exploration_weight * (math.log(10.0) ** 0.5)
         self.assertAlmostEqual(score, expected_score, places=5)
 
     def test_expand(self):
