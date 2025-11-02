@@ -12,7 +12,6 @@ dependencies:
   - jupyter
   - ipykernel
   - pytorch
-  - pytorch-cuda=12.1
   - loguru
   - networkx
   - lxml
@@ -20,7 +19,6 @@ dependencies:
   - deprecated
   - pip:
     - lean-dojo
-    - torch
     - tqdm
     - deepspeed
     - pytorch-lightning[extra]
