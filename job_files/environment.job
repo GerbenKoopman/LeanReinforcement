@@ -15,6 +15,6 @@ module load CUDA/12.6.0
 
 cd $HOME/lean_reinforcement
 
-conda remove -n lean-reinforcement --all
+conda remove -n lean-reinforcement --all -y
 conda env create -f environment.yaml
 # conda env update --file environment.yaml --prune
