@@ -230,6 +230,7 @@ def main(args):
                 env=env,
                 premise_selector=premise_selector,
                 tactic_generator=tactic_generator,
+                all_premises=all_premises,
                 mcts_class=mcts_class,
                 mcts_kwargs=mcts_kwargs,
                 num_iterations=args.num_iterations,
@@ -238,7 +239,6 @@ def main(args):
 
             # Run the agent and collect lightweight training data
             success, theorem_training_data = runner.run(
-                all_premises=all_premises,
                 collect_value_data=args.train_value_head,
                 collect_policy_data=args.train_tactic_generator,
             )

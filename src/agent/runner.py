@@ -24,6 +24,7 @@ class AgentRunner:
         env: LeanDojoEnv,
         premise_selector: PremiseSelector,
         tactic_generator: TacticGenerator,
+        all_premises: list[str],
         mcts_class: Type[BaseMCTS] = MCTS_GuidedRollout,
         mcts_kwargs: Optional[dict] = None,
         num_iterations: int = 100,
@@ -36,6 +37,7 @@ class AgentRunner:
             env: The LeanDojo environment.
             premise_selector: The premise selector model.
             tactic_generator: The tactic generator model.
+            all_premises: All accessible premises for the theorem (pre-fetched).
             mcts_class: The MCTS implementation to use (e.g., MCTS_GuidedRollout).
             mcts_kwargs: Additional keyword arguments for initializing the MCTS class.
             num_iterations: The number of MCTS iterations to run at each step.
@@ -44,6 +46,7 @@ class AgentRunner:
         self.env = env
         self.premise_selector = premise_selector
         self.tactic_generator = tactic_generator
+        self.all_premises = all_premises
         self.mcts_class = mcts_class
         self.mcts_kwargs = mcts_kwargs if mcts_kwargs is not None else {}
         self.num_iterations = num_iterations
@@ -51,7 +54,6 @@ class AgentRunner:
 
     def run(
         self,
-        all_premises: list[str],
         collect_value_data: bool = False,
         collect_policy_data: bool = False,
     ) -> tuple[bool, list[dict]]:
@@ -59,7 +61,6 @@ class AgentRunner:
         Run the proof search loop and collect lightweight training data.
 
         Args:
-            all_premises: All accessible premises for the theorem (pre-fetched).
             collect_value_data: Whether to collect data for value head training.
             collect_policy_data: Whether to collect data for tactic generator training.
 
@@ -86,6 +87,7 @@ class AgentRunner:
                 env=self.env,
                 premise_selector=self.premise_selector,
                 tactic_generator=self.tactic_generator,
+                all_premises=self.all_premises,
                 **self.mcts_kwargs,
             )
 
@@ -115,7 +117,7 @@ class AgentRunner:
                     {
                         "type": "policy",
                         "state": state_pp,
-                        "premises": all_premises,
+                        "premises": self.all_premises,
                         "tactic_target": best_action,
                     }
                 )
@@ -125,7 +127,7 @@ class AgentRunner:
                     {
                         "type": "value",
                         "state": state_pp,
-                        "premises": all_premises,
+                        "premises": self.all_premises,
                         # Value target will be filled in later with final reward
                     }
                 )

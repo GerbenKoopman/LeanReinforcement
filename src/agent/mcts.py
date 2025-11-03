@@ -61,6 +61,7 @@ class BaseMCTS:
         env: LeanDojoEnv,
         premise_selector: PremiseSelector,
         tactic_generator: TacticGenerator,
+        all_premises: List[str],
         exploration_weight: float = math.sqrt(2),
         max_tree_nodes: int = 1000,
     ):
@@ -75,10 +76,8 @@ class BaseMCTS:
         self.theorem = env.theorem
         self.theorem_pos = env.theorem_pos
 
-        # Load all accessible premises once
-        self.all_premises = self.env.dataloader.get_premises(
-            self.theorem, self.theorem_pos
-        )
+        # Load all accessible premises once (injected from runner)
+        self.all_premises = all_premises
 
         # Initialize the root node with the initial state from the env
         if not isinstance(

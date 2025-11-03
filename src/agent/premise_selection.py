@@ -3,12 +3,12 @@ Premise selection module using a ByT5-based text encoder from ReProver.
 """
 
 import torch
-from typing import Union, List
+from typing import Union, List, Dict, Tuple
 from transformers import AutoTokenizer, AutoModelForTextEncoding
 
 
 class PremiseSelector:
-    def __init__(self):
+    def __init__(self, max_cache_size: int = 2000):
         self.tokenizer = AutoTokenizer.from_pretrained(
             "kaiyuy/leandojo-lean4-retriever-byt5-small"
         )
@@ -16,7 +16,8 @@ class PremiseSelector:
             "kaiyuy/leandojo-lean4-retriever-byt5-small"
         )
         # Cache for premise embeddings to avoid recomputation
-        self._premise_cache = {}
+        self._premise_cache: Dict[Tuple[str, ...], torch.Tensor] = {}
+        self.max_cache_size = max_cache_size
 
     @torch.no_grad()
     def _encode(self, s: Union[str, List[str]]) -> torch.Tensor:
@@ -49,6 +50,11 @@ class PremiseSelector:
             premise_embs = self._premise_cache[cache_key]
         else:
             premise_embs = self._encode(premises)
+
+            # Evict an old item if cache is full (simple FIFO eviction)
+            if len(self._premise_cache) >= self.max_cache_size:
+                self._premise_cache.pop(next(iter(self._premise_cache)))
+
             self._premise_cache[cache_key] = premise_embs
 
         scores = state_emb @ premise_embs.T
