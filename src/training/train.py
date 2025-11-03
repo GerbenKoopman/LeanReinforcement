@@ -3,6 +3,7 @@ from loguru import logger
 import torch
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
+import gc
 
 from ReProver.common import Pos
 
@@ -181,7 +182,10 @@ def main(args):
     # --- Models ---
     premise_selector = PremiseSelector()
     tactic_generator = TacticGenerator()
-    value_head = ValueHead()
+
+    value_head = None
+    if args.mcts_type == "alpha_zero" or args.train_value_head:
+        value_head = ValueHead()
 
     # --- DataLoader ---
     logger.info(f"Loading data from 'leandojo_benchmark_4/{args.data_type}'")
@@ -262,6 +266,16 @@ def main(args):
                             }
                         )
 
+            logger.debug(f"Clearing trajectory for theorem: {theorem.full_name}")
+            del trajectory
+            del runner
+            del env
+            gc.collect()
+            premise_selector.clear_cache()  # You already have this, which is good
+
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+
         # --- MODEL TRAINING STEP ---
         if not training_data_buffer:
             logger.warning("No data collected in this epoch. Skipping training.")
@@ -270,6 +284,9 @@ def main(args):
         # --- CONDITIONAL TRAINING ---
         if args.train_value_head:
             value_data = [d for d in training_data_buffer if "value_target" in d]
+            assert (
+                value_head is not None
+            ), "ValueHead must be initialized before training"
             train_value_head(value_head, value_data, epochs=args.train_epochs)
 
         if args.train_tactic_generator:
