@@ -15,6 +15,8 @@ class PremiseSelector:
         self.model = AutoModelForTextEncoding.from_pretrained(
             "kaiyuy/leandojo-lean4-retriever-byt5-small"
         )
+        # Cache for premise embeddings to avoid recomputation
+        self._premise_cache = {}
 
     @torch.no_grad()
     def _encode(self, s: Union[str, List[str]]) -> torch.Tensor:
@@ -38,7 +40,23 @@ class PremiseSelector:
     def retrieve(self, state: str, premises: List[str], k: int) -> List[str]:
         """Retrieve the top-k premises from a list given a state."""
         state_emb = self._encode(state)
-        premise_embs = self._encode(premises)
+
+        # Create cache key from premises tuple
+        cache_key = tuple(premises)
+
+        # Check if we've already encoded these premises
+        if cache_key in self._premise_cache:
+            premise_embs = self._premise_cache[cache_key]
+        else:
+            premise_embs = self._encode(premises)
+            self._premise_cache[cache_key] = premise_embs
+
         scores = state_emb @ premise_embs.T
         topk = scores.topk(k).indices.tolist()
         return [premises[i] for i in topk]
+
+    def clear_cache(self):
+        """Clear the premise embedding cache to free memory."""
+        self._premise_cache.clear()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()

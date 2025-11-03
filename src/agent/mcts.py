@@ -62,11 +62,14 @@ class BaseMCTS:
         premise_selector: PremiseSelector,
         tactic_generator: TacticGenerator,
         exploration_weight: float = math.sqrt(2),
+        max_tree_nodes: int = 1000,
     ):
         self.env = env
         self.premise_selector = premise_selector
         self.tactic_generator = tactic_generator
         self.exploration_weight = exploration_weight
+        self.max_tree_nodes = max_tree_nodes
+        self.node_count = 0
 
         # Get theorem info from the environment
         self.theorem = env.theorem
@@ -84,12 +87,17 @@ class BaseMCTS:
             raise TypeError(f"Invalid initial state type: {type(env.current_state)}")
 
         self.root = Node(state=env.current_state)
+        self.node_count = 1
 
     def search(self, num_iterations: int) -> None:
         """
         Run the MCTS search for a given number of iterations.
         """
         for _ in range(num_iterations):
+            # Stop if tree is too large
+            if self.node_count >= self.max_tree_nodes:
+                break
+
             leaf = self._select(self.root)
 
             if leaf.is_terminal:
@@ -263,6 +271,7 @@ class MCTS_GuidedRollout(BaseMCTS):
         # Create the new child node
         child = Node(next_state_or_result, parent=node, action=tactic)
         node.children.append(child)
+        self.node_count += 1
 
         return child
 
@@ -372,6 +381,7 @@ class MCTS_AlphaZero(BaseMCTS):
             child = Node(next_state, parent=node, action=tactic)
             child.prior_p = prob
             node.children.append(child)
+            self.node_count += 1
 
         node.untried_actions = []
 

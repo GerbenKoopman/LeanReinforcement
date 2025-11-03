@@ -96,6 +96,9 @@ class AgentRunner:
             logger.info(f"Step {step_num}: Applying best tactic: {best_action}")
             _, _, terminated, _, _ = self.env.step(best_action)
 
+            # Clear the MCTS instance to free memory
+            del mcts_instance
+
             if terminated:
                 break
 

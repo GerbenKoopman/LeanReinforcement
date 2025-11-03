@@ -195,6 +195,10 @@ def main(args):
         logger.info(f"Starting Epoch {epoch + 1}/{args.num_epochs}")
         training_data_buffer = []
 
+        # Clear GPU cache at start of each epoch
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
         for thm_data in dataloader.train_data[
             : args.num_theorems
         ]:  # Limiting for demonstration
@@ -227,6 +231,9 @@ def main(args):
 
             success, trajectory = runner.run()
             final_reward = 1.0 if success else -1.0
+
+            # Clear premise cache after each theorem to free memory
+            premise_selector.clear_cache()
 
             # --- PROCESS TRAJECTORY FOR TRAINING DATA ---
             all_premises = dataloader.get_premises(theorem, theorem_pos)
