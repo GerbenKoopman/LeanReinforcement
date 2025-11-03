@@ -223,6 +223,9 @@ def main(args):
                 mcts_kwargs = {}  # GuidedRollout does not need a value head
                 logger.debug("Using MCTS_GuidedRollout")
 
+            # Pre-fetch premises once per theorem
+            all_premises = dataloader.get_premises(theorem, theorem_pos)
+
             runner = AgentRunner(
                 env=env,
                 premise_selector=premise_selector,
@@ -233,45 +236,26 @@ def main(args):
                 max_steps=args.max_steps,
             )
 
-            success, trajectory = runner.run()
-            final_reward = 1.0 if success else -1.0
+            # Run the agent and collect lightweight training data
+            success, theorem_training_data = runner.run(
+                all_premises=all_premises,
+                collect_value_data=args.train_value_head,
+                collect_policy_data=args.train_tactic_generator,
+            )
+
+            # Add the lightweight data to the buffer
+            training_data_buffer.extend(theorem_training_data)
 
             # Clear premise cache after each theorem to free memory
             premise_selector.clear_cache()
 
-            # --- PROCESS TRAJECTORY FOR TRAINING DATA ---
-            all_premises = dataloader.get_premises(theorem, theorem_pos)
-
-            for state, root_node in trajectory:
-                # 1. Data for Value Head
-                if args.train_value_head:
-                    training_data_buffer.append(
-                        {
-                            "state": state.pp,
-                            "premises": all_premises,
-                            "value_target": final_reward,  # Use final outcome as value target
-                        }
-                    )
-
-                # 2. Data for Tactic Generator (Policy Head)
-                if args.train_tactic_generator and root_node.children:
-                    # Find the best action taken from this state based on MCTS visits
-                    best_child = max(root_node.children, key=lambda c: c.visit_count)
-                    if best_child.action:  # Ensure action is not None or empty
-                        training_data_buffer.append(
-                            {
-                                "state": state.pp,
-                                "premises": all_premises,
-                                "tactic_target": best_child.action,  # Use best action as target
-                            }
-                        )
-
-            logger.debug(f"Clearing trajectory for theorem: {theorem.full_name}")
-            del trajectory
+            logger.debug(
+                f"Collected {len(theorem_training_data)} training samples for theorem: {theorem.full_name}"
+            )
+            del theorem_training_data
             del runner
             del env
             gc.collect()
-            premise_selector.clear_cache()  # You already have this, which is good
 
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
@@ -283,14 +267,14 @@ def main(args):
 
         # --- CONDITIONAL TRAINING ---
         if args.train_value_head:
-            value_data = [d for d in training_data_buffer if "value_target" in d]
+            value_data = [d for d in training_data_buffer if d.get("type") == "value"]
             assert (
                 value_head is not None
             ), "ValueHead must be initialized before training"
             train_value_head(value_head, value_data, epochs=args.train_epochs)
 
         if args.train_tactic_generator:
-            policy_data = [d for d in training_data_buffer if "tactic_target" in d]
+            policy_data = [d for d in training_data_buffer if d.get("type") == "policy"]
             train_tactic_generator(
                 tactic_generator, policy_data, epochs=args.train_epochs
             )
