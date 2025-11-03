@@ -1,27 +1,40 @@
 """
-Simple testing script to load and display theorem data from a traced LeanDojo repository.
+Test memory usage on Snellius of simple pipeline.
 """
 
-from utilities.dataloader import DataLoader
+from ReProver.common import Pos
 
-dataloader = DataLoader()
+from src.utilities.dataloader import LeanDataLoader
+from src.utilities.gym import LeanDojoEnv
 
-repo = dataloader.trace_repo()
-tactic_theorems, statement_theorems = dataloader.load_theorems(repo)
+from src.agent.premise_selection import PremiseSelector
+from src.agent.tactic_generation import TacticGenerator
+from src.agent.value_head import ValueHead
 
-print(f"Number of tactic theorems: {len(tactic_theorems)}")
-print(f"Number of statement theorems: {len(statement_theorems)}\n\n")
+dataloader = LeanDataLoader()
 
-for thm in tactic_theorems[:5]:
-    statement = thm.get_theorem_statement()
-    tactic_proof = thm.get_tactic_proof()
+thm_data = dataloader.train_data[0]
+theorem = dataloader.extract_theorem(thm_data)
+theorem_pos = Pos(*thm_data["start"])
 
-    print(f"Theorem: {statement}\n")
-    print(f"Tactic Proof: {tactic_proof}\n")
-    print("-----\n\n")
+premises = dataloader.get_premises(theorem, theorem_pos)
 
-for thm in statement_theorems[:5]:
-    statement = thm.get_theorem_statement()
+env = LeanDojoEnv(theorem, theorem_pos)
 
-    print(f"Theorem: {statement}\n")
-    print("-----\n\n")
+state = str(env.current_state)
+
+premise_selector = PremiseSelector()
+
+retrieved_premises = premise_selector.retrieve(state, premises, 10)
+
+tactic_generator = TacticGenerator()
+
+generated_tactic = tactic_generator.generate_tactics_with_probs(
+    state, retrieved_premises
+)
+
+value_head = ValueHead()
+
+value = value_head.predict(state, retrieved_premises)
+
+print(value)

@@ -1,0 +1,29 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=1
+#SBATCH --job-name=test
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=18
+#SBATCH --time=12:00:00
+#SBATCH --output=logs/test_%A.out
+
+module purge
+module load 2024
+module load Anaconda3/2024.06-1
+module load CUDA/12.6.0  # or whatever CUDA version is available
+
+# Set CUDA_HOME environment variable
+export CUDA_HOME=$CUDA_ROOT
+export CUDA_PATH=$CUDA_ROOT
+
+source activate lean-reinforcement
+
+# Source environment variables
+set -a
+source $HOME/lean_reinforcement/.env
+set +a
+
+cd $HOME/lean_reinforcement
+
+srun python3 -m src.testing
