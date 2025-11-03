@@ -98,6 +98,11 @@ def train_value_head(
 
     value_head.eval()  # Set back to evaluation mode
 
+    # Clear GPU memory after training
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
 
 def train_tactic_generator(
     tactic_generator: TacticGenerator,
@@ -174,8 +179,23 @@ def train_tactic_generator(
 
     tactic_generator.model.eval()  # Set back to evaluation mode
 
+    # Clear GPU memory after training
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
 
 # --- Main Loop ---
+
+
+def log_gpu_memory(prefix: str = ""):
+    """Log current GPU memory usage."""
+    if torch.cuda.is_available():
+        allocated = torch.cuda.memory_allocated() / 1024**3
+        reserved = torch.cuda.memory_reserved() / 1024**3
+        logger.info(
+            f"{prefix}GPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved"
+        )
 
 
 def main(args):
@@ -186,6 +206,8 @@ def main(args):
     value_head = None
     if args.mcts_type == "alpha_zero" or args.train_value_head:
         value_head = ValueHead()
+
+    log_gpu_memory("After model initialization - ")
 
     # --- DataLoader ---
     logger.info(f"Loading data from 'leandojo_benchmark_4/{args.data_type}'")
@@ -311,11 +333,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "--num-iterations",
         type=int,
-        default=100,
-        help="Number of MCTS iterations per step.",
+        default=50,
+        help="Number of MCTS iterations per step (reduced default for memory efficiency).",
     )
     parser.add_argument(
-        "--max-steps", type=int, default=50, help="Max steps per proof."
+        "--max-steps",
+        type=int,
+        default=30,
+        help="Max steps per proof (reduced default for memory efficiency).",
     )
     parser.add_argument(
         "--mcts-type",

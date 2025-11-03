@@ -35,6 +35,12 @@ class PremiseSelector:
         ) / lens.unsqueeze(1)
         if should_squeeze:
             features = features.squeeze()
+
+        # Clean up intermediate tensors
+        del tokenized_s
+        del hidden_state
+        del lens
+
         return features
 
     @torch.no_grad()

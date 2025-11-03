@@ -3,6 +3,8 @@ Main agent loop for running MCTS-based proof search.
 """
 
 import time
+import gc
+import torch
 from typing import Type, Optional
 
 from loguru import logger
@@ -52,6 +54,15 @@ class AgentRunner:
         self.num_iterations = num_iterations
         self.max_steps = max_steps
 
+    def _log_gpu_memory(self, prefix: str = ""):
+        """Log current GPU memory usage."""
+        if torch.cuda.is_available():
+            allocated = torch.cuda.memory_allocated() / 1024**3
+            reserved = torch.cuda.memory_reserved() / 1024**3
+            logger.debug(
+                f"{prefix}GPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved"
+            )
+
     def run(
         self,
         collect_value_data: bool = False,
@@ -71,6 +82,7 @@ class AgentRunner:
         """
         start_time = time.time()
         logger.info(f"Starting proof search for: {self.env.theorem.full_name}")
+        self._log_gpu_memory("Initial ")
 
         training_data = []
         step_num = 0
@@ -80,6 +92,10 @@ class AgentRunner:
             current_state = self.env.current_state
             if not isinstance(current_state, TacticState):
                 break
+
+            # Log GPU memory every 5 steps
+            if step_num % 5 == 0:
+                self._log_gpu_memory(f"Step {step_num} - ")
 
             # Create a new MCTS tree for the current state
             # TODO: Implement subtree reusage to improve efficiency
@@ -135,6 +151,11 @@ class AgentRunner:
             # Discard the MCTS tree immediately to free memory
             del mcts_instance
             del root_node
+
+            # Force garbage collection and clear CUDA cache after each step
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
 
             if best_action is None:
                 logger.warning("MCTS search returned no action. Stopping.")

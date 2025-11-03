@@ -1,6 +1,8 @@
 import math
 import random
+import torch
 from typing import List, Optional
+from loguru import logger
 
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
@@ -88,37 +90,52 @@ class BaseMCTS:
         self.root = Node(state=env.current_state)
         self.node_count = 1
 
+    def _log_gpu_memory(self):
+        """Log current GPU memory usage."""
+        if torch.cuda.is_available():
+            allocated = torch.cuda.memory_allocated() / 1024**3
+            reserved = torch.cuda.memory_reserved() / 1024**3
+            logger.debug(
+                f"GPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved"
+            )
+
     def search(self, num_iterations: int) -> None:
         """
         Run the MCTS search for a given number of iterations.
         """
-        for _ in range(num_iterations):
-            # Stop if tree is too large
-            if self.node_count >= self.max_tree_nodes:
-                break
+        # Ensure no gradients are computed during MCTS search
+        with torch.no_grad():
+            for iteration in range(num_iterations):
+                # Stop if tree is too large
+                if self.node_count >= self.max_tree_nodes:
+                    break
 
-            leaf = self._select(self.root)
+                leaf = self._select(self.root)
 
-            if leaf.is_terminal:
-                # If the leaf is terminal, we can't expand it.
-                # We just backpropagate its known value.
-                if isinstance(leaf.state, ProofFinished):
-                    self._backpropagate(leaf, 1.0)
-                elif isinstance(leaf.state, (LeanError, ProofGivenUp)):
-                    self._backpropagate(leaf, -1.0)
-                continue
+                if leaf.is_terminal:
+                    # If the leaf is terminal, we can't expand it.
+                    # We just backpropagate its known value.
+                    if isinstance(leaf.state, ProofFinished):
+                        self._backpropagate(leaf, 1.0)
+                    elif isinstance(leaf.state, (LeanError, ProofGivenUp)):
+                        self._backpropagate(leaf, -1.0)
+                    continue
 
-            if not isinstance(leaf.state, TacticState):
-                # Cannot expand a non-tactic state
-                if isinstance(leaf.state, ProofFinished):
-                    self._backpropagate(leaf, 1.0)
-                else:
-                    self._backpropagate(leaf, -1.0)
-                continue
+                if not isinstance(leaf.state, TacticState):
+                    # Cannot expand a non-tactic state
+                    if isinstance(leaf.state, ProofFinished):
+                        self._backpropagate(leaf, 1.0)
+                    else:
+                        self._backpropagate(leaf, -1.0)
+                    continue
 
-            simulation_node = self._expand(leaf)
-            reward = self._simulate(simulation_node)
-            self._backpropagate(simulation_node, reward)
+                simulation_node = self._expand(leaf)
+                reward = self._simulate(simulation_node)
+                self._backpropagate(simulation_node, reward)
+
+                # Clear CUDA cache periodically during search
+                if torch.cuda.is_available() and iteration % 20 == 0 and iteration > 0:
+                    torch.cuda.empty_cache()
 
     def _select(self, node: Node) -> Node:
         """

@@ -44,6 +44,13 @@ class TacticGenerator:
             early_stopping=True,
         )
         tactics = self.tokenizer.batch_decode(tactic_ids, skip_special_tokens=True)
+
+        # Explicitly delete tensors to free GPU memory
+        del tokenized_input
+        del tactic_ids
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
         return tactics
 
     @torch.no_grad()
@@ -82,4 +89,14 @@ class TacticGenerator:
             outputs.sequences, skip_special_tokens=True
         )
 
-        return list(zip(tactics, probs.tolist()))
+        result = list(zip(tactics, probs.tolist()))
+
+        # Explicitly delete tensors to free GPU memory
+        del tokenized_input
+        del outputs
+        del sequence_scores
+        del probs
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        return result
