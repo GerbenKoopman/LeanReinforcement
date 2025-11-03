@@ -37,10 +37,12 @@ class TestAgentRunner(unittest.TestCase):
         self.initial_state.pp = "initial_state_pp"
         self.env.current_state = self.initial_state
 
+        self.all_premises = ["p1", "p2"]
         self.runner = AgentRunner(
             self.env,
             self.premise_selector,
             self.tactic_generator,
+            self.all_premises,
             mcts_class=MCTS_GuidedRollout,
             num_iterations=10,
             max_steps=5,
@@ -60,10 +62,12 @@ class TestAgentRunner(unittest.TestCase):
         mock_mcts_instance.root = mock_root
 
         # Create a new runner with the mocked MCTS class
+        all_premises = ["p1", "p2"]
         runner = AgentRunner(
             self.env,
             self.premise_selector,
             self.tactic_generator,
+            all_premises,
             mcts_class=MockMCTS,
             num_iterations=10,
             max_steps=5,
@@ -87,10 +91,9 @@ class TestAgentRunner(unittest.TestCase):
 
         self.env.step.side_effect = mock_step
 
-        # Act - pass all_premises and flags
-        all_premises = ["p1", "p2"]
+        # Act
         success, training_data = runner.run(
-            all_premises=all_premises, collect_value_data=True, collect_policy_data=True
+            collect_value_data=True, collect_policy_data=True
         )
 
         # Assert
@@ -119,10 +122,12 @@ class TestAgentRunner(unittest.TestCase):
         mock_mcts_instance.root = mock_root
 
         # Create a new runner with the mocked MCTS class
+        all_premises = ["p1", "p2"]
         runner = AgentRunner(
             self.env,
             self.premise_selector,
             self.tactic_generator,
+            all_premises,
             mcts_class=MockMCTS,
             num_iterations=10,
             max_steps=5,
@@ -136,10 +141,8 @@ class TestAgentRunner(unittest.TestCase):
 
         self.env.step.side_effect = mock_step
 
-        # Act - pass all_premises and flags
-        all_premises = ["p1", "p2"]
+        # Act
         success, training_data = runner.run(
-            all_premises=all_premises,
             collect_value_data=True,
             collect_policy_data=False,
         )
@@ -165,10 +168,12 @@ class TestAgentRunner(unittest.TestCase):
         mock_mcts_instance.root = mock_root
 
         # Create a new runner with the mocked MCTS class
+        all_premises = ["p1", "p2"]
         runner = AgentRunner(
             self.env,
             self.premise_selector,
             self.tactic_generator,
+            all_premises,
             mcts_class=MockMCTS,
             num_iterations=10,
             max_steps=5,
@@ -177,10 +182,9 @@ class TestAgentRunner(unittest.TestCase):
         # Define step mock even though it shouldn't be called
         self.env.step.return_value = (Mock(spec=TacticState), 0, False, False, {})
 
-        # Act - pass all_premises and flags
-        all_premises = ["p1", "p2"]
+        # Act
         success, training_data = runner.run(
-            all_premises=all_premises, collect_value_data=True, collect_policy_data=True
+            collect_value_data=True, collect_policy_data=True
         )
 
         # Assert

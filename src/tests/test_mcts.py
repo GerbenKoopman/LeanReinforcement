@@ -63,19 +63,18 @@ class TestBaseMCTS(unittest.TestCase):
         self.tactic_generator = Mock(spec=TacticGenerator)
 
     def test_base_mcts_initialization(self):
+        all_premises = ["p1", "p2"]
         mcts = MCTS_GuidedRollout(
-            self.env, self.premise_selector, self.tactic_generator
+            self.env, self.premise_selector, self.tactic_generator, all_premises
         )
         self.assertIsInstance(mcts.root, Node)
         self.assertEqual(mcts.root.state, self.env.current_state)
-        self.env.dataloader.get_premises.assert_called_once_with(
-            "mock_theorem", "mock_pos"
-        )
         self.assertEqual(mcts.all_premises, ["p1", "p2"])
 
     def test_backpropagate(self):
+        all_premises = ["p1", "p2"]
         mcts = MCTS_GuidedRollout(
-            self.env, self.premise_selector, self.tactic_generator
+            self.env, self.premise_selector, self.tactic_generator, all_premises
         )
         node1 = Node(Mock(spec=TacticState))
         node2 = Node(Mock(spec=TacticState), parent=node1)
@@ -96,8 +95,9 @@ class TestMCTSGuidedRollout(unittest.TestCase):
         self.env = MockLeanDojoEnv()
         self.premise_selector = Mock(spec=PremiseSelector)
         self.tactic_generator = Mock(spec=TacticGenerator)
+        self.all_premises = ["p1", "p2"]
         self.mcts = MCTS_GuidedRollout(
-            self.env, self.premise_selector, self.tactic_generator
+            self.env, self.premise_selector, self.tactic_generator, self.all_premises
         )
 
     def test_ucb1(self):
@@ -159,8 +159,13 @@ class TestMCTSAlphaZero(unittest.TestCase):
         self.premise_selector = Mock(spec=PremiseSelector)
         self.tactic_generator = Mock(spec=TacticGenerator)
         self.value_head = Mock(spec=ValueHead)
+        self.all_premises = ["p1", "p2"]
         self.mcts = MCTS_AlphaZero(
-            self.value_head, self.env, self.premise_selector, self.tactic_generator
+            self.value_head,
+            self.env,
+            self.premise_selector,
+            self.tactic_generator,
+            self.all_premises,
         )
 
     def test_puct_score(self):
