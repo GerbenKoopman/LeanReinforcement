@@ -333,7 +333,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--num-iterations",
         type=int,
-        default=50,
+        default=20,
         help="Number of MCTS iterations per step (reduced default for memory efficiency).",
     )
     parser.add_argument(

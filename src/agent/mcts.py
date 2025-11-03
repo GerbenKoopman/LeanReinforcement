@@ -12,9 +12,9 @@ from .value_head import ValueHead
 from .premise_selection import PremiseSelector
 
 # Max depth for a single rollout in Part 1
-MAX_ROLLOUT_DEPTH = 30
+MAX_ROLLOUT_DEPTH = 5  # Drastically reduced to prevent OOM
 # Number of tactics to expand from the generator
-NUM_TACTICS_TO_EXPAND = 5
+NUM_TACTICS_TO_EXPAND = 1  # Reduced to 1 to minimize memory usage
 
 
 class Node:
@@ -133,8 +133,8 @@ class BaseMCTS:
                 reward = self._simulate(simulation_node)
                 self._backpropagate(simulation_node, reward)
 
-                # Clear CUDA cache periodically during search
-                if torch.cuda.is_available() and iteration % 20 == 0 and iteration > 0:
+                # Clear CUDA cache more frequently during search (every 5 iterations)
+                if torch.cuda.is_available() and iteration % 5 == 0 and iteration > 0:
                     torch.cuda.empty_cache()
 
     def _select(self, node: Node) -> Node:
