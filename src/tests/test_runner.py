@@ -52,7 +52,12 @@ class TestAgentRunner(unittest.TestCase):
         # Mock the MCTS instance and its methods
         mock_mcts_instance = MockMCTS.return_value
         mock_mcts_instance.get_best_action.return_value = "best_tactic"
-        mock_mcts_instance.root = Mock()
+        mock_root = Mock()
+        mock_child = Mock()
+        mock_child.action = "best_tactic"
+        mock_child.visit_count = 10
+        mock_root.children = [mock_child]
+        mock_mcts_instance.root = mock_root
 
         # Create a new runner with the mocked MCTS class
         runner = AgentRunner(
@@ -82,22 +87,36 @@ class TestAgentRunner(unittest.TestCase):
 
         self.env.step.side_effect = mock_step
 
-        # Act
-        success, trajectory = runner.run()
+        # Act - pass all_premises and flags
+        all_premises = ["p1", "p2"]
+        success, training_data = runner.run(
+            all_premises=all_premises, collect_value_data=True, collect_policy_data=True
+        )
 
         # Assert
         self.assertTrue(success)
-        self.assertEqual(len(trajectory), 2)
+        # Should have 2 steps * 2 data types = 4 training samples
+        self.assertEqual(len(training_data), 4)
         self.assertEqual(self.env.step.call_count, 2)
         mock_mcts_instance.search.assert_called_with(10)
         self.assertEqual(mock_mcts_instance.search.call_count, 2)
+
+        # Check that value_target is assigned correctly
+        value_data = [d for d in training_data if d.get("type") == "value"]
+        for d in value_data:
+            self.assertEqual(d["value_target"], 1.0)  # Success = 1.0
 
     @patch("src.agent.runner.MCTS_GuidedRollout")
     def test_run_max_steps_reached(self, MockMCTS):
         # Arrange
         mock_mcts_instance = MockMCTS.return_value
         mock_mcts_instance.get_best_action.return_value = "best_tactic"
-        mock_mcts_instance.root = Mock()
+        mock_root = Mock()
+        mock_child = Mock()
+        mock_child.action = "best_tactic"
+        mock_child.visit_count = 10
+        mock_root.children = [mock_child]
+        mock_mcts_instance.root = mock_root
 
         # Create a new runner with the mocked MCTS class
         runner = AgentRunner(
@@ -117,20 +136,33 @@ class TestAgentRunner(unittest.TestCase):
 
         self.env.step.side_effect = mock_step
 
-        # Act
-        success, trajectory = runner.run()
+        # Act - pass all_premises and flags
+        all_premises = ["p1", "p2"]
+        success, training_data = runner.run(
+            all_premises=all_premises,
+            collect_value_data=True,
+            collect_policy_data=False,
+        )
 
         # Assert
         self.assertFalse(success)
-        self.assertEqual(len(trajectory), 5)
+        # Should have 5 steps * 1 data type (value only) = 5 training samples
+        self.assertEqual(len(training_data), 5)
         self.assertEqual(self.env.step.call_count, 5)
+
+        # Check that value_target is assigned correctly (failed proof = -1.0)
+        for d in training_data:
+            self.assertEqual(d.get("type"), "value")
+            self.assertEqual(d["value_target"], -1.0)
 
     @patch("src.agent.runner.MCTS_GuidedRollout")
     def test_run_no_action_returned(self, MockMCTS):
         # Arrange
         mock_mcts_instance = MockMCTS.return_value
         mock_mcts_instance.get_best_action.return_value = None
-        mock_mcts_instance.root = Mock()
+        mock_root = Mock()
+        mock_root.children = []  # No children means no action
+        mock_mcts_instance.root = mock_root
 
         # Create a new runner with the mocked MCTS class
         runner = AgentRunner(
@@ -145,12 +177,18 @@ class TestAgentRunner(unittest.TestCase):
         # Define step mock even though it shouldn't be called
         self.env.step.return_value = (Mock(spec=TacticState), 0, False, False, {})
 
-        # Act
-        success, trajectory = runner.run()
+        # Act - pass all_premises and flags
+        all_premises = ["p1", "p2"]
+        success, training_data = runner.run(
+            all_premises=all_premises, collect_value_data=True, collect_policy_data=True
+        )
 
         # Assert
         self.assertFalse(success)
-        self.assertEqual(len(trajectory), 1)
+        # Only value data is collected (no policy data since no action)
+        self.assertEqual(len(training_data), 1)
+        value_data = [d for d in training_data if d.get("type") == "value"]
+        self.assertEqual(len(value_data), 1)
         self.env.step.assert_not_called()
 
 

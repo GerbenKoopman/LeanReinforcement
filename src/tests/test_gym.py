@@ -10,7 +10,7 @@ from src.utilities.gym import LeanDojoEnv
 
 class TestLeanDojoEnv(unittest.TestCase):
     @patch("src.utilities.gym.Dojo")
-    @patch("src.utilities.gym.DataLoader")
+    @patch("src.utilities.gym.LeanDataLoader")
     def setUp(self, MockDataLoader, MockDojo):
         # Mock dependencies
         self.mock_dataloader = MockDataLoader.return_value
