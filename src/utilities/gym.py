@@ -13,7 +13,7 @@ from lean_dojo import (
     ProofFinished,
     LeanError,
 )
-from ReProver.common import Pos
+from ReProver.common import Corpus, Pos
 from .dataloader import LeanDataLoader
 
 
@@ -23,10 +23,8 @@ class LeanDojoEnv(gym.Env):
         self.theorem = theorem
         self.theorem_pos = theorem_pos
 
-        benchmark_dir = os.getenv("BENCHMARK_DIR", "")
-        jsonl_path = os.path.join(benchmark_dir, "leandojo_benchmark_4/corpus.jsonl")
-
-        self.dataloader = LeanDataLoader(jsonl_path)
+        corpus = Corpus(os.path.join("leandojo_benchmark_4/corpus.jsonl"))
+        self.dataloader = LeanDataLoader(corpus)
 
         self.dojo = Dojo(self.theorem)
         self.observation_space = gym.spaces.Text(max_length=10000)
