@@ -45,6 +45,12 @@ class ValueHead(nn.Module):
         features = (hidden_state * tokenized_s.attention_mask.unsqueeze(2)).sum(
             dim=1
         ) / lens.unsqueeze(1)
+
+        # Clean up intermediate tensors
+        del tokenized_s
+        del hidden_state
+        del lens
+
         return features
 
     @torch.no_grad()
@@ -63,7 +69,15 @@ class ValueHead(nn.Module):
         value = self.value_head(features).squeeze()
 
         # Apply tanh to squash the value between -1 and 1
-        return torch.tanh(value).item()
+        result = torch.tanh(value).item()
+
+        # Clean up
+        del features
+        del value
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        return result
 
     def save_checkpoint(self, folder, filename):
         """

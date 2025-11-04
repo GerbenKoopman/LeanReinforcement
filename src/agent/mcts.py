@@ -1,6 +1,8 @@
 import math
 import random
+import torch
 from typing import List, Optional
+from loguru import logger
 
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
@@ -60,10 +62,13 @@ class BaseMCTS:
         env: LeanDojoEnv,
         transformer: Transformer,
         exploration_weight: float = math.sqrt(2),
+        max_tree_nodes: int = 10000,
     ):
         self.env = env
         self.transformer = transformer
         self.exploration_weight = exploration_weight
+        self.max_tree_nodes = max_tree_nodes
+        self.node_count = 0
 
         # Get theorem info from the environment
         self.theorem = env.theorem
@@ -76,34 +81,53 @@ class BaseMCTS:
             raise TypeError(f"Invalid initial state type: {type(env.current_state)}")
 
         self.root = Node(state=env.current_state)
+        self.node_count = 1
+
+    def _log_gpu_memory(self):
+        """Log current GPU memory usage."""
+        if torch.cuda.is_available():
+            allocated = torch.cuda.memory_allocated() / 1024**3
+            reserved = torch.cuda.memory_reserved() / 1024**3
+            logger.debug(
+                f"GPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved"
+            )
 
     def search(self, num_iterations: int) -> None:
         """
         Run the MCTS search for a given number of iterations.
         """
-        for _ in range(num_iterations):
-            leaf = self._select(self.root)
+        with torch.no_grad():
+            for iteration in range(num_iterations):
+                # Stop if tree is too large
+                if self.node_count >= self.max_tree_nodes:
+                    break
 
-            if leaf.is_terminal:
-                # If the leaf is terminal, we can't expand it.
-                # We just backpropagate its known value.
-                if isinstance(leaf.state, ProofFinished):
-                    self._backpropagate(leaf, 1.0)
-                elif isinstance(leaf.state, (LeanError, ProofGivenUp)):
-                    self._backpropagate(leaf, -1.0)
-                continue
+                leaf = self._select(self.root)
 
-            if not isinstance(leaf.state, TacticState):
-                # Cannot expand a non-tactic state
-                if isinstance(leaf.state, ProofFinished):
-                    self._backpropagate(leaf, 1.0)
-                else:
-                    self._backpropagate(leaf, -1.0)
-                continue
+                if leaf.is_terminal:
+                    # If the leaf is terminal, we can't expand it.
+                    # We just backpropagate its known value.
+                    if isinstance(leaf.state, ProofFinished):
+                        self._backpropagate(leaf, 1.0)
+                    elif isinstance(leaf.state, (LeanError, ProofGivenUp)):
+                        self._backpropagate(leaf, -1.0)
+                    continue
 
-            simulation_node = self._expand(leaf)
-            reward = self._simulate(simulation_node)
-            self._backpropagate(simulation_node, reward)
+                if not isinstance(leaf.state, TacticState):
+                    # Cannot expand a non-tactic state
+                    if isinstance(leaf.state, ProofFinished):
+                        self._backpropagate(leaf, 1.0)
+                    else:
+                        self._backpropagate(leaf, -1.0)
+                    continue
+
+                simulation_node = self._expand(leaf)
+                reward = self._simulate(simulation_node)
+                self._backpropagate(simulation_node, reward)
+
+                # Clear CUDA cache periodically during search
+                if torch.cuda.is_available() and iteration % 20 == 0 and iteration > 0:
+                    torch.cuda.empty_cache()
 
     def _select(self, node: Node) -> Node:
         """
@@ -248,6 +272,7 @@ class MCTS_GuidedRollout(BaseMCTS):
         # Create the new child node
         child = Node(next_state_or_result, parent=node, action=tactic)
         node.children.append(child)
+        self.node_count += 1
 
         return child
 
@@ -351,6 +376,7 @@ class MCTS_AlphaZero(BaseMCTS):
             child = Node(next_state, parent=node, action=tactic)
             child.prior_p = prob
             node.children.append(child)
+            self.node_count += 1
 
         node.untried_actions = []
 
