@@ -4,7 +4,7 @@ Data loader for LeanDojo traced repositories and theorems.
 
 import os
 import json
-from typing import List, Optional
+from typing import List
 
 from lean_dojo import LeanGitRepo, TracedRepo, trace, Theorem
 from ReProver.common import Corpus, Pos
@@ -13,13 +13,11 @@ from ReProver.common import Corpus, Pos
 class LeanDataLoader:
     def __init__(
         self,
+        corpus: Corpus,
         dataset_path: str = "leandojo_benchmark_4",
         data_type: str = "novel_premises",
-        jsonl_path: Optional[str] = None,
     ):
-        if jsonl_path is None:
-            jsonl_path = os.path.join(dataset_path, "corpus.jsonl")
-        self.corpus = Corpus(jsonl_path)
+        self.corpus = corpus
         self.dataset_path = dataset_path
         self.data_type = data_type
 

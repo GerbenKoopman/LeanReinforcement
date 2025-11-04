@@ -4,10 +4,11 @@ import torch
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 import gc
+import os
 
-from ReProver.common import Pos
+from ReProver.common import Corpus, Pos
 
-from src.utilities.dataloader import LeanDataLoader as LeanDataLoader
+from src.utilities.dataloader import LeanDataLoader
 from src.utilities.gym import LeanDojoEnv
 from src.agent.runner import AgentRunner
 from src.agent.mcts import MCTS_AlphaZero, MCTS_GuidedRollout
@@ -209,8 +210,9 @@ def main(args):
 
     # --- DataLoader ---
     logger.info(f"Loading data from 'leandojo_benchmark_4/{args.data_type}'")
+    corpus = Corpus(os.path.join("leandojo_benchmark_4/corpus.jsonl"))
     dataloader = LeanDataLoader(
-        dataset_path="leandojo_benchmark_4", data_type=args.data_type
+        corpus, dataset_path="leandojo_benchmark_4", data_type=args.data_type
     )
     dataloader.trace_repo()
 
