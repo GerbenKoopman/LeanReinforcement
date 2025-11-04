@@ -11,8 +11,7 @@ from src.utilities.dataloader import LeanDataLoader as LeanDataLoader
 from src.utilities.gym import LeanDojoEnv
 from src.agent.runner import AgentRunner
 from src.agent.mcts import MCTS_AlphaZero, MCTS_GuidedRollout
-from src.agent.premise_selection import PremiseSelector
-from src.agent.tactic_generation import TacticGenerator
+from src.agent.transformer import Transformer
 from src.agent.value_head import ValueHead
 
 # --- Custom Datasets for Training ---
@@ -104,85 +103,85 @@ def train_value_head(
         torch.cuda.empty_cache()
 
 
-def train_tactic_generator(
-    tactic_generator: TacticGenerator,
-    data_buffer: list,
-    epochs: int = 1,
-    batch_size: int = 8,
-):
-    """
-    Trains (fine-tunes) the tactic generator on collected (state, best_tactic) data.
-    This treats MCTS as an "expert" and uses supervised learning.
-    """
-    if not data_buffer:
-        logger.warning("Tactic Generator training skipped: No data provided.")
-        return
+# def train_tactic_generator(
+#     tactic_generator: TacticGenerator,
+#     data_buffer: list,
+#     epochs: int = 1,
+#     batch_size: int = 8,
+# ):
+#     """
+#     Trains (fine-tunes) the tactic generator on collected (state, best_tactic) data.
+#     This treats MCTS as an "expert" and uses supervised learning.
+#     """
+#     if not data_buffer:
+#         logger.warning("Tactic Generator training skipped: No data provided.")
+#         return
 
-    logger.info(f"Training Tactic Generator on {len(data_buffer)} samples...")
-    tactic_generator.model.train()  # Set the underlying Seq2Seq model to train mode
+#     logger.info(f"Training Tactic Generator on {len(data_buffer)} samples...")
+#     tactic_generator.model.train()  # Set the underlying Seq2Seq model to train mode
 
-    dataset = PolicyHeadDataset(data_buffer)
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-    optimizer = optim.Adam(
-        tactic_generator.model.parameters(), lr=1e-5
-    )  # Lower LR for fine-tuning
+#     dataset = PolicyHeadDataset(data_buffer)
+#     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+#     optimizer = optim.Adam(
+#         tactic_generator.model.parameters(), lr=1e-5
+#     )  # Lower LR for fine-tuning
 
-    for epoch in range(epochs):
-        total_loss = 0
-        for batch in dataloader:
-            states = [item["state"] for item in batch]
-            premises = [item["premises"] for item in batch]
-            tactic_targets = [item["tactic_target"] for item in batch]
+#     for epoch in range(epochs):
+#         total_loss = 0
+#         for batch in dataloader:
+#             states = [item["state"] for item in batch]
+#             premises = [item["premises"] for item in batch]
+#             tactic_targets = [item["tactic_target"] for item in batch]
 
-            # Format inputs
-            inputs = [f"{' '.join(p)}\n{s}" for s, p in zip(states, premises)]
+#             # Format inputs
+#             inputs = [f"{' '.join(p)}\n{s}" for s, p in zip(states, premises)]
 
-            tokenized_inputs = tactic_generator.tokenizer(
-                inputs,
-                return_tensors="pt",
-                padding=True,
-                truncation=True,
-                max_length=2300,
-            )
-            # Format labels
-            tokenized_targets = tactic_generator.tokenizer(
-                tactic_targets,
-                return_tensors="pt",
-                padding=True,
-                truncation=True,
-                max_length=1024,
-            )
-            labels = tokenized_targets.input_ids
+#             tokenized_inputs = tactic_generator.tokenizer(
+#                 inputs,
+#                 return_tensors="pt",
+#                 padding=True,
+#                 truncation=True,
+#                 max_length=2300,
+#             )
+#             # Format labels
+#             tokenized_targets = tactic_generator.tokenizer(
+#                 tactic_targets,
+#                 return_tensors="pt",
+#                 padding=True,
+#                 truncation=True,
+#                 max_length=1024,
+#             )
+#             labels = tokenized_targets.input_ids
 
-            if torch.cuda.is_available():
-                tokenized_inputs = tokenized_inputs.to("cuda")
-                labels = labels.to("cuda")
+#             if torch.cuda.is_available():
+#                 tokenized_inputs = tokenized_inputs.to("cuda")
+#                 labels = labels.to("cuda")
 
-            optimizer.zero_grad()
+#             optimizer.zero_grad()
 
-            # Forward pass (model computes loss when labels are provided)
-            outputs = tactic_generator.model(
-                input_ids=tokenized_inputs.input_ids,
-                attention_mask=tokenized_inputs.attention_mask,
-                labels=labels,
-            )
-            loss = outputs.loss
+#             # Forward pass (model computes loss when labels are provided)
+#             outputs = tactic_generator.model(
+#                 input_ids=tokenized_inputs.input_ids,
+#                 attention_mask=tokenized_inputs.attention_mask,
+#                 labels=labels,
+#             )
+#             loss = outputs.loss
 
-            loss.backward()
-            optimizer.step()
-            total_loss += loss.item()
+#             loss.backward()
+#             optimizer.step()
+#             total_loss += loss.item()
 
-        avg_loss = total_loss / len(dataloader)
-        logger.info(
-            f"Tactic Generator Epoch {epoch+1}/{epochs}, Avg. Loss: {avg_loss:.4f}"
-        )
+#         avg_loss = total_loss / len(dataloader)
+#         logger.info(
+#             f"Tactic Generator Epoch {epoch+1}/{epochs}, Avg. Loss: {avg_loss:.4f}"
+#         )
 
-    tactic_generator.model.eval()  # Set back to evaluation mode
+#     tactic_generator.model.eval()  # Set back to evaluation mode
 
-    # Clear GPU memory after training
-    gc.collect()
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
+#     # Clear GPU memory after training
+#     gc.collect()
+#     if torch.cuda.is_available():
+#         torch.cuda.empty_cache()
 
 
 # --- Main Loop ---
@@ -200,8 +199,7 @@ def log_gpu_memory(prefix: str = ""):
 
 def main(args):
     # --- Models ---
-    premise_selector = PremiseSelector()
-    tactic_generator = TacticGenerator()
+    transformer = Transformer()
 
     value_head = None
     if args.mcts_type == "alpha_zero" or args.train_value_head:
@@ -245,14 +243,9 @@ def main(args):
                 mcts_kwargs = {}  # GuidedRollout does not need a value head
                 logger.debug("Using MCTS_GuidedRollout")
 
-            # Pre-fetch premises once per theorem
-            all_premises = dataloader.get_premises(theorem, theorem_pos)
-
             runner = AgentRunner(
                 env=env,
-                premise_selector=premise_selector,
-                tactic_generator=tactic_generator,
-                all_premises=all_premises,
+                transformer=transformer,
                 mcts_class=mcts_class,
                 mcts_kwargs=mcts_kwargs,
                 num_iterations=args.num_iterations,
@@ -267,9 +260,6 @@ def main(args):
 
             # Add the lightweight data to the buffer
             training_data_buffer.extend(theorem_training_data)
-
-            # Clear premise cache after each theorem to free memory
-            premise_selector.clear_cache()
 
             logger.debug(
                 f"Collected {len(theorem_training_data)} training samples for theorem: {theorem.full_name}"
@@ -295,11 +285,11 @@ def main(args):
             ), "ValueHead must be initialized before training"
             train_value_head(value_head, value_data, epochs=args.train_epochs)
 
-        if args.train_tactic_generator:
-            policy_data = [d for d in training_data_buffer if d.get("type") == "policy"]
-            train_tactic_generator(
-                tactic_generator, policy_data, epochs=args.train_epochs
-            )
+        # if args.train_tactic_generator:
+        #     policy_data = [d for d in training_data_buffer if d.get("type") == "policy"]
+        #     train_tactic_generator(
+        #         tactic_generator, policy_data, epochs=args.train_epochs
+        #     )
 
         # TODO: Save model checkpoints
         # value_head.save_checkpoint(...)
