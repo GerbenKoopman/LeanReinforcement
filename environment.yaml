@@ -12,15 +12,14 @@ dependencies:
   - jupyter
   - ipykernel
   - pytorch
-  - pytorch-cuda=12.1
   - loguru
   - networkx
   - lxml
   - pygithub
   - deprecated
+  - git-lfs
   - pip:
     - lean-dojo
-    - torch
     - tqdm
     - deepspeed
     - pytorch-lightning[extra]
@@ -31,3 +30,4 @@ dependencies:
     - vllm
     - -e ReProver/
     - pre-commit
+    - gymnasium
