@@ -255,7 +255,7 @@ def main(args):
             # Run the agent and collect lightweight training data
             success, theorem_training_data = runner.run(
                 collect_value_data=args.train_value_head,
-                collect_policy_data=args.train_tactic_generator,
+                # collect_policy_data=args.train_tactic_generator,
             )
 
             # Add the lightweight data to the buffer
