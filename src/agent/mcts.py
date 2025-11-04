@@ -7,9 +7,8 @@ from loguru import logger
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
 from src.utilities.gym import LeanDojoEnv
-from .tactic_generation import TacticGenerator
+from .transformer import Transformer
 from .value_head import ValueHead
-from .premise_selection import PremiseSelector
 
 # Max depth for a single rollout in Part 1
 MAX_ROLLOUT_DEPTH = 5  # Drastically reduced to prevent OOM
@@ -61,15 +60,12 @@ class BaseMCTS:
     def __init__(
         self,
         env: LeanDojoEnv,
-        premise_selector: PremiseSelector,
-        tactic_generator: TacticGenerator,
-        all_premises: List[str],
+        transformer: Transformer,
         exploration_weight: float = math.sqrt(2),
         max_tree_nodes: int = 1000,
     ):
         self.env = env
-        self.premise_selector = premise_selector
-        self.tactic_generator = tactic_generator
+        self.transformer = transformer
         self.exploration_weight = exploration_weight
         self.max_tree_nodes = max_tree_nodes
         self.node_count = 0
@@ -77,9 +73,6 @@ class BaseMCTS:
         # Get theorem info from the environment
         self.theorem = env.theorem
         self.theorem_pos = env.theorem_pos
-
-        # Load all accessible premises once (injected from runner)
-        self.all_premises = all_premises
 
         # Initialize the root node with the initial state from the env
         if not isinstance(
@@ -195,12 +188,9 @@ class BaseMCTS:
                 self.root.state, TacticState
             ):
                 state_str = self.root.state.pp
-                retrieved = self.premise_selector.retrieve(
-                    state_str, self.all_premises, k=10
-                )
-                # In AlphaZero, we'd use the policy head. Here we adapt.
-                self.root.untried_actions = self.tactic_generator.generate_tactics(
-                    state_str, retrieved, n=NUM_TACTICS_TO_EXPAND
+
+                self.root.untried_actions = self.transformer.generate_tactics(
+                    state_str, n=NUM_TACTICS_TO_EXPAND
                 )
 
             if self.root.untried_actions:
@@ -264,14 +254,10 @@ class MCTS_GuidedRollout(BaseMCTS):
             # First visit to this node: get premises and generate tactics
             state_str = node.state.pp
 
-            retrieved = self.premise_selector.retrieve(
-                state_str, self.all_premises, k=10
+            node.untried_actions = self.transformer.generate_tactics(
+                state_str, n=NUM_TACTICS_TO_EXPAND
             )
 
-            # Use the tactic generator to get N promising tactics
-            node.untried_actions = self.tactic_generator.generate_tactics(
-                state_str, retrieved, n=NUM_TACTICS_TO_EXPAND
-            )
             if node.untried_actions:
                 random.shuffle(node.untried_actions)  # Add randomness
 
@@ -310,12 +296,7 @@ class MCTS_GuidedRollout(BaseMCTS):
             state_str = current_state.pp
 
             # Get premises and a single greedy tactic
-            retrieved = self.premise_selector.retrieve(
-                state_str, self.all_premises, k=10
-            )
-            tactic = self.tactic_generator.generate_tactics(state_str, retrieved, n=1)[
-                0
-            ]
+            tactic = self.transformer.generate_tactics(state_str, n=1)[0]
 
             # Run the tactic
             result = self.env.dojo_instance.run_tac(current_state, tactic)
@@ -382,13 +363,12 @@ class MCTS_AlphaZero(BaseMCTS):
 
         # Get tactics and their prior probabilities from the policy head
         state_str = node.state.pp
-        retrieved = self.premise_selector.retrieve(state_str, self.all_premises, k=10)
 
         # Assume generate_tactics_with_logprobs returns [(tactic, log_prob), ...]
         # And that we convert log_prob to prob.
         # For now, let's assume it returns (tactic, prob)
-        tactics_with_probs = self.tactic_generator.generate_tactics_with_probs(
-            state_str, retrieved, n=NUM_TACTICS_TO_EXPAND
+        tactics_with_probs = self.transformer.generate_tactics_with_probs(
+            state_str, n=NUM_TACTICS_TO_EXPAND
         )
 
         # Create a child for each promising tactic
@@ -420,7 +400,6 @@ class MCTS_AlphaZero(BaseMCTS):
         state_str = node.state.pp
 
         # Get premises and predict value
-        retrieved = self.premise_selector.retrieve(state_str, self.all_premises, k=10)
-        value = self.value_head.predict(state_str, retrieved)
+        value = self.value_head.predict(state_str)
 
         return value

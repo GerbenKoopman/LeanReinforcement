@@ -7,17 +7,18 @@ from typing_extensions import Self
 import torch
 import torch.nn as nn
 from typing import List
-from transformers import AutoTokenizer, AutoModelForTextEncoding
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 
 class ValueHead(nn.Module):
 
     def __init__(
-        self, encoder_name: str = "kaiyuy/leandojo-lean4-retriever-byt5-small"
+        self, transformer_name: str = "kaiyuy/leandojo-lean4-tacgen-byt5-small"
     ):
         super().__init__()
-        self.tokenizer = AutoTokenizer.from_pretrained(encoder_name)
-        self.encoder = AutoModelForTextEncoding.from_pretrained(encoder_name)
+        self.tokenizer = AutoTokenizer.from_pretrained(transformer_name)
+        self.transformer = AutoModelForSeq2SeqLM.from_pretrained(transformer_name)
+        self.encoder = self.transformer.get_encoder()
 
         # Freeze the pre-trained encoder
         for param in self.encoder.parameters():
@@ -53,13 +54,13 @@ class ValueHead(nn.Module):
         return features
 
     @torch.no_grad()
-    def predict(self, state_str: str, premises: List[str]) -> float:
+    def predict(self, state_str: str) -> float:
         """
         Predicts the value of a single state.
         Returns a float between -1.0 and 1.0.
         """
         self.eval()  # Set to evaluation mode
-        input_str = "\n\n".join(premises + [state_str])
+        input_str = state_str
 
         # Encode the input string (pass as a batch of 1)
         features = self._encode([input_str])
