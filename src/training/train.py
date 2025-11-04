@@ -305,7 +305,7 @@ if __name__ == "__main__":
         "--data-type",
         type=str,
         choices=["random", "novel_premises"],
-        default="random",
+        default="novel_premises",
         help="Dataset split to use.",
     )
     parser.add_argument(
@@ -336,7 +336,7 @@ if __name__ == "__main__":
         "--mcts-type",
         type=str,
         choices=["guided_rollout", "alpha_zero"],
-        default="alpha_zero",
+        default="guided_rollout",
         help="Which MCTS algorithm to use for self-play.",
     )
 
@@ -352,11 +352,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Train the value head after each epoch.",
     )
-    parser.add_argument(
-        "--train-tactic-generator",
-        action="store_true",
-        help="Train the tactic generator after each epoch.",
-    )
+    # parser.add_argument(
+    #     "--train-tactic-generator",
+    #     action="store_true",
+    #     help="Train the tactic generator after each epoch.",
+    # )
 
     args = parser.parse_args()
     main(args)
