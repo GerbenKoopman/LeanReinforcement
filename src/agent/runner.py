@@ -10,8 +10,7 @@ from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
 from .mcts import BaseMCTS, MCTS_GuidedRollout, Node
 from src.utilities.gym import LeanDojoEnv
-from .tactic_generation import TacticGenerator
-from .premise_selection import PremiseSelector
+from .transformer import Transformer
 
 
 class AgentRunner:
@@ -22,8 +21,7 @@ class AgentRunner:
     def __init__(
         self,
         env: LeanDojoEnv,
-        premise_selector: PremiseSelector,
-        tactic_generator: TacticGenerator,
+        transformer: Transformer,
         mcts_class: Type[BaseMCTS] = MCTS_GuidedRollout,
         mcts_kwargs: Optional[dict] = None,
         num_iterations: int = 100,
@@ -42,8 +40,7 @@ class AgentRunner:
             max_steps: The maximum number of tactics to apply before giving up.
         """
         self.env = env
-        self.premise_selector = premise_selector
-        self.tactic_generator = tactic_generator
+        self.transformer = transformer
         self.mcts_class = mcts_class
         self.mcts_kwargs = mcts_kwargs if mcts_kwargs is not None else {}
         self.num_iterations = num_iterations
@@ -73,8 +70,7 @@ class AgentRunner:
             # TODO: Implement subtree reusage to improve efficiency
             mcts_instance = self.mcts_class(
                 env=self.env,
-                premise_selector=self.premise_selector,
-                tactic_generator=self.tactic_generator,
+                transformer=self.transformer,
                 **self.mcts_kwargs,
             )
 
