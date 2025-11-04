@@ -14,7 +14,7 @@ from lean_dojo import (
     LeanError,
 )
 from ReProver.common import Pos
-from .dataloader import DataLoader
+from .dataloader import LeanDataLoader
 
 
 class LeanDojoEnv(gym.Env):
@@ -26,7 +26,7 @@ class LeanDojoEnv(gym.Env):
         benchmark_dir = os.getenv("BENCHMARK_DIR", "")
         jsonl_path = os.path.join(benchmark_dir, "leandojo_benchmark_4/corpus.jsonl")
 
-        self.dataloader = DataLoader(jsonl_path)
+        self.dataloader = LeanDataLoader(jsonl_path)
 
         self.dojo = Dojo(self.theorem)
         self.observation_space = gym.spaces.Text(max_length=10000)

@@ -2,9 +2,9 @@
 Simple testing script to load and display theorem data from a traced LeanDojo repository.
 """
 
-from utilities.dataloader import DataLoader
+from utilities.dataloader import LeanDataLoader
 
-dataloader = DataLoader()
+dataloader = LeanDataLoader()
 
 repo = dataloader.trace_repo()
 tactic_theorems, statement_theorems = dataloader.load_theorems(repo)

@@ -5,7 +5,7 @@ from unittest.mock import patch, mock_open, MagicMock
 from lean_dojo import Theorem
 from ReProver.common import Pos
 
-from src.utilities.dataloader import DataLoader
+from src.utilities.dataloader import LeanDataLoader
 
 
 class TestDataLoader(unittest.TestCase):
@@ -33,7 +33,9 @@ class TestDataLoader(unittest.TestCase):
         ).return_value
 
         # Act
-        loader = DataLoader(dataset_path=self.dataset_path, data_type=self.data_type)
+        loader = LeanDataLoader(
+            dataset_path=self.dataset_path, data_type=self.data_type
+        )
 
         # Assert
         MockCorpus.assert_called_once_with(self.jsonl_path)
@@ -45,7 +47,7 @@ class TestDataLoader(unittest.TestCase):
     @patch("src.utilities.dataloader.Theorem")
     def test_extract_theorem(self, MockTheorem, MockLeanGitRepo):
         # Arrange
-        loader = DataLoader(jsonl_path="/dev/null")  # Avoid file reads
+        loader = LeanDataLoader(jsonl_path="/dev/null")  # Avoid file reads
         data = {
             "url": "test_url",
             "commit": "test_commit",
@@ -64,7 +66,7 @@ class TestDataLoader(unittest.TestCase):
 
     def test_extract_tactics(self):
         # Arrange
-        loader = DataLoader(jsonl_path="/dev/null")
+        loader = LeanDataLoader(jsonl_path="/dev/null")
         data = {
             "traced_tactics": [
                 {"tactic": "tactic1"},
@@ -82,7 +84,7 @@ class TestDataLoader(unittest.TestCase):
     @patch("src.utilities.dataloader.LeanGitRepo")
     def test_trace_repo(self, MockLeanGitRepo, mock_trace):
         # Arrange
-        loader = DataLoader(jsonl_path="/dev/null")
+        loader = LeanDataLoader(jsonl_path="/dev/null")
         url = "test_url"
         commit = "test_commit"
 
@@ -97,7 +99,7 @@ class TestDataLoader(unittest.TestCase):
         # Arrange
         mock_corpus = MagicMock()
         mock_corpus.get_accessible_premises.return_value = ["p1", "p2"]
-        loader = DataLoader(jsonl_path="/dev/null")
+        loader = LeanDataLoader(jsonl_path="/dev/null")
         loader.corpus = mock_corpus
 
         mock_theorem = MagicMock(spec=Theorem)
