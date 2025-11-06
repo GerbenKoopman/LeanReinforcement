@@ -9,16 +9,17 @@ from src.utilities.gym import LeanDojoEnv
 
 
 class TestLeanDojoEnv(unittest.TestCase):
+    @patch("src.utilities.gym.Corpus")
     @patch("src.utilities.gym.Dojo")
-    @patch("src.utilities.gym.DataLoader")
-    def setUp(self, MockDataLoader, MockDojo):
+    def setUp(self, MockDojo, MockCorpus):
         # Mock dependencies
-        self.mock_dataloader = MockDataLoader.return_value
+        self.mock_corpus = MockCorpus.return_value
         self.mock_dojo_context = MockDojo.return_value
         self.mock_dojo_instance = MagicMock()
 
         # Mock theorem and position
         self.theorem = MagicMock(spec=Theorem)
+        self.theorem.file_path = "path/to/file.lean"
         self.theorem_pos = Pos(1, 0)
 
         # Mock initial state from Dojo context manager
@@ -29,17 +30,15 @@ class TestLeanDojoEnv(unittest.TestCase):
             self.initial_state,
         )
 
-        # Mock dataloader to return a fixed number of premises
-        self.mock_dataloader.get_premises.return_value = ["p1", "p2", "p3"]
+        # Mock corpus to return a fixed number of premises
+        self.mock_corpus.get_accessible_premises.return_value = ["p1", "p2", "p3"]
 
         # Instantiate the environment
         self.env = LeanDojoEnv(self.theorem, self.theorem_pos, k=2)
 
     def test_initialization(self):
         # Assert that dependencies were called correctly
-        self.mock_dataloader.get_premises.assert_called_once_with(
-            self.theorem, self.theorem_pos
-        )
+        self.mock_corpus.get_accessible_premises.assert_called_once()
         self.assertIsInstance(self.env.observation_space, gym.spaces.Text)
         self.assertIsInstance(self.env.action_space, gym.spaces.MultiDiscrete)
         assert isinstance(self.env.action_space, gym.spaces.MultiDiscrete)

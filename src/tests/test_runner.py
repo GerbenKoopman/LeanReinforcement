@@ -6,22 +6,19 @@ from lean_dojo import TacticState, ProofFinished
 from src.agent.runner import AgentRunner
 from src.agent.mcts import MCTS_GuidedRollout
 from src.utilities.gym import LeanDojoEnv
-from src.agent.premise_selection import PremiseSelector
-from src.agent.tactic_generation import TacticGenerator
+from src.agent.transformer import Transformer
 
 
 class TestAgentRunner(unittest.TestCase):
     def setUp(self):
         self.env = MagicMock(spec=LeanDojoEnv)
-        self.premise_selector = Mock(spec=PremiseSelector)
-        self.premise_selector.retrieve.return_value = ["premise1", "premise2"]
-        self.tactic_generator = Mock(spec=TacticGenerator)
+        self.transformer = Mock(spec=Transformer)
 
         # Mock generate_tactics to always return a list with at least one tactic
-        def mock_generate_tactics(state_str, retrieved, n=1):
+        def mock_generate_tactics(state_str, n=1):
             return ["tactic1", "tactic2", "tactic3"][:n] if n > 0 else ["tactic1"]
 
-        self.tactic_generator.generate_tactics.side_effect = mock_generate_tactics
+        self.transformer.generate_tactics.side_effect = mock_generate_tactics
 
         # Mock the environment's theorem and initial state
         self.env.theorem = Mock(full_name="test_theorem")
@@ -39,8 +36,7 @@ class TestAgentRunner(unittest.TestCase):
 
         self.runner = AgentRunner(
             self.env,
-            self.premise_selector,
-            self.tactic_generator,
+            self.transformer,
             mcts_class=MCTS_GuidedRollout,
             num_iterations=10,
             max_steps=5,
@@ -52,13 +48,20 @@ class TestAgentRunner(unittest.TestCase):
         # Mock the MCTS instance and its methods
         mock_mcts_instance = MockMCTS.return_value
         mock_mcts_instance.get_best_action.return_value = "best_tactic"
-        mock_mcts_instance.root = Mock()
+
+        # Create a mock child node
+        mock_child = Mock()
+        mock_child.visit_count = 10
+        mock_child.action = "best_tactic"
+
+        mock_root = Mock()
+        mock_root.children = [mock_child]
+        mock_mcts_instance.root = mock_root
 
         # Create a new runner with the mocked MCTS class
         runner = AgentRunner(
             self.env,
-            self.premise_selector,
-            self.tactic_generator,
+            self.transformer,
             mcts_class=MockMCTS,
             num_iterations=10,
             max_steps=5,
@@ -87,7 +90,8 @@ class TestAgentRunner(unittest.TestCase):
 
         # Assert
         self.assertTrue(success)
-        self.assertEqual(len(trajectory), 2)
+        # Training data is empty by default (collect_value_data=False)
+        self.assertEqual(len(trajectory), 0)
         self.assertEqual(self.env.step.call_count, 2)
         mock_mcts_instance.search.assert_called_with(10)
         self.assertEqual(mock_mcts_instance.search.call_count, 2)
@@ -97,13 +101,20 @@ class TestAgentRunner(unittest.TestCase):
         # Arrange
         mock_mcts_instance = MockMCTS.return_value
         mock_mcts_instance.get_best_action.return_value = "best_tactic"
-        mock_mcts_instance.root = Mock()
+
+        # Create a mock child node
+        mock_child = Mock()
+        mock_child.visit_count = 10
+        mock_child.action = "best_tactic"
+
+        mock_root = Mock()
+        mock_root.children = [mock_child]
+        mock_mcts_instance.root = mock_root
 
         # Create a new runner with the mocked MCTS class
         runner = AgentRunner(
             self.env,
-            self.premise_selector,
-            self.tactic_generator,
+            self.transformer,
             mcts_class=MockMCTS,
             num_iterations=10,
             max_steps=5,
@@ -122,7 +133,8 @@ class TestAgentRunner(unittest.TestCase):
 
         # Assert
         self.assertFalse(success)
-        self.assertEqual(len(trajectory), 5)
+        # Training data is empty by default (collect_value_data=False)
+        self.assertEqual(len(trajectory), 0)
         self.assertEqual(self.env.step.call_count, 5)
 
     @patch("src.agent.runner.MCTS_GuidedRollout")
@@ -130,13 +142,15 @@ class TestAgentRunner(unittest.TestCase):
         # Arrange
         mock_mcts_instance = MockMCTS.return_value
         mock_mcts_instance.get_best_action.return_value = None
-        mock_mcts_instance.root = Mock()
+
+        mock_root = Mock()
+        mock_root.children = []  # No children, so no best action
+        mock_mcts_instance.root = mock_root
 
         # Create a new runner with the mocked MCTS class
         runner = AgentRunner(
             self.env,
-            self.premise_selector,
-            self.tactic_generator,
+            self.transformer,
             mcts_class=MockMCTS,
             num_iterations=10,
             max_steps=5,
@@ -150,7 +164,8 @@ class TestAgentRunner(unittest.TestCase):
 
         # Assert
         self.assertFalse(success)
-        self.assertEqual(len(trajectory), 1)
+        # Training data is empty by default (collect_value_data=False)
+        self.assertEqual(len(trajectory), 0)
         self.env.step.assert_not_called()
 
 

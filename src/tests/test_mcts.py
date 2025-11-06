@@ -5,8 +5,7 @@ from unittest.mock import Mock, MagicMock
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
 from src.agent.mcts import Node, MCTS_GuidedRollout, MCTS_AlphaZero
-from src.agent.premise_selection import PremiseSelector
-from src.agent.tactic_generation import TacticGenerator
+from src.agent.transformer import Transformer
 from src.agent.value_head import ValueHead
 
 
@@ -59,24 +58,15 @@ class MockLeanDojoEnv(MagicMock):
 class TestBaseMCTS(unittest.TestCase):
     def setUp(self):
         self.env = MockLeanDojoEnv()
-        self.premise_selector = Mock(spec=PremiseSelector)
-        self.tactic_generator = Mock(spec=TacticGenerator)
+        self.transformer = Mock(spec=Transformer)
 
     def test_base_mcts_initialization(self):
-        mcts = MCTS_GuidedRollout(
-            self.env, self.premise_selector, self.tactic_generator
-        )
+        mcts = MCTS_GuidedRollout(self.env, self.transformer)
         self.assertIsInstance(mcts.root, Node)
         self.assertEqual(mcts.root.state, self.env.current_state)
-        self.env.dataloader.get_premises.assert_called_once_with(
-            "mock_theorem", "mock_pos"
-        )
-        self.assertEqual(mcts.all_premises, ["p1", "p2"])
 
     def test_backpropagate(self):
-        mcts = MCTS_GuidedRollout(
-            self.env, self.premise_selector, self.tactic_generator
-        )
+        mcts = MCTS_GuidedRollout(self.env, self.transformer)
         node1 = Node(Mock(spec=TacticState))
         node2 = Node(Mock(spec=TacticState), parent=node1)
         node3 = Node(Mock(spec=TacticState), parent=node2)
@@ -94,11 +84,8 @@ class TestBaseMCTS(unittest.TestCase):
 class TestMCTSGuidedRollout(unittest.TestCase):
     def setUp(self):
         self.env = MockLeanDojoEnv()
-        self.premise_selector = Mock(spec=PremiseSelector)
-        self.tactic_generator = Mock(spec=TacticGenerator)
-        self.mcts = MCTS_GuidedRollout(
-            self.env, self.premise_selector, self.tactic_generator
-        )
+        self.transformer = Mock(spec=Transformer)
+        self.mcts = MCTS_GuidedRollout(self.env, self.transformer)
 
     def test_ucb1(self):
         parent = Node(Mock(spec=TacticState))
@@ -114,8 +101,7 @@ class TestMCTSGuidedRollout(unittest.TestCase):
         state = Mock(spec=TacticState)
         state.pp = "state_pp"
         node = Node(state)
-        self.premise_selector.retrieve.return_value = ["retrieved_premise"]
-        self.tactic_generator.generate_tactics.return_value = ["tactic1"]
+        self.transformer.generate_tactics.return_value = ["tactic1"]
         self.env.dojo_instance.run_tac.return_value = Mock(spec=TacticState)
 
         child = self.mcts._expand(node)
@@ -123,8 +109,7 @@ class TestMCTSGuidedRollout(unittest.TestCase):
         self.assertEqual(len(node.children), 1)
         self.assertIs(child.parent, node)
         self.assertEqual(child.action, "tactic1")
-        self.premise_selector.retrieve.assert_called_once()
-        self.tactic_generator.generate_tactics.assert_called_once()
+        self.transformer.generate_tactics.assert_called_once()
         self.env.dojo_instance.run_tac.assert_called_once_with(state, "tactic1")
 
     def test_simulate_proof_finished(self):
@@ -137,8 +122,7 @@ class TestMCTSGuidedRollout(unittest.TestCase):
         initial_state.pp = "initial_state"
         node = Node(initial_state)
 
-        self.premise_selector.retrieve.return_value = ["retrieved_premise"]
-        self.tactic_generator.generate_tactics.side_effect = [["tactic1"], ["tactic2"]]
+        self.transformer.generate_tactics.side_effect = [["tactic1"], ["tactic2"]]
 
         # First step in rollout leads to another tactic state
         intermediate_state = Mock(spec=TacticState)
@@ -156,12 +140,9 @@ class TestMCTSGuidedRollout(unittest.TestCase):
 class TestMCTSAlphaZero(unittest.TestCase):
     def setUp(self):
         self.env = MockLeanDojoEnv()
-        self.premise_selector = Mock(spec=PremiseSelector)
-        self.tactic_generator = Mock(spec=TacticGenerator)
+        self.transformer = Mock(spec=Transformer)
         self.value_head = Mock(spec=ValueHead)
-        self.mcts = MCTS_AlphaZero(
-            self.value_head, self.env, self.premise_selector, self.tactic_generator
-        )
+        self.mcts = MCTS_AlphaZero(self.value_head, self.env, self.transformer)
 
     def test_puct_score(self):
         parent = Node(Mock(spec=TacticState))
@@ -178,8 +159,7 @@ class TestMCTSAlphaZero(unittest.TestCase):
         state = Mock(spec=TacticState)
         state.pp = "state_pp"
         node = Node(state)
-        self.premise_selector.retrieve.return_value = ["retrieved_premise"]
-        self.tactic_generator.generate_tactics_with_probs.return_value = [
+        self.transformer.generate_tactics_with_probs.return_value = [
             ("tactic1", 0.6),
             ("tactic2", 0.4),
         ]
@@ -198,15 +178,9 @@ class TestMCTSAlphaZero(unittest.TestCase):
         state = Mock(spec=TacticState)
         state.pp = "state_pp"
         node = Node(state)
-        self.premise_selector.retrieve.return_value = ["retrieved_premise"]
         self.value_head.predict.return_value = 0.75
 
         value = self.mcts._simulate(node)
 
         self.assertEqual(value, 0.75)
-        self.premise_selector.retrieve.assert_called_once_with(
-            "state_pp", self.mcts.all_premises, k=10
-        )
-        self.value_head.predict.assert_called_once_with(
-            "state_pp", ["retrieved_premise"]
-        )
+        self.value_head.predict.assert_called_once_with("state_pp")

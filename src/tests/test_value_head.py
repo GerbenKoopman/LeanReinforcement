@@ -7,13 +7,18 @@ from src.agent.value_head import ValueHead
 
 
 class TestValueHead(unittest.TestCase):
-    @patch("src.agent.value_head.AutoModelForTextEncoding.from_pretrained")
+    @patch("src.agent.value_head.AutoModelForSeq2SeqLM.from_pretrained")
     @patch("src.agent.value_head.AutoTokenizer.from_pretrained")
     def setUp(self, mock_tokenizer_from_pretrained, mock_model_from_pretrained):
         self.mock_tokenizer = MagicMock()
+        self.mock_transformer = MagicMock()
         self.mock_encoder = MagicMock()
+
         mock_tokenizer_from_pretrained.return_value = self.mock_tokenizer
-        mock_model_from_pretrained.return_value = self.mock_encoder
+        mock_model_from_pretrained.return_value = self.mock_transformer
+
+        # Mock get_encoder to return the encoder
+        self.mock_transformer.get_encoder.return_value = self.mock_encoder
 
         # Mock that the encoder has parameters
         self.mock_encoder.parameters.return_value = [nn.Parameter(torch.randn(2, 2))]
@@ -63,8 +68,6 @@ class TestValueHead(unittest.TestCase):
     def test_predict(self):
         # Arrange
         state_str = "state"
-        premises = ["p1", "p2"]
-        input_str = "p1\n\np2\n\nstate"
 
         # Mock the _encode method to return a predictable tensor
         encoded_features = torch.randn(1, 1472)
@@ -74,10 +77,10 @@ class TestValueHead(unittest.TestCase):
             self.value_head.value_head, "forward", return_value=torch.tensor([[0.5]])
         ) as mock_forward:
             # Act
-            value = self.value_head.predict(state_str, premises)
+            value = self.value_head.predict(state_str)
 
             # Assert
-            mock_encode.assert_called_once_with([input_str])
+            mock_encode.assert_called_once_with([state_str])
             mock_forward.assert_called_once_with(encoded_features)
             self.assertIsInstance(value, float)
             self.assertAlmostEqual(value, torch.tanh(torch.tensor(0.5)).item())

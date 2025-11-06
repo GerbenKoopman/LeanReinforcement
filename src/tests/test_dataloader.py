@@ -25,20 +25,21 @@ class TestDataLoader(unittest.TestCase):
         }
 
     @patch("builtins.open", new_callable=mock_open)
-    @patch("src.utilities.dataloader.Corpus")
-    def test_initialization(self, MockCorpus, mock_file):
+    def test_initialization(self, mock_file):
         # Arrange
         mock_file.side_effect = lambda path, *args, **kwargs: mock_open(
             read_data=self.mock_fs.get(path, "")
         ).return_value
 
+        mock_corpus = MagicMock()
+
         # Act
         loader = LeanDataLoader(
-            dataset_path=self.dataset_path, data_type=self.data_type
+            corpus=mock_corpus, dataset_path=self.dataset_path, data_type=self.data_type
         )
 
         # Assert
-        MockCorpus.assert_called_once_with(self.jsonl_path)
+        self.assertEqual(loader.corpus, mock_corpus)
         self.assertEqual(loader.train_data, [{"id": 1}])
         self.assertEqual(loader.test_data, [{"id": 2}])
         self.assertEqual(loader.val_data, [{"id": 3}])
@@ -47,7 +48,8 @@ class TestDataLoader(unittest.TestCase):
     @patch("src.utilities.dataloader.Theorem")
     def test_extract_theorem(self, MockTheorem, MockLeanGitRepo):
         # Arrange
-        loader = LeanDataLoader(jsonl_path="/dev/null")  # Avoid file reads
+        mock_corpus = MagicMock()
+        loader = LeanDataLoader(corpus=mock_corpus)
         data = {
             "url": "test_url",
             "commit": "test_commit",
@@ -66,7 +68,8 @@ class TestDataLoader(unittest.TestCase):
 
     def test_extract_tactics(self):
         # Arrange
-        loader = LeanDataLoader(jsonl_path="/dev/null")
+        mock_corpus = MagicMock()
+        loader = LeanDataLoader(corpus=mock_corpus)
         data = {
             "traced_tactics": [
                 {"tactic": "tactic1"},
@@ -84,7 +87,8 @@ class TestDataLoader(unittest.TestCase):
     @patch("src.utilities.dataloader.LeanGitRepo")
     def test_trace_repo(self, MockLeanGitRepo, mock_trace):
         # Arrange
-        loader = LeanDataLoader(jsonl_path="/dev/null")
+        mock_corpus = MagicMock()
+        loader = LeanDataLoader(corpus=mock_corpus)
         url = "test_url"
         commit = "test_commit"
 
@@ -99,8 +103,7 @@ class TestDataLoader(unittest.TestCase):
         # Arrange
         mock_corpus = MagicMock()
         mock_corpus.get_accessible_premises.return_value = ["p1", "p2"]
-        loader = LeanDataLoader(jsonl_path="/dev/null")
-        loader.corpus = mock_corpus
+        loader = LeanDataLoader(corpus=mock_corpus)
 
         mock_theorem = MagicMock(spec=Theorem)
         mock_theorem.file_path = "path/to/file.lean"
