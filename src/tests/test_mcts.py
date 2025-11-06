@@ -163,7 +163,9 @@ class TestMCTSAlphaZero(unittest.TestCase):
             ("tactic1", 0.6),
             ("tactic2", 0.4),
         ]
-        self.env.dojo_instance.run_tac.return_value = Mock(spec=TacticState)
+        next_state_mock = Mock(spec=TacticState)
+        next_state_mock.pp = "next_state_pp"
+        self.env.dojo_instance.run_tac.return_value = next_state_mock
 
         expanded_node = self.mcts._expand(node)
         self.assertIs(expanded_node, node)
