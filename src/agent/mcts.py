@@ -45,6 +45,8 @@ class Node:
         self.is_terminal = isinstance(state, (ProofFinished, LeanError, ProofGivenUp))
         self.untried_actions: Optional[List[str]] = None
 
+        self.encoder_features: Optional[torch.Tensor] = None
+
     def value(self) -> float:
         """Calculates the UCT value of this node."""
         if self.visit_count == 0:
@@ -360,13 +362,19 @@ class MCTS_AlphaZero(BaseMCTS):
         Phase 2: Expansion (AlphaZero-style)
         Expand the leaf node by generating all promising actions from the
         policy head, creating a child for each, and storing their prior
-        probabilities. Then, return the node itself for simulation.
+        probabilities. Also caches encoder features for efficiency.
+        Then, return the node itself for simulation.
         """
         if not isinstance(node.state, TacticState):
             raise TypeError("Cannot expand a node without a TacticState.")
 
         # Get tactics and their prior probabilities from the policy head
         state_str = node.state.pp
+
+        # Cache encoder features for this node if not already cached
+        # This will be used during simulation/evaluation
+        if node.encoder_features is None:
+            node.encoder_features = self.value_head.encode_states([state_str])
 
         # Assume generate_tactics_with_logprobs returns [(tactic, log_prob), ...]
         # And that we convert log_prob to prob.
@@ -383,6 +391,11 @@ class MCTS_AlphaZero(BaseMCTS):
             node.children.append(child)
             self.node_count += 1
 
+            # Pre-compute encoder features for children if they're non-terminal TacticStates
+            # This way they're ready for evaluation in future iterations
+            if isinstance(next_state, TacticState):
+                child.encoder_features = self.value_head.encode_states([next_state.pp])
+
         node.untried_actions = []
 
         return node
@@ -390,6 +403,7 @@ class MCTS_AlphaZero(BaseMCTS):
     def _simulate(self, node: Node) -> float:
         """
         Phase 3: Evaluation (using Value Head)
+        Uses cached encoder features if available to avoid recomputation.
         """
         if node.is_terminal:
             if isinstance(node.state, ProofFinished):
@@ -400,10 +414,13 @@ class MCTS_AlphaZero(BaseMCTS):
         if not isinstance(node.state, TacticState):
             return -1.0
 
-        # Not terminal, so evaluate with the ValueHead
-        state_str = node.state.pp
-
-        # Predict value
-        value = self.value_head.predict(state_str)
+        # Check if we have cached encoder features
+        if node.encoder_features is not None:
+            # Use the cached features - much more efficient!
+            value = self.value_head.predict_from_features(node.encoder_features)
+        else:
+            # Fall back to full encoding if features aren't cached
+            state_str = node.state.pp
+            value = self.value_head.predict(state_str)
 
         return value

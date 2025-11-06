@@ -32,7 +32,7 @@ class ValueHead(nn.Module):
         if torch.cuda.is_available():
             self.to("cuda")
 
-    def _encode(self, s: List[str]) -> torch.Tensor:
+    def encode_states(self, s: List[str]) -> torch.Tensor:
         """Encode a batch of texts into feature vectors."""
         tokenized_s = self.tokenizer(
             s, return_tensors="pt", padding=True, truncation=True, max_length=2300
@@ -63,7 +63,7 @@ class ValueHead(nn.Module):
         input_str = state_str
 
         # Encode the input string (pass as a batch of 1)
-        features = self._encode([input_str])
+        features = self.encode_states([input_str])
 
         # Get value prediction
         value = self.value_head(features).squeeze()
@@ -73,6 +73,34 @@ class ValueHead(nn.Module):
 
         # Clean up
         del features
+        del value
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        return result
+
+    @torch.no_grad()
+    def predict_from_features(self, features: torch.Tensor) -> float:
+        """
+        Predicts the value from pre-computed encoder features.
+        This is more efficient than predict() when encoder representations
+        are already available.
+
+        Args:
+            features: Pre-computed encoder features (output of _encode)
+
+        Returns:
+            A float between -1.0 and 1.0.
+        """
+        self.eval()  # Set to evaluation mode
+
+        # Get value prediction
+        value = self.value_head(features).squeeze()
+
+        # Apply tanh to squash the value between -1 and 1
+        result = torch.tanh(value).item()
+
+        # Clean up
         del value
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
