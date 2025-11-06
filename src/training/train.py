@@ -1,3 +1,8 @@
+"""
+Main script for agent training and guided-rollout mcts dataset creation. Will
+implement tactic generation training in the future.
+"""
+
 import argparse
 from loguru import logger
 import torch

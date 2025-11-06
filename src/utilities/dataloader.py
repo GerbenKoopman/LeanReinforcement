@@ -26,8 +26,6 @@ class LeanDataLoader:
         self.test_data = self._load_split("test")
         self.val_data = self._load_split("val")
 
-    # TODO: Verify that output is indeed technically a dict. See
-    # structure_example.json for reference
     def _load_split(self, split: str) -> List[dict]:
         """
         Loads a specific split of the dataset (train, test, or val).

@@ -1,3 +1,8 @@
+"""
+A transformer class that loads the ReProver model and provides easy
+tactic generation.
+"""
+
 import torch
 from typing import List
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM

@@ -34,8 +34,7 @@ class AgentRunner:
 
         Args:
             env: The LeanDojo environment.
-            premise_selector: The premise selector model.
-            tactic_generator: The tactic generator model.
+            transformer: The Transformer model to use.
             mcts_class: The MCTS implementation to use (e.g., MCTS_GuidedRollout).
             mcts_kwargs: Additional keyword arguments for initializing the MCTS class.
             num_iterations: The number of MCTS iterations to run at each step.
@@ -62,7 +61,6 @@ class AgentRunner:
         Run the proof search loop and collect lightweight training data.
 
         Args:
-            all_premises: All accessible premises for the theorem (pre-fetched).
             collect_value_data: Whether to collect data for value head training.
 
         Returns:

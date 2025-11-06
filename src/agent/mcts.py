@@ -1,3 +1,8 @@
+"""
+Implementations of MCTS algorithms. Guided-Rollout MCTS does greedy rollout for
+simulation, AlphaZero MCTS calls a trained value network for evaluation.
+"""
+
 import math
 import random
 import torch
@@ -250,7 +255,7 @@ class MCTS_GuidedRollout(BaseMCTS):
             raise TypeError("Cannot expand a node without a TacticState.")
 
         if node.untried_actions is None:
-            # First visit to this node: get premises and generate tactics
+            # First visit to this node: generate tactics
             state_str = node.state.pp
 
             node.untried_actions = self.transformer.generate_tactics(
@@ -294,7 +299,7 @@ class MCTS_GuidedRollout(BaseMCTS):
         for _ in range(MAX_ROLLOUT_DEPTH):
             state_str = current_state.pp
 
-            # Get premises and a single greedy tactic
+            # Get a single greedy tactic
             tactic = self.transformer.generate_tactics(state_str, n=1)[0]
 
             # Run the tactic
@@ -398,7 +403,7 @@ class MCTS_AlphaZero(BaseMCTS):
         # Not terminal, so evaluate with the ValueHead
         state_str = node.state.pp
 
-        # Get premises and predict value
+        # Predict value
         value = self.value_head.predict(state_str)
 
         return value
