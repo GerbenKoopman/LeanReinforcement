@@ -7,6 +7,8 @@ from typing_extensions import Self
 import torch
 import torch.nn as nn
 from typing import List
+import os
+from loguru import logger
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 
@@ -107,16 +109,45 @@ class ValueHead(nn.Module):
 
         return result
 
-    def save_checkpoint(self, folder, filename):
+    def save_checkpoint(self, folder: str, filename: str):
         """
         Saves the current neural network (with its parameters) in
         folder/filename
-        """
 
-    def load_checkpoint(self, folder, filename):
+        Args:
+            folder: Directory to save checkpoint
+            filename: Name of the checkpoint file
+        """
+        os.makedirs(folder, exist_ok=True)
+        filepath = os.path.join(folder, filename)
+
+        checkpoint = {
+            "value_head_state_dict": self.value_head.state_dict(),
+            "transformer_name": self.tokenizer.name_or_path,
+        }
+
+        torch.save(checkpoint, filepath)
+        logger.info(f"Checkpoint saved to {filepath}")
+
+    def load_checkpoint(self, folder: str, filename: str):
         """
         Loads parameters of the neural network from folder/filename
+
+        Args:
+            folder: Directory containing checkpoint
+            filename: Name of the checkpoint file
         """
+        filepath = os.path.join(folder, filename)
+
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"Checkpoint not found at {filepath}")
+
+        checkpoint = torch.load(
+            filepath, map_location="cuda" if torch.cuda.is_available() else "cpu"
+        )
+        self.value_head.load_state_dict(checkpoint["value_head_state_dict"])
+
+        logger.info(f"Checkpoint loaded from {filepath}")
 
     def train(self, mode: bool = True) -> Self:
         return super().train(mode)

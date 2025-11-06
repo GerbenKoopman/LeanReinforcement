@@ -10,15 +10,25 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 import gc
 import os
+from pathlib import Path
+from dotenv import load_dotenv
 
 from ReProver.common import Corpus, Pos
 
 from src.utilities.dataloader import LeanDataLoader
 from src.utilities.gym import LeanDojoEnv
+from src.utilities.checkpoint import (
+    get_checkpoint_dir,
+    save_training_metadata,
+    cleanup_old_checkpoints,
+)
 from src.agent.runner import AgentRunner
 from src.agent.mcts import MCTS_AlphaZero, MCTS_GuidedRollout
 from src.agent.transformer import Transformer
 from src.agent.value_head import ValueHead
+
+# Load environment variables from .env file
+load_dotenv()
 
 # --- Custom Datasets for Training ---
 
@@ -106,6 +116,93 @@ def train_value_head(
         torch.cuda.empty_cache()
 
 
+# --- Checkpoint Management ---
+
+
+def save_checkpoint(
+    value_head: ValueHead,
+    epoch: int,
+    checkpoint_dir: Path,
+    args,
+    prefix: str = "value_head",
+):
+    """
+    Save a checkpoint for the value head with metadata.
+
+    Args:
+        value_head: The ValueHead model to save
+        epoch: Current epoch number
+        checkpoint_dir: Directory to save checkpoints
+        args: Training arguments
+        prefix: Prefix for checkpoint filename
+    """
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+
+    # Save the latest checkpoint
+    latest_filename = f"{prefix}_latest.pth"
+    value_head.save_checkpoint(str(checkpoint_dir), latest_filename)
+
+    # Save epoch-specific checkpoint
+    epoch_filename = f"{prefix}_epoch_{epoch}.pth"
+    value_head.save_checkpoint(str(checkpoint_dir), epoch_filename)
+
+    # Save training metadata
+    metadata = {
+        "data_type": args.data_type,
+        "mcts_type": args.mcts_type,
+        "num_iterations": args.num_iterations,
+        "max_steps": args.max_steps,
+        "train_epochs": args.train_epochs,
+    }
+    save_training_metadata(checkpoint_dir, epoch, metadata)
+
+    # Clean up old checkpoints (keep last 5)
+    cleanup_old_checkpoints(checkpoint_dir, prefix, keep_last_n=5)
+
+    logger.info(f"Saved checkpoints: {latest_filename} and {epoch_filename}")
+
+
+def load_checkpoint(
+    value_head: ValueHead, checkpoint_dir: Path, prefix: str = "value_head"
+) -> int:
+    """
+    Load the latest checkpoint if it exists.
+
+    Args:
+        value_head: The ValueHead model to load into
+        checkpoint_dir: Directory containing checkpoints
+        prefix: Prefix for checkpoint filename
+
+    Returns:
+        The epoch number of the loaded checkpoint, or 0 if no checkpoint found
+    """
+    latest_filename = f"{prefix}_latest.pth"
+    latest_path = checkpoint_dir / latest_filename
+
+    if latest_path.exists():
+        try:
+            value_head.load_checkpoint(str(checkpoint_dir), latest_filename)
+
+            # Try to determine the epoch from other checkpoints
+            epoch_checkpoints = sorted(checkpoint_dir.glob(f"{prefix}_epoch_*.pth"))
+            if epoch_checkpoints:
+                # Extract epoch number from the last checkpoint
+                last_checkpoint = epoch_checkpoints[-1]
+                epoch_str = last_checkpoint.stem.split("_")[-1]
+                try:
+                    return int(epoch_str)
+                except ValueError:
+                    logger.warning(f"Could not parse epoch from {last_checkpoint}")
+                    return 0
+            return 0
+        except Exception as e:
+            logger.error(f"Failed to load checkpoint from {latest_path}: {e}")
+            return 0
+    else:
+        logger.info(f"No checkpoint found at {latest_path}, starting from scratch")
+        return 0
+
+
 # --- Main Loop ---
 
 
@@ -120,12 +217,22 @@ def log_gpu_memory(prefix: str = ""):
 
 
 def main(args):
+    # --- Setup checkpoint directory ---
+    checkpoint_dir = get_checkpoint_dir()
+    logger.info(f"Using checkpoint directory: {checkpoint_dir}")
+
     # --- Models ---
     transformer = Transformer()
 
     value_head = None
+    start_epoch = 0
     if args.mcts_type == "alpha_zero" or args.train_value_head:
         value_head = ValueHead()
+
+        # Load checkpoint if resume flag is set
+        if args.resume:
+            start_epoch = load_checkpoint(value_head, checkpoint_dir)
+            logger.info(f"Resuming training from epoch {start_epoch}")
 
     log_gpu_memory("After model initialization - ")
 
@@ -138,7 +245,7 @@ def main(args):
     dataloader.trace_repo()
 
     # --- Self-Play and Training Loop ---
-    for epoch in range(args.num_epochs):
+    for epoch in range(start_epoch, start_epoch + args.num_epochs):
         logger.info(f"Starting Epoch {epoch + 1}/{args.num_epochs}")
         training_data_buffer = []
 
@@ -208,8 +315,10 @@ def main(args):
             ), "ValueHead must be initialized before training"
             train_value_head(value_head, value_data, epochs=args.train_epochs)
 
-        # TODO: Save model checkpoints
-        # value_head.save_checkpoint(...)
+        # --- Save checkpoints after each epoch ---
+        if args.train_value_head and value_head is not None and args.save_checkpoints:
+            save_checkpoint(value_head, epoch + 1, checkpoint_dir, args)
+            logger.info(f"Checkpoint saved for epoch {epoch + 1}")
 
 
 if __name__ == "__main__":
@@ -269,5 +378,29 @@ if __name__ == "__main__":
         help="Train the value head after each epoch.",
     )
 
+    # --- Checkpoint Args ---
+    parser.add_argument(
+        "--save-checkpoints",
+        action="store_true",
+        default=True,
+        help="Save model checkpoints after each epoch (default: True).",
+    )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Resume training from the latest checkpoint if available.",
+    )
+    parser.add_argument(
+        "--checkpoint-dir",
+        type=str,
+        default=None,
+        help="Override checkpoint directory (defaults to CHECKPOINT_DIR env var or ./checkpoints).",
+    )
+
     args = parser.parse_args()
+
+    # Override checkpoint directory if provided
+    if args.checkpoint_dir:
+        os.environ["CHECKPOINT_DIR"] = args.checkpoint_dir
+
     main(args)
