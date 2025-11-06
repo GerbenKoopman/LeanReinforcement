@@ -24,12 +24,12 @@ from src.agent.value_head import ValueHead
 
 
 class ValueHeadDataset(Dataset):
-    """Dataset for (state, premises) -> value_target."""
+    """Dataset for state -> value_target."""
 
-    def __init__(self, data):
+    def __init__(self, data: list):
         self.data = data
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.data)
 
     def __getitem__(self, idx):
@@ -39,10 +39,10 @@ class ValueHeadDataset(Dataset):
 class PolicyHeadDataset(Dataset):
     """Dataset for (state, premises) -> tactic_target."""
 
-    def __init__(self, data):
+    def __init__(self, data: dict):
         self.data = data
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.data)
 
     def __getitem__(self, idx):
@@ -75,7 +75,6 @@ def train_value_head(
         total_loss = 0
         for batch in dataloader:
             states = [item["state"] for item in batch]
-            premises = [item["premises"] for item in batch]
             value_targets = torch.tensor(
                 [item["value_target"] for item in batch], dtype=torch.float32
             )
@@ -84,9 +83,7 @@ def train_value_head(
                 value_targets = value_targets.to("cuda")
 
             # Get features from the frozen encoder
-            features = value_head._encode(
-                [f"{' '.join(p)}\n{s}" for s, p in zip(states, premises)]
-            )
+            features = value_head.encode_states(states)
 
             # Get value prediction from the trainable head
             value_preds = value_head.value_head(features).squeeze()
