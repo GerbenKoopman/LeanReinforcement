@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 import torch
 
-from src.agent.premise_selection import PremiseSelector
+from DEPRECATED.premise_selection import PremiseSelector
 
 
 class TestPremiseSelector(unittest.TestCase):

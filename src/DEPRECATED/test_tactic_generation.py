@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 import torch
 
-from src.agent.tactic_generation import TacticGenerator
+from DEPRECATED.tactic_generation import TacticGenerator
 
 
 class TestTacticGenerator(unittest.TestCase):
