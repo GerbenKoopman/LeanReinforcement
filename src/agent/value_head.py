@@ -9,18 +9,15 @@ import torch.nn as nn
 from typing import List
 import os
 from loguru import logger
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+
+from .transformer import Transformer
 
 
 class ValueHead(nn.Module):
-
-    def __init__(
-        self, transformer_name: str = "kaiyuy/leandojo-lean4-tacgen-byt5-small"
-    ):
+    def __init__(self, transformer: Transformer):
         super().__init__()
-        self.tokenizer = AutoTokenizer.from_pretrained(transformer_name)
-        self.transformer = AutoModelForSeq2SeqLM.from_pretrained(transformer_name)
-        self.encoder = self.transformer.get_encoder()
+        self.tokenizer = transformer.tokenizer
+        self.encoder = transformer.model.get_encoder()
 
         # Freeze the pre-trained encoder
         for param in self.encoder.parameters():

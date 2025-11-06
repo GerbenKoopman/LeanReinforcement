@@ -227,7 +227,7 @@ def main(args):
     value_head = None
     start_epoch = 0
     if args.mcts_type == "alpha_zero" or args.train_value_head:
-        value_head = ValueHead()
+        value_head = ValueHead(transformer)
 
         # Load checkpoint if resume flag is set
         if args.resume:
