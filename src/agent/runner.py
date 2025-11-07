@@ -60,6 +60,7 @@ class AgentRunner:
         self,
         collect_value_data: bool = False,
         use_final_reward: bool = True,
+        use_wandb: bool = True,
     ) -> tuple[bool, list[dict]]:
         """
         Run the proof search loop and collect lightweight training data.
@@ -68,6 +69,7 @@ class AgentRunner:
             collect_value_data: Whether to collect data for value head training.
             use_final_reward: Whether to use the final reward for training (True) or the MCTS value estimates (False).
                             Default: True.
+            use_wandb: Whether to log metrics to wandb.
 
         Returns:
             A tuple containing:
@@ -175,6 +177,17 @@ class AgentRunner:
         # Final status check
         elapsed_time = time.time() - start_time
         success = isinstance(self.env.current_state, ProofFinished)
+
+        if use_wandb:
+            import wandb
+
+            wandb.log(
+                {
+                    "proof_search/success": success,
+                    "proof_search/steps": step_num,
+                    "proof_search/time": elapsed_time,
+                }
+            )
 
         if success:
             logger.success(

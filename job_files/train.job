@@ -38,4 +38,5 @@ srun python3 -m src.training.train \
     --train-value-head \
     --use-final-reward \
     --save-training-data \
-    --save-checkpoints
+    --save-checkpoints \
+    --use-wandb

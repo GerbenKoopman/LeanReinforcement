@@ -20,6 +20,7 @@ dependencies:
   - git-lfs
   - pip:
     - lean-dojo
+    - wandb
     - tqdm
     - deepspeed
     - pytorch-lightning[extra]

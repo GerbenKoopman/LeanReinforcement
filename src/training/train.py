@@ -12,6 +12,7 @@ import gc
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import wandb
 
 from ReProver.common import Corpus, Pos
 
@@ -68,7 +69,11 @@ class PolicyHeadDataset(Dataset):
 
 
 def train_value_head(
-    value_head: ValueHead, data_buffer: list, epochs: int = 1, batch_size: int = 32
+    value_head: ValueHead,
+    data_buffer: list,
+    epochs: int = 1,
+    batch_size: int = 32,
+    use_wandb: bool = True,
 ):
     """
     Trains the value head on collected data.
@@ -90,10 +95,21 @@ def train_value_head(
     logger.info(f"  Average target value: {avg_target:.4f}")
 
     # Log MCTS statistics if available
+    avg_mcts = None
     if "mcts_value" in data_buffer[0]:
         mcts_values = [item["mcts_value"] for item in data_buffer]
         avg_mcts = sum(mcts_values) / len(mcts_values)
         logger.info(f"  Average MCTS value estimate: {avg_mcts:.4f}")
+
+    if use_wandb:
+        wandb.log(
+            {
+                "value_head/avg_target": avg_target,
+                "value_head/positive_samples": positive_samples,
+                "value_head/negative_samples": negative_samples,
+                "value_head/avg_mcts_value": avg_mcts,
+            }
+        )
 
     value_head.train()  # Set model to training mode
 
@@ -127,6 +143,8 @@ def train_value_head(
 
         avg_loss = total_loss / len(dataloader)
         logger.info(f"Value Head Epoch {epoch+1}/{epochs}, Avg. Loss: {avg_loss:.4f}")
+        if use_wandb:
+            wandb.log({"value_head/avg_loss": avg_loss})
 
     value_head.eval()  # Set back to evaluation mode
 
@@ -238,6 +256,14 @@ def log_gpu_memory(prefix: str = ""):
 
 
 def main(args):
+    # --- Setup wandb ---
+    if args.use_wandb:
+        wandb.init(
+            entity="gerbennkoopman-university-of-amsterdam",
+            project="lean-reinforcement",
+            config=args,
+        )
+
     # --- Setup checkpoint directory ---
     checkpoint_dir = get_checkpoint_dir()
     logger.info(f"Using checkpoint directory: {checkpoint_dir}")
@@ -307,6 +333,7 @@ def main(args):
             success, theorem_training_data = runner.run(
                 collect_value_data=args.train_value_head,
                 use_final_reward=args.use_final_reward,
+                use_wandb=args.use_wandb,
                 # collect_policy_data=args.train_tactic_generator,
             )
 
@@ -347,7 +374,12 @@ def main(args):
             assert (
                 value_head is not None
             ), "ValueHead must be initialized before training"
-            train_value_head(value_head, value_data, epochs=args.train_epochs)
+            train_value_head(
+                value_head,
+                value_data,
+                epochs=args.train_epochs,
+                use_wandb=args.use_wandb,
+            )
 
         # --- Save checkpoints after each epoch ---
         if args.train_value_head and value_head is not None and args.save_checkpoints:
@@ -440,6 +472,12 @@ if __name__ == "__main__":
         type=str,
         default=None,
         help="Override checkpoint directory (defaults to CHECKPOINT_DIR env var or ./checkpoints).",
+    )
+    parser.add_argument(
+        "--use-wandb",
+        action="store_true",
+        default=True,
+        help="Use wandb for logging.",
     )
 
     args = parser.parse_args()
