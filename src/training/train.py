@@ -22,6 +22,11 @@ from src.utilities.checkpoint import (
     save_training_metadata,
     cleanup_old_checkpoints,
 )
+from src.utilities.analyze_training_data import (
+    analyze_value_data,
+    print_training_stats,
+    save_training_data,
+)
 from src.agent.runner import AgentRunner
 from src.agent.mcts import MCTS_AlphaZero, MCTS_GuidedRollout
 from src.agent.transformer import Transformer
@@ -72,13 +77,29 @@ def train_value_head(
         logger.warning("Value Head training skipped: No data provided.")
         return
 
+    # Log training data statistics
+    value_targets = [item["value_target"] for item in data_buffer]
+    avg_target = sum(value_targets) / len(value_targets)
+    positive_samples = sum(1 for v in value_targets if v > 0)
+    negative_samples = sum(1 for v in value_targets if v < 0)
+
     logger.info(f"Training Value Head on {len(data_buffer)} samples...")
+    logger.info(
+        f"  Data distribution: {positive_samples} positive, {negative_samples} negative"
+    )
+    logger.info(f"  Average target value: {avg_target:.4f}")
+
+    # Log MCTS statistics if available
+    if "mcts_value" in data_buffer[0]:
+        mcts_values = [item["mcts_value"] for item in data_buffer]
+        avg_mcts = sum(mcts_values) / len(mcts_values)
+        logger.info(f"  Average MCTS value estimate: {avg_mcts:.4f}")
+
     value_head.train()  # Set model to training mode
 
     dataset = ValueHeadDataset(data_buffer)
-    # Filter out data not meant for this model
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-    optimizer = optim.Adam(value_head.value_head.parameters(), lr=1e-4)
+    optimizer = optim.AdamW(value_head.value_head.parameters(), lr=1e-4)
     loss_fn = torch.nn.MSELoss()
 
     for epoch in range(epochs):
@@ -86,11 +107,10 @@ def train_value_head(
         for batch in dataloader:
             states = [item["state"] for item in batch]
             value_targets = torch.tensor(
-                [item["value_target"] for item in batch], dtype=torch.float32
+                [item["value_target"] for item in batch],
+                dtype=torch.float32,
+                device="cuda" if torch.cuda.is_available() else "cpu",
             )
-
-            if torch.cuda.is_available():
-                value_targets = value_targets.to("cuda")
 
             # Get features from the frozen encoder
             features = value_head.encode_states(states)
@@ -153,6 +173,7 @@ def save_checkpoint(
         "num_iterations": args.num_iterations,
         "max_steps": args.max_steps,
         "train_epochs": args.train_epochs,
+        "use_final_reward": args.use_final_reward,
     }
     save_training_metadata(checkpoint_dir, epoch, metadata)
 
@@ -285,6 +306,7 @@ def main(args):
             # Run the agent and collect lightweight training data
             success, theorem_training_data = runner.run(
                 collect_value_data=args.train_value_head,
+                use_final_reward=args.use_final_reward,
                 # collect_policy_data=args.train_tactic_generator,
             )
 
@@ -306,6 +328,18 @@ def main(args):
         if not training_data_buffer:
             logger.warning("No data collected in this epoch. Skipping training.")
             continue
+
+        # --- Analyze collected data ---
+        if args.train_value_head:
+            stats = analyze_value_data(training_data_buffer)
+            print_training_stats(stats)
+
+            # Optionally save training data for offline analysis
+            if args.save_training_data:
+                data_save_path = (
+                    checkpoint_dir / f"training_data_epoch_{epoch + 1}.json"
+                )
+                save_training_data(training_data_buffer, data_save_path)
 
         # --- CONDITIONAL TRAINING ---
         if args.train_value_head:
@@ -376,6 +410,17 @@ if __name__ == "__main__":
         "--train-value-head",
         action="store_true",
         help="Train the value head after each epoch.",
+    )
+    parser.add_argument(
+        "--use-final-reward",
+        action="store_true",
+        default=True,
+        help="Whether to use the final reward for training (True) or the MCTS value estimates (False). Default: True.",
+    )
+    parser.add_argument(
+        "--save-training-data",
+        action="store_true",
+        help="Save raw training data to JSON files for offline analysis.",
     )
 
     # --- Checkpoint Args ---

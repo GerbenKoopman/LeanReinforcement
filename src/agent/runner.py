@@ -56,12 +56,18 @@ class AgentRunner:
                 f"{prefix}GPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved"
             )
 
-    def run(self, collect_value_data: bool = False) -> tuple[bool, list[dict]]:
+    def run(
+        self,
+        collect_value_data: bool = False,
+        use_final_reward: bool = True,
+    ) -> tuple[bool, list[dict]]:
         """
         Run the proof search loop and collect lightweight training data.
 
         Args:
             collect_value_data: Whether to collect data for value head training.
+            use_final_reward: Whether to use the final reward for training (True) or the MCTS value estimates (False).
+                            Default: True.
 
         Returns:
             A tuple containing:
@@ -115,10 +121,32 @@ class AgentRunner:
             state_pp = current_state.pp
 
             if collect_value_data:
+                # Extract MCTS statistics from the root node
+                mcts_value = root_node.value() if root_node.visit_count > 0 else 0.0
+                visit_count = root_node.visit_count
+
+                # Calculate visit-count-based policy target (for future policy head training)
+                # This represents the improved policy from MCTS search
+                visit_distribution = {}
+                if root_node.children:
+                    total_visits = sum(
+                        child.visit_count for child in root_node.children
+                    )
+                    if total_visits > 0:
+                        visit_distribution = {
+                            child.action: child.visit_count / total_visits
+                            for child in root_node.children
+                            if child.action is not None
+                        }
+
                 training_data.append(
                     {
                         "type": "value",
                         "state": state_pp,
+                        "step": step_num,
+                        "mcts_value": mcts_value,
+                        "visit_count": visit_count,
+                        "visit_distribution": visit_distribution,  # For future policy training
                         # Value target will be filled in later with final reward
                     }
                 )
@@ -159,10 +187,19 @@ class AgentRunner:
             if isinstance(self.env.current_state, (LeanError, ProofGivenUp)):
                 logger.warning(f"Final state: {self.env.current_state}")
 
-        # Assign final reward to all value training data
+        # Assign value targets
         final_reward = 1.0 if success else -1.0
-        for data_point in training_data:
+
+        for i, data_point in enumerate(training_data):
             if data_point["type"] == "value":
-                data_point["value_target"] = final_reward
+                if use_final_reward:
+                    data_point["value_target"] = final_reward
+                elif "mcts_value" in data_point:
+                    data_point["value_target"] = data_point["mcts_value"]
+                else:
+                    data_point["value_target"] = final_reward  # Fallback
+
+                # Store the raw final reward for analysis
+                data_point["final_reward"] = final_reward
 
         return success, training_data
