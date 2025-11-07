@@ -27,4 +27,15 @@ set +a
 cd $HOME/lean_reinforcement
 
 echo "Starting training run with distributed environment..."
-srun python3 -m src.training.train --data-type novel_premises --num-epochs 1 --mcts-type guided_rollout --num-iterations 10 --max-steps 10 --num-theorems 5
+srun python3 -m src.training.train \
+    --data-type novel_premises \
+    --num-epochs 10 \
+    --num-theorems 1000 \
+    --num-iterations 50 \
+    --max-steps 30 \
+    --mcts-type guided_rollout \
+    --train-epochs 1 \
+    --train-value-head \
+    --use-final-reward \
+    --save-training-data \
+    --save-checkpoints
