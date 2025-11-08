@@ -308,7 +308,7 @@ def main(args):
                 continue
 
             theorem_pos = Pos(*thm_data["start"])
-            env = LeanDojoEnv(theorem, theorem_pos)
+            env = LeanDojoEnv(corpus, theorem, theorem_pos)
 
             # --- DYNAMIC MCTS SELECTION ---
             if args.mcts_type == "alpha_zero":

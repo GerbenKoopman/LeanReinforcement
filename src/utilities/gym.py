@@ -4,7 +4,6 @@ Environment for interacting with LeanDojo via a Gymnasium extension.
 
 from typing import Any
 import gymnasium as gym
-import os
 
 from lean_dojo import (
     Dojo,
@@ -18,12 +17,11 @@ from .dataloader import LeanDataLoader
 
 
 class LeanDojoEnv(gym.Env):
-    def __init__(self, theorem: Theorem, theorem_pos: Pos, k: int = 10):
+    def __init__(self, corpus: Corpus, theorem: Theorem, theorem_pos: Pos, k: int = 10):
         super().__init__()
         self.theorem = theorem
         self.theorem_pos = theorem_pos
 
-        corpus = Corpus(os.path.join("leandojo_benchmark_4/corpus.jsonl"))
         self.dataloader = LeanDataLoader(corpus)
 
         self.dojo = Dojo(self.theorem)
