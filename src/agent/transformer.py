@@ -10,16 +10,17 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 class Transformer:
     def __init__(self):
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.tokenizer = AutoTokenizer.from_pretrained(
             "kaiyuy/leandojo-lean4-tacgen-byt5-small"
         )
         self.model = AutoModelForSeq2SeqLM.from_pretrained(
             "kaiyuy/leandojo-lean4-tacgen-byt5-small"
-        )
+        ).to(self.device)
 
     @torch.no_grad()
     def generate_tactics(self, state: str, n: int = 1) -> List[str]:
-        tokenized_state = self.tokenizer(state, return_tensors="pt")
+        tokenized_state = self.tokenizer(state, return_tensors="pt").to(self.device)
 
         tactics_ids = self.model.generate(
             tokenized_state.input_ids,
@@ -37,7 +38,7 @@ class Transformer:
     def generate_tactics_with_probs(
         self, state: str, n: int = 1
     ) -> List[tuple[str, float]]:
-        tokenized_state = self.tokenizer(state, return_tensors="pt")
+        tokenized_state = self.tokenizer(state, return_tensors="pt").to(self.device)
 
         outputs = self.model.generate(
             tokenized_state.input_ids,
