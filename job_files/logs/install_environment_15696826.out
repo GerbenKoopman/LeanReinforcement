@@ -1,0 +1,522 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Channels:
+ - pytorch
+ - nvidia
+ - conda-forge
+ - defaults
+Platform: linux-64
+Collecting package metadata (repodata.json): ...working... done
+Solving environment: ...working... done
+
+Downloading and Extracting Packages: ...working... done
+Preparing transaction: ...working... done
+Verifying transaction: ...working... done
+Executing transaction: ...working... done
+Installing pip dependencies: ...working... Ran pip subprocess with arguments:
+['/home/gkoopman/.conda/envs/lean-reinforcement/bin/python', '-m', 'pip', 'install', '-U', '-r', '/gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt', '--exists-action=b']
+Pip subprocess output:
+Obtaining file:///gpfs/home1/gkoopman/lean_reinforcement/ReProver (from -r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 10))
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: lean-dojo in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from -r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (4.20.0)
+Requirement already satisfied: tqdm in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from -r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 2)) (4.67.1)
+Collecting deepspeed (from -r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3))
+  Using cached deepspeed-0.18.1.tar.gz (1.6 MB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Requirement already satisfied: transformers in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from -r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 5)) (4.55.4)
+Collecting transformers (from -r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 5))
+  Downloading transformers-4.57.1-py3-none-any.whl.metadata (43 kB)
+Collecting wandb (from -r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 6))
+  Downloading wandb-0.22.3-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (10 kB)
+Requirement already satisfied: openai in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from -r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 7)) (1.101.0)
+Collecting openai (from -r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 7))
+  Downloading openai-2.6.1-py3-none-any.whl.metadata (29 kB)
+Collecting rank_bm25 (from -r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 8))
+  Downloading rank_bm25-0.2.2-py3-none-any.whl.metadata (3.2 kB)
+Requirement already satisfied: vllm in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from -r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.10.1.1)
+Collecting vllm (from -r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9))
+  Downloading vllm-0.11.0-cp38-abi3-manylinux1_x86_64.whl.metadata (17 kB)
+Collecting pre-commit (from -r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 11))
+  Downloading pre_commit-4.3.0-py2.py3-none-any.whl.metadata (1.2 kB)
+Collecting pytorch-lightning[extra] (from -r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4))
+  Downloading pytorch_lightning-2.5.5-py3-none-any.whl.metadata (20 kB)
+Requirement already satisfied: filelock in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (3.17.0)
+Requirement already satisfied: gitpython in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (3.1.44)
+Requirement already satisfied: loguru in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (0.7.3)
+Requirement already satisfied: lxml in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (5.4.0)
+Requirement already satisfied: networkx in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (3.4.2)
+Requirement already satisfied: pexpect in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (4.8.0)
+Requirement already satisfied: psutil in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (7.0.0)
+Requirement already satisfied: pygithub in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (2.6.1)
+Requirement already satisfied: python-dotenv in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (1.1.0)
+Requirement already satisfied: ray>=2.8 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (2.48.0)
+Requirement already satisfied: toml in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (0.10.2)
+Requirement already satisfied: types-psutil in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (7.0.0.20250601)
+Requirement already satisfied: types-toml in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (0.10.8.20240310)
+Requirement already satisfied: einops in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3)) (0.8.1)
+Collecting hjson (from deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3))
+  Downloading hjson-3.1.0-py3-none-any.whl.metadata (2.6 kB)
+Requirement already satisfied: msgpack in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3)) (1.1.0)
+Requirement already satisfied: ninja in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3)) (1.11.1.4)
+Requirement already satisfied: numpy in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3)) (2.2.5)
+Requirement already satisfied: packaging>=20.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3)) (24.2)
+Requirement already satisfied: py-cpuinfo in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3)) (9.0.0)
+Requirement already satisfied: pydantic>=2.0.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3)) (2.11.7)
+Requirement already satisfied: torch in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3)) (2.5.1)
+Requirement already satisfied: PyYAML>5.4 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4)) (6.0.2)
+Requirement already satisfied: fsspec>=2022.5.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from fsspec[http]>=2022.5.0->pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4)) (2025.7.0)
+Collecting torchmetrics>0.7.0 (from pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4))
+  Downloading torchmetrics-1.8.2-py3-none-any.whl.metadata (22 kB)
+Requirement already satisfied: typing-extensions>4.5.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4)) (4.12.2)
+Collecting lightning-utilities>=0.10.0 (from pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4))
+  Downloading lightning_utilities-0.15.2-py3-none-any.whl.metadata (5.7 kB)
+Requirement already satisfied: matplotlib>3.1 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4)) (3.10.7)
+Collecting omegaconf>=2.2.3 (from pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4))
+  Downloading omegaconf-2.3.0-py3-none-any.whl.metadata (3.9 kB)
+Collecting hydra-core>=1.2.0 (from pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4))
+  Downloading hydra_core-1.3.2-py3-none-any.whl.metadata (5.5 kB)
+Collecting jsonargparse>=4.39.0 (from jsonargparse[jsonnet,signatures]>=4.39.0; extra == "extra"->pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4))
+  Downloading jsonargparse-4.42.0-py3-none-any.whl.metadata (12 kB)
+Requirement already satisfied: rich>=12.3.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4)) (14.0.0)
+Collecting tensorboardX>=2.2 (from pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4))
+  Downloading tensorboardx-2.6.4-py3-none-any.whl.metadata (6.2 kB)
+Collecting bitsandbytes>=0.45.2 (from pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4))
+  Downloading bitsandbytes-0.48.2-py3-none-manylinux_2_24_x86_64.whl.metadata (10 kB)
+Requirement already satisfied: huggingface-hub<1.0,>=0.34.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from transformers->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 5)) (0.34.4)
+Requirement already satisfied: regex!=2019.12.17 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from transformers->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 5)) (2024.11.6)
+Requirement already satisfied: requests in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from transformers->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 5)) (2.32.3)
+Collecting tokenizers<=0.23.0,>=0.22.0 (from transformers->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 5))
+  Downloading tokenizers-0.22.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.8 kB)
+Requirement already satisfied: safetensors>=0.4.3 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from transformers->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 5)) (0.5.3)
+Requirement already satisfied: hf-xet<2.0.0,>=1.1.3 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from huggingface-hub<1.0,>=0.34.0->transformers->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 5)) (1.1.5)
+Requirement already satisfied: click>=8.0.1 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from wandb->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 6)) (8.2.1)
+Requirement already satisfied: platformdirs in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from wandb->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 6)) (4.3.7)
+Requirement already satisfied: protobuf!=4.21.0,!=5.28.0,<7,>=3.19.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from wandb->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 6)) (6.31.1)
+Requirement already satisfied: sentry-sdk>=2.0.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from wandb->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 6)) (2.32.0)
+Requirement already satisfied: annotated-types>=0.6.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from pydantic>=2.0.0->deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3)) (0.7.0)
+Requirement already satisfied: pydantic-core==2.33.2 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from pydantic>=2.0.0->deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3)) (2.33.2)
+Requirement already satisfied: typing-inspection>=0.4.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from pydantic>=2.0.0->deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3)) (0.4.1)
+Requirement already satisfied: charset-normalizer<4,>=2 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from requests->transformers->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 5)) (3.3.2)
+Requirement already satisfied: idna<4,>=2.5 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from requests->transformers->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 5)) (3.7)
+Requirement already satisfied: urllib3<3,>=1.21.1 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from requests->transformers->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 5)) (2.3.0)
+Requirement already satisfied: certifi>=2017.4.17 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from requests->transformers->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 5)) (2025.10.5)
+Requirement already satisfied: anyio<5,>=3.5.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from openai->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 7)) (4.7.0)
+Requirement already satisfied: distro<2,>=1.7.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from openai->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 7)) (1.9.0)
+Requirement already satisfied: httpx<1,>=0.23.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from openai->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 7)) (0.28.1)
+Requirement already satisfied: jiter<1,>=0.10.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from openai->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 7)) (0.10.0)
+Requirement already satisfied: sniffio in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from openai->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 7)) (1.3.0)
+Requirement already satisfied: exceptiongroup>=1.0.2 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from anyio<5,>=3.5.0->openai->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 7)) (1.2.0)
+Requirement already satisfied: httpcore==1.* in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from httpx<1,>=0.23.0->openai->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 7)) (1.0.9)
+Requirement already satisfied: h11>=0.16 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from httpcore==1.*->httpx<1,>=0.23.0->openai->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 7)) (0.16.0)
+Requirement already satisfied: cachetools in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (5.5.2)
+Requirement already satisfied: sentencepiece in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.2.0)
+Requirement already satisfied: blake3 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (1.0.5)
+Requirement already satisfied: fastapi>=0.115.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from fastapi[standard]>=0.115.0->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.116.1)
+Requirement already satisfied: aiohttp in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (3.12.7)
+Requirement already satisfied: prometheus_client>=0.18.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.21.1)
+Requirement already satisfied: pillow in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (11.3.0)
+Requirement already satisfied: prometheus-fastapi-instrumentator>=7.0.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (7.1.0)
+Requirement already satisfied: tiktoken>=0.6.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.9.0)
+Collecting lm-format-enforcer==0.11.3 (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9))
+  Downloading lm_format_enforcer-0.11.3-py3-none-any.whl.metadata (17 kB)
+Requirement already satisfied: llguidance<0.8.0,>=0.7.11 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.7.30)
+Collecting outlines_core==0.2.11 (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9))
+  Downloading outlines_core-0.2.11-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.8 kB)
+Requirement already satisfied: diskcache==5.6.3 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (5.6.3)
+Requirement already satisfied: lark==1.2.2 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (1.2.2)
+Collecting xgrammar==0.1.25 (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9))
+  Downloading xgrammar-0.1.25-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.5 kB)
+Requirement already satisfied: partial-json-parser in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.2.1.1.post6)
+Requirement already satisfied: pyzmq>=25.0.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (26.2.0)
+Requirement already satisfied: msgspec in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.19.0)
+Requirement already satisfied: gguf>=0.13.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.17.1)
+Requirement already satisfied: mistral_common>=1.8.2 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from mistral_common[audio,image]>=1.8.2->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (1.8.4)
+Requirement already satisfied: opencv-python-headless>=4.11.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (4.12.0.88)
+Collecting compressed-tensors==0.11.0 (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9))
+  Downloading compressed_tensors-0.11.0-py3-none-any.whl.metadata (7.0 kB)
+Requirement already satisfied: depyf==0.19.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.19.0)
+Requirement already satisfied: cloudpickle in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (3.1.1)
+Requirement already satisfied: watchfiles in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (1.1.0)
+Requirement already satisfied: python-json-logger in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (3.2.1)
+Requirement already satisfied: scipy in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (1.15.3)
+Requirement already satisfied: pybase64 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (1.4.1)
+Requirement already satisfied: cbor2 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (5.7.0)
+Requirement already satisfied: setproctitle in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (1.3.6)
+Requirement already satisfied: openai-harmony>=0.0.3 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.0.4)
+Requirement already satisfied: numba==0.61.2 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.61.2)
+Collecting torch (from deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3))
+  Downloading torch-2.8.0-cp310-cp310-manylinux_2_28_x86_64.whl.metadata (30 kB)
+Collecting torchaudio==2.8.0 (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9))
+  Downloading torchaudio-2.8.0-cp310-cp310-manylinux_2_28_x86_64.whl.metadata (7.2 kB)
+Collecting torchvision==0.23.0 (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9))
+  Downloading torchvision-0.23.0-cp310-cp310-manylinux_2_28_x86_64.whl.metadata (6.1 kB)
+Collecting xformers==0.0.32.post1 (from vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9))
+  Downloading xformers-0.0.32.post1-cp39-abi3-manylinux_2_28_x86_64.whl.metadata (1.1 kB)
+Collecting frozendict (from compressed-tensors==0.11.0->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9))
+  Downloading frozendict-2.4.6-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (23 kB)
+Requirement already satisfied: astor in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from depyf==0.19.0->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.8.1)
+Requirement already satisfied: dill in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from depyf==0.19.0->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.4.0)
+Requirement already satisfied: interegular>=0.3.2 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from lm-format-enforcer==0.11.3->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.3.3)
+Requirement already satisfied: llvmlite<0.45,>=0.44.0dev0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from numba==0.61.2->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.44.0)
+Requirement already satisfied: sympy>=1.13.3 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from torch->deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3)) (1.13.3)
+Requirement already satisfied: jinja2 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from torch->deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3)) (3.1.6)
+Collecting nvidia-cuda-nvrtc-cu12==12.8.93 (from torch->deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3))
+  Downloading nvidia_cuda_nvrtc_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cuda-runtime-cu12==12.8.90 (from torch->deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3))
+  Downloading nvidia_cuda_runtime_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cuda-cupti-cu12==12.8.90 (from torch->deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3))
+  Downloading nvidia_cuda_cupti_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cudnn-cu12==9.10.2.21 (from torch->deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3))
+  Downloading nvidia_cudnn_cu12-9.10.2.21-py3-none-manylinux_2_27_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-cublas-cu12==12.8.4.1 (from torch->deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3))
+  Downloading nvidia_cublas_cu12-12.8.4.1-py3-none-manylinux_2_27_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cufft-cu12==11.3.3.83 (from torch->deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3))
+  Downloading nvidia_cufft_cu12-11.3.3.83-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-curand-cu12==10.3.9.90 (from torch->deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3))
+  Downloading nvidia_curand_cu12-10.3.9.90-py3-none-manylinux_2_27_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cusolver-cu12==11.7.3.90 (from torch->deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3))
+  Downloading nvidia_cusolver_cu12-11.7.3.90-py3-none-manylinux_2_27_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-cusparse-cu12==12.5.8.93 (from torch->deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3))
+  Downloading nvidia_cusparse_cu12-12.5.8.93-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-cusparselt-cu12==0.7.1 (from torch->deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3))
+  Downloading nvidia_cusparselt_cu12-0.7.1-py3-none-manylinux2014_x86_64.whl.metadata (7.0 kB)
+Collecting nvidia-nccl-cu12==2.27.3 (from torch->deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3))
+  Downloading nvidia_nccl_cu12-2.27.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.0 kB)
+Collecting nvidia-nvtx-cu12==12.8.90 (from torch->deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3))
+  Downloading nvidia_nvtx_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-nvjitlink-cu12==12.8.93 (from torch->deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3))
+  Downloading nvidia_nvjitlink_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cufile-cu12==1.13.1.3 (from torch->deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3))
+  Downloading nvidia_cufile_cu12-1.13.1.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+Collecting triton==3.4.0 (from torch->deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3))
+  Downloading triton-3.4.0-cp310-cp310-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (1.7 kB)
+Requirement already satisfied: setuptools>=40.8.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from triton==3.4.0->torch->deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3)) (72.1.0)
+Collecting cfgv>=2.0.0 (from pre-commit->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 11))
+  Downloading cfgv-3.4.0-py2.py3-none-any.whl.metadata (8.5 kB)
+Collecting identify>=1.0.0 (from pre-commit->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 11))
+  Downloading identify-2.6.15-py2.py3-none-any.whl.metadata (4.4 kB)
+Collecting nodeenv>=0.11.1 (from pre-commit->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 11))
+  Downloading nodeenv-1.9.1-py2.py3-none-any.whl.metadata (21 kB)
+Requirement already satisfied: virtualenv>=20.10.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from pre-commit->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 11)) (20.31.2)
+Requirement already satisfied: starlette<0.48.0,>=0.40.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from fastapi>=0.115.0->fastapi[standard]>=0.115.0->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.47.1)
+Requirement already satisfied: fastapi-cli>=0.0.8 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from fastapi-cli[standard]>=0.0.8; extra == "standard"->fastapi[standard]>=0.115.0->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.0.8)
+Requirement already satisfied: python-multipart>=0.0.18 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from fastapi[standard]>=0.115.0->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.0.20)
+Requirement already satisfied: email-validator>=2.0.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from fastapi[standard]>=0.115.0->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (2.2.0)
+Requirement already satisfied: uvicorn>=0.12.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from uvicorn[standard]>=0.12.0; extra == "standard"->fastapi[standard]>=0.115.0->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.35.0)
+Requirement already satisfied: dnspython>=2.0.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from email-validator>=2.0.0->fastapi[standard]>=0.115.0->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (2.7.0)
+Requirement already satisfied: typer>=0.15.1 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from fastapi-cli>=0.0.8->fastapi-cli[standard]>=0.0.8; extra == "standard"->fastapi[standard]>=0.115.0->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.16.0)
+Requirement already satisfied: rich-toolkit>=0.14.8 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from fastapi-cli>=0.0.8->fastapi-cli[standard]>=0.0.8; extra == "standard"->fastapi[standard]>=0.115.0->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.14.8)
+Requirement already satisfied: fastapi-cloud-cli>=0.1.1 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from fastapi-cli[standard]>=0.0.8; extra == "standard"->fastapi[standard]>=0.115.0->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.1.4)
+Requirement already satisfied: rignore>=0.5.1 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from fastapi-cloud-cli>=0.1.1->fastapi-cli[standard]>=0.0.8; extra == "standard"->fastapi[standard]>=0.115.0->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.6.2)
+Requirement already satisfied: aiohappyeyeballs>=2.5.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from aiohttp->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (2.6.1)
+Requirement already satisfied: aiosignal>=1.1.2 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from aiohttp->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (1.3.2)
+Requirement already satisfied: async-timeout<6.0,>=4.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from aiohttp->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (5.0.1)
+Requirement already satisfied: attrs>=17.3.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from aiohttp->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (24.3.0)
+Requirement already satisfied: frozenlist>=1.1.1 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from aiohttp->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (1.6.0)
+Requirement already satisfied: multidict<7.0,>=4.5 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from aiohttp->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (6.4.4)
+Requirement already satisfied: propcache>=0.2.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from aiohttp->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.3.1)
+Requirement already satisfied: yarl<2.0,>=1.17.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from aiohttp->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (1.20.0)
+Requirement already satisfied: gitdb<5,>=4.0.1 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from gitpython->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (4.0.12)
+Requirement already satisfied: smmap<6,>=3.0.1 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from gitdb<5,>=4.0.1->gitpython->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (5.0.2)
+Collecting antlr4-python3-runtime==4.9.* (from hydra-core>=1.2.0->pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4))
+  Downloading antlr4-python3-runtime-4.9.3.tar.gz (117 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Requirement already satisfied: MarkupSafe>=2.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from jinja2->torch->deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3)) (3.0.2)
+Collecting docstring-parser>=0.17 (from jsonargparse[jsonnet,signatures]>=4.39.0; extra == "extra"->pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4))
+  Downloading docstring_parser-0.17.0-py3-none-any.whl.metadata (3.5 kB)
+Collecting typeshed-client>=2.8.2 (from jsonargparse[jsonnet,signatures]>=4.39.0; extra == "extra"->pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4))
+  Downloading typeshed_client-2.8.2-py3-none-any.whl.metadata (9.9 kB)
+Collecting jsonnet>=0.21.0 (from jsonargparse[jsonnet,signatures]>=4.39.0; extra == "extra"->pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4))
+  Downloading jsonnet-0.21.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (449 bytes)
+Requirement already satisfied: contourpy>=1.0.1 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from matplotlib>3.1->pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4)) (1.3.1)
+Requirement already satisfied: cycler>=0.10 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from matplotlib>3.1->pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4)) (0.11.0)
+Requirement already satisfied: fonttools>=4.22.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from matplotlib>3.1->pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4)) (4.55.3)
+Requirement already satisfied: kiwisolver>=1.3.1 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from matplotlib>3.1->pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4)) (1.4.8)
+Requirement already satisfied: pyparsing>=3 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from matplotlib>3.1->pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4)) (3.2.0)
+Requirement already satisfied: python-dateutil>=2.7 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from matplotlib>3.1->pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4)) (2.9.0.post0)
+Requirement already satisfied: jsonschema>=4.21.1 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from mistral_common>=1.8.2->mistral_common[audio,image]>=1.8.2->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (4.23.0)
+Requirement already satisfied: pydantic-extra-types>=2.10.5 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from pydantic-extra-types[pycountry]>=2.10.5->mistral_common>=1.8.2->mistral_common[audio,image]>=1.8.2->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (2.10.5)
+Requirement already satisfied: jsonschema-specifications>=2023.03.6 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from jsonschema>=4.21.1->mistral_common>=1.8.2->mistral_common[audio,image]>=1.8.2->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (2023.7.1)
+Requirement already satisfied: referencing>=0.28.4 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from jsonschema>=4.21.1->mistral_common>=1.8.2->mistral_common[audio,image]>=1.8.2->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.30.2)
+Requirement already satisfied: rpds-py>=0.7.1 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from jsonschema>=4.21.1->mistral_common>=1.8.2->mistral_common[audio,image]>=1.8.2->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.22.3)
+Requirement already satisfied: pycountry>=23 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from pydantic-extra-types[pycountry]>=2.10.5->mistral_common>=1.8.2->mistral_common[audio,image]>=1.8.2->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (24.6.1)
+Requirement already satisfied: six>=1.5 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from python-dateutil>=2.7->matplotlib>3.1->pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4)) (1.17.0)
+Requirement already satisfied: cupy-cuda12x in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from ray[cgraph]>=2.48.0->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (13.5.1)
+Requirement already satisfied: aiohttp_cors in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (0.8.1)
+Requirement already satisfied: colorful in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (0.5.6)
+Requirement already satisfied: py-spy>=0.2.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (0.4.0)
+Requirement already satisfied: grpcio>=1.42.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (1.72.1)
+Requirement already satisfied: opencensus in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (0.11.4)
+Requirement already satisfied: opentelemetry-sdk>=1.30.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (1.36.0)
+Requirement already satisfied: opentelemetry-exporter-prometheus in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (0.57b0)
+Requirement already satisfied: opentelemetry-proto in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (1.36.0)
+Requirement already satisfied: smart_open in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (7.1.0)
+Requirement already satisfied: opentelemetry-api==1.36.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from opentelemetry-sdk>=1.30.0->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (1.36.0)
+Requirement already satisfied: opentelemetry-semantic-conventions==0.57b0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from opentelemetry-sdk>=1.30.0->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (0.57b0)
+Requirement already satisfied: importlib-metadata<8.8.0,>=6.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from opentelemetry-api==1.36.0->opentelemetry-sdk>=1.30.0->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (8.7.0)
+Requirement already satisfied: zipp>=3.20 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from importlib-metadata<8.8.0,>=6.0->opentelemetry-api==1.36.0->opentelemetry-sdk>=1.30.0->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (3.23.0)
+Requirement already satisfied: markdown-it-py>=2.2.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from rich>=12.3.0->pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4)) (3.0.0)
+Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from rich>=12.3.0->pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4)) (2.19.1)
+Requirement already satisfied: mdurl~=0.1 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from markdown-it-py>=2.2.0->rich>=12.3.0->pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4)) (0.1.2)
+Requirement already satisfied: mpmath<1.4,>=1.1.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from sympy>=1.13.3->torch->deepspeed->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 3)) (1.3.0)
+Requirement already satisfied: shellingham>=1.3.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from typer>=0.15.1->fastapi-cli>=0.0.8->fastapi-cli[standard]>=0.0.8; extra == "standard"->fastapi[standard]>=0.115.0->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (1.5.4)
+Collecting importlib_resources>=1.4.0 (from typeshed-client>=2.8.2->jsonargparse[jsonnet,signatures]>=4.39.0; extra == "extra"->pytorch-lightning[extra]->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 4))
+  Downloading importlib_resources-6.5.2-py3-none-any.whl.metadata (3.9 kB)
+Requirement already satisfied: httptools>=0.6.3 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from uvicorn[standard]>=0.12.0; extra == "standard"->fastapi[standard]>=0.115.0->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.6.4)
+Requirement already satisfied: uvloop>=0.15.1 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from uvicorn[standard]>=0.12.0; extra == "standard"->fastapi[standard]>=0.115.0->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.21.0)
+Requirement already satisfied: websockets>=10.4 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from uvicorn[standard]>=0.12.0; extra == "standard"->fastapi[standard]>=0.115.0->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (15.0.1)
+Requirement already satisfied: distlib<1,>=0.3.7 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from virtualenv>=20.10.0->pre-commit->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 11)) (0.3.9)
+Requirement already satisfied: fastrlock>=0.5 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from cupy-cuda12x->ray[cgraph]>=2.48.0->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.8.3)
+Requirement already satisfied: soundfile>=0.12.1 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from mistral_common>=1.8.2->mistral_common[audio,image]>=1.8.2->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.13.1)
+Requirement already satisfied: cffi>=1.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from soundfile>=0.12.1->mistral_common>=1.8.2->mistral_common[audio,image]>=1.8.2->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (1.17.1)
+Requirement already satisfied: pycparser in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from cffi>=1.0->soundfile>=0.12.1->mistral_common>=1.8.2->mistral_common[audio,image]>=1.8.2->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (2.21)
+Requirement already satisfied: soxr>=0.5.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from mistral_common>=1.8.2->mistral_common[audio,image]>=1.8.2->vllm->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 9)) (0.5.0.post1)
+Requirement already satisfied: opencensus-context>=0.1.3 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from opencensus->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (0.1.3)
+Requirement already satisfied: google-api-core<3.0.0,>=1.0.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from opencensus->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (2.25.0)
+Requirement already satisfied: googleapis-common-protos<2.0.0,>=1.56.2 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from google-api-core<3.0.0,>=1.0.0->opencensus->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (1.70.0)
+Requirement already satisfied: proto-plus<2.0.0,>=1.22.3 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from google-api-core<3.0.0,>=1.0.0->opencensus->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (1.26.1)
+Requirement already satisfied: google-auth<3.0.0,>=2.14.1 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from google-api-core<3.0.0,>=1.0.0->opencensus->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (2.40.2)
+Requirement already satisfied: pyasn1-modules>=0.2.1 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from google-auth<3.0.0,>=2.14.1->google-api-core<3.0.0,>=1.0.0->opencensus->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (0.4.2)
+Requirement already satisfied: rsa<5,>=3.1.4 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from google-auth<3.0.0,>=2.14.1->google-api-core<3.0.0,>=1.0.0->opencensus->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (4.9.1)
+Requirement already satisfied: pyasn1>=0.1.3 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from rsa<5,>=3.1.4->google-auth<3.0.0,>=2.14.1->google-api-core<3.0.0,>=1.0.0->opencensus->ray[default]>=2.8->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (0.6.1)
+Requirement already satisfied: ptyprocess>=0.5 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from pexpect->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (0.7.0)
+Requirement already satisfied: pynacl>=1.4.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from pygithub->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (1.5.0)
+Requirement already satisfied: pyjwt>=2.4.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from pyjwt[crypto]>=2.4.0->pygithub->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (2.10.1)
+Requirement already satisfied: Deprecated in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from pygithub->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (1.3.1)
+Requirement already satisfied: cryptography>=3.4.0 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from pyjwt[crypto]>=2.4.0->pygithub->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (45.0.3)
+Requirement already satisfied: wrapt<3,>=1.10 in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from Deprecated->pygithub->lean-dojo->-r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.0as7qcjk.requirements.txt (line 1)) (1.17.2)
+Downloading pytorch_lightning-2.5.5-py3-none-any.whl (832 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 832.4/832.4 kB 47.4 MB/s  0:00:00
+Downloading transformers-4.57.1-py3-none-any.whl (12.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.0/12.0 MB 57.6 MB/s  0:00:00
+Downloading tokenizers-0.22.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.3/3.3 MB 77.0 MB/s  0:00:00
+Downloading wandb-0.22.3-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (20.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 20.0/20.0 MB 17.9 MB/s  0:00:01
+Downloading openai-2.6.1-py3-none-any.whl (1.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.0/1.0 MB 75.0 MB/s  0:00:00
+Downloading rank_bm25-0.2.2-py3-none-any.whl (8.6 kB)
+Downloading vllm-0.11.0-cp38-abi3-manylinux1_x86_64.whl (438.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 438.2/438.2 MB 52.1 MB/s  0:00:08
+Downloading compressed_tensors-0.11.0-py3-none-any.whl (179 kB)
+Downloading lm_format_enforcer-0.11.3-py3-none-any.whl (45 kB)
+Downloading outlines_core-0.2.11-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.3/2.3 MB 27.3 MB/s  0:00:00
+Downloading torch-2.8.0-cp310-cp310-manylinux_2_28_x86_64.whl (888.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 888.0/888.0 MB 43.8 MB/s  0:00:15
+Downloading nvidia_cublas_cu12-12.8.4.1-py3-none-manylinux_2_27_x86_64.whl (594.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 594.3/594.3 MB 61.5 MB/s  0:00:08
+Downloading nvidia_cuda_cupti_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (10.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.2/10.2 MB 92.4 MB/s  0:00:00
+Downloading nvidia_cuda_nvrtc_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl (88.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 88.0/88.0 MB 57.4 MB/s  0:00:01
+Downloading nvidia_cuda_runtime_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (954 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 954.8/954.8 kB 78.2 MB/s  0:00:00
+Downloading nvidia_cudnn_cu12-9.10.2.21-py3-none-manylinux_2_27_x86_64.whl (706.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 706.8/706.8 MB 49.9 MB/s  0:00:10
+Downloading nvidia_cufft_cu12-11.3.3.83-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (193.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 193.1/193.1 MB 46.8 MB/s  0:00:04
+Downloading nvidia_cufile_cu12-1.13.1.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 20.5 MB/s  0:00:00
+Downloading nvidia_curand_cu12-10.3.9.90-py3-none-manylinux_2_27_x86_64.whl (63.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 63.6/63.6 MB 64.5 MB/s  0:00:00
+Downloading nvidia_cusolver_cu12-11.7.3.90-py3-none-manylinux_2_27_x86_64.whl (267.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 267.5/267.5 MB 50.2 MB/s  0:00:05
+Downloading nvidia_cusparse_cu12-12.5.8.93-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (288.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 288.2/288.2 MB 56.1 MB/s  0:00:04
+Downloading nvidia_cusparselt_cu12-0.7.1-py3-none-manylinux2014_x86_64.whl (287.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 287.2/287.2 MB 56.7 MB/s  0:00:05
+Downloading nvidia_nccl_cu12-2.27.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (322.4 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 322.4/322.4 MB 55.1 MB/s  0:00:05
+Downloading nvidia_nvjitlink_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl (39.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 39.3/39.3 MB 28.1 MB/s  0:00:01
+Downloading nvidia_nvtx_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (89 kB)
+Downloading torchaudio-2.8.0-cp310-cp310-manylinux_2_28_x86_64.whl (4.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.0/4.0 MB 42.9 MB/s  0:00:00
+Downloading torchvision-0.23.0-cp310-cp310-manylinux_2_28_x86_64.whl (8.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.6/8.6 MB 75.1 MB/s  0:00:00
+Downloading triton-3.4.0-cp310-cp310-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (155.4 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 155.4/155.4 MB 55.8 MB/s  0:00:02
+Downloading xformers-0.0.32.post1-cp39-abi3-manylinux_2_28_x86_64.whl (117.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 117.2/117.2 MB 58.9 MB/s  0:00:01
+Downloading xgrammar-0.1.25-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (8.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.7/8.7 MB 59.9 MB/s  0:00:00
+Downloading pre_commit-4.3.0-py2.py3-none-any.whl (220 kB)
+Downloading bitsandbytes-0.48.2-py3-none-manylinux_2_24_x86_64.whl (59.4 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 59.4/59.4 MB 79.7 MB/s  0:00:00
+Downloading cfgv-3.4.0-py2.py3-none-any.whl (7.2 kB)
+Downloading hydra_core-1.3.2-py3-none-any.whl (154 kB)
+Downloading omegaconf-2.3.0-py3-none-any.whl (79 kB)
+Downloading identify-2.6.15-py2.py3-none-any.whl (99 kB)
+Downloading jsonargparse-4.42.0-py3-none-any.whl (235 kB)
+Downloading docstring_parser-0.17.0-py3-none-any.whl (36 kB)
+Downloading jsonnet-0.21.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (6.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.5/6.5 MB 26.6 MB/s  0:00:00
+Downloading lightning_utilities-0.15.2-py3-none-any.whl (29 kB)
+Downloading nodeenv-1.9.1-py2.py3-none-any.whl (22 kB)
+Downloading tensorboardx-2.6.4-py3-none-any.whl (87 kB)
+Downloading torchmetrics-1.8.2-py3-none-any.whl (983 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 983.2/983.2 kB 92.2 MB/s  0:00:00
+Downloading typeshed_client-2.8.2-py3-none-any.whl (760 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 760.5/760.5 kB 51.2 MB/s  0:00:00
+Downloading importlib_resources-6.5.2-py3-none-any.whl (37 kB)
+Downloading frozendict-2.4.6-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (117 kB)
+Downloading hjson-3.1.0-py3-none-any.whl (54 kB)
+Building wheels for collected packages: reprover, deepspeed, antlr4-python3-runtime
+  Building editable for reprover (pyproject.toml): started
+  Building editable for reprover (pyproject.toml): finished with status 'done'
+  Created wheel for reprover: filename=reprover-0.1-0.editable-py3-none-any.whl size=3519 sha256=2b10b96b4a8e47dd97ab24f6fb3d8fc8af60994c19e24a00bdae2c85926bc599
+  Stored in directory: /gpfs/scratch1/nodespecific/gcn2/gkoopman.15696826/pip-ephem-wheel-cache-hw_i5d4v/wheels/70/37/19/ae585ade97b581b8761e857b1cb819460421870f8e96fb121a
+  Building wheel for deepspeed (setup.py): started
+  Building wheel for deepspeed (setup.py): finished with status 'done'
+  Created wheel for deepspeed: filename=deepspeed-0.18.1-py3-none-any.whl size=1764041 sha256=973ff90d6d19a600aeb353ee966d422c00bb59233b8a4513879ceddd4d8e924e
+  Stored in directory: /gpfs/home1/gkoopman/.cache/pip/wheels/ca/6b/76/ffb4c8190bbb957a36962a511169933d97e54ac70612b16d02
+  Building wheel for antlr4-python3-runtime (setup.py): started
+  Building wheel for antlr4-python3-runtime (setup.py): finished with status 'done'
+  Created wheel for antlr4-python3-runtime: filename=antlr4_python3_runtime-4.9.3-py3-none-any.whl size=144554 sha256=910ab1ee286da1a954e95f4a0127c4d94a89cdc9b9ba7fa7b5aaae9d20eb719f
+  Stored in directory: /gpfs/home1/gkoopman/.cache/pip/wheels/12/93/dd/1f6a127edc45659556564c5730f6d4e300888f4bca2d4c5a88
+Successfully built reprover deepspeed antlr4-python3-runtime
+Installing collected packages: reprover, nvidia-cusparselt-cu12, jsonnet, hjson, antlr4-python3-runtime, triton, tensorboardX, rank_bm25, outlines_core, omegaconf, nvidia-nvtx-cu12, nvidia-nvjitlink-cu12, nvidia-nccl-cu12, nvidia-curand-cu12, nvidia-cufile-cu12, nvidia-cuda-runtime-cu12, nvidia-cuda-nvrtc-cu12, nvidia-cuda-cupti-cu12, nvidia-cublas-cu12, nodeenv, lightning-utilities, jsonargparse, importlib_resources, identify, frozendict, docstring-parser, cfgv, typeshed-client, pre-commit, nvidia-cusparse-cu12, nvidia-cufft-cu12, nvidia-cudnn-cu12, hydra-core, wandb, tokenizers, openai, nvidia-cusolver-cu12, lm-format-enforcer, transformers, torch, xgrammar, xformers, torchvision, torchmetrics, torchaudio, deepspeed, compressed-tensors, bitsandbytes, pytorch-lightning, vllm
+  Attempting uninstall: nvidia-cusparselt-cu12
+    Found existing installation: nvidia-cusparselt-cu12 0.6.3
+    Uninstalling nvidia-cusparselt-cu12-0.6.3:
+      Successfully uninstalled nvidia-cusparselt-cu12-0.6.3
+  Attempting uninstall: triton
+    Found existing installation: triton 3.3.0
+    Uninstalling triton-3.3.0:
+      Successfully uninstalled triton-3.3.0
+  Attempting uninstall: outlines_core
+    Found existing installation: outlines_core 0.2.10
+    Uninstalling outlines_core-0.2.10:
+      Successfully uninstalled outlines_core-0.2.10
+  Attempting uninstall: nvidia-nvtx-cu12
+    Found existing installation: nvidia-nvtx-cu12 12.6.77
+    Uninstalling nvidia-nvtx-cu12-12.6.77:
+      Successfully uninstalled nvidia-nvtx-cu12-12.6.77
+  Attempting uninstall: nvidia-nvjitlink-cu12
+    Found existing installation: nvidia-nvjitlink-cu12 12.6.85
+    Uninstalling nvidia-nvjitlink-cu12-12.6.85:
+      Successfully uninstalled nvidia-nvjitlink-cu12-12.6.85
+  Attempting uninstall: nvidia-nccl-cu12
+    Found existing installation: nvidia-nccl-cu12 2.26.2
+    Uninstalling nvidia-nccl-cu12-2.26.2:
+      Successfully uninstalled nvidia-nccl-cu12-2.26.2
+  Attempting uninstall: nvidia-curand-cu12
+    Found existing installation: nvidia-curand-cu12 10.3.7.77
+    Uninstalling nvidia-curand-cu12-10.3.7.77:
+      Successfully uninstalled nvidia-curand-cu12-10.3.7.77
+  Attempting uninstall: nvidia-cufile-cu12
+    Found existing installation: nvidia-cufile-cu12 1.11.1.6
+    Uninstalling nvidia-cufile-cu12-1.11.1.6:
+      Successfully uninstalled nvidia-cufile-cu12-1.11.1.6
+  Attempting uninstall: nvidia-cuda-runtime-cu12
+    Found existing installation: nvidia-cuda-runtime-cu12 12.6.77
+    Uninstalling nvidia-cuda-runtime-cu12-12.6.77:
+      Successfully uninstalled nvidia-cuda-runtime-cu12-12.6.77
+  Attempting uninstall: nvidia-cuda-nvrtc-cu12
+    Found existing installation: nvidia-cuda-nvrtc-cu12 12.6.77
+    Uninstalling nvidia-cuda-nvrtc-cu12-12.6.77:
+      Successfully uninstalled nvidia-cuda-nvrtc-cu12-12.6.77
+  Attempting uninstall: nvidia-cuda-cupti-cu12
+    Found existing installation: nvidia-cuda-cupti-cu12 12.6.80
+    Uninstalling nvidia-cuda-cupti-cu12-12.6.80:
+      Successfully uninstalled nvidia-cuda-cupti-cu12-12.6.80
+  Attempting uninstall: nvidia-cublas-cu12
+    Found existing installation: nvidia-cublas-cu12 12.6.4.1
+    Uninstalling nvidia-cublas-cu12-12.6.4.1:
+      Successfully uninstalled nvidia-cublas-cu12-12.6.4.1
+  Attempting uninstall: nvidia-cusparse-cu12
+    Found existing installation: nvidia-cusparse-cu12 12.5.4.2
+    Uninstalling nvidia-cusparse-cu12-12.5.4.2:
+      Successfully uninstalled nvidia-cusparse-cu12-12.5.4.2
+  Attempting uninstall: nvidia-cufft-cu12
+    Found existing installation: nvidia-cufft-cu12 11.3.0.4
+    Uninstalling nvidia-cufft-cu12-11.3.0.4:
+      Successfully uninstalled nvidia-cufft-cu12-11.3.0.4
+  Attempting uninstall: nvidia-cudnn-cu12
+    Found existing installation: nvidia-cudnn-cu12 9.5.1.17
+    Uninstalling nvidia-cudnn-cu12-9.5.1.17:
+      Successfully uninstalled nvidia-cudnn-cu12-9.5.1.17
+  Attempting uninstall: tokenizers
+    Found existing installation: tokenizers 0.21.2
+    Uninstalling tokenizers-0.21.2:
+      Successfully uninstalled tokenizers-0.21.2
+  Attempting uninstall: openai
+    Found existing installation: openai 1.101.0
+    Uninstalling openai-1.101.0:
+      Successfully uninstalled openai-1.101.0
+  Attempting uninstall: nvidia-cusolver-cu12
+    Found existing installation: nvidia-cusolver-cu12 11.7.1.2
+    Uninstalling nvidia-cusolver-cu12-11.7.1.2:
+      Successfully uninstalled nvidia-cusolver-cu12-11.7.1.2
+  Attempting uninstall: lm-format-enforcer
+    Found existing installation: lm-format-enforcer 0.10.11
+    Uninstalling lm-format-enforcer-0.10.11:
+      Successfully uninstalled lm-format-enforcer-0.10.11
+  Attempting uninstall: transformers
+    Found existing installation: transformers 4.55.4
+    Uninstalling transformers-4.55.4:
+      Successfully uninstalled transformers-4.55.4
+  Attempting uninstall: torch
+    Found existing installation: torch 2.5.1
+    Uninstalling torch-2.5.1:
+      Successfully uninstalled torch-2.5.1
+  Attempting uninstall: xgrammar
+    Found existing installation: xgrammar 0.1.21
+    Uninstalling xgrammar-0.1.21:
+      Successfully uninstalled xgrammar-0.1.21
+  Attempting uninstall: xformers
+    Found existing installation: xformers 0.0.31
+    Uninstalling xformers-0.0.31:
+      Successfully uninstalled xformers-0.0.31
+  Attempting uninstall: torchvision
+    Found existing installation: torchvision 0.22.1
+    Uninstalling torchvision-0.22.1:
+      Successfully uninstalled torchvision-0.22.1
+  Attempting uninstall: torchaudio
+    Found existing installation: torchaudio 2.7.1
+    Uninstalling torchaudio-2.7.1:
+      Successfully uninstalled torchaudio-2.7.1
+  Attempting uninstall: compressed-tensors
+    Found existing installation: compressed-tensors 0.10.2
+    Uninstalling compressed-tensors-0.10.2:
+      Successfully uninstalled compressed-tensors-0.10.2
+  Attempting uninstall: vllm
+    Found existing installation: vllm 0.10.1.1
+    Uninstalling vllm-0.10.1.1:
+      Successfully uninstalled vllm-0.10.1.1
+
+Successfully installed antlr4-python3-runtime-4.9.3 bitsandbytes-0.48.2 cfgv-3.4.0 compressed-tensors-0.11.0 deepspeed-0.18.1 docstring-parser-0.17.0 frozendict-2.4.6 hjson-3.1.0 hydra-core-1.3.2 identify-2.6.15 importlib_resources-6.5.2 jsonargparse-4.42.0 jsonnet-0.21.0 lightning-utilities-0.15.2 lm-format-enforcer-0.11.3 nodeenv-1.9.1 nvidia-cublas-cu12-12.8.4.1 nvidia-cuda-cupti-cu12-12.8.90 nvidia-cuda-nvrtc-cu12-12.8.93 nvidia-cuda-runtime-cu12-12.8.90 nvidia-cudnn-cu12-9.10.2.21 nvidia-cufft-cu12-11.3.3.83 nvidia-cufile-cu12-1.13.1.3 nvidia-curand-cu12-10.3.9.90 nvidia-cusolver-cu12-11.7.3.90 nvidia-cusparse-cu12-12.5.8.93 nvidia-cusparselt-cu12-0.7.1 nvidia-nccl-cu12-2.27.3 nvidia-nvjitlink-cu12-12.8.93 nvidia-nvtx-cu12-12.8.90 omegaconf-2.3.0 openai-2.6.1 outlines_core-0.2.11 pre-commit-4.3.0 pytorch-lightning-2.5.5 rank_bm25-0.2.2 reprover-0.1 tensorboardX-2.6.4 tokenizers-0.22.1 torch-2.7.0 torchaudio-2.8.0 torchmetrics-1.8.2 torchvision-0.23.0 transformers-4.57.1 triton-3.3.1 typeshed-client-2.8.2 vllm-0.11.0 wandb-0.22.3 xformers-0.0.32.post1 xgrammar-0.1.25
+
+done
+#
+# To activate this environment, use
+#
+#     $ conda activate lean-reinforcement
+#
+# To deactivate an active environment, use
+#
+#     $ conda deactivate
+

@@ -1,0 +1,22 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Starting training run with distributed environment...
+Traceback (most recent call last):
+  File "/gpfs/home1/gkoopman/lean_reinforcement/src/training/train.py", line 7, in <module>
+    from ReProver.common import Pos
+ModuleNotFoundError: No module named 'ReProver'
+srun: error: gcn14: task 0: Exited with exit code 1
+srun: Terminating StepId=15697493.0

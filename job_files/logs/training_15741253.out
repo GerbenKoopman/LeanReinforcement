@@ -1,0 +1,19 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Starting training run with distributed environment...
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+[2025-11-04T12:00:09.294] error: *** JOB 15741253 ON gcn8 CANCELLED AT 2025-11-04T12:00:09 DUE to SIGNAL Terminated ***
+[2025-11-04T12:00:09.295] error: *** STEP 15741253.0 ON gcn8 CANCELLED AT 2025-11-04T12:00:09 DUE to SIGNAL Terminated ***

@@ -1,0 +1,91 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Channels:
+ - pytorch
+ - nvidia
+ - conda-forge
+ - defaults
+Platform: linux-64
+Collecting package metadata (repodata.json): ...working... done
+Solving environment: ...working... done
+
+Downloading and Extracting Packages: ...working... done
+Preparing transaction: ...working... done
+Verifying transaction: ...working... done
+Executing transaction: ...working... done
+Installing pip dependencies: ...working... Pip subprocess error:
+  error: subprocess-exited-with-error
+  
+  × python setup.py egg_info did not run successfully.
+  │ exit code: 1
+  ╰─> [19 lines of output]
+      df: /home/gkoopman/.triton/autotune: No such file or directory
+      Traceback (most recent call last):
+        File "<string>", line 2, in <module>
+        File "<pip-setuptools-caller>", line 35, in <module>
+        File "/gpfs/scratch1/nodespecific/gcn2/gkoopman.15696750/pip-install-mx1ljtym/deepspeed_feef52bceae54dc9beb869e52814b241/setup.py", line 40, in <module>
+          from op_builder import get_default_compute_capabilities, OpBuilder
+        File "/gpfs/scratch1/nodespecific/gcn2/gkoopman.15696750/pip-install-mx1ljtym/deepspeed_feef52bceae54dc9beb869e52814b241/op_builder/__init__.py", line 18, in <module>
+          import deepspeed.ops.op_builder  # noqa: F401 # type: ignore
+        File "/gpfs/scratch1/nodespecific/gcn2/gkoopman.15696750/pip-install-mx1ljtym/deepspeed_feef52bceae54dc9beb869e52814b241/deepspeed/__init__.py", line 25, in <module>
+          from . import ops
+        File "/gpfs/scratch1/nodespecific/gcn2/gkoopman.15696750/pip-install-mx1ljtym/deepspeed_feef52bceae54dc9beb869e52814b241/deepspeed/ops/__init__.py", line 15, in <module>
+          from ..git_version_info import compatible_ops as __compatible_ops__
+        File "/gpfs/scratch1/nodespecific/gcn2/gkoopman.15696750/pip-install-mx1ljtym/deepspeed_feef52bceae54dc9beb869e52814b241/deepspeed/git_version_info.py", line 29, in <module>
+          op_compatible = builder.is_compatible()
+        File "/gpfs/scratch1/nodespecific/gcn2/gkoopman.15696750/pip-install-mx1ljtym/deepspeed_feef52bceae54dc9beb869e52814b241/op_builder/fp_quantizer.py", line 35, in is_compatible
+          sys_cuda_major, _ = installed_cuda_version()
+        File "/gpfs/scratch1/nodespecific/gcn2/gkoopman.15696750/pip-install-mx1ljtym/deepspeed_feef52bceae54dc9beb869e52814b241/op_builder/builder.py", line 51, in installed_cuda_version
+          raise MissingCUDAException("CUDA_HOME does not exist, unable to compile CUDA op(s)")
+      op_builder.builder.MissingCUDAException: CUDA_HOME does not exist, unable to compile CUDA op(s)
+      [end of output]
+  
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+error: metadata-generation-failed
+
+× Encountered error while generating package metadata.
+╰─> See above for output.
+
+note: This is an issue with the package mentioned above, not pip.
+hint: See above for details.
+
+Ran pip subprocess with arguments:
+['/home/gkoopman/.conda/envs/lean-reinforcement/bin/python', '-m', 'pip', 'install', '-U', '-r', '/gpfs/home1/gkoopman/lean_reinforcement/condaenv.jqwojwd_.requirements.txt', '--exists-action=b']
+Pip subprocess output:
+Obtaining file:///gpfs/home1/gkoopman/lean_reinforcement/ReProver (from -r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.jqwojwd_.requirements.txt (line 11))
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: lean-dojo in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from -r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.jqwojwd_.requirements.txt (line 1)) (4.20.0)
+Requirement already satisfied: torch in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from -r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.jqwojwd_.requirements.txt (line 2)) (2.7.0)
+Collecting torch (from -r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.jqwojwd_.requirements.txt (line 2))
+  Downloading torch-2.9.0-cp310-cp310-manylinux_2_28_x86_64.whl.metadata (30 kB)
+Requirement already satisfied: tqdm in /gpfs/home1/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages (from -r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.jqwojwd_.requirements.txt (line 3)) (4.67.1)
+Collecting deepspeed (from -r /gpfs/home1/gkoopman/lean_reinforcement/condaenv.jqwojwd_.requirements.txt (line 4))
+  Downloading deepspeed-0.18.1.tar.gz (1.6 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.6/1.6 MB 30.0 MB/s  0:00:00
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+
+failed
+
+CondaEnvException: Pip failed
+

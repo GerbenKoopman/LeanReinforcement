@@ -1,0 +1,34 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Starting training run with distributed environment...
+Traceback (most recent call last):
+  File "/gpfs/home1/gkoopman/lean_reinforcement/src/training/train.py", line 7, in <module>
+    from ReProver.common import Pos
+  File "/gpfs/home1/gkoopman/lean_reinforcement/ReProver/common.py", line 17, in <module>
+    from deepspeed.ops.adam import FusedAdam, DeepSpeedCPUAdam
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/deepspeed/__init__.py", line 25, in <module>
+    from . import ops
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/deepspeed/ops/__init__.py", line 15, in <module>
+    from ..git_version_info import compatible_ops as __compatible_ops__
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/deepspeed/git_version_info.py", line 29, in <module>
+    op_compatible = builder.is_compatible()
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/deepspeed/ops/op_builder/fp_quantizer.py", line 35, in is_compatible
+    sys_cuda_major, _ = installed_cuda_version()
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/deepspeed/ops/op_builder/builder.py", line 51, in installed_cuda_version
+    raise MissingCUDAException("CUDA_HOME does not exist, unable to compile CUDA op(s)")
+deepspeed.ops.op_builder.builder.MissingCUDAException: CUDA_HOME does not exist, unable to compile CUDA op(s)
+srun: error: gcn14: task 0: Exited with exit code 1
+srun: Terminating StepId=15697498.0
