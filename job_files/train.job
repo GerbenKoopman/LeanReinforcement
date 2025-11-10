@@ -30,7 +30,7 @@ echo "Starting training run with distributed environment..."
 srun python3 -m src.training.train \
     --data-type novel_premises \
     --num-epochs 10 \
-    --num-theorems 1000 \
+    --num-theorems 100 \
     --num-iterations 50 \
     --max-steps 30 \
     --mcts-type guided_rollout \
