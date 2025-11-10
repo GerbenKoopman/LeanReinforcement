@@ -5,13 +5,7 @@ Environment for interacting with LeanDojo via a Gymnasium extension.
 from typing import Any
 import gymnasium as gym
 
-from lean_dojo import (
-    Dojo,
-    TacticState,
-    Theorem,
-    ProofFinished,
-    LeanError,
-)
+from lean_dojo import Dojo, TacticState, Theorem, ProofFinished, LeanError
 from ReProver.common import Corpus, Pos
 from .dataloader import LeanDataLoader
 
@@ -24,7 +18,7 @@ class LeanDojoEnv(gym.Env):
 
         self.dataloader = LeanDataLoader(corpus)
 
-        self.dojo = Dojo(self.theorem)
+        self.dojo = Dojo(theorem)
         self.observation_space = gym.spaces.Text(max_length=10000)
 
         # Action space for selecting k premises from an indexed library of size N
@@ -69,3 +63,19 @@ class LeanDojoEnv(gym.Env):
             raise ValueError(f"Unhandled state: {next_state}")
 
         return observation, reward, done, False, {}
+
+    def close(self):
+        """Explicitly clean up the last running 'lean' process."""
+        if self.dojo is not None:
+            try:
+                self.dojo.__exit__(None, None, None)
+            except Exception as e:
+                print(f"⚠ Warning: Error during Dojo close: {e}")
+
+        self.dojo = None
+        self.dojo_instance = None
+        print("✓ Environment closed.")
+
+    def __del__(self):
+        """Ensure cleanup when object is garbage collected."""
+        self.close()
