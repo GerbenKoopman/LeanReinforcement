@@ -343,6 +343,7 @@ def main(args):
             logger.debug(
                 f"Collected {len(theorem_training_data)} training samples for theorem: {theorem.full_name}"
             )
+            env.close()
             del theorem_training_data
             del runner
             del env
