@@ -376,9 +376,6 @@ class MCTS_AlphaZero(BaseMCTS):
         if node.encoder_features is None:
             node.encoder_features = self.value_head.encode_states([state_str])
 
-        # Assume generate_tactics_with_logprobs returns [(tactic, log_prob), ...]
-        # And that we convert log_prob to prob.
-        # For now, let's assume it returns (tactic, prob)
         tactics_with_probs = self.transformer.generate_tactics_with_probs(
             state_str, n=NUM_TACTICS_TO_EXPAND
         )
