@@ -368,7 +368,6 @@ class MCTS_AlphaZero(BaseMCTS):
         if not isinstance(node.state, TacticState):
             raise TypeError("Cannot expand a node without a TacticState.")
 
-        # Get tactics and their prior probabilities from the policy head
         state_str = node.state.pp
 
         # Cache encoder features for this node if not already cached
