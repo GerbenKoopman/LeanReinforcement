@@ -25,7 +25,6 @@ dependencies:
     - deepspeed
     - pytorch-lightning[extra]
     - transformers
-    - wandb
     - openai
     - rank_bm25
     - vllm
