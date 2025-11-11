@@ -274,7 +274,7 @@ class MCTS_GuidedRollout(BaseMCTS):
 
         # Run the tactic in the environment to get the next state
         # This is fast as it doesn't modify the main env, just computes the next state
-        next_state_or_result = self.env.dojo_instance.run_tac(node.state, tactic)
+        next_state_or_result = self.env.dojo.run_tac(node.state, tactic)
 
         # Create the new child node
         child = Node(next_state_or_result, parent=node, action=tactic)
@@ -305,7 +305,7 @@ class MCTS_GuidedRollout(BaseMCTS):
             tactic = self.transformer.generate_tactics(state_str, n=1)[0]
 
             # Run the tactic
-            result = self.env.dojo_instance.run_tac(current_state, tactic)
+            result = self.env.dojo.run_tac(current_state, tactic)
 
             # Check result
             if isinstance(result, ProofFinished):
@@ -381,7 +381,7 @@ class MCTS_AlphaZero(BaseMCTS):
 
         # Create a child for each promising tactic
         for tactic, prob in tactics_with_probs:
-            next_state = self.env.dojo_instance.run_tac(node.state, tactic)
+            next_state = self.env.dojo.run_tac(node.state, tactic)
             child = Node(next_state, parent=node, action=tactic)
             child.prior_p = prob
             node.children.append(child)

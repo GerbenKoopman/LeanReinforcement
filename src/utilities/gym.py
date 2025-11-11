@@ -4,6 +4,7 @@ Environment for interacting with LeanDojo via a Gymnasium extension.
 
 from typing import Any
 import gymnasium as gym
+from loguru import logger
 
 from lean_dojo import Dojo, TacticState, Theorem, ProofFinished, LeanError
 from ReProver.common import Corpus, Pos
@@ -34,7 +35,7 @@ class LeanDojoEnv(gym.Env):
 
     def reset(self, *, seed=None, options=None) -> tuple[str, dict[str, Any]]:
         super().reset(seed=seed)
-        self.dojo_instance, self.initial_state = self.dojo.__enter__()
+        self.dojo, self.initial_state = self.dojo.__enter__()
         assert isinstance(self.initial_state, TacticState)
         observation = self.initial_state.pp
         return observation, {}
@@ -42,7 +43,7 @@ class LeanDojoEnv(gym.Env):
     def step(self, action: str) -> tuple[str, float, bool, bool, dict[str, Any]]:
         # Interact with Lean
         assert isinstance(self.current_state, TacticState)
-        next_state = self.dojo_instance.run_tac(self.current_state, action)
+        next_state = self.dojo.run_tac(self.current_state, action)
         self.current_state = next_state
 
         if isinstance(next_state, LeanError):  # Error occurred
@@ -70,11 +71,10 @@ class LeanDojoEnv(gym.Env):
             try:
                 self.dojo.__exit__(None, None, None)
             except Exception as e:
-                print(f"⚠ Warning: Error during Dojo close: {e}")
+                logger.debug(f"⚠ Warning: Error during Dojo close: {e}")
 
-        self.dojo = None
-        self.dojo_instance = None
-        print("✓ Environment closed.")
+        self.dojo: Dojo = None  # type: ignore
+        logger.info("✓ Environment closed.")
 
     def __del__(self):
         """Ensure cleanup when object is garbage collected."""
