@@ -1,0 +1,41 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Starting training run with distributed environment...
+wandb: Currently logged in as: gerbennkoopman to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.22.3
+wandb: Run data is saved locally in /gpfs/home1/gkoopman/lean_reinforcement/wandb/run-20251110_104237-40dp6b9d
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run northern-dream-4
+wandb: ⭐️ View project at https://wandb.ai/gerbennkoopman-university-of-amsterdam/lean-reinforcement
+wandb: 🚀 View run at https://wandb.ai/gerbennkoopman-university-of-amsterdam/lean-reinforcement/runs/40dp6b9d
+2025-11-10 10:42:38.598 | WARNING  | src.utilities.checkpoint:get_checkpoint_dir:28 - CHECKPOINT_DIR not set in environment, using ./checkpoints
+2025-11-10 10:42:38.598 | INFO     | __main__:main:269 - Using checkpoint directory: checkpoints
+2025-11-10 10:42:41.576 | INFO     | __main__:log_gpu_memory:253 - After model initialization - GPU Memory: 1.12GB allocated, 1.23GB reserved
+2025-11-10 10:42:41.576 | INFO     | __main__:main:287 - Loading data from 'leandojo_benchmark_4/novel_premises'
+2025-11-10 10:42:41.577 | INFO     | ReProver.common:__init__:201 - Building the corpus from leandojo_benchmark_4/corpus.jsonl
+2025-11-10 10:43:25.182 | INFO     | lean_dojo.data_extraction.trace:trace:248 - Loading the traced repo from /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/leanprover-community-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4
+2025-11-10 10:44:20,632	INFO worker.py:2003 -- Started a local Ray instance. View the dashboard at [1m[32m127.0.0.1:8265 [39m[22m
+/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/ray/_private/worker.py:2051: FutureWarning: Tip: In future versions of Ray, Ray will no longer override accelerator visible devices env var if num_gpus=0 or num_gpus=None (default). To enable this behavior and turn off this error message, set RAY_ACCEL_ENV_VAR_OVERRIDE_ON_ZERO=0
+  warnings.warn(
+  0%|          | 0/5674 [00:00<?, ?it/s]  0%|          | 1/5674 [00:01<2:44:59,  1.74s/it]  0%|          | 7/5674 [00:01<18:49,  5.02it/s]    0%|          | 11/5674 [00:06<56:56,  1.66it/s]  0%|          | 16/5674 [00:06<32:21,  2.91it/s]  0%|          | 20/5674 [00:06<22:14,  4.24it/s]  0%|          | 26/5674 [00:06<13:39,  6.89it/s]  1%|          | 33/5674 [00:06<08:42, 10.80it/s]  1%|          | 38/5674 [00:11<32:00,  2.93it/s]  1%|          | 45/5674 [00:11<20:36,  4.55it/s]  1%|          | 51/5674 [00:11<14:51,  6.30it/s]  1%|          | 56/5674 [00:11<11:55,  7.85it/s]  1%|          | 60/5674 [00:16<36:03,  2.59it/s]  1%|          | 63/5674 [00:16<29:26,  3.18it/s]  1%|          | 66/5674 [00:16<23:34,  3.96it/s]  1%|          | 69/5674 [00:16<18:36,  5.02it/s]  1%|▏         | 74/5674 [00:17<12:43,  7.34it/s]  1%|▏         | 81/5674 [00:17<07:55, 11.75it/s]  2%|▏         | 87/5674 [00:17<06:08, 15.16it/s]  2%|▏         | 91/5674 [00:17<05:47, 16.08it/s]  2%|▏         | 95/srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+[2025-11-10T10:45:04.284] error: *** JOB 15860716 ON gcn47 CANCELLED AT 2025-11-10T10:45:04 DUE to SIGNAL Terminated ***
+5674 [00:23<37:31,  2.48it/s]  2%|▏         | 99/5674 [00:23<28:30,  3.26it/s]  2%|▏         | 102/5674 [00:23<23:13,  4.00it/s]  2%|▏         | 105/5674 [00:23<18:50,  4.93it/s]  2%|▏         | 108/5674 [00:23<15:27,  6.00it/s]  2%|▏         | 111/5674 [00:23<12:09,  7.62it/s]  2%|▏         | 114/5674 [00:24<10:06,  9.16it/s]  2%|▏         | 118/5674 [00:24<07:40, 12.06it/s]  2%|▏         | 121/5674 [00:30<57:25,  1.61it/s]  2%|▏         | 124/5674 [00:30<42:31,  2.18it/s]  2%|▏         | 130/5674 [00:30<25:07,  3.68it/s]  2%|▏         | 137/5674 [00:30<15:02,  6.14it/s]  2%|▏         | 141/5674 [00:31<12:30,  7.37it/s]  3%|▎         | 144/5674 [00:31<10:48,  8.52it/s]  3%|▎         | 149/5674 [00:31<07:56, 11.60it/s]  3%|▎         | 156/5674 [00:31<05:23, 17.07it/s]  3%|▎         | 160/5674 [00:31<05:13, 17.60it/s][2025-11-10T10:45:04.285] error: *** STEP 15860716.0 ON gcn47 CANCELLED AT 2025-11-10T10:45:04 DUE to SIGNAL Terminated ***
+*** SIGTERM received at time=1762767904 on cpu 25 ***
+PC: @     0x559ec5612f8e  (unknown)  list_traverse
+    @     0x1546636d26f0  (unknown)  (unknown)
+    @     0x559ed1a0f240  (unknown)  (unknown)
+[2025-11-10 10:45:04,298 E 2382159 2382159] logging.cc:474: *** SIGTERM received at time=1762767904 on cpu 25 ***
+[2025-11-10 10:45:04,298 E 2382159 2382159] logging.cc:474: PC: @     0x559ec5612f8e  (unknown)  list_traverse
