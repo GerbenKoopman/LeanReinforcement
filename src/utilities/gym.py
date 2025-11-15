@@ -29,8 +29,8 @@ class LeanDojoEnv:
         return len(premise_list)
 
     def reset(self) -> None:
-        self.initial_state = self.dojo.__enter__()
-        assert isinstance(self.initial_state[-1], TacticState)
+        _, self.initial_state = self.dojo.__enter__()
+        assert isinstance(self.initial_state, TacticState)
 
     def step(self, action: str) -> tuple[str, float, bool, bool, dict[str, Any]]:
         # Interact with Lean
