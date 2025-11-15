@@ -23,7 +23,7 @@ class TestLeanDojoEnv(unittest.TestCase):
         self.initial_state.pp = "initial_state_pp"
 
         self.mock_dojo = MockDojo.return_value
-        self.mock_dojo.__enter__.return_value = self.initial_state
+        self.mock_dojo.__enter__.return_value = (self.mock_dojo, self.initial_state)
         self.mock_dojo.run_tac = MagicMock()
 
         mock_dataloader = MockDataLoader.return_value
