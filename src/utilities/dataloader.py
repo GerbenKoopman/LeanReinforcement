@@ -4,7 +4,7 @@ Data loader for LeanDojo traced repositories and theorems.
 
 import os
 import json
-from typing import List
+from typing import List, Optional
 
 from lean_dojo import LeanGitRepo, TracedRepo, trace, Theorem
 from ReProver.common import Corpus, Pos
@@ -34,11 +34,14 @@ class LeanDataLoader:
         with open(file_path, "r") as f:
             return json.load(f)
 
-    def extract_theorem(self, data: dict) -> Theorem:
+    def extract_theorem(self, data: dict) -> Optional[Theorem]:
         url = data["url"]
         commit = data["commit"]
         file_path = data["file_path"]
         full_name = data["full_name"]
+
+        if any(x is None for x in [url, commit, file_path, full_name]):
+            return None
 
         repo = LeanGitRepo(url, commit)
         theorem = Theorem(repo, file_path, full_name)

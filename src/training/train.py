@@ -304,10 +304,15 @@ def main(args):
             : args.num_theorems
         ]:  # Limiting for demonstration
             theorem = dataloader.extract_theorem(thm_data)
+
             if not theorem:
                 continue
 
             theorem_pos = Pos(*thm_data["start"])
+
+            if not theorem_pos:
+                continue
+
             env = LeanDojoEnv(corpus, theorem, theorem_pos)
 
             # --- DYNAMIC MCTS SELECTION ---
