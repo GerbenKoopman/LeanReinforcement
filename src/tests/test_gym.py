@@ -31,7 +31,7 @@ class TestLeanDojoEnv(unittest.TestCase):
         mock_dataloader.get_premises.return_value = ["p1", "p2", "p3"]
 
         # Instantiate the environment
-        self.env = LeanDojoEnv(self.theorem, self.theorem_pos, k=2)
+        self.env = LeanDojoEnv(self.mock_corpus, self.theorem, self.theorem_pos, k=2)
 
     def test_initialization(self):
         # Assert that dependencies were called correctly
