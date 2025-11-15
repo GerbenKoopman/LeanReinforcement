@@ -3,7 +3,6 @@ Environment for interacting with LeanDojo via a Gymnasium extension.
 """
 
 from typing import Any
-import gymnasium as gym
 from loguru import logger
 
 from lean_dojo import Dojo, TacticState, Theorem, ProofFinished, LeanError
@@ -12,7 +11,7 @@ from ReProver.common import Corpus, Pos
 from .dataloader import LeanDataLoader
 
 
-class LeanDojoEnv(gym.Env):
+class LeanDojoEnv:
     def __init__(self, corpus: Corpus, theorem: Theorem, theorem_pos: Pos, k: int = 10):
         super().__init__()
         self.theorem = theorem
@@ -21,11 +20,6 @@ class LeanDojoEnv(gym.Env):
         self.dataloader = LeanDataLoader(corpus)
 
         self.dojo = Dojo(theorem)
-        self.observation_space = gym.spaces.Text(max_length=10000)
-
-        # Action space for selecting k premises from an indexed library of size N
-        N = self._get_number_of_accessible_premises()
-        self.action_space = gym.spaces.MultiDiscrete([N] * k)
 
         self.reset()
         self.current_state = self.initial_state
@@ -34,12 +28,9 @@ class LeanDojoEnv(gym.Env):
         premise_list = self.dataloader.get_premises(self.theorem, self.theorem_pos)
         return len(premise_list)
 
-    def reset(self, *, seed=None, options=None) -> tuple[str, dict[str, Any]]:
-        super().reset(seed=seed)
+    def reset(self) -> None:
         self.initial_state = self.dojo.__enter__()
         assert isinstance(self.initial_state, TacticState)
-        observation = self.initial_state.pp
-        return observation, {}
 
     def step(self, action: str) -> tuple[str, float, bool, bool, dict[str, Any]]:
         # Interact with Lean
@@ -70,8 +61,6 @@ class LeanDojoEnv(gym.Env):
             done = False
             observation = next_state.pp
         else:
-            # Edge case state, next_state is of type ProofGivenUp which
-            # only occurs when it contains a sorry
             raise ValueError(f"Unhandled state: {next_state}")
 
         return observation, reward, done, False, {}
@@ -82,10 +71,10 @@ class LeanDojoEnv(gym.Env):
             try:
                 self.dojo.__exit__(None, None, None)
             except Exception as e:
-                logger.debug(f"⚠ Warning: Error during Dojo close: {e}")
+                logger.debug(f"Warning: Error during Dojo close: {e}")
 
         self.dojo: Dojo = None  # type: ignore
-        logger.info("✓ Environment closed.")
+        logger.info("Environment closed.")
 
     def __del__(self):
         """Ensure cleanup when object is garbage collected."""
