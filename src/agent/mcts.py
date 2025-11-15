@@ -10,6 +10,7 @@ from typing import List, Optional
 from loguru import logger
 
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
+from lean_dojo.interaction.dojo import DojoTacticTimeoutError
 
 from src.utilities.gym import LeanDojoEnv
 from .transformer import Transformer
@@ -274,7 +275,15 @@ class MCTS_GuidedRollout(BaseMCTS):
 
         # Run the tactic in the environment to get the next state
         # This is fast as it doesn't modify the main env, just computes the next state
-        next_state_or_result = self.env.dojo.run_tac(node.state, tactic)
+        try:
+            next_state_or_result = self.env.dojo.run_tac(node.state, tactic)
+        except DojoTacticTimeoutError:
+            logger.warning(f"Tactic timed out: {tactic[:100]}")
+            # Treat timeout as an error state
+            next_state_or_result = LeanError(error="Tactic execution timed out")
+        except Exception as e:
+            logger.warning(f"Error running tactic '{tactic[:100]}': {e}")
+            next_state_or_result = LeanError(error=f"Exception: {str(e)}")
 
         # Create the new child node
         child = Node(next_state_or_result, parent=node, action=tactic)
@@ -304,8 +313,17 @@ class MCTS_GuidedRollout(BaseMCTS):
             # Get a single greedy tactic
             tactic = self.transformer.generate_tactics(state_str, n=1)[0]
 
-            # Run the tactic
-            result = self.env.dojo.run_tac(current_state, tactic)
+            # Run the tactic with timeout handling
+            try:
+                result = self.env.dojo.run_tac(current_state, tactic)
+            except DojoTacticTimeoutError:
+                logger.warning(f"Tactic timed out during simulation: {tactic[:100]}")
+                return -1.0  # Penalize timeouts
+            except Exception as e:
+                logger.warning(
+                    f"Error during simulation with tactic '{tactic[:100]}': {e}"
+                )
+                return -1.0
 
             # Check result
             if isinstance(result, ProofFinished):
@@ -381,7 +399,16 @@ class MCTS_AlphaZero(BaseMCTS):
 
         # Create a child for each promising tactic
         for tactic, prob in tactics_with_probs:
-            next_state = self.env.dojo.run_tac(node.state, tactic)
+            try:
+                next_state = self.env.dojo.run_tac(node.state, tactic)
+            except DojoTacticTimeoutError:
+                logger.warning(f"Tactic timed out: {tactic[:100]}")
+                # Treat timeout as an error state and continue with other tactics
+                next_state = LeanError(error="Tactic execution timed out")
+            except Exception as e:
+                logger.warning(f"Error running tactic '{tactic[:100]}': {e}")
+                next_state = LeanError(error=f"Exception: {str(e)}")
+
             child = Node(next_state, parent=node, action=tactic)
             child.prior_p = prob
             node.children.append(child)

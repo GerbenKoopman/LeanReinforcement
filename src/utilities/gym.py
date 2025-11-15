@@ -7,6 +7,7 @@ import gymnasium as gym
 from loguru import logger
 
 from lean_dojo import Dojo, TacticState, Theorem, ProofFinished, LeanError
+from lean_dojo.interaction.dojo import DojoTacticTimeoutError
 from ReProver.common import Corpus, Pos
 from .dataloader import LeanDataLoader
 
@@ -43,7 +44,17 @@ class LeanDojoEnv(gym.Env):
     def step(self, action: str) -> tuple[str, float, bool, bool, dict[str, Any]]:
         # Interact with Lean
         assert isinstance(self.current_state, TacticState)
-        next_state = self.dojo.run_tac(self.current_state, action)
+
+        try:
+            next_state = self.dojo.run_tac(self.current_state, action)
+        except DojoTacticTimeoutError:
+            logger.warning(f"Tactic timed out: {action[:100]}")
+            # Treat timeout as an error state
+            next_state = LeanError(error="Tactic execution timed out")
+        except Exception as e:
+            logger.error(f"Error running tactic '{action[:100]}': {e}")
+            next_state = LeanError(error=f"Exception: {str(e)}")
+
         self.current_state = next_state
 
         if isinstance(next_state, LeanError):  # Error occurred
