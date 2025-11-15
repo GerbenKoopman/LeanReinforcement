@@ -67,7 +67,7 @@ class LeanDojoEnv(gym.Env):
 
     def close(self):
         """Explicitly clean up the last running 'lean' process."""
-        if self.dojo is not None:
+        if hasattr(self, "dojo") and self.dojo is not None:
             try:
                 self.dojo.__exit__(None, None, None)
             except Exception as e:
