@@ -12,6 +12,7 @@ class TestTransformer(unittest.TestCase):
         """Set up the test environment with mocked tokenizer and model."""
         self.mock_tokenizer = MagicMock()
         self.mock_model = MagicMock()
+        self.mock_model.to.return_value = self.mock_model
         mock_tokenizer_from_pretrained.return_value = self.mock_tokenizer
         mock_model_from_pretrained.return_value = self.mock_model
 
@@ -31,6 +32,7 @@ class TestTransformer(unittest.TestCase):
         # Mock tokenizer return value
         mock_tokenized = MagicMock()
         mock_tokenized.input_ids = torch.tensor([[1, 2, 3]])
+        mock_tokenized.to.return_value = mock_tokenized  # Chain .to() method
         self.mock_tokenizer.return_value = mock_tokenized
 
         # Mock model generate return value
@@ -62,6 +64,7 @@ class TestTransformer(unittest.TestCase):
         # Mock tokenizer return value
         mock_tokenized = MagicMock()
         mock_tokenized.input_ids = torch.tensor([[1, 2, 3]])
+        mock_tokenized.to.return_value = mock_tokenized  # Chain .to() method
         self.mock_tokenizer.return_value = mock_tokenized
 
         # Mock model generate return value
@@ -92,12 +95,13 @@ class TestTransformer(unittest.TestCase):
         # Mock tokenizer return value
         mock_tokenized = MagicMock()
         mock_tokenized.input_ids = torch.tensor([[1, 2, 3]])
+        mock_tokenized.to.return_value = mock_tokenized  # Chain .to() method
         self.mock_tokenizer.return_value = mock_tokenized
 
         # Mock model generate return value with scores
         mock_outputs = MagicMock()
         mock_outputs.sequences = torch.tensor([[10, 20, 30], [11, 21, 31]])
-        mock_outputs.sequences_scores = torch.tensor([2.0, 1.0])
+        mock_outputs.sequences_scores = torch.tensor([2.0, 1.0])  # Use actual tensor
         self.mock_model.generate.return_value = mock_outputs
 
         # Mock batch_decode return value
@@ -132,6 +136,7 @@ class TestTransformer(unittest.TestCase):
         # Mock tokenizer return value
         mock_tokenized = MagicMock()
         mock_tokenized.input_ids = torch.tensor([[1, 2, 3]])
+        mock_tokenized.to.return_value = mock_tokenized  # Chain .to() method
         self.mock_tokenizer.return_value = mock_tokenized
 
         # Mock model generate return value with scores
@@ -161,6 +166,7 @@ class TestTransformer(unittest.TestCase):
         # Mock tokenizer return value
         mock_tokenized = MagicMock()
         mock_tokenized.input_ids = torch.tensor([[1, 2, 3]])
+        mock_tokenized.to.return_value = mock_tokenized
         self.mock_tokenizer.return_value = mock_tokenized
 
         # Mock model generate return value
