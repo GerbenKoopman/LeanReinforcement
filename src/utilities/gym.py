@@ -35,7 +35,7 @@ class LeanDojoEnv(gym.Env):
 
     def reset(self, *, seed=None, options=None) -> tuple[str, dict[str, Any]]:
         super().reset(seed=seed)
-        self.dojo, self.initial_state = self.dojo.__enter__()
+        self.initial_state = self.dojo.__enter__()
         assert isinstance(self.initial_state, TacticState)
         observation = self.initial_state.pp
         return observation, {}
