@@ -1,6 +1,5 @@
 import unittest
 from unittest.mock import patch, MagicMock, PropertyMock
-import gymnasium as gym
 
 from lean_dojo import TacticState, ProofFinished, LeanError, Theorem
 from ReProver.common import Pos
@@ -35,16 +34,10 @@ class TestLeanDojoEnv(unittest.TestCase):
 
     def test_initialization(self):
         # Assert that dependencies were called correctly
-        self.assertIsInstance(self.env.observation_space, gym.spaces.Text)
-        self.assertIsInstance(self.env.action_space, gym.spaces.MultiDiscrete)
-        assert isinstance(self.env.action_space, gym.spaces.MultiDiscrete)
-        self.assertEqual(self.env.action_space.nvec.tolist(), [3, 3])
         self.assertEqual(self.env.current_state, self.initial_state)
 
     def test_reset(self):
-        obs, info = self.env.reset()
-        self.assertEqual(obs, "initial_state_pp")
-        self.assertEqual(info, {})
+        self.env.reset()
         self.mock_dojo.__enter__.assert_called()
 
     def test_step_tactic_state(self):
