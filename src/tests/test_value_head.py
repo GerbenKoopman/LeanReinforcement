@@ -7,18 +7,20 @@ from src.agent.value_head import ValueHead
 
 
 class TestValueHead(unittest.TestCase):
-    @patch("src.agent.value_head.AutoModelForSeq2SeqLM.from_pretrained")
-    @patch("src.agent.value_head.AutoTokenizer.from_pretrained")
+    @patch("src.agent.transformer.AutoModelForSeq2SeqLM.from_pretrained")
+    @patch("src.agent.transformer.AutoTokenizer.from_pretrained")
     def setUp(self, mock_tokenizer_from_pretrained, mock_model_from_pretrained):
         self.mock_tokenizer = MagicMock()
-        self.mock_transformer = MagicMock()
+        self.mock_transformer_model = MagicMock()
         self.mock_encoder = MagicMock()
 
         mock_tokenizer_from_pretrained.return_value = self.mock_tokenizer
-        mock_model_from_pretrained.return_value = self.mock_transformer
+        mock_model_from_pretrained.return_value = self.mock_transformer_model
+
+        self.mock_transformer_model.to.return_value = self.mock_transformer_model
 
         # Mock get_encoder to return the encoder
-        self.mock_transformer.get_encoder.return_value = self.mock_encoder
+        self.mock_transformer_model.get_encoder.return_value = self.mock_encoder
 
         # Mock that the encoder has parameters
         self.mock_encoder.parameters.return_value = [nn.Parameter(torch.randn(2, 2))]
@@ -51,7 +53,7 @@ class TestValueHead(unittest.TestCase):
         self.mock_encoder.return_value = MagicMock(last_hidden_state=hidden_state)
 
         # Act
-        features = self.value_head.encode_states(test_list)
+        features = self.value_head._encode(test_list)
 
         # Assert
         self.mock_tokenizer.assert_called_once_with(
@@ -69,10 +71,9 @@ class TestValueHead(unittest.TestCase):
         # Arrange
         state_str = "state"
 
-        # Mock the encode_states method to return a predictable tensor
         encoded_features = torch.randn(1, 1472)
         with patch.object(
-            self.value_head, "encode_states", return_value=encoded_features
+            self.value_head, "_encode", return_value=encoded_features
         ) as mock_encode, patch.object(
             self.value_head.value_head, "forward", return_value=torch.tensor([[0.5]])
         ) as mock_forward:
@@ -85,24 +86,25 @@ class TestValueHead(unittest.TestCase):
             self.assertIsInstance(value, float)
             self.assertAlmostEqual(value, torch.tanh(torch.tensor(0.5)).item())
 
-    def test_predict_from_features(self):
+    def test_value_head_forward(self):
         # Arrange
         # Create pre-computed features with the expected dimension (1, 1472)
         features = torch.randn(1, 1472)
 
         # Mock the value_head forward pass to return a predictable value
         expected_raw_value = torch.tensor([[0.75]])
-        expected_result = torch.tanh(torch.tensor(0.75)).item()
 
         with patch.object(
             self.value_head.value_head, "forward", return_value=expected_raw_value
         ) as mock_forward:
             # Act
-            value = self.value_head.predict_from_features(features)
+            raw_value = self.value_head.value_head(features)
+            value = torch.tanh(raw_value).item()
 
             # Assert
             mock_forward.assert_called_once_with(features)
             self.assertIsInstance(value, float)
+            expected_result = torch.tanh(torch.tensor(0.75)).item()
             self.assertAlmostEqual(value, expected_result)
             # Verify the value is in the expected range [-1, 1]
             self.assertGreaterEqual(value, -1.0)

@@ -52,7 +52,7 @@ class MockLeanDojoEnv(MagicMock):
         self.theorem_pos = "mock_pos"
         self.dataloader = Mock()
         self.dataloader.get_premises.return_value = ["p1", "p2"]
-        self.dojo_instance = Mock()
+        self.dojo = Mock()  # Changed from dojo_instance to dojo
 
 
 class TestBaseMCTS(unittest.TestCase):
@@ -102,7 +102,7 @@ class TestMCTSGuidedRollout(unittest.TestCase):
         state.pp = "state_pp"
         node = Node(state)
         self.transformer.generate_tactics.return_value = ["tactic1"]
-        self.env.dojo_instance.run_tac.return_value = Mock(spec=TacticState)
+        self.env.dojo.run_tac.return_value = Mock(spec=TacticState)
 
         child = self.mcts._expand(node)
 
@@ -110,7 +110,7 @@ class TestMCTSGuidedRollout(unittest.TestCase):
         self.assertIs(child.parent, node)
         self.assertEqual(child.action, "tactic1")
         self.transformer.generate_tactics.assert_called_once()
-        self.env.dojo_instance.run_tac.assert_called_once_with(state, "tactic1")
+        self.env.dojo.run_tac.assert_called_once_with(state, "tactic1")
 
     def test_simulate_proof_finished(self):
         node = Node(Mock(spec=ProofFinished))
@@ -127,14 +127,14 @@ class TestMCTSGuidedRollout(unittest.TestCase):
         # First step in rollout leads to another tactic state
         intermediate_state = Mock(spec=TacticState)
         intermediate_state.pp = "intermediate_state"
-        self.env.dojo_instance.run_tac.side_effect = [
+        self.env.dojo.run_tac.side_effect = [
             intermediate_state,
             Mock(spec=ProofFinished),
         ]
 
         reward = self.mcts._simulate(node)
         self.assertEqual(reward, 1.0)
-        self.assertEqual(self.env.dojo_instance.run_tac.call_count, 2)
+        self.assertEqual(self.env.dojo.run_tac.call_count, 2)
 
 
 class TestMCTSAlphaZero(unittest.TestCase):

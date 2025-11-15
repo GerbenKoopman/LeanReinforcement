@@ -9,36 +9,32 @@ from src.utilities.gym import LeanDojoEnv
 
 
 class TestLeanDojoEnv(unittest.TestCase):
-    @patch("src.utilities.gym.Corpus")
+    @patch("src.utilities.gym.LeanDataLoader")
     @patch("src.utilities.gym.Dojo")
-    def setUp(self, MockDojo, MockCorpus):
-        # Mock dependencies
-        self.mock_corpus = MockCorpus.return_value
-        self.mock_dojo_context = MockDojo.return_value
-        self.mock_dojo_instance = MagicMock()
-
+    def setUp(self, MockDojo, MockDataLoader):
         # Mock theorem and position
         self.theorem = MagicMock(spec=Theorem)
         self.theorem.file_path = "path/to/file.lean"
         self.theorem_pos = Pos(1, 0)
 
+        self.mock_corpus = MagicMock()
+
         # Mock initial state from Dojo context manager
         self.initial_state = MagicMock(spec=TacticState)
         self.initial_state.pp = "initial_state_pp"
-        self.mock_dojo_context.__enter__.return_value = (
-            self.mock_dojo_instance,
-            self.initial_state,
-        )
 
-        # Mock corpus to return a fixed number of premises
-        self.mock_corpus.get_accessible_premises.return_value = ["p1", "p2", "p3"]
+        self.mock_dojo = MockDojo.return_value
+        self.mock_dojo.__enter__.return_value = self.initial_state
+        self.mock_dojo.run_tac = MagicMock()
+
+        mock_dataloader = MockDataLoader.return_value
+        mock_dataloader.get_premises.return_value = ["p1", "p2", "p3"]
 
         # Instantiate the environment
         self.env = LeanDojoEnv(self.theorem, self.theorem_pos, k=2)
 
     def test_initialization(self):
         # Assert that dependencies were called correctly
-        self.mock_corpus.get_accessible_premises.assert_called_once()
         self.assertIsInstance(self.env.observation_space, gym.spaces.Text)
         self.assertIsInstance(self.env.action_space, gym.spaces.MultiDiscrete)
         assert isinstance(self.env.action_space, gym.spaces.MultiDiscrete)
@@ -49,22 +45,20 @@ class TestLeanDojoEnv(unittest.TestCase):
         obs, info = self.env.reset()
         self.assertEqual(obs, "initial_state_pp")
         self.assertEqual(info, {})
-        self.mock_dojo_context.__enter__.assert_called()
+        self.mock_dojo.__enter__.assert_called()
 
     def test_step_tactic_state(self):
         # Arrange
         action = "test_tactic"
         next_tactic_state = MagicMock(spec=TacticState)
         next_tactic_state.pp = "next_state_pp"
-        self.mock_dojo_instance.run_tac.return_value = next_tactic_state
+        self.mock_dojo.run_tac.return_value = next_tactic_state
 
         # Act
         obs, reward, done, _, _ = self.env.step(action)
 
         # Assert
-        self.mock_dojo_instance.run_tac.assert_called_once_with(
-            self.initial_state, action
-        )
+        self.mock_dojo.run_tac.assert_called_once_with(self.initial_state, action)
         self.assertEqual(self.env.current_state, next_tactic_state)
         self.assertEqual(obs, "next_state_pp")
         self.assertEqual(reward, 0.1)
@@ -75,7 +69,7 @@ class TestLeanDojoEnv(unittest.TestCase):
         action = "finish_proof_tactic"
         proof_finished_state = MagicMock(spec=ProofFinished)
         type(proof_finished_state).pp = PropertyMock(return_value="proof_finished")
-        self.mock_dojo_instance.run_tac.return_value = proof_finished_state
+        self.mock_dojo.run_tac.return_value = proof_finished_state
 
         # Act
         obs, reward, done, _, _ = self.env.step(action)
@@ -90,7 +84,7 @@ class TestLeanDojoEnv(unittest.TestCase):
         action = "error_tactic"
         lean_error_state = MagicMock(spec=LeanError)
         type(lean_error_state).pp = PropertyMock(return_value="lean_error")
-        self.mock_dojo_instance.run_tac.return_value = lean_error_state
+        self.mock_dojo.run_tac.return_value = lean_error_state
 
         # Act
         obs, reward, done, _, _ = self.env.step(action)
