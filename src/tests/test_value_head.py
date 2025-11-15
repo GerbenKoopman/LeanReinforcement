@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 
 from src.agent.value_head import ValueHead
+from src.agent.transformer import Transformer
 
 
 class TestValueHead(unittest.TestCase):
@@ -25,7 +26,12 @@ class TestValueHead(unittest.TestCase):
         # Mock that the encoder has parameters
         self.mock_encoder.parameters.return_value = [nn.Parameter(torch.randn(2, 2))]
 
-        self.value_head = ValueHead()
+        # Create a mock transformer
+        mock_transformer = MagicMock(spec=Transformer)
+        mock_transformer.tokenizer = self.mock_tokenizer
+        mock_transformer.model = self.mock_transformer_model
+
+        self.value_head = ValueHead(mock_transformer)
 
     def test_initialization(self):
         # Check if encoder parameters are frozen
@@ -53,7 +59,7 @@ class TestValueHead(unittest.TestCase):
         self.mock_encoder.return_value = MagicMock(last_hidden_state=hidden_state)
 
         # Act
-        features = self.value_head._encode(test_list)
+        features = self.value_head.encode_states(test_list)
 
         # Assert
         self.mock_tokenizer.assert_called_once_with(
@@ -73,7 +79,7 @@ class TestValueHead(unittest.TestCase):
 
         encoded_features = torch.randn(1, 1472)
         with patch.object(
-            self.value_head, "_encode", return_value=encoded_features
+            self.value_head, "encode_states", return_value=encoded_features
         ) as mock_encode, patch.object(
             self.value_head.value_head, "forward", return_value=torch.tensor([[0.5]])
         ) as mock_forward:
