@@ -30,7 +30,7 @@ class LeanDojoEnv:
 
     def reset(self) -> None:
         self.initial_state = self.dojo.__enter__()
-        assert isinstance(self.initial_state, TacticState)
+        assert isinstance(self.initial_state[-1], TacticState)
 
     def step(self, action: str) -> tuple[str, float, bool, bool, dict[str, Any]]:
         # Interact with Lean
