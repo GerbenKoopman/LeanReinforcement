@@ -6,8 +6,9 @@ import time
 import gc
 import torch
 from typing import Type, Optional
-
+import wandb
 from loguru import logger
+
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
 from .mcts import BaseMCTS, MCTS_GuidedRollout
@@ -179,15 +180,17 @@ class AgentRunner:
         success = isinstance(self.env.current_state, ProofFinished)
 
         if use_wandb:
-            import wandb
-
-            wandb.log(
-                {
-                    "proof_search/success": success,
-                    "proof_search/steps": step_num,
-                    "proof_search/time": elapsed_time,
-                }
-            )
+            try:
+                if wandb.run is not None:
+                    wandb.log(
+                        {
+                            "proof_search/success": success,
+                            "proof_search/steps": step_num,
+                            "proof_search/time": elapsed_time,
+                        }
+                    )
+            except Exception as e:
+                logger.debug(f"Could not log to wandb: {e}")
 
         if success:
             logger.success(
