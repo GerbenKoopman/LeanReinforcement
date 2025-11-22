@@ -25,7 +25,7 @@ Relevant sources will be added here as the project progresses.
 - [x] Run experiments on Snellius
 - [ ] Finish in-comment ToDo's
   - [ ] Checkpoint saving and loading
-  - [ ] Subtree reusage
+  - [x] Subtree reusage
   - [ ] Reimplement tactic generator fine-tuning
-- [ ] Implement ValueHead Dataset creation
-- [ ] Set up wandb/tensorboard equivalent logging
+- [x] Implement ValueHead Dataset creation
+- [x] Set up wandb/tensorboard equivalent logging
