@@ -181,6 +181,12 @@ class AgentRunner:
                     logger.error(f"Environment step failed with error: {e}")
                     break
 
+                if isinstance(self.env.current_state, (LeanError, ProofGivenUp)):
+                    logger.warning(
+                        f"Tactic resulted in error: {self.env.current_state}"
+                    )
+                    break
+
                 if terminated:
                     break
 
