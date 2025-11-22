@@ -349,7 +349,7 @@ def main(args):
 
             # Run the agent and collect lightweight training data
             try:
-                success, theorem_training_data = runner.run(
+                _, theorem_training_data = runner.run(
                     collect_value_data=args.train_value_head,
                     use_final_reward=args.use_final_reward,
                     use_wandb=args.use_wandb,
