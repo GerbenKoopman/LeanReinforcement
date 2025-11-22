@@ -12,14 +12,21 @@ from .dataloader import LeanDataLoader
 
 
 class LeanDojoEnv:
-    def __init__(self, corpus: Corpus, theorem: Theorem, theorem_pos: Pos, k: int = 10):
+    def __init__(
+        self,
+        corpus: Corpus,
+        theorem: Theorem,
+        theorem_pos: Pos,
+        k: int = 10,
+        timeout: int = 60,
+    ):
         super().__init__()
         self.theorem = theorem
         self.theorem_pos = theorem_pos
 
         self.dataloader = LeanDataLoader(corpus)
 
-        self.dojo = Dojo(theorem)
+        self.dojo = Dojo(theorem, timeout=timeout)
 
         self.reset()
         self.current_state = self.initial_state
