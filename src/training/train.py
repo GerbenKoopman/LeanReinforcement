@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 import wandb
+import random
 
 from lean_dojo import DojoInitError
 from ReProver.common import Corpus, Pos
@@ -300,6 +301,9 @@ def main(args):
         # Clear GPU cache at start of each epoch
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
+
+        # Shuffle training theorems each epoch
+        random.shuffle(dataloader.train_data)
 
         for thm_data in dataloader.train_data[
             : args.num_theorems
