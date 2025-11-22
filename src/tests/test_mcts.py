@@ -80,6 +80,35 @@ class TestBaseMCTS(unittest.TestCase):
         self.assertEqual(node1.visit_count, 1)
         self.assertEqual(node1.value_sum, 0.5)
 
+    def test_move_root(self):
+        mcts = MCTS_GuidedRollout(self.env, self.transformer)
+        root = mcts.root
+
+        # Create children manually
+        child1 = Node(Mock(spec=TacticState), parent=root, action="tactic1")
+        child2 = Node(Mock(spec=TacticState), parent=root, action="tactic2")
+        root.children = [child1, child2]
+
+        # Add some grandchildren to test node counting
+        grandchild = Node(Mock(spec=TacticState), parent=child1, action="tactic1_1")
+        child1.children = [grandchild]
+
+        # Test moving to an existing child
+        mcts.move_root("tactic1")
+        self.assertIs(mcts.root, child1)
+        self.assertIsNone(mcts.root.parent)
+        self.assertEqual(mcts.node_count, 2)  # child1 + grandchild
+
+        # Test moving to a non-existent child (should reset)
+        # First, update env.current_state to match what we expect for a reset
+        new_state = Mock(spec=TacticState)
+        self.env.current_state = new_state
+
+        mcts.move_root("non_existent_tactic")
+        self.assertIsNot(mcts.root, child1)
+        self.assertEqual(mcts.root.state, new_state)
+        self.assertEqual(mcts.node_count, 1)
+
 
 class TestMCTSGuidedRollout(unittest.TestCase):
     def setUp(self):
