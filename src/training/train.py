@@ -51,7 +51,11 @@ class ValueHeadDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, idx):
-        return self.data[idx]
+        item = self.data[idx]
+        return {
+            "state": item["state"],
+            "value_target": item["value_target"],
+        }
 
 
 class PolicyHeadDataset(Dataset):
@@ -123,10 +127,9 @@ def train_value_head(
     for epoch in range(epochs):
         total_loss = 0
         for batch in dataloader:
-            states = [item["state"] for item in batch]
-            value_targets = torch.tensor(
-                [item["value_target"] for item in batch],
-                dtype=torch.float32,
+            states = batch["state"]
+            value_targets = batch["value_target"].to(
+                dtype=torch.bfloat16,
                 device="cuda" if torch.cuda.is_available() else "cpu",
             )
 
