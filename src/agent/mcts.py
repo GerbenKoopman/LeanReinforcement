@@ -19,7 +19,7 @@ from .value_head import ValueHead
 # Max depth for a single rollout in Part 1
 MAX_ROLLOUT_DEPTH = 30
 # Number of tactics to expand from the generator
-NUM_TACTICS_TO_EXPAND = 5
+NUM_TACTICS_TO_EXPAND = 16
 
 
 class Node:
