@@ -83,9 +83,13 @@ class AgentRunner:
 
         training_data = []
         step_num = 0
+        mcts_instance = None
 
         for step_num in range(1, self.max_steps + 1):
-            mcts_instance = None
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+
             try:
                 # Check if the proof is already finished or has failed
                 current_state = self.env.current_state
@@ -96,13 +100,13 @@ class AgentRunner:
                 if step_num % 5 == 0:
                     self._log_gpu_memory(f"Step {step_num} - ")
 
-                # Create a new MCTS tree for the current state
-                # TODO: Implement subtree reusage to improve efficiency
-                mcts_instance = self.mcts_class(
-                    env=self.env,
-                    transformer=self.transformer,
-                    **self.mcts_kwargs,
-                )
+                # Create a new MCTS tree for the current state if needed
+                if mcts_instance is None:
+                    mcts_instance = self.mcts_class(
+                        env=self.env,
+                        transformer=self.transformer,
+                        **self.mcts_kwargs,
+                    )
 
                 # Run the search to find the best action
                 logger.info(
@@ -163,11 +167,6 @@ class AgentRunner:
 
                 del root_node
 
-                # Force garbage collection and clear CUDA cache after each step
-                gc.collect()
-                if torch.cuda.is_available():
-                    torch.cuda.empty_cache()
-
                 if best_action is None:
                     logger.warning("MCTS search returned no action. Stopping.")
                     break
@@ -190,10 +189,19 @@ class AgentRunner:
                 if terminated:
                     break
 
-            finally:
-                # Always clean up the MCTS instance
-                if mcts_instance is not None:
+                # Move the MCTS root to the child corresponding to the chosen action
+                mcts_instance.move_root(best_action)
+
+            except Exception as e:
+                logger.error(f"Error in agent loop: {e}")
+                if mcts_instance:
                     del mcts_instance
+                    mcts_instance = None
+                break
+
+        # Clean up MCTS instance after loop
+        if mcts_instance is not None:
+            del mcts_instance
 
         # Final status check
         elapsed_time = time.time() - start_time

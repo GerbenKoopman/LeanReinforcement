@@ -209,6 +209,41 @@ class BaseMCTS:
         best_child = max(self.root.children, key=lambda c: c.visit_count)
         return best_child.action
 
+    def move_root(self, action: str):
+        """
+        Moves the root of the tree to the child corresponding to the given action.
+        This allows for subtree reuse.
+        """
+        found_child = None
+        for child in self.root.children:
+            if child.action == action:
+                found_child = child
+                break
+
+        if found_child:
+            self.root = found_child
+            self.root.parent = None
+            self.node_count = self._count_nodes(self.root)
+        else:
+            # If child not found, reset the tree with the current environment state
+            if not isinstance(
+                self.env.current_state,
+                (TacticState, ProofFinished, LeanError, ProofGivenUp),
+            ):
+                raise TypeError(
+                    f"Invalid state type for new root: {type(self.env.current_state)}"
+                )
+
+            self.root = Node(state=self.env.current_state)
+            self.node_count = 1
+
+    def _count_nodes(self, node: Node) -> int:
+        """Recursively counts the number of nodes in the subtree."""
+        count = 1
+        for child in node.children:
+            count += self._count_nodes(child)
+        return count
+
 
 # --- Part 1: MCTS with Guided Rollouts ---
 
