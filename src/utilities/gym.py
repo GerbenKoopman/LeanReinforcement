@@ -5,7 +5,14 @@ Environment for interacting with LeanDojo via a Gymnasium extension.
 from typing import Any
 from loguru import logger
 
-from lean_dojo import Dojo, TacticState, Theorem, ProofFinished, LeanError
+from lean_dojo import (
+    Dojo,
+    TacticState,
+    Theorem,
+    ProofFinished,
+    LeanError,
+    DojoInitError,
+)
 from lean_dojo.interaction.dojo import DojoTacticTimeoutError
 from ReProver.common import Corpus, Pos
 from .dataloader import LeanDataLoader
@@ -36,8 +43,15 @@ class LeanDojoEnv:
         return len(premise_list)
 
     def reset(self) -> None:
-        _, self.initial_state = self.dojo.__enter__()
-        assert isinstance(self.initial_state, TacticState)
+        try:
+            _, self.initial_state = self.dojo.__enter__()
+            assert isinstance(self.initial_state, TacticState)
+        except DojoInitError as e:
+            logger.error(f"Error during environment reset: {e}")
+            raise e
+        except Exception as e:
+            logger.error(f"Unexpected error during environment reset: {e}")
+            raise e
 
     def step(self, action: str) -> tuple[str, float, bool, bool, dict[str, Any]]:
         # Interact with Lean

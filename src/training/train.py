@@ -14,6 +14,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import wandb
 
+from lean_dojo import DojoInitError
 from ReProver.common import Corpus, Pos
 
 from src.utilities.dataloader import LeanDataLoader
@@ -313,7 +314,19 @@ def main(args):
             if not theorem_pos:
                 continue
 
-            env = LeanDojoEnv(corpus, theorem, theorem_pos)
+            # Try to create environment - skip theorem if initialization fails
+            try:
+                env = LeanDojoEnv(corpus, theorem, theorem_pos)
+            except DojoInitError as e:
+                logger.error(
+                    f"Failed to initialize environment for theorem {theorem.full_name}: {e}"
+                )
+                continue
+            except Exception as e:
+                logger.error(
+                    f"Unexpected error initializing environment for theorem {theorem.full_name}: {e}"
+                )
+                continue
 
             # --- DYNAMIC MCTS SELECTION ---
             if args.mcts_type == "alpha_zero":
@@ -335,23 +348,30 @@ def main(args):
             )
 
             # Run the agent and collect lightweight training data
-            success, theorem_training_data = runner.run(
-                collect_value_data=args.train_value_head,
-                use_final_reward=args.use_final_reward,
-                use_wandb=args.use_wandb,
-                # collect_policy_data=args.train_tactic_generator,
-            )
+            try:
+                success, theorem_training_data = runner.run(
+                    collect_value_data=args.train_value_head,
+                    use_final_reward=args.use_final_reward,
+                    use_wandb=args.use_wandb,
+                    # collect_policy_data=args.train_tactic_generator,
+                )
 
-            # Add the lightweight data to the buffer
-            training_data_buffer.extend(theorem_training_data)
+                # Add the lightweight data to the buffer
+                training_data_buffer.extend(theorem_training_data)
 
-            logger.debug(
-                f"Collected {len(theorem_training_data)} training samples for theorem: {theorem.full_name}"
-            )
-            del theorem_training_data
-            del runner
-            del env
-            gc.collect()
+                logger.debug(
+                    f"Collected {len(theorem_training_data)} training samples for theorem: {theorem.full_name}"
+                )
+                del theorem_training_data
+            except Exception as e:
+                logger.error(
+                    f"Error during proof search for theorem {theorem.full_name}: {e}"
+                )
+            finally:
+                # Always clean up resources
+                del runner
+                del env
+                gc.collect()
 
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
