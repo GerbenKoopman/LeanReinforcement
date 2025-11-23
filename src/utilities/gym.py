@@ -16,6 +16,8 @@ from lean_dojo import (
 from lean_dojo.interaction.dojo import DojoTacticTimeoutError
 from ReProver.common import Corpus, Pos
 from .dataloader import LeanDataLoader
+import queue
+from contextlib import contextmanager
 
 
 class LeanDojoEnv:
@@ -100,3 +102,46 @@ class LeanDojoEnv:
     def __del__(self):
         """Ensure cleanup when object is garbage collected."""
         self.close()
+
+
+class LeanDojoEnvPool:
+    """
+    Manages a pool of LeanDojoEnv instances for parallel execution.
+    """
+
+    def __init__(
+        self,
+        corpus: Corpus,
+        theorem: Theorem,
+        theorem_pos: Pos,
+        num_workers: int = 4,
+        k: int = 10,
+        timeout: int = 60,
+    ):
+        self.pool = queue.Queue()
+        self.envs = []
+        for _ in range(num_workers):
+            # Create new env instances
+            # Note: This will spawn multiple Lean processes
+            env = LeanDojoEnv(corpus, theorem, theorem_pos, k, timeout)
+            self.envs.append(env)
+            self.pool.put(env)
+
+    @contextmanager
+    def get_env(self):
+        """
+        Context manager to safely checkout and return an environment.
+        Usage:
+            with pool.get_env() as env:
+                env.step(...)
+        """
+        env = self.pool.get()
+        try:
+            yield env
+        finally:
+            self.pool.put(env)
+
+    def close(self):
+        """Close all environments in the pool."""
+        for env in self.envs:
+            env.close()

@@ -345,6 +345,9 @@ def main(args):
                 mcts_kwargs = {}  # GuidedRollout does not need a value head
                 logger.debug("Using MCTS_GuidedRollout")
 
+            # Add batch_size to mcts_kwargs
+            mcts_kwargs["batch_size"] = args.batch_size
+
             runner = AgentRunner(
                 env=env,
                 transformer=transformer,
@@ -352,6 +355,7 @@ def main(args):
                 mcts_kwargs=mcts_kwargs,
                 num_iterations=args.num_iterations,
                 max_steps=args.max_steps,
+                num_workers=args.num_workers,
             )
 
             # Run the agent and collect lightweight training data
@@ -454,6 +458,18 @@ if __name__ == "__main__":
         type=int,
         default=30,
         help="Max steps per proof (reduced default for memory efficiency).",
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=16,
+        help="Batch size for MCTS search.",
+    )
+    parser.add_argument(
+        "--num-workers",
+        type=int,
+        default=16,
+        help="Number of parallel workers for MCTS simulations.",
     )
     parser.add_argument(
         "--mcts-type",

@@ -79,6 +79,30 @@ class ValueHead(nn.Module):
         return result
 
     @torch.no_grad()
+    def predict_batch(self, state_strs: List[str]) -> List[float]:
+        """
+        Predicts the value of a batch of states.
+        Returns a list of floats between -1.0 and 1.0.
+        """
+        self.eval()
+        features = self.encode_states(state_strs)
+        values = self.value_head(features).squeeze()
+
+        # Handle case where batch size is 1
+        if values.ndim == 0:
+            values = values.unsqueeze(0)
+
+        results = torch.tanh(values).tolist()
+
+        # Clean up
+        del features
+        del values
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        return results
+
+    @torch.no_grad()
     def predict_from_features(self, features: torch.Tensor) -> float:
         """
         Predicts the value from pre-computed encoder features.
@@ -105,6 +129,27 @@ class ValueHead(nn.Module):
             torch.cuda.empty_cache()
 
         return result
+
+    @torch.no_grad()
+    def predict_from_features_batch(self, features: torch.Tensor) -> List[float]:
+        """
+        Predicts the value from pre-computed encoder features for a batch.
+        """
+        self.eval()
+        values = self.value_head(features).squeeze()
+
+        # Handle case where batch size is 1
+        if values.ndim == 0:
+            values = values.unsqueeze(0)
+
+        results = torch.tanh(values).tolist()
+
+        # Clean up
+        del values
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        return results
 
     def save_checkpoint(self, folder: str, filename: str):
         """

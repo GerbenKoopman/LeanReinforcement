@@ -5,13 +5,14 @@ simulation, AlphaZero MCTS calls a trained value network for evaluation.
 
 import math
 import torch
-from typing import List, Optional
+from typing import List, Optional, Dict
 from loguru import logger
+from concurrent.futures import ThreadPoolExecutor
 
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 from lean_dojo.interaction.dojo import DojoTacticTimeoutError
 
-from src.utilities.gym import LeanDojoEnv
+from src.utilities.gym import LeanDojoEnv, LeanDojoEnvPool
 from .transformer import Transformer
 from .value_head import ValueHead
 
@@ -70,12 +71,15 @@ class BaseMCTS:
         transformer: Transformer,
         exploration_weight: float = math.sqrt(2),
         max_tree_nodes: int = 10000,
+        env_pool: Optional[LeanDojoEnvPool] = None,
     ):
         self.env = env
+        self.env_pool = env_pool
         self.transformer = transformer
         self.exploration_weight = exploration_weight
         self.max_tree_nodes = max_tree_nodes
         self.node_count = 0
+        self.virtual_losses: Dict[Node, int] = {}
 
         # Get theorem info from the environment
         self.theorem = env.theorem
@@ -90,6 +94,18 @@ class BaseMCTS:
         self.root = Node(state=env.current_state)
         self.node_count = 1
 
+    def _get_virtual_loss(self, node: Node) -> int:
+        return self.virtual_losses.get(node, 0)
+
+    def _add_virtual_loss(self, node: Node, loss: int = 1):
+        self.virtual_losses[node] = self.virtual_losses.get(node, 0) + loss
+
+    def _remove_virtual_loss(self, node: Node, loss: int = 1):
+        if node in self.virtual_losses:
+            self.virtual_losses[node] -= loss
+            if self.virtual_losses[node] <= 0:
+                del self.virtual_losses[node]
+
     def _log_gpu_memory(self):
         """Log current GPU memory usage."""
         if torch.cuda.is_available():
@@ -99,40 +115,58 @@ class BaseMCTS:
                 f"GPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved"
             )
 
-    def search(self, num_iterations: int) -> None:
+    def search(self, num_iterations: int, batch_size: int = 16) -> None:
         """
-        Run the MCTS search for a given number of iterations.
+        Run the MCTS search for a given number of iterations with batching.
         """
         with torch.no_grad():
-            for iteration in range(num_iterations):
+            for iteration in range(0, num_iterations, batch_size):
                 # Stop if tree is too large
                 if self.node_count >= self.max_tree_nodes:
                     break
 
-                leaf = self._select(self.root)
+                current_batch_size = min(batch_size, num_iterations - iteration)
+                leaves = []
 
-                if leaf.is_terminal:
-                    # If the leaf is terminal, we can't expand it.
-                    # We just backpropagate its known value.
-                    if isinstance(leaf.state, ProofFinished):
-                        self._backpropagate(leaf, 1.0)
-                    elif isinstance(leaf.state, (LeanError, ProofGivenUp)):
-                        self._backpropagate(leaf, -1.0)
+                # 1. Selection Phase (Batch)
+                for _ in range(current_batch_size):
+                    leaf = self._select(self.root)
+
+                    if leaf.is_terminal:
+                        if isinstance(leaf.state, ProofFinished):
+                            self._backpropagate(leaf, 1.0)
+                        elif isinstance(leaf.state, (LeanError, ProofGivenUp)):
+                            self._backpropagate(leaf, -1.0)
+                        continue
+
+                    if not isinstance(leaf.state, TacticState):
+                        if isinstance(leaf.state, ProofFinished):
+                            self._backpropagate(leaf, 1.0)
+                        else:
+                            self._backpropagate(leaf, -1.0)
+                        continue
+
+                    # Apply virtual loss to encourage diversity in the batch
+                    self._add_virtual_loss(leaf)
+                    leaves.append(leaf)
+
+                if not leaves:
                     continue
 
-                if not isinstance(leaf.state, TacticState):
-                    # Cannot expand a non-tactic state
-                    if isinstance(leaf.state, ProofFinished):
-                        self._backpropagate(leaf, 1.0)
-                    else:
-                        self._backpropagate(leaf, -1.0)
-                    continue
+                # 2. Expansion Phase
+                expanded_nodes = self._expand_batch(leaves)
 
-                simulation_node = self._expand(leaf)
-                reward = self._simulate(simulation_node)
-                self._backpropagate(simulation_node, reward)
+                # 3. Simulation Phase
+                rewards = self._simulate_batch(expanded_nodes)
 
-                # Clear CUDA cache periodically during search
+                # 4. Backpropagation Phase
+                for i, leaf in enumerate(leaves):
+                    self._remove_virtual_loss(leaf)
+                    child = expanded_nodes[i]
+                    reward = rewards[i]
+                    self._backpropagate(child, reward)
+
+                # Clear CUDA cache periodically
                 if torch.cuda.is_available() and iteration % 20 == 0 and iteration > 0:
                     torch.cuda.empty_cache()
 
@@ -163,12 +197,28 @@ class BaseMCTS:
         """
         raise NotImplementedError
 
-    def _simulate(self, node: Node) -> float:
+    def _expand_batch(self, nodes: List[Node]) -> List[Node]:
+        """
+        Phase 2: Batch Expansion
+        Default implementation calls _expand sequentially.
+        Subclasses should override this for parallelism/batching.
+        """
+        return [self._expand(node) for node in nodes]
+
+    def _simulate(self, node: Node, env: Optional[LeanDojoEnv] = None) -> float:
         """
         Phase 3: Simulation / Evaluation
         This method is meant to be implemented by the child classes.
         """
         raise NotImplementedError
+
+    def _simulate_batch(self, nodes: List[Node]) -> List[float]:
+        """
+        Phase 3: Batch Simulation
+        Default implementation calls _simulate sequentially.
+        Subclasses should override this for parallelism/batching.
+        """
+        return [self._simulate(node) for node in nodes]
 
     def _backpropagate(self, node: Node, reward: float):
         """
@@ -260,7 +310,10 @@ class MCTS_GuidedRollout(BaseMCTS):
 
     def _ucb1(self, node: Node) -> float:
         """Calculates the UCB1 score for a node."""
-        if node.visit_count == 0:
+        # Virtual loss increases visit count to discourage selection
+        visit_count = node.visit_count + self._get_virtual_loss(node)
+
+        if visit_count == 0:
             return float("inf")
 
         if (
@@ -272,8 +325,11 @@ class MCTS_GuidedRollout(BaseMCTS):
         exploitation = node.value()
 
         # Exploration term
+        # Use parent's visit count.
+        # Note: We don't add virtual loss to parent's visit count here,
+        # effectively reducing exploration for siblings of nodes being visited.
         exploration = self.exploration_weight * math.sqrt(
-            math.log(node.parent.visit_count) / node.visit_count
+            math.log(node.parent.visit_count) / visit_count
         )
 
         return exploitation + exploration
@@ -324,7 +380,76 @@ class MCTS_GuidedRollout(BaseMCTS):
 
         return child
 
-    def _simulate(self, node: Node) -> float:
+    def _expand_batch(self, nodes: List[Node]) -> List[Node]:
+        # 1. Generate tactics for all nodes
+        states = []
+        nodes_to_generate = []
+        indices_to_generate = []
+
+        for i, node in enumerate(nodes):
+            if node.untried_actions is None:
+                if isinstance(node.state, TacticState):
+                    states.append(node.state.pp)
+                    nodes_to_generate.append(node)
+                    indices_to_generate.append(i)
+                else:
+                    # Should not happen given _select logic
+                    node.untried_actions = []
+
+        if states:
+            batch_tactics = self.transformer.generate_tactics_batch(
+                states, n=NUM_TACTICS_TO_EXPAND
+            )
+            for i, tactics in enumerate(batch_tactics):
+                node = nodes_to_generate[i]
+                node.untried_actions = tactics
+                node.untried_actions.reverse()
+
+        # 2. Pick one tactic for each node
+        tactics_to_run = []
+        for node in nodes:
+            tactic = ""
+            if node.untried_actions:
+                tactic = node.untried_actions.pop()
+            tactics_to_run.append(tactic)
+
+        # 3. Run tactics in parallel
+        def run_expand(args):
+            node, tactic = args
+            if not tactic:
+                return Node(
+                    LeanError(error="No tactics generated"), parent=node, action=tactic
+                )
+
+            # Use env from pool if available
+            if self.env_pool:
+                with self.env_pool.get_env() as env:
+                    try:
+                        next_state = env.dojo.run_tac(node.state, tactic)
+                    except Exception as e:
+                        next_state = LeanError(error=str(e))
+            else:
+                try:
+                    next_state = self.env.dojo.run_tac(node.state, tactic)
+                except Exception as e:
+                    next_state = LeanError(error=str(e))
+
+            child = Node(next_state, parent=node, action=tactic)
+            return child
+
+        if self.env_pool:
+            with ThreadPoolExecutor(max_workers=len(nodes)) as executor:
+                children = list(executor.map(run_expand, zip(nodes, tactics_to_run)))
+        else:
+            children = [run_expand((n, t)) for n, t in zip(nodes, tactics_to_run)]
+
+        self.node_count += len(children)
+        for i, node in enumerate(nodes):
+            node.children.append(children[i])
+
+        return children
+
+    def _simulate(self, node: Node, env: Optional[LeanDojoEnv] = None) -> float:
         """
         Phase 3: Simulation (Guided Rollout)
         """
@@ -339,6 +464,9 @@ class MCTS_GuidedRollout(BaseMCTS):
 
         current_state: TacticState = node.state
 
+        # Use provided env or fallback to self.env
+        sim_env = env if env else self.env
+
         for _ in range(MAX_ROLLOUT_DEPTH):
             state_str = current_state.pp
 
@@ -347,7 +475,7 @@ class MCTS_GuidedRollout(BaseMCTS):
 
             # Run the tactic with timeout handling
             try:
-                result = self.env.dojo.run_tac(current_state, tactic)
+                result = sim_env.dojo.run_tac(current_state, tactic)
             except DojoTacticTimeoutError:
                 logger.warning(f"Tactic timed out during simulation: {tactic[:100]}")
                 return -1.0  # Penalize timeouts
@@ -370,6 +498,19 @@ class MCTS_GuidedRollout(BaseMCTS):
 
         return 0.0  # Reached max depth, count as a draw/timeout
 
+    def _simulate_batch(self, nodes: List[Node]) -> List[float]:
+        if self.env_pool:
+
+            def run_simulate(node):
+                with self.env_pool.get_env() as env:  # type: ignore
+                    return self._simulate(node, env)
+
+            with ThreadPoolExecutor(max_workers=len(nodes)) as executor:
+                rewards = list(executor.map(run_simulate, nodes))
+            return rewards
+        else:
+            return [self._simulate(node) for node in nodes]
+
 
 # --- Part 2: MCTS with Value Head (AlphaZero-Style) ---
 
@@ -391,14 +532,22 @@ class MCTS_AlphaZero(BaseMCTS):
         if node.parent is None:
             return 0.0  # Should not happen for children
 
-        # Q(s,a): Exploitation term (average value)
-        q_value = node.value()
+        # Virtual loss
+        v_loss = self._get_virtual_loss(node)
+        visit_count = node.visit_count + v_loss
+
+        # Q(s,a): Exploitation term
+        # Penalize Q value with virtual loss
+        if visit_count == 0:
+            q_value = 0.0
+        else:
+            q_value = (node.value_sum - v_loss) / visit_count
 
         # U(s,a): Exploration term
         exploration = (
             self.exploration_weight
             * node.prior_p
-            * (math.sqrt(node.parent.visit_count) / (1 + node.visit_count))
+            * (math.sqrt(node.parent.visit_count) / (1 + visit_count))
         )
 
         return q_value + exploration
@@ -421,7 +570,6 @@ class MCTS_AlphaZero(BaseMCTS):
         state_str = node.state.pp
 
         # Cache encoder features for this node if not already cached
-        # This will be used during simulation/evaluation
         if node.encoder_features is None:
             node.encoder_features = self.value_head.encode_states([state_str])
 
@@ -447,7 +595,6 @@ class MCTS_AlphaZero(BaseMCTS):
             self.node_count += 1
 
             # Pre-compute encoder features for children if they're non-terminal TacticStates
-            # This way they're ready for evaluation in future iterations
             if isinstance(next_state, TacticState):
                 child.encoder_features = self.value_head.encode_states([next_state.pp])
 
@@ -455,7 +602,96 @@ class MCTS_AlphaZero(BaseMCTS):
 
         return node
 
-    def _simulate(self, node: Node) -> float:
+    def _expand_batch(self, nodes: List[Node]) -> List[Node]:
+        # 1. Generate tactics for all nodes
+        states = []
+        nodes_to_generate = []
+
+        for node in nodes:
+            if isinstance(node.state, TacticState):
+                states.append(node.state.pp)
+                nodes_to_generate.append(node)
+
+                # Cache encoder features if missing
+                if node.encoder_features is None:
+                    # We will compute them in batch later or now?
+                    # Let's compute them now for simplicity or add to a list
+                    pass
+
+        if not states:
+            return nodes
+
+        # Batch generate tactics
+        batch_tactics_with_probs = self.transformer.generate_tactics_with_probs_batch(
+            states, n=NUM_TACTICS_TO_EXPAND
+        )
+
+        # 2. Prepare tasks for parallel execution
+        tasks = []
+        for i, tactics_probs in enumerate(batch_tactics_with_probs):
+            node = nodes_to_generate[i]
+            for tactic, prob in tactics_probs:
+                tasks.append((node, tactic, prob))
+
+        # 3. Run tactics in parallel
+        def run_task(args):
+            node, tactic, prob = args
+            # Use env from pool if available
+            if self.env_pool:
+                with self.env_pool.get_env() as env:
+                    try:
+                        next_state = env.dojo.run_tac(node.state, tactic)
+                    except Exception as e:
+                        next_state = LeanError(error=str(e))
+            else:
+                try:
+                    next_state = self.env.dojo.run_tac(node.state, tactic)
+                except Exception as e:
+                    next_state = LeanError(error=str(e))
+            return (node, tactic, prob, next_state)
+
+        if self.env_pool:
+            # We might have many tasks, more than workers. Executor handles queue.
+            with ThreadPoolExecutor(max_workers=len(self.env_pool.envs)) as executor:
+                results = list(executor.map(run_task, tasks))
+        else:
+            results = [run_task(task) for task in tasks]
+
+        # 4. Create children
+        new_children_nodes = []
+        for node, tactic, prob, next_state in results:
+            child = Node(next_state, parent=node, action=tactic)
+            child.prior_p = prob
+            node.children.append(child)
+            self.node_count += 1
+            new_children_nodes.append(child)
+
+        # 5. Batch encode features for new children
+        child_states = []
+        child_nodes_with_state = []
+
+        for child in new_children_nodes:
+            if isinstance(child.state, TacticState):
+                child_states.append(child.state.pp)
+                child_nodes_with_state.append(child)
+
+        if child_states:
+            # Encode in batches to avoid OOM if too many children
+            batch_size = 32
+            for i in range(0, len(child_states), batch_size):
+                batch_states = child_states[i : i + batch_size]
+                features = self.value_head.encode_states(batch_states)
+                for j, feature in enumerate(features):
+                    child_nodes_with_state[i + j].encoder_features = feature.unsqueeze(
+                        0
+                    )
+
+        for node in nodes_to_generate:
+            node.untried_actions = []
+
+        return nodes
+
+    def _simulate(self, node: Node, env: Optional[LeanDojoEnv] = None) -> float:
         """
         Phase 3: Evaluation (using Value Head)
         Uses cached encoder features if available to avoid recomputation.
@@ -479,3 +715,51 @@ class MCTS_AlphaZero(BaseMCTS):
             value = self.value_head.predict(state_str)
 
         return value
+
+    def _simulate_batch(self, nodes: List[Node]) -> List[float]:
+        """
+        Phase 3: Batch Evaluation
+        """
+        # Separate nodes by terminal status and feature availability
+        results = [0.0] * len(nodes)
+
+        features_list = []
+        indices_with_features = []
+
+        states_to_encode = []
+        indices_to_encode = []
+
+        for i, node in enumerate(nodes):
+            if node.is_terminal:
+                if isinstance(node.state, ProofFinished):
+                    results[i] = 1.0
+                elif isinstance(node.state, (LeanError, ProofGivenUp)):
+                    results[i] = -1.0
+                continue
+
+            if not isinstance(node.state, TacticState):
+                results[i] = -1.0
+                continue
+
+            if node.encoder_features is not None:
+                features_list.append(node.encoder_features)
+                indices_with_features.append(i)
+            else:
+                states_to_encode.append(node.state.pp)
+                indices_to_encode.append(i)
+
+        # Predict from features
+        if features_list:
+            # Stack features: (batch, feature_dim)
+            batch_features = torch.cat(features_list, dim=0)
+            values = self.value_head.predict_from_features_batch(batch_features)
+            for idx, val in zip(indices_with_features, values):
+                results[idx] = val
+
+        # Predict from states (encode + predict)
+        if states_to_encode:
+            values = self.value_head.predict_batch(states_to_encode)
+            for idx, val in zip(indices_to_encode, values):
+                results[idx] = val
+
+        return results
