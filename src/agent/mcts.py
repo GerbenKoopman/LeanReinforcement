@@ -297,7 +297,8 @@ class MCTS_GuidedRollout(BaseMCTS):
 
             node.untried_actions = self.transformer.generate_tactics(
                 state_str, n=NUM_TACTICS_TO_EXPAND
-            ).reverse()
+            )
+            node.untried_actions.reverse()
 
         # Pop one untried action
         tactic = ""
