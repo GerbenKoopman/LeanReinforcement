@@ -4,7 +4,6 @@ simulation, AlphaZero MCTS calls a trained value network for evaluation.
 """
 
 import math
-import random
 import torch
 from typing import List, Optional
 from loguru import logger
@@ -298,10 +297,7 @@ class MCTS_GuidedRollout(BaseMCTS):
 
             node.untried_actions = self.transformer.generate_tactics(
                 state_str, n=NUM_TACTICS_TO_EXPAND
-            )
-
-            if node.untried_actions:
-                random.shuffle(node.untried_actions)  # Add randomness
+            ).reverse()
 
         # Pop one untried action
         tactic = ""
