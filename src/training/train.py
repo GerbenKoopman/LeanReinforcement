@@ -129,7 +129,7 @@ def train_value_head(
         for batch in dataloader:
             states = batch["state"]
             value_targets = batch["value_target"].to(
-                dtype=torch.bfloat16,
+                dtype=torch.float32,
                 device="cuda" if torch.cuda.is_available() else "cpu",
             )
 
