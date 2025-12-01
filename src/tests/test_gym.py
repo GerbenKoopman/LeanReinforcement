@@ -8,9 +8,8 @@ from src.utilities.gym import LeanDojoEnv
 
 
 class TestLeanDojoEnv(unittest.TestCase):
-    @patch("src.utilities.gym.LeanDataLoader")
     @patch("src.utilities.gym.Dojo")
-    def setUp(self, MockDojo, MockDataLoader):
+    def setUp(self, MockDojo):
         # Mock theorem and position
         self.theorem = MagicMock(spec=Theorem)
         self.theorem.file_path = "path/to/file.lean"
@@ -25,9 +24,6 @@ class TestLeanDojoEnv(unittest.TestCase):
         self.mock_dojo = MockDojo.return_value
         self.mock_dojo.__enter__.return_value = (self.mock_dojo, self.initial_state)
         self.mock_dojo.run_tac = MagicMock()
-
-        mock_dataloader = MockDataLoader.return_value
-        mock_dataloader.get_premises.return_value = ["p1", "p2", "p3"]
 
         # Instantiate the environment
         self.env = LeanDojoEnv(self.mock_corpus, self.theorem, self.theorem_pos, k=2)
