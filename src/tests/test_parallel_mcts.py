@@ -12,11 +12,8 @@ class TestParallelMCTS(unittest.TestCase):
         self.env.theorem_pos = MagicMock()
 
         self.transformer = MagicMock()
-        self.env_pool = MagicMock()
 
-        self.mcts = MCTS_GuidedRollout(
-            self.env, self.transformer, env_pool=self.env_pool
-        )
+        self.mcts = MCTS_GuidedRollout(self.env, self.transformer)
 
     def test_virtual_loss(self):
         node = Node(TacticState("pp", 0, "id"))
@@ -44,12 +41,8 @@ class TestParallelMCTS(unittest.TestCase):
         # Mock transformer batch generation
         self.transformer.generate_tactics_batch.return_value = [["t1"], ["t2"]]
 
-        # Mock env pool context manager
-        mock_env_instance = MagicMock()
-        self.env_pool.get_env.return_value.__enter__.return_value = mock_env_instance
-
-        # Mock run_tac
-        mock_env_instance.dojo.run_tac.side_effect = [
+        # Mock run_tac on the single env
+        self.env.dojo.run_tac.side_effect = [
             TacticState("pp_next1", 0, "id_next1"),
             TacticState("pp_next2", 0, "id_next2"),
         ]
@@ -70,14 +63,7 @@ class TestParallelMCTS(unittest.TestCase):
         node2 = Node(TacticState("pp2", 0, "id2"))
         nodes = [node1, node2]
 
-        # Mock env pool
-        mock_env_instance = MagicMock()
-        self.env_pool.get_env.return_value.__enter__.return_value = mock_env_instance
-
-        # Mock _simulate behavior (we can't easily mock the internal _simulate call in map,
-        # so we mock the result of the map or the _simulate method itself if we could)
-        # Since _simulate is an instance method, we can patch it on the instance
-
+        # Mock _simulate behavior
         with patch.object(
             self.mcts, "_simulate", side_effect=[1.0, -1.0]
         ) as mock_simulate:
