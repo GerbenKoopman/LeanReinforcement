@@ -33,6 +33,8 @@ srun python3 -m src.training.train \
     --num-theorems 100 \
     --num-iterations 200 \
     --max-steps 30 \
+    --batch-size 16 \
+    --num-workers 16 \
     --mcts-type guided_rollout \
     --train-epochs 1 \
     --train-value-head \
