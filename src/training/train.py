@@ -10,6 +10,8 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 import gc
 import os
+import subprocess
+import shutil
 from pathlib import Path
 from dotenv import load_dotenv
 import wandb
@@ -364,7 +366,36 @@ def main(args):
     dataloader = LeanDataLoader(
         corpus, dataset_path="leandojo_benchmark_4", data_type=args.data_type
     )
-    dataloader.trace_repo()
+    traced_repo = dataloader.trace_repo()
+
+    # Ensure the repo is built (fix for missing .lake/lakefile.olean)
+    # This is necessary because sometimes the cache might be incomplete or corrupted
+    repo_path = traced_repo.root_dir
+    lakefile_path = repo_path / ".lake" / "lakefile.olean"
+    if not lakefile_path.exists():
+        logger.warning(f"{lakefile_path} missing. Running lake build in {repo_path}...")
+        try:
+            subprocess.run(["lake", "build"], cwd=repo_path, check=True)
+            logger.info("lake build completed successfully.")
+
+            if not lakefile_path.exists():
+                # In newer lake versions, lakefile.olean might be in .lake/build
+                # We try to find it and copy it to where LeanDojo expects it
+                candidates = list(repo_path.glob(".lake/build/**/lakefile.olean"))
+                if candidates:
+                    src = candidates[0]
+                    logger.info(
+                        f"Found lakefile.olean at {src}, copying to {lakefile_path}"
+                    )
+                    shutil.copy2(src, lakefile_path)
+                else:
+                    logger.warning("Could not find lakefile.olean even after build.")
+
+        except subprocess.CalledProcessError as e:
+            logger.error(f"lake build failed: {e}")
+            # We continue, hoping that maybe it was a partial failure or not critical,
+            # but it will likely fail later in Dojo init.
+            raise e
 
     # --- Self-Play and Training Loop ---
     for epoch in range(start_epoch, start_epoch + args.num_epochs):
