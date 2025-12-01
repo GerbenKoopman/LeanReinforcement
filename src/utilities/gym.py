@@ -15,7 +15,6 @@ from lean_dojo import (
 )
 from lean_dojo.interaction.dojo import DojoTacticTimeoutError
 from ReProver.common import Corpus, Pos
-from .dataloader import LeanDataLoader
 import queue
 from contextlib import contextmanager
 
@@ -33,16 +32,10 @@ class LeanDojoEnv:
         self.theorem = theorem
         self.theorem_pos = theorem_pos
 
-        self.dataloader = LeanDataLoader(corpus)
-
         self.dojo = Dojo(theorem, timeout=timeout)
 
         self.reset()
         self.current_state = self.initial_state
-
-    def _get_number_of_accessible_premises(self) -> int:
-        premise_list = self.dataloader.get_premises(self.theorem, self.theorem_pos)
-        return len(premise_list)
 
     def reset(self) -> None:
         try:
