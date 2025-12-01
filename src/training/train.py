@@ -14,6 +14,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import wandb
 import random
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from lean_dojo import DojoInitError
 from ReProver.common import Corpus, Pos
@@ -260,6 +261,75 @@ def log_gpu_memory(prefix: str = ""):
         )
 
 
+def process_theorem(
+    thm_data,
+    corpus,
+    dataloader,
+    transformer,
+    value_head,
+    args,
+):
+    """
+    Process a single theorem: initialize env, run agent, collect data.
+    """
+    theorem = dataloader.extract_theorem(thm_data)
+    if not theorem:
+        return []
+
+    theorem_pos = Pos(*thm_data["start"])
+    if not theorem_pos:
+        return []
+
+    try:
+        env = LeanDojoEnv(corpus, theorem, theorem_pos)
+    except DojoInitError as e:
+        logger.error(
+            f"Failed to initialize environment for theorem {theorem.full_name}: {e}"
+        )
+        return []
+    except Exception as e:
+        logger.error(
+            f"Unexpected error initializing environment for theorem {theorem.full_name}: {e}"
+        )
+        return []
+
+    if args.mcts_type == "alpha_zero":
+        mcts_class = MCTS_AlphaZero
+        mcts_kwargs = {"value_head": value_head}
+    else:
+        mcts_class = MCTS_GuidedRollout
+        mcts_kwargs = {}
+
+    mcts_kwargs["batch_size"] = args.batch_size
+
+    runner = AgentRunner(
+        env=env,
+        transformer=transformer,
+        mcts_class=mcts_class,
+        mcts_kwargs=mcts_kwargs,
+        num_iterations=args.num_iterations,
+        max_steps=args.max_steps,
+    )
+
+    try:
+        _, theorem_training_data = runner.run(
+            collect_value_data=args.train_value_head,
+            use_final_reward=args.use_final_reward,
+            use_wandb=args.use_wandb,
+        )
+        logger.debug(
+            f"Collected {len(theorem_training_data)} training samples for theorem: {theorem.full_name}"
+        )
+        return theorem_training_data
+    except Exception as e:
+        logger.error(f"Error during proof search for theorem {theorem.full_name}: {e}")
+        return []
+    finally:
+        del runner
+        del env
+        gc.collect()
+
+
 def main(args):
     # --- Setup wandb ---
     if args.use_wandb:
@@ -308,84 +378,38 @@ def main(args):
         # Shuffle training theorems each epoch
         random.shuffle(dataloader.train_data)
 
-        for thm_data in dataloader.train_data[
-            : args.num_theorems
-        ]:  # Limiting for demonstration
-            theorem = dataloader.extract_theorem(thm_data)
+        theorems_to_process = dataloader.train_data[: args.num_theorems]
+        logger.info(
+            f"Processing {len(theorems_to_process)} theorems with {args.num_workers} workers."
+        )
 
-            if not theorem:
-                continue
-
-            theorem_pos = Pos(*thm_data["start"])
-
-            if not theorem_pos:
-                continue
-
-            # Try to create environment - skip theorem if initialization fails
-            try:
-                env = LeanDojoEnv(corpus, theorem, theorem_pos)
-            except DojoInitError as e:
-                logger.error(
-                    f"Failed to initialize environment for theorem {theorem.full_name}: {e}"
+        with ThreadPoolExecutor(max_workers=args.num_workers) as executor:
+            futures = [
+                executor.submit(
+                    process_theorem,
+                    thm_data,
+                    corpus,
+                    dataloader,
+                    transformer,
+                    value_head,
+                    args,
                 )
-                continue
-            except Exception as e:
-                logger.error(
-                    f"Unexpected error initializing environment for theorem {theorem.full_name}: {e}"
-                )
-                continue
+                for thm_data in theorems_to_process
+            ]
 
-            # --- DYNAMIC MCTS SELECTION ---
-            if args.mcts_type == "alpha_zero":
-                mcts_class = MCTS_AlphaZero
-                mcts_kwargs = {"value_head": value_head}
-                logger.debug("Using MCTS_AlphaZero")
-            else:  # guided_rollout
-                mcts_class = MCTS_GuidedRollout
-                mcts_kwargs = {}  # GuidedRollout does not need a value head
-                logger.debug("Using MCTS_GuidedRollout")
+            for i, future in enumerate(as_completed(futures)):
+                try:
+                    data = future.result()
+                    if data:
+                        training_data_buffer.extend(data)
+                except Exception as e:
+                    logger.error(f"Error in worker thread: {e}")
 
-            # Add batch_size to mcts_kwargs
-            mcts_kwargs["batch_size"] = args.batch_size
+                if (i + 1) % 10 == 0:
+                    logger.info(f"Completed {i + 1}/{len(theorems_to_process)} proofs")
 
-            runner = AgentRunner(
-                env=env,
-                transformer=transformer,
-                mcts_class=mcts_class,
-                mcts_kwargs=mcts_kwargs,
-                num_iterations=args.num_iterations,
-                max_steps=args.max_steps,
-                num_workers=args.num_workers,
-            )
-
-            # Run the agent and collect lightweight training data
-            try:
-                _, theorem_training_data = runner.run(
-                    collect_value_data=args.train_value_head,
-                    use_final_reward=args.use_final_reward,
-                    use_wandb=args.use_wandb,
-                    # collect_policy_data=args.train_tactic_generator,
-                )
-
-                # Add the lightweight data to the buffer
-                training_data_buffer.extend(theorem_training_data)
-
-                logger.debug(
-                    f"Collected {len(theorem_training_data)} training samples for theorem: {theorem.full_name}"
-                )
-                del theorem_training_data
-            except Exception as e:
-                logger.error(
-                    f"Error during proof search for theorem {theorem.full_name}: {e}"
-                )
-            finally:
-                # Always clean up resources
-                del runner
-                del env
-                gc.collect()
-
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
         # --- MODEL TRAINING STEP ---
         if not training_data_buffer:

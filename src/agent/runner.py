@@ -12,7 +12,7 @@ from loguru import logger
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
 from .mcts import BaseMCTS, MCTS_GuidedRollout
-from src.utilities.gym import LeanDojoEnv, LeanDojoEnvPool
+from src.utilities.gym import LeanDojoEnv
 from .transformer import Transformer
 
 
@@ -29,7 +29,6 @@ class AgentRunner:
         mcts_kwargs: Optional[dict] = None,
         num_iterations: int = 100,
         max_steps: int = 100,
-        num_workers: int = 1,
     ):
         """
         Initialize the agent runner.
@@ -41,34 +40,14 @@ class AgentRunner:
             mcts_kwargs: Additional keyword arguments for initializing the MCTS class.
             num_iterations: The number of MCTS iterations to run at each step.
             max_steps: The maximum number of tactics to apply before giving up.
-            num_workers: Number of parallel workers for MCTS simulations.
         """
         self.env = env
         self.transformer = transformer
         self.mcts_class = mcts_class
         self.num_iterations = num_iterations
         self.max_steps = max_steps
-        self.num_workers = num_workers
-
-        self.env_pool = None
-        if num_workers > 1:
-            logger.info(f"Initializing environment pool with {num_workers} workers...")
-            self.env_pool = LeanDojoEnvPool(
-                env.dataloader.corpus,
-                env.theorem,
-                env.theorem_pos,
-                num_workers=num_workers,
-            )
-            if mcts_kwargs is None:
-                mcts_kwargs = {}
-            mcts_kwargs["env_pool"] = self.env_pool
 
         self.mcts_kwargs = mcts_kwargs if mcts_kwargs is not None else {}
-
-    def close(self):
-        """Clean up resources."""
-        if self.env_pool:
-            self.env_pool.close()
 
     def _log_gpu_memory(self, prefix: str = ""):
         """Log current GPU memory usage."""
@@ -268,5 +247,4 @@ class AgentRunner:
                 # Store the raw final reward for analysis
                 data_point["final_reward"] = final_reward
 
-        self.close()
         return success, training_data
