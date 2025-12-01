@@ -493,7 +493,7 @@ if __name__ == "__main__":
         "--num-workers",
         type=int,
         default=16,
-        help="Number of parallel workers for MCTS simulations.",
+        help="Number of parallel workers for processing theorems.",
     )
     parser.add_argument(
         "--mcts-type",
