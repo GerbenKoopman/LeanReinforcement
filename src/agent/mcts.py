@@ -7,12 +7,11 @@ import math
 import torch
 from typing import List, Optional, Dict
 from loguru import logger
-from concurrent.futures import ThreadPoolExecutor
 
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 from lean_dojo.interaction.dojo import DojoTacticTimeoutError
 
-from src.utilities.gym import LeanDojoEnv, LeanDojoEnvPool
+from src.utilities.gym import LeanDojoEnv
 from .transformer import Transformer
 from .value_head import ValueHead
 
@@ -71,10 +70,8 @@ class BaseMCTS:
         transformer: Transformer,
         exploration_weight: float = math.sqrt(2),
         max_tree_nodes: int = 10000,
-        env_pool: Optional[LeanDojoEnvPool] = None,
     ):
         self.env = env
-        self.env_pool = env_pool
         self.transformer = transformer
         self.exploration_weight = exploration_weight
         self.max_tree_nodes = max_tree_nodes
@@ -413,35 +410,20 @@ class MCTS_GuidedRollout(BaseMCTS):
                 tactic = node.untried_actions.pop()
             tactics_to_run.append(tactic)
 
-        # 3. Run tactics in parallel
-        def run_expand(args):
-            node, tactic = args
+        # 3. Run tactics sequentially (single env)
+        children = []
+        for node, tactic in zip(nodes, tactics_to_run):
             if not tactic:
-                return Node(
+                child = Node(
                     LeanError(error="No tactics generated"), parent=node, action=tactic
                 )
-
-            # Use env from pool if available
-            if self.env_pool:
-                with self.env_pool.get_env() as env:
-                    try:
-                        next_state = env.dojo.run_tac(node.state, tactic)
-                    except Exception as e:
-                        next_state = LeanError(error=str(e))
             else:
                 try:
-                    next_state = self.env.dojo.run_tac(node.state, tactic)
+                    next_state = self.env.dojo.run_tac(node.state, tactic)  # type: ignore
                 except Exception as e:
                     next_state = LeanError(error=str(e))
-
-            child = Node(next_state, parent=node, action=tactic)
-            return child
-
-        if self.env_pool:
-            with ThreadPoolExecutor(max_workers=len(nodes)) as executor:
-                children = list(executor.map(run_expand, zip(nodes, tactics_to_run)))
-        else:
-            children = [run_expand((n, t)) for n, t in zip(nodes, tactics_to_run)]
+                child = Node(next_state, parent=node, action=tactic)
+            children.append(child)
 
         self.node_count += len(children)
         for i, node in enumerate(nodes):
@@ -499,17 +481,7 @@ class MCTS_GuidedRollout(BaseMCTS):
         return 0.0  # Reached max depth, count as a draw/timeout
 
     def _simulate_batch(self, nodes: List[Node]) -> List[float]:
-        if self.env_pool:
-
-            def run_simulate(node):
-                with self.env_pool.get_env() as env:  # type: ignore
-                    return self._simulate(node, env)
-
-            with ThreadPoolExecutor(max_workers=len(nodes)) as executor:
-                rewards = list(executor.map(run_simulate, nodes))
-            return rewards
-        else:
-            return [self._simulate(node) for node in nodes]
+        return [self._simulate(node) for node in nodes]
 
 
 # --- Part 2: MCTS with Value Head (AlphaZero-Style) ---
@@ -633,29 +605,14 @@ class MCTS_AlphaZero(BaseMCTS):
             for tactic, prob in tactics_probs:
                 tasks.append((node, tactic, prob))
 
-        # 3. Run tactics in parallel
-        def run_task(args):
-            node, tactic, prob = args
-            # Use env from pool if available
-            if self.env_pool:
-                with self.env_pool.get_env() as env:
-                    try:
-                        next_state = env.dojo.run_tac(node.state, tactic)
-                    except Exception as e:
-                        next_state = LeanError(error=str(e))
-            else:
-                try:
-                    next_state = self.env.dojo.run_tac(node.state, tactic)
-                except Exception as e:
-                    next_state = LeanError(error=str(e))
-            return (node, tactic, prob, next_state)
-
-        if self.env_pool:
-            # We might have many tasks, more than workers. Executor handles queue.
-            with ThreadPoolExecutor(max_workers=len(self.env_pool.envs)) as executor:
-                results = list(executor.map(run_task, tasks))
-        else:
-            results = [run_task(task) for task in tasks]
+        # 3. Run tactics sequentially
+        results = []
+        for node, tactic, prob in tasks:
+            try:
+                next_state = self.env.dojo.run_tac(node.state, tactic)
+            except Exception as e:
+                next_state = LeanError(error=str(e))
+            results.append((node, tactic, prob, next_state))
 
         # 4. Create children
         new_children_nodes = []
@@ -665,26 +622,6 @@ class MCTS_AlphaZero(BaseMCTS):
             node.children.append(child)
             self.node_count += 1
             new_children_nodes.append(child)
-
-        # 5. Batch encode features for new children
-        child_states = []
-        child_nodes_with_state = []
-
-        for child in new_children_nodes:
-            if isinstance(child.state, TacticState):
-                child_states.append(child.state.pp)
-                child_nodes_with_state.append(child)
-
-        if child_states:
-            # Encode in batches to avoid OOM if too many children
-            batch_size = 32
-            for i in range(0, len(child_states), batch_size):
-                batch_states = child_states[i : i + batch_size]
-                features = self.value_head.encode_states(batch_states)
-                for j, feature in enumerate(features):
-                    child_nodes_with_state[i + j].encoder_features = feature.unsqueeze(
-                        0
-                    )
 
         for node in nodes_to_generate:
             node.untried_actions = []
