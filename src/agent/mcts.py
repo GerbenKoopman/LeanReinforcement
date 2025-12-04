@@ -12,7 +12,7 @@ from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 from lean_dojo.interaction.dojo import DojoTacticTimeoutError
 
 from src.utilities.gym import LeanDojoEnv
-from .transformer import Transformer
+from .transformer import TransformerProtocol
 from .value_head import ValueHead
 
 # Max depth for a single rollout in Part 1
@@ -67,7 +67,7 @@ class BaseMCTS:
     def __init__(
         self,
         env: LeanDojoEnv,
-        transformer: Transformer,
+        transformer: TransformerProtocol,
         exploration_weight: float = math.sqrt(2),
         max_tree_nodes: int = 10000,
     ):

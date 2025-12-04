@@ -4,8 +4,25 @@ tactic generation.
 """
 
 import torch
-from typing import List
+from typing import List, Protocol, Tuple, runtime_checkable
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+
+
+@runtime_checkable
+class TransformerProtocol(Protocol):
+    def generate_tactics(self, state: str, n: int = 1) -> List[str]: ...
+
+    def generate_tactics_with_probs(
+        self, state: str, n: int = 1
+    ) -> List[Tuple[str, float]]: ...
+
+    def generate_tactics_batch(
+        self, states: List[str], n: int = 1
+    ) -> List[List[str]]: ...
+
+    def generate_tactics_with_probs_batch(
+        self, states: List[str], n: int = 1
+    ) -> List[List[Tuple[str, float]]]: ...
 
 
 class Transformer:

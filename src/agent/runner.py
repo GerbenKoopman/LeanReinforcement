@@ -13,7 +13,7 @@ from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
 from .mcts import BaseMCTS, MCTS_GuidedRollout
 from src.utilities.gym import LeanDojoEnv
-from .transformer import Transformer
+from .transformer import TransformerProtocol
 
 
 class AgentRunner:
@@ -24,7 +24,7 @@ class AgentRunner:
     def __init__(
         self,
         env: LeanDojoEnv,
-        transformer: Transformer,
+        transformer: TransformerProtocol,
         mcts_class: Type[BaseMCTS] = MCTS_GuidedRollout,
         mcts_kwargs: Optional[dict] = None,
         num_iterations: int = 100,
