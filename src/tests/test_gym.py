@@ -15,8 +15,6 @@ class TestLeanDojoEnv(unittest.TestCase):
         self.theorem.file_path = "path/to/file.lean"
         self.theorem_pos = Pos(1, 0)
 
-        self.mock_corpus = MagicMock()
-
         # Mock initial state from Dojo context manager
         self.initial_state = MagicMock(spec=TacticState)
         self.initial_state.pp = "initial_state_pp"
@@ -26,7 +24,7 @@ class TestLeanDojoEnv(unittest.TestCase):
         self.mock_dojo.run_tac = MagicMock()
 
         # Instantiate the environment
-        self.env = LeanDojoEnv(self.mock_corpus, self.theorem, self.theorem_pos, k=2)
+        self.env = LeanDojoEnv(self.theorem, self.theorem_pos)
 
     def test_initialization(self):
         # Assert that dependencies were called correctly
