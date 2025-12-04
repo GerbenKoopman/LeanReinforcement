@@ -70,11 +70,13 @@ class BaseMCTS:
         transformer: TransformerProtocol,
         exploration_weight: float = math.sqrt(2),
         max_tree_nodes: int = 10000,
+        batch_size: int = 16,
     ):
         self.env = env
         self.transformer = transformer
         self.exploration_weight = exploration_weight
         self.max_tree_nodes = max_tree_nodes
+        self.batch_size = batch_size
         self.node_count = 0
         self.virtual_losses: Dict[Node, int] = {}
 
@@ -112,10 +114,13 @@ class BaseMCTS:
                 f"GPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved"
             )
 
-    def search(self, num_iterations: int, batch_size: int = 16) -> None:
+    def search(self, num_iterations: int, batch_size: Optional[int] = None) -> None:
         """
         Run the MCTS search for a given number of iterations with batching.
         """
+        if batch_size is None:
+            batch_size = self.batch_size
+
         with torch.no_grad():
             for iteration in range(0, num_iterations, batch_size):
                 # Stop if tree is too large
@@ -302,8 +307,8 @@ class MCTS_GuidedRollout(BaseMCTS):
     finished or max depth is reached.
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, batch_size: int = 16, *args, **kwargs):
+        super().__init__(batch_size=batch_size, *args, **kwargs)
 
     def _ucb1(self, node: Node) -> float:
         """Calculates the UCB1 score for a node."""
@@ -495,8 +500,8 @@ class MCTS_AlphaZero(BaseMCTS):
     to the ValueHead for evaluation.
     """
 
-    def __init__(self, value_head: ValueHead, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, value_head: ValueHead, batch_size: int = 16, *args, **kwargs):
+        super().__init__(batch_size=batch_size, *args, **kwargs)
         self.value_head = value_head
 
     def _puct_score(self, node: Node) -> float:

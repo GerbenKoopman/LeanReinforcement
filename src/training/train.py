@@ -544,7 +544,7 @@ def main(args: argparse.Namespace):
                 response_queues[i],
                 theorem_queue,
                 result_queue,
-                corpus_path,  # Pass path to avoid pickling large object
+                corpus,
                 args,
             ),
         )
