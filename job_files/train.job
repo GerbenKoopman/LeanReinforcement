@@ -27,7 +27,7 @@ set +a
 cd $HOME/lean_reinforcement
 
 echo "Starting training run with distributed environment..."
-srun python3 -m src.training.train \
+srun python3 -m lean_reinforcement.training.train \
     --data-type novel_premises \
     --num-epochs 10 \
     --num-theorems 128 \

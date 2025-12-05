@@ -22,5 +22,5 @@ set +a
 # Ensure cache directory exists
 mkdir -p "${CACHE_DIR}"
 
-cd $HOME/lean_reinforcement/src
+cd $HOME/lean_reinforcement/lean_reinforcement
 srun python testing.py
