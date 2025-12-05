@@ -7,10 +7,99 @@ import json
 from pathlib import Path
 from typing import Dict, Any
 from loguru import logger
+import argparse
 from dotenv import load_dotenv
+
+
+from src.agent.value_head import ValueHead
 
 # Load environment variables
 load_dotenv()
+
+
+def save_checkpoint(
+    value_head: ValueHead,
+    epoch: int,
+    checkpoint_dir: Path,
+    args: argparse.Namespace,
+    prefix: str = "value_head",
+):
+    """
+    Save a checkpoint for the value head with metadata.
+
+    Args:
+        value_head: The ValueHead model to save
+        epoch: Current epoch number
+        checkpoint_dir: Directory to save checkpoints
+        args: Training arguments
+        prefix: Prefix for checkpoint filename
+    """
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+
+    # Save the latest checkpoint
+    latest_filename = f"{prefix}_latest.pth"
+    value_head.save_checkpoint(str(checkpoint_dir), latest_filename)
+
+    # Save epoch-specific checkpoint
+    epoch_filename = f"{prefix}_epoch_{epoch}.pth"
+    value_head.save_checkpoint(str(checkpoint_dir), epoch_filename)
+
+    # Save training metadata
+    metadata = {
+        "data_type": args.data_type,
+        "mcts_type": args.mcts_type,
+        "num_iterations": args.num_iterations,
+        "max_steps": args.max_steps,
+        "train_epochs": args.train_epochs,
+        "use_final_reward": args.use_final_reward,
+    }
+    save_training_metadata(checkpoint_dir, epoch, metadata)
+
+    # Clean up old checkpoints (keep last 5)
+    cleanup_old_checkpoints(checkpoint_dir, prefix, keep_last_n=5)
+
+    logger.info(f"Saved checkpoints: {latest_filename} and {epoch_filename}")
+
+
+def load_checkpoint(
+    value_head: ValueHead, checkpoint_dir: Path, prefix: str = "value_head"
+) -> int:
+    """
+    Load the latest checkpoint if it exists.
+
+    Args:
+        value_head: The ValueHead model to load into
+        checkpoint_dir: Directory containing checkpoints
+        prefix: Prefix for checkpoint filename
+
+    Returns:
+        The epoch number of the loaded checkpoint, or 0 if no checkpoint found
+    """
+    latest_filename = f"{prefix}_latest.pth"
+    latest_path = checkpoint_dir / latest_filename
+
+    if latest_path.exists():
+        try:
+            value_head.load_checkpoint(str(checkpoint_dir), latest_filename)
+
+            # Try to determine the epoch from other checkpoints
+            epoch_checkpoints = sorted(checkpoint_dir.glob(f"{prefix}_epoch_*.pth"))
+            if epoch_checkpoints:
+                # Extract epoch number from the last checkpoint
+                last_checkpoint = epoch_checkpoints[-1]
+                epoch_str = last_checkpoint.stem.split("_")[-1]
+                try:
+                    return int(epoch_str)
+                except ValueError:
+                    logger.warning(f"Could not parse epoch from {last_checkpoint}")
+                    return 0
+            return 0
+        except Exception as e:
+            logger.error(f"Failed to load checkpoint from {latest_path}: {e}")
+            return 0
+    else:
+        logger.info(f"No checkpoint found at {latest_path}, starting from scratch")
+        return 0
 
 
 def get_checkpoint_dir() -> Path:
