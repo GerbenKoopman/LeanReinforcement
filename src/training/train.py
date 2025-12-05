@@ -4,12 +4,12 @@ implement tactic generation training in the future.
 """
 
 import argparse
-from typing import Union, List, Dict, Any, Optional
+from typing import List, Dict, Any
 from loguru import logger
 import torch
 import torch.optim as optim
 import torch.multiprocessing as mp
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 import gc
 import os
 import subprocess
@@ -21,11 +21,9 @@ import wandb
 import random
 import queue
 
-from lean_dojo import DojoInitError
-from ReProver.common import Corpus, Pos
+from ReProver.common import Corpus
 
 from src.utilities.dataloader import LeanDataLoader
-from src.utilities.gym import LeanDojoEnv
 from src.utilities.checkpoint import (
     get_checkpoint_dir,
     save_training_metadata,
@@ -36,114 +34,15 @@ from src.utilities.analyze_training_data import (
     print_training_stats,
     save_training_data,
 )
-from src.agent.runner import AgentRunner
-from src.agent.mcts import MCTS_AlphaZero, MCTS_GuidedRollout
-from src.agent.transformer import Transformer, TransformerProtocol
+from src.agent.transformer import Transformer
 from src.agent.value_head import ValueHead
+from src.training.datasets import ValueHeadDataset
+from src.training.inference_server import InferenceServer
+from src.training.worker import worker_loop
+
 
 # Load environment variables from .env file
 load_dotenv()
-
-# --- Proxy Models for Multiprocessing ---
-
-
-class QueueProxyTransformer(TransformerProtocol):
-    def __init__(
-        self, request_queue: mp.Queue, response_queue: mp.Queue, worker_id: int
-    ):
-        self.request_queue = request_queue
-        self.response_queue = response_queue
-        self.worker_id = worker_id
-        # Mock tokenizer for AgentRunner if it accesses it directly (unlikely but safe to have)
-        self.tokenizer = None
-
-    def generate_tactics_with_probs(
-        self, state: str, n: int = 1
-    ) -> List[tuple[str, float]]:
-        self.request_queue.put(
-            (self.worker_id, "generate_tactics_with_probs", (state, n))
-        )
-        return self.response_queue.get()
-
-    def generate_tactics(self, state: str, n: int = 1) -> List[str]:
-        self.request_queue.put((self.worker_id, "generate_tactics", (state, n)))
-        return self.response_queue.get()
-
-    def generate_tactics_batch(self, states: List[str], n: int = 1) -> List[List[str]]:
-        self.request_queue.put((self.worker_id, "generate_tactics_batch", (states, n)))
-        return self.response_queue.get()
-
-    def generate_tactics_with_probs_batch(
-        self, states: List[str], n: int = 1
-    ) -> List[List[tuple[str, float]]]:
-        self.request_queue.put(
-            (self.worker_id, "generate_tactics_with_probs_batch", (states, n))
-        )
-        return self.response_queue.get()
-
-
-class QueueProxyValueHead:
-    def __init__(
-        self, request_queue: mp.Queue, response_queue: mp.Queue, worker_id: int
-    ):
-        self.request_queue = request_queue
-        self.response_queue = response_queue
-        self.worker_id = worker_id
-
-    def predict(self, state: str) -> float:
-        self.request_queue.put((self.worker_id, "predict_value", (state,)))
-        return self.response_queue.get()
-
-    def predict_batch(self, states: List[str]) -> List[float]:
-        self.request_queue.put((self.worker_id, "predict_batch", (states,)))
-        return self.response_queue.get()
-
-    def encode_states(self, states: List[str]) -> torch.Tensor:
-        self.request_queue.put((self.worker_id, "encode_states", (states,)))
-        return self.response_queue.get()
-
-    def predict_from_features(self, features: torch.Tensor) -> float:
-        self.request_queue.put((self.worker_id, "predict_from_features", (features,)))
-        return self.response_queue.get()
-
-    def predict_from_features_batch(self, features: torch.Tensor) -> List[float]:
-        self.request_queue.put(
-            (self.worker_id, "predict_from_features_batch", (features,))
-        )
-        return self.response_queue.get()
-
-
-# --- Custom Datasets for Training ---
-
-
-class ValueHeadDataset(Dataset):
-    """Dataset for state -> value_target."""
-
-    def __init__(self, data: List[Dict[str, Any]]):
-        self.data = data
-
-    def __len__(self) -> int:
-        return len(self.data)
-
-    def __getitem__(self, idx: int) -> Dict[str, Any]:
-        item = self.data[idx]
-        return {
-            "state": item["state"],
-            "value_target": item["value_target"],
-        }
-
-
-class PolicyHeadDataset(Dataset):
-    """Dataset for (state, premises) -> tactic_target."""
-
-    def __init__(self, data: Dict[Any, Any]):
-        self.data = data
-
-    def __len__(self) -> int:
-        return len(self.data)
-
-    def __getitem__(self, idx: int) -> Any:
-        return self.data[idx]
 
 
 # --- Training Functions ---
@@ -322,55 +221,6 @@ def load_checkpoint(
         return 0
 
 
-def worker_loop(
-    worker_id: int,
-    request_queue: mp.Queue,
-    response_queue: mp.Queue,
-    theorem_queue: mp.Queue,
-    result_queue: mp.Queue,
-    corpus_path: Union[str, Corpus],
-    args: argparse.Namespace,
-):
-    """
-    Worker process loop.
-    """
-    if isinstance(corpus_path, str):
-        corpus = Corpus(corpus_path)
-    else:
-        corpus = corpus_path
-
-    transformer_proxy = QueueProxyTransformer(request_queue, response_queue, worker_id)
-    value_head_proxy = None
-    if args.mcts_type == "alpha_zero":
-        value_head_proxy = QueueProxyValueHead(request_queue, response_queue, worker_id)
-
-    dataloader = LeanDataLoader(
-        corpus, dataset_path="leandojo_benchmark_4", data_type=args.data_type
-    )
-
-    while True:
-        try:
-            thm_data = theorem_queue.get(timeout=1)
-        except queue.Empty:
-            continue
-
-        if thm_data is None:
-            break
-
-        # Process theorem
-        data = process_theorem(
-            thm_data,
-            corpus,
-            dataloader,
-            transformer_proxy,
-            value_head_proxy,
-            args,
-        )
-
-        # Send result back
-        result_queue.put(data)
-
-
 # --- Main Loop ---
 
 
@@ -382,75 +232,6 @@ def log_gpu_memory(prefix: str = "") -> None:
         logger.info(
             f"{prefix}GPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved"
         )
-
-
-def process_theorem(
-    thm_data: Dict[str, Any],
-    corpus: Corpus,
-    dataloader: LeanDataLoader,
-    transformer: QueueProxyTransformer,
-    value_head: Optional[QueueProxyValueHead],
-    args: argparse.Namespace,
-) -> List[Dict[str, Any]]:
-    """
-    Process a single theorem: initialize env, run agent, collect data.
-    """
-    theorem = dataloader.extract_theorem(thm_data)
-    if not theorem:
-        return []
-
-    theorem_pos = Pos(*thm_data["start"])
-    if not theorem_pos:
-        return []
-
-    try:
-        env = LeanDojoEnv(theorem, theorem_pos)
-    except DojoInitError as e:
-        logger.error(
-            f"Failed to initialize environment for theorem {theorem.full_name}: {e}"
-        )
-        return []
-    except Exception as e:
-        logger.error(
-            f"Unexpected error initializing environment for theorem {theorem.full_name}: {e}"
-        )
-        return []
-
-    if args.mcts_type == "alpha_zero":
-        mcts_class = MCTS_AlphaZero
-        mcts_kwargs = {"value_head": value_head}
-    else:
-        mcts_class = MCTS_GuidedRollout
-        mcts_kwargs = {}
-
-    mcts_kwargs["batch_size"] = args.batch_size
-
-    runner = AgentRunner(
-        env=env,
-        transformer=transformer,
-        mcts_class=mcts_class,
-        mcts_kwargs=mcts_kwargs,
-        num_iterations=args.num_iterations,
-        max_steps=args.max_steps,
-    )
-
-    try:
-        _, theorem_training_data = runner.run(
-            collect_value_data=args.train_value_head,
-            use_final_reward=args.use_final_reward,
-            use_wandb=args.use_wandb,
-        )
-        logger.debug(
-            f"Collected {len(theorem_training_data)} training samples for theorem: {theorem.full_name}"
-        )
-        return theorem_training_data
-    except Exception as e:
-        logger.error(f"Error during proof search for theorem {theorem.full_name}: {e}")
-        return []
-    finally:
-        del runner
-        del env
-        gc.collect()
 
 
 def main(args: argparse.Namespace):
@@ -576,356 +357,13 @@ def main(args: argparse.Namespace):
         # Inference Loop
         completed_theorems = 0
 
+        inference_server = InferenceServer(
+            transformer, value_head, request_queue, response_queues, args.batch_size
+        )
+
         while completed_theorems < len(theorems_to_process):
             # 1. Process Inference Requests
-            # Collect a batch of requests
-            batch_requests = []
-
-            # Try to get as many requests as possible without blocking too long
-            try:
-                while len(batch_requests) < args.batch_size:
-                    req = request_queue.get_nowait()
-                    batch_requests.append(req)
-            except queue.Empty:
-                pass
-
-            if batch_requests:
-                # Sort by type to batch efficiently
-                batch_requests.sort(key=lambda x: x[1])
-
-                current_type = None
-                current_batch = []
-                current_indices = []
-
-                for worker_id, req_type, payload in batch_requests:
-                    if req_type != current_type:
-                        # Process previous batch
-                        if current_batch:
-                            results = []
-                            if current_type == "generate_tactics_with_probs":
-                                states, ns = zip(*current_batch)
-                                n = ns[0]
-                                results = transformer.generate_tactics_with_probs_batch(
-                                    list(states), n=n
-                                )
-                            elif current_type == "generate_tactics":
-                                states, ns = zip(*current_batch)
-                                n = ns[0]
-                                results = transformer.generate_tactics_batch(
-                                    list(states), n=n
-                                )
-                            elif current_type == "generate_tactics_batch":
-                                # payload is (states, n)
-                                # Flatten
-                                all_states = []
-                                lengths = []
-                                ns = []
-                                for p in current_batch:
-                                    s, n = p
-                                    all_states.extend(s)
-                                    lengths.append(len(s))
-                                    ns.append(n)
-
-                                n = ns[0]
-                                all_results = transformer.generate_tactics_batch(
-                                    all_states, n=n
-                                )
-
-                                # Split back
-                                results = []
-                                start = 0
-                                for length in lengths:
-                                    results.append(all_results[start : start + length])
-                                    start += length
-
-                            elif current_type == "generate_tactics_with_probs_batch":
-                                # payload is (states, n)
-                                all_states = []
-                                lengths = []
-                                ns = []
-                                for p in current_batch:
-                                    s, n = p
-                                    all_states.extend(s)
-                                    lengths.append(len(s))
-                                    ns.append(n)
-
-                                n = ns[0]
-                                all_results = (
-                                    transformer.generate_tactics_with_probs_batch(
-                                        all_states, n=n
-                                    )
-                                )
-
-                                results = []
-                                start = 0
-                                for length in lengths:
-                                    results.append(all_results[start : start + length])
-                                    start += length
-
-                            elif current_type == "predict_value":
-                                if value_head is not None:
-                                    states = [p[0] for p in current_batch]
-                                    results = value_head.predict_batch(list(states))
-                                else:
-                                    logger.error(
-                                        "Received predict_value request but value_head is None"
-                                    )
-                                    results = [0.0] * len(current_batch)
-
-                            elif current_type == "predict_batch":
-                                if value_head is not None:
-                                    all_states = []
-                                    lengths = []
-                                    for p in current_batch:
-                                        s = p[0]
-                                        all_states.extend(s)
-                                        lengths.append(len(s))
-
-                                    all_results = value_head.predict_batch(all_states)
-
-                                    results = []
-                                    start = 0
-                                    for length in lengths:
-                                        results.append(
-                                            all_results[start : start + length]
-                                        )
-                                        start += length
-                                else:
-                                    logger.error(
-                                        "Received predict_batch request but value_head is None"
-                                    )
-                                    results = [[] for _ in current_batch]
-
-                            elif current_type == "encode_states":
-                                if value_head is not None:
-                                    all_states = []
-                                    lengths = []
-                                    for p in current_batch:
-                                        s = p[0]
-                                        all_states.extend(s)
-                                        lengths.append(len(s))
-
-                                    features = value_head.encode_states(all_states)
-
-                                    results = []
-                                    start = 0
-                                    for length in lengths:
-                                        res = features[start : start + length]
-                                        results.append(res.cpu())  # Move to CPU
-                                        start += length
-                                else:
-                                    logger.error(
-                                        "Received encode_states request but value_head is None"
-                                    )
-                                    results = [None for _ in current_batch]
-
-                            elif current_type == "predict_from_features":
-                                if value_head is not None:
-                                    device = (
-                                        "cuda" if torch.cuda.is_available() else "cpu"
-                                    )
-                                    features_batch = []
-                                    for p in current_batch:
-                                        f = p[0].to(device)
-                                        if f.ndim == 1:
-                                            f = f.unsqueeze(0)
-                                        features_batch.append(f)
-
-                                    if features_batch:
-                                        full_batch = torch.cat(features_batch, dim=0)
-                                        results = (
-                                            value_head.predict_from_features_batch(
-                                                full_batch
-                                            )
-                                        )
-                                    else:
-                                        results = []
-                                else:
-                                    logger.error(
-                                        "Received predict_from_features request but value_head is None"
-                                    )
-                                    results = [0.0] * len(current_batch)
-
-                            elif current_type == "predict_from_features_batch":
-                                if value_head is not None:
-                                    device = (
-                                        "cuda" if torch.cuda.is_available() else "cpu"
-                                    )
-                                    features_list = [
-                                        p[0].to(device) for p in current_batch
-                                    ]
-                                    full_batch = torch.cat(features_list, dim=0)
-                                    all_results = (
-                                        value_head.predict_from_features_batch(
-                                            full_batch
-                                        )
-                                    )
-
-                                    results = []
-                                    start = 0
-                                    for f in features_list:
-                                        length = f.shape[0]
-                                        results.append(
-                                            all_results[start : start + length]
-                                        )
-                                        start += length
-                                else:
-                                    logger.error(
-                                        "Received predict_from_features_batch request but value_head is None"
-                                    )
-                                    results = [[] for _ in current_batch]
-
-                            # Send responses
-                            for i, res in enumerate(results):
-                                response_queues[current_indices[i]].put(res)
-
-                        current_type = req_type
-                        current_batch = []
-                        current_indices = []
-
-                    current_batch.append(payload)
-                    current_indices.append(worker_id)
-
-                # Process last batch
-                if current_batch:
-                    results = []
-                    if current_type == "generate_tactics_with_probs":
-                        states, ns = zip(*current_batch)
-                        n = ns[0]
-                        results = transformer.generate_tactics_with_probs_batch(
-                            list(states), n=n
-                        )
-                    elif current_type == "generate_tactics":
-                        states, ns = zip(*current_batch)
-                        n = ns[0]
-                        results = transformer.generate_tactics_batch(list(states), n=n)
-                    elif current_type == "generate_tactics_batch":
-                        all_states = []
-                        lengths = []
-                        ns = []
-                        for p in current_batch:
-                            s, n = p
-                            all_states.extend(s)
-                            lengths.append(len(s))
-                            ns.append(n)
-                        n = ns[0]
-                        all_results = transformer.generate_tactics_batch(
-                            all_states, n=n
-                        )
-                        results = []
-                        start = 0
-                        for length in lengths:
-                            results.append(all_results[start : start + length])
-                            start += length
-                    elif current_type == "generate_tactics_with_probs_batch":
-                        all_states = []
-                        lengths = []
-                        ns = []
-                        for p in current_batch:
-                            s, n = p
-                            all_states.extend(s)
-                            lengths.append(len(s))
-                            ns.append(n)
-                        n = ns[0]
-                        all_results = transformer.generate_tactics_with_probs_batch(
-                            all_states, n=n
-                        )
-                        results = []
-                        start = 0
-                        for length in lengths:
-                            results.append(all_results[start : start + length])
-                            start += length
-                    elif current_type == "predict_value":
-                        if value_head is not None:
-                            states = [p[0] for p in current_batch]
-                            results = value_head.predict_batch(list(states))
-                        else:
-                            logger.error(
-                                "Received predict_value request but value_head is None"
-                            )
-                            results = [0.0] * len(current_batch)
-                    elif current_type == "predict_batch":
-                        if value_head is not None:
-                            all_states = []
-                            lengths = []
-                            for p in current_batch:
-                                s = p[0]
-                                all_states.extend(s)
-                                lengths.append(len(s))
-                            all_results = value_head.predict_batch(all_states)
-                            results = []
-                            start = 0
-                            for length in lengths:
-                                results.append(all_results[start : start + length])
-                                start += length
-                        else:
-                            logger.error(
-                                "Received predict_batch request but value_head is None"
-                            )
-                            results = [[] for _ in current_batch]
-                    elif current_type == "encode_states":
-                        if value_head is not None:
-                            all_states = []
-                            lengths = []
-                            for p in current_batch:
-                                s = p[0]
-                                all_states.extend(s)
-                                lengths.append(len(s))
-                            features = value_head.encode_states(all_states)
-                            results = []
-                            start = 0
-                            for length in lengths:
-                                res = features[start : start + length]
-                                results.append(res.cpu())
-                                start += length
-                        else:
-                            logger.error(
-                                "Received encode_states request but value_head is None"
-                            )
-                            results = [None for _ in current_batch]
-                    elif current_type == "predict_from_features":
-                        if value_head is not None:
-                            device = "cuda" if torch.cuda.is_available() else "cpu"
-                            features_batch = []
-                            for p in current_batch:
-                                f = p[0].to(device)
-                                if f.ndim == 1:
-                                    f = f.unsqueeze(0)
-                                features_batch.append(f)
-                            if features_batch:
-                                full_batch = torch.cat(features_batch, dim=0)
-                                results = value_head.predict_from_features_batch(
-                                    full_batch
-                                )
-                            else:
-                                results = []
-                        else:
-                            logger.error(
-                                "Received predict_from_features request but value_head is None"
-                            )
-                            results = [0.0] * len(current_batch)
-                    elif current_type == "predict_from_features_batch":
-                        if value_head is not None:
-                            device = "cuda" if torch.cuda.is_available() else "cpu"
-                            features_list = [p[0].to(device) for p in current_batch]
-                            full_batch = torch.cat(features_list, dim=0)
-                            all_results = value_head.predict_from_features_batch(
-                                full_batch
-                            )
-                            results = []
-                            start = 0
-                            for f in features_list:
-                                length = f.shape[0]
-                                results.append(all_results[start : start + length])
-                                start += length
-                        else:
-                            logger.error(
-                                "Received predict_from_features_batch request but value_head is None"
-                            )
-                            results = [[] for _ in current_batch]
-
-                    for i, res in enumerate(results):
-                        response_queues[current_indices[i]].put(res)
+            processed_batch = inference_server.process_requests()
 
             # 2. Check for Results
             try:
@@ -942,7 +380,7 @@ def main(args: argparse.Namespace):
                 pass
 
             # Small sleep to prevent busy loop burning CPU
-            if not batch_requests:
+            if not processed_batch:
                 time.sleep(0.01)
 
         if torch.cuda.is_available():
