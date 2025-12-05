@@ -171,7 +171,7 @@ importlib_resources==6.5.2
 huggingface-hub==0.36.0
 rignore==0.7.3
 PyNaCl==1.6.0
-fonttools==4.60.1
+fonttools==4.61.0
 debugpy==1.8.17
 xformers==0.0.32.post1
 opencv-python-headless==4.12.0.88
