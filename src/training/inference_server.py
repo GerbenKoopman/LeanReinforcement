@@ -46,8 +46,22 @@ class InferenceServer:
         return True
 
     def _process_batch(self, batch_requests: List[Any]):
-        # Sort by type to batch efficiently
-        batch_requests.sort(key=lambda x: x[1])
+        # Helper to extract 'n' from payload safely for sorting
+        def sort_key(req):
+            _, req_type, payload = req
+            # For generation requests, payload is (state, n) or (states, n)
+            # We want to group by req_type AND n
+            n_val = 0
+            if (
+                isinstance(payload, tuple)
+                and len(payload) >= 2
+                and isinstance(payload[1], int)
+            ):
+                n_val = payload[1]
+            return (req_type, n_val)
+
+        # Sort by type AND parameter n to ensure safe batching
+        batch_requests.sort(key=sort_key)
 
         current_type = None
         current_batch = []
