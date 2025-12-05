@@ -190,6 +190,48 @@ class TestInferenceServer(unittest.TestCase):
         res = self.response_queues[0].get_nowait()
         self.assertEqual(len(res), 4)
 
+    def test_oom_handling_persistent(self):
+        # Test that max_safe_batch_size is remembered
+        self.server.batch_size = 1  # Process one request at a time
+
+        req_type = "generate_tactics_batch"
+        states = ["s1", "s2", "s3", "s4"]
+        n = 5
+
+        # First request: triggers OOM
+        self.request_queue.put((0, req_type, (states, n)))
+
+        def side_effect(batch_states, n=1):
+            if len(batch_states) == 4:
+                raise torch.cuda.OutOfMemoryError("OOM")
+            return [["t"] for _ in batch_states]
+
+        self.transformer.generate_tactics_batch.side_effect = side_effect
+
+        # Process first request
+        self.server.process_requests()
+        # Should have called 3 times (4->fail, 2->ok, 2->ok)
+        self.assertEqual(self.transformer.generate_tactics_batch.call_count, 3)
+        self.assertEqual(self.server.max_safe_batch_size, 2)
+
+        # Reset mock call count
+        self.transformer.generate_tactics_batch.reset_mock()
+        self.transformer.generate_tactics_batch.side_effect = side_effect
+
+        # Second request: should be split preemptively
+        self.request_queue.put((1, req_type, (states, n)))
+
+        # Process second request
+        self.server.process_requests()
+        # Should have called 2 times (2->ok, 2->ok) because 4 is > max_safe_batch_size (2)
+        # It should NOT call with 4
+        self.assertEqual(self.transformer.generate_tactics_batch.call_count, 2)
+
+        # Verify no call with length 4
+        for call in self.transformer.generate_tactics_batch.call_args_list:
+            args, _ = call
+            self.assertLessEqual(len(args[0]), 2)
+
 
 if __name__ == "__main__":
     unittest.main()
