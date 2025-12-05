@@ -1,5 +1,5 @@
 """
-TODO: Add module docstring
+Proxy classes for remote model inference.
 """
 
 from typing import List

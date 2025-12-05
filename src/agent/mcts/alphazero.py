@@ -1,5 +1,5 @@
 """
-TODO: Add module docstring
+AlphaZero MCTS implementation.
 """
 
 import math

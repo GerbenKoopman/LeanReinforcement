@@ -1,5 +1,5 @@
 """
-TODO: Add module docstring
+Guided Rollout MCTS implementation.
 """
 
 import math

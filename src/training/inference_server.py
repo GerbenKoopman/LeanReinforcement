@@ -1,5 +1,5 @@
 """
-TODO: Add module docstring
+Inference Server for centralized model execution.
 """
 
 from typing import List, Any, Union, Sequence

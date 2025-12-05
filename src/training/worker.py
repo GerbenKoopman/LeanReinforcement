@@ -1,5 +1,5 @@
 """
-TODO: Add module docstring
+Worker module for parallel theorem proving.
 """
 
 from typing import Union, List, Dict, Any, Optional

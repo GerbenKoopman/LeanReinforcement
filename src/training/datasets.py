@@ -1,5 +1,5 @@
 """
-TODO: Add module docstring
+PyTorch Datasets for training the policy and value heads.
 """
 
 from typing import List, Dict, Any
