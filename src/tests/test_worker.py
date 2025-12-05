@@ -1,7 +1,11 @@
 import unittest
 from unittest.mock import MagicMock, patch
 import argparse
+
+from lean_dojo import DojoInitError
+
 from src.training.worker import process_theorem
+from src.agent.mcts.alphazero import MCTS_AlphaZero
 
 
 class TestWorker(unittest.TestCase):
@@ -64,8 +68,6 @@ class TestWorker(unittest.TestCase):
         self.dataloader.extract_theorem.return_value = mock_theorem
 
         # Simulate environment initialization error
-        from lean_dojo import DojoInitError
-
         MockLeanDojoEnv.side_effect = DojoInitError("Init failed")
 
         # Run function
@@ -110,7 +112,6 @@ class TestWorker(unittest.TestCase):
         # Check that MCTS_AlphaZero was used (indirectly via kwargs passed to AgentRunner)
         # We can check the call args of AgentRunner
         _, kwargs = MockAgentRunner.call_args
-        from src.agent.mcts import MCTS_AlphaZero
 
         self.assertEqual(kwargs["mcts_class"], MCTS_AlphaZero)
         self.assertEqual(kwargs["mcts_kwargs"]["value_head"], self.value_head)

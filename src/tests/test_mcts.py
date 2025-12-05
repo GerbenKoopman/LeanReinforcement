@@ -4,7 +4,9 @@ from unittest.mock import Mock, MagicMock
 
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
-from src.agent.mcts import Node, MCTS_GuidedRollout, MCTS_AlphaZero
+from src.agent.mcts.base_mcts import Node
+from src.agent.mcts.guidedrollout import MCTS_GuidedRollout
+from src.agent.mcts.alphazero import MCTS_AlphaZero
 from src.agent.transformer import Transformer
 from src.agent.value_head import ValueHead
 

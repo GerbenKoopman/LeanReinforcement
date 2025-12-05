@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
-from src.agent.mcts import MCTS_GuidedRollout, Node
+from src.agent.mcts.base_mcts import Node
+from src.agent.mcts.guidedrollout import MCTS_GuidedRollout
 from lean_dojo import TacticState
 
 
