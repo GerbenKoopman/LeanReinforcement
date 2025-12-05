@@ -47,34 +47,39 @@ class InferenceServer:
 
     def _process_batch(self, batch_requests: List[Any]):
         # Helper to extract 'n' from payload safely for sorting
-        def sort_key(req):
-            _, req_type, payload = req
-            # For generation requests, payload is (state, n) or (states, n)
-            # We want to group by req_type AND n
-            n_val = 0
+        def get_n(payload):
             if (
                 isinstance(payload, tuple)
                 and len(payload) >= 2
                 and isinstance(payload[1], int)
             ):
-                n_val = payload[1]
-            return (req_type, n_val)
+                return payload[1]
+            return 0
 
         # Sort by type AND parameter n to ensure safe batching
+        def sort_key(req):
+            _, req_type, payload = req
+            return (req_type, get_n(payload))
+
         batch_requests.sort(key=sort_key)
 
         current_type = None
+        current_n = -1
         current_batch = []
         current_indices = []
 
         for worker_id, req_type, payload in batch_requests:
-            if req_type != current_type:
+            this_n = get_n(payload)
+
+            # Flush if type changes OR if n changes
+            if req_type != current_type or this_n != current_n:
                 # Process previous batch
                 if current_batch:
                     assert current_type is not None
                     self._execute_batch(current_type, current_batch, current_indices)
 
                 current_type = req_type
+                current_n = this_n
                 current_batch = []
                 current_indices = []
 
@@ -86,19 +91,37 @@ class InferenceServer:
             assert current_type is not None
             self._execute_batch(current_type, current_batch, current_indices)
 
+    def _run_transformer_batch(self, method, states, n, **kwargs):
+        try:
+            return method(states, n=n, **kwargs)
+        except torch.cuda.OutOfMemoryError:
+            logger.warning(
+                f"OOM in transformer batch (size {len(states)}). Splitting batch..."
+            )
+            torch.cuda.empty_cache()
+            if len(states) <= 1:
+                raise RuntimeError(f"OOM even with single sample! n={n}")
+
+            mid = len(states) // 2
+            left = self._run_transformer_batch(method, states[:mid], n, **kwargs)
+            right = self._run_transformer_batch(method, states[mid:], n, **kwargs)
+            return left + right
+
     def _execute_batch(self, req_type: str, batch: List[Any], indices: List[int]):
         results = []
 
         if req_type == "generate_tactics_with_probs":
             states, ns = zip(*batch)
             n = ns[0]
-            results = self.transformer.generate_tactics_with_probs_batch(
-                list(states), n=n
+            results = self._run_transformer_batch(
+                self.transformer.generate_tactics_with_probs_batch, list(states), n=n
             )
         elif req_type == "generate_tactics":
             states, ns = zip(*batch)
             n = ns[0]
-            results = self.transformer.generate_tactics_batch(list(states), n=n)
+            results = self._run_transformer_batch(
+                self.transformer.generate_tactics_batch, list(states), n=n
+            )
         elif req_type == "generate_tactics_batch":
             # payload is (states, n)
             # Flatten
@@ -112,7 +135,9 @@ class InferenceServer:
                 ns.append(n)
 
             n = ns[0]
-            all_results = self.transformer.generate_tactics_batch(all_states, n=n)
+            all_results = self._run_transformer_batch(
+                self.transformer.generate_tactics_batch, all_states, n=n
+            )
 
             # Split back
             results = []
@@ -133,8 +158,8 @@ class InferenceServer:
                 ns.append(n)
 
             n = ns[0]
-            all_results = self.transformer.generate_tactics_with_probs_batch(
-                all_states, n=n
+            all_results = self._run_transformer_batch(
+                self.transformer.generate_tactics_with_probs_batch, all_states, n=n
             )
 
             results = []
