@@ -11,9 +11,10 @@ from loguru import logger
 
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
-from .mcts import BaseMCTS, MCTS_GuidedRollout
+from src.agent.mcts.base_mcts import BaseMCTS
+from src.agent.mcts.guidedrollout import MCTS_GuidedRollout
 from src.utilities.gym import LeanDojoEnv
-from .transformer import TransformerProtocol
+from src.agent.transformer import TransformerProtocol
 
 
 class AgentRunner:

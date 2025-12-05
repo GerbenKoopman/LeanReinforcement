@@ -10,7 +10,7 @@ from typing import List
 import os
 from loguru import logger
 
-from .transformer import Transformer
+from src.agent.transformer import Transformer
 
 
 class ValueHead(nn.Module):

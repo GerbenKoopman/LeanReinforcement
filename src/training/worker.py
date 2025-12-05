@@ -15,7 +15,8 @@ from ReProver.common import Corpus, Pos
 from src.utilities.dataloader import LeanDataLoader
 from src.utilities.gym import LeanDojoEnv
 from src.agent.runner import AgentRunner
-from src.agent.mcts import MCTS_AlphaZero, MCTS_GuidedRollout
+from src.agent.mcts.guidedrollout import MCTS_GuidedRollout
+from src.agent.mcts.alphazero import MCTS_AlphaZero
 from src.agent.proxies import QueueProxyTransformer, QueueProxyValueHead
 
 
