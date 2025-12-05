@@ -228,117 +228,153 @@ def main(args: TrainingConfig):
     response_queues = [mp.Queue() for _ in range(args.num_workers)]
 
     workers = []
-    for i in range(args.num_workers):
-        p = mp.Process(
-            target=worker_loop,
-            args=(
-                i,
-                request_queue,
-                response_queues[i],
-                theorem_queue,
-                result_queue,
-                corpus,
-                args,
-            ),
-        )
-        p.start()
-        workers.append(p)
+    try:
+        for i in range(args.num_workers):
+            p = mp.Process(
+                target=worker_loop,
+                args=(
+                    i,
+                    request_queue,
+                    response_queues[i],
+                    theorem_queue,
+                    result_queue,
+                    corpus,
+                    args,
+                ),
+            )
+            p.start()
+            workers.append(p)
 
-    # --- Self-Play and Training Loop ---
-    for epoch in range(start_epoch, start_epoch + args.num_epochs):
-        logger.info(f"Starting Epoch {epoch + 1}/{args.num_epochs}")
-        training_data_buffer = []
+        # --- Self-Play and Training Loop ---
+        for epoch in range(start_epoch, start_epoch + args.num_epochs):
+            logger.info(f"Starting Epoch {epoch + 1}/{args.num_epochs}")
+            training_data_buffer = []
 
-        # Clear GPU cache at start of each epoch
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+            # Clear GPU cache at start of each epoch
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
 
-        # Shuffle training theorems each epoch
-        random.shuffle(dataloader.train_data)
+            # Shuffle training theorems each epoch
+            random.shuffle(dataloader.train_data)
 
-        theorems_to_process = dataloader.train_data[: args.num_theorems]
+            theorems_to_process = dataloader.train_data[: args.num_theorems]
 
-        # Fill theorem queue
-        for thm in theorems_to_process:
-            theorem_queue.put(thm)
+            # Fill theorem queue
+            for thm in theorems_to_process:
+                theorem_queue.put(thm)
 
-        logger.info(
-            f"Processing {len(theorems_to_process)} theorems with {args.num_workers} workers."
-        )
-
-        # Inference Loop
-        completed_theorems = 0
-
-        inference_server = InferenceServer(
-            transformer, value_head, request_queue, response_queues, args.batch_size
-        )
-
-        while completed_theorems < len(theorems_to_process):
-            # 1. Process Inference Requests
-            processed_batch = inference_server.process_requests()
-
-            # 2. Check for Results
-            try:
-                while True:
-                    res = result_queue.get_nowait()
-                    if res:
-                        training_data_buffer.extend(res)
-                    completed_theorems += 1
-                    if completed_theorems % 10 == 0:
-                        logger.info(
-                            f"Completed {completed_theorems}/{len(theorems_to_process)} proofs"
-                        )
-            except queue.Empty:
-                pass
-
-            # Small sleep to prevent busy loop burning CPU
-            if not processed_batch:
-                time.sleep(0.01)
-
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-
-        # --- MODEL TRAINING STEP ---
-        if not training_data_buffer:
-            logger.warning("No data collected in this epoch. Skipping training.")
-            continue
-
-        # --- Analyze collected data ---
-        if args.train_value_head:
-            stats = analyze_value_data(training_data_buffer)
-            print_training_stats(stats)
-
-            # Optionally save training data for offline analysis
-            if args.save_training_data:
-                data_save_path = (
-                    checkpoint_dir / f"training_data_epoch_{epoch + 1}.json"
-                )
-                save_training_data(training_data_buffer, data_save_path)
-
-        # --- CONDITIONAL TRAINING ---
-        if args.train_value_head:
-            value_data = [d for d in training_data_buffer if d.get("type") == "value"]
-            assert (
-                value_head is not None
-            ), "ValueHead must be initialized before training"
-            train_value_head(
-                value_head,
-                value_data,
-                epochs=args.train_epochs,
-                use_wandb=args.use_wandb,
+            logger.info(
+                f"Processing {len(theorems_to_process)} theorems with {args.num_workers} workers."
             )
 
-        # --- Save checkpoints after each epoch ---
-        if args.train_value_head and value_head is not None and args.save_checkpoints:
-            save_checkpoint(value_head, epoch + 1, checkpoint_dir, args)
-            logger.info(f"Checkpoint saved for epoch {epoch + 1}")
+            # Inference Loop
+            completed_theorems = 0
 
-    # Cleanup
-    for _ in range(args.num_workers):
-        theorem_queue.put(None)
+            inference_server = InferenceServer(
+                transformer, value_head, request_queue, response_queues, args.batch_size
+            )
 
-    for p in workers:
-        p.join()
+            while completed_theorems < len(theorems_to_process):
+                # 1. Process Inference Requests
+                processed_batch = inference_server.process_requests()
+
+                # 2. Check for Results
+                try:
+                    while True:
+                        res = result_queue.get_nowait()
+                        if res:
+                            training_data_buffer.extend(res)
+                        completed_theorems += 1
+                        if completed_theorems % 10 == 0:
+                            logger.info(
+                                f"Completed {completed_theorems}/{len(theorems_to_process)} proofs"
+                            )
+                except queue.Empty:
+                    pass
+
+                # Small sleep to prevent busy loop burning CPU
+                if not processed_batch:
+                    time.sleep(0.01)
+
+                # Check if any worker has died unexpectedly
+                dead_workers = [p for p in workers if not p.is_alive()]
+                if dead_workers:
+                    logger.error(
+                        f"Found {len(dead_workers)} dead worker(s). Stopping training to prevent hang."
+                    )
+                    for p in dead_workers:
+                        logger.error(f"Worker exit code: {p.exitcode}")
+
+                    # Kill remaining workers and exit
+                    for p in workers:
+                        if p.is_alive():
+                            p.terminate()
+                    raise RuntimeError(
+                        "One or more worker processes died unexpectedly."
+                    )
+
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+
+            # --- MODEL TRAINING STEP ---
+            if not training_data_buffer:
+                logger.warning("No data collected in this epoch. Skipping training.")
+                continue
+
+            # --- Analyze collected data ---
+            if args.train_value_head:
+                stats = analyze_value_data(training_data_buffer)
+                print_training_stats(stats)
+
+                # Optionally save training data for offline analysis
+                if args.save_training_data:
+                    data_save_path = (
+                        checkpoint_dir / f"training_data_epoch_{epoch + 1}.json"
+                    )
+                    save_training_data(training_data_buffer, data_save_path)
+
+            # --- CONDITIONAL TRAINING ---
+            if args.train_value_head:
+                value_data = [
+                    d for d in training_data_buffer if d.get("type") == "value"
+                ]
+                assert (
+                    value_head is not None
+                ), "ValueHead must be initialized before training"
+                train_value_head(
+                    value_head,
+                    value_data,
+                    epochs=args.train_epochs,
+                    use_wandb=args.use_wandb,
+                )
+
+            # --- Save checkpoints after each epoch ---
+            if (
+                args.train_value_head
+                and value_head is not None
+                and args.save_checkpoints
+            ):
+                save_checkpoint(value_head, epoch + 1, checkpoint_dir, args)
+                logger.info(f"Checkpoint saved for epoch {epoch + 1}")
+
+        # Cleanup
+        for _ in range(args.num_workers):
+            theorem_queue.put(None)
+
+        for p in workers:
+            p.join()
+
+    except KeyboardInterrupt:
+        logger.info("Training interrupted by user.")
+    except Exception as e:
+        logger.error(f"Training crashed: {e}")
+        raise e
+    finally:
+        logger.info("Shutting down workers...")
+        for p in workers:
+            if p.is_alive():
+                p.terminate()
+                p.join()
 
 
 if __name__ == "__main__":
