@@ -5,7 +5,7 @@ from unittest.mock import patch, mock_open, MagicMock
 from lean_dojo import Theorem
 from ReProver.common import Pos
 
-from src.utilities.dataloader import LeanDataLoader
+from lean_reinforcement.utilities.dataloader import LeanDataLoader
 
 
 class TestDataLoader(unittest.TestCase):
@@ -44,8 +44,8 @@ class TestDataLoader(unittest.TestCase):
         self.assertEqual(loader.test_data, [{"id": 2}])
         self.assertEqual(loader.val_data, [{"id": 3}])
 
-    @patch("src.utilities.dataloader.LeanGitRepo")
-    @patch("src.utilities.dataloader.Theorem")
+    @patch("lean_reinforcement.utilities.dataloader.LeanGitRepo")
+    @patch("lean_reinforcement.utilities.dataloader.Theorem")
     def test_extract_theorem(self, MockTheorem, MockLeanGitRepo):
         # Arrange
         mock_corpus = MagicMock()
@@ -83,8 +83,8 @@ class TestDataLoader(unittest.TestCase):
         # Assert
         self.assertEqual(tactics, ["tactic1", "tactic2"])
 
-    @patch("src.utilities.dataloader.trace")
-    @patch("src.utilities.dataloader.LeanGitRepo")
+    @patch("lean_reinforcement.utilities.dataloader.trace")
+    @patch("lean_reinforcement.utilities.dataloader.LeanGitRepo")
     def test_trace_repo(self, MockLeanGitRepo, mock_trace):
         # Arrange
         mock_corpus = MagicMock()

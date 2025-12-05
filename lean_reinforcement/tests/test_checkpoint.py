@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import MagicMock, patch
 from pathlib import Path
-from src.utilities.checkpoint import save_checkpoint, load_checkpoint
-from src.utilities.config import TrainingConfig
+from lean_reinforcement.utilities.checkpoint import save_checkpoint, load_checkpoint
+from lean_reinforcement.utilities.config import TrainingConfig
 
 
 class TestCheckpoint(unittest.TestCase):
@@ -28,8 +28,8 @@ class TestCheckpoint(unittest.TestCase):
             use_wandb=False,
         )
 
-    @patch("src.utilities.checkpoint.save_training_metadata")
-    @patch("src.utilities.checkpoint.cleanup_old_checkpoints")
+    @patch("lean_reinforcement.utilities.checkpoint.save_training_metadata")
+    @patch("lean_reinforcement.utilities.checkpoint.cleanup_old_checkpoints")
     @patch("pathlib.Path.mkdir")
     def test_save_checkpoint(self, mock_mkdir, mock_cleanup, mock_save_metadata):
         """Test saving a checkpoint."""

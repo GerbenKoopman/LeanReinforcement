@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import MagicMock
 import torch
-from src.agent.proxies import QueueProxyTransformer, QueueProxyValueHead
-from src.agent.transformer import TransformerProtocol
+from lean_reinforcement.agent.proxies import QueueProxyTransformer, QueueProxyValueHead
+from lean_reinforcement.agent.transformer import TransformerProtocol
 
 
 class TestQueueProxyTransformer(unittest.TestCase):

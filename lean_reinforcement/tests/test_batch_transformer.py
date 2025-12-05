@@ -1,16 +1,16 @@
 import unittest
 import torch
 from unittest.mock import MagicMock, patch
-from src.agent.transformer import Transformer
+from lean_reinforcement.agent.transformer import Transformer
 
 
 class TestBatchTransformer(unittest.TestCase):
     def setUp(self):
         self.tokenizer_patcher = patch(
-            "src.agent.transformer.AutoTokenizer.from_pretrained"
+            "lean_reinforcement.agent.transformer.AutoTokenizer.from_pretrained"
         )
         self.model_patcher = patch(
-            "src.agent.transformer.AutoModelForSeq2SeqLM.from_pretrained"
+            "lean_reinforcement.agent.transformer.AutoModelForSeq2SeqLM.from_pretrained"
         )
 
         self.mock_tokenizer = self.tokenizer_patcher.start()

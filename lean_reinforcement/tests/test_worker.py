@@ -1,11 +1,11 @@
 import unittest
 from unittest.mock import MagicMock, patch
-from src.utilities.config import TrainingConfig
+from lean_reinforcement.utilities.config import TrainingConfig
 
 from lean_dojo import DojoInitError
 
-from src.training.worker import process_theorem
-from src.agent.mcts.alphazero import MCTS_AlphaZero
+from lean_reinforcement.training.worker import process_theorem
+from lean_reinforcement.agent.mcts.alphazero import MCTS_AlphaZero
 
 
 class TestWorker(unittest.TestCase):
@@ -34,9 +34,9 @@ class TestWorker(unittest.TestCase):
         self.value_head = MagicMock()
         self.thm_data = {"start": [0, 0]}
 
-    @patch("src.training.worker.LeanDojoEnv")
-    @patch("src.training.worker.AgentRunner")
-    @patch("src.training.worker.Pos")
+    @patch("lean_reinforcement.training.worker.LeanDojoEnv")
+    @patch("lean_reinforcement.training.worker.AgentRunner")
+    @patch("lean_reinforcement.training.worker.Pos")
     def test_process_theorem_success(self, MockPos, MockAgentRunner, MockLeanDojoEnv):
         # Setup mocks
         mock_theorem = MagicMock()
@@ -69,7 +69,7 @@ class TestWorker(unittest.TestCase):
         mock_runner.run.assert_called_once()
         self.assertEqual(result, expected_data)
 
-    @patch("src.training.worker.LeanDojoEnv")
+    @patch("lean_reinforcement.training.worker.LeanDojoEnv")
     def test_process_theorem_env_error(self, MockLeanDojoEnv):
         # Setup mocks
         mock_theorem = MagicMock()
@@ -92,9 +92,9 @@ class TestWorker(unittest.TestCase):
         # Should return empty list on error
         self.assertEqual(result, [])
 
-    @patch("src.training.worker.LeanDojoEnv")
-    @patch("src.training.worker.AgentRunner")
-    @patch("src.training.worker.Pos")
+    @patch("lean_reinforcement.training.worker.LeanDojoEnv")
+    @patch("lean_reinforcement.training.worker.AgentRunner")
+    @patch("lean_reinforcement.training.worker.Pos")
     def test_process_theorem_alpha_zero(
         self, MockPos, MockAgentRunner, MockLeanDojoEnv
     ):

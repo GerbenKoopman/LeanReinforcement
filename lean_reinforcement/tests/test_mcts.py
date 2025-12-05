@@ -4,11 +4,11 @@ from unittest.mock import Mock, MagicMock
 
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
-from src.agent.mcts.base_mcts import Node
-from src.agent.mcts.guidedrollout import MCTS_GuidedRollout
-from src.agent.mcts.alphazero import MCTS_AlphaZero
-from src.agent.transformer import Transformer
-from src.agent.value_head import ValueHead
+from lean_reinforcement.agent.mcts.base_mcts import Node
+from lean_reinforcement.agent.mcts.guidedrollout import MCTS_GuidedRollout
+from lean_reinforcement.agent.mcts.alphazero import MCTS_AlphaZero
+from lean_reinforcement.agent.transformer import Transformer
+from lean_reinforcement.agent.value_head import ValueHead
 
 
 class TestNode(unittest.TestCase):

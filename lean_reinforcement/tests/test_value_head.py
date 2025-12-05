@@ -3,13 +3,13 @@ from unittest.mock import patch, MagicMock
 import torch
 import torch.nn as nn
 
-from src.agent.value_head import ValueHead
-from src.agent.transformer import Transformer
+from lean_reinforcement.agent.value_head import ValueHead
+from lean_reinforcement.agent.transformer import Transformer
 
 
 class TestValueHead(unittest.TestCase):
-    @patch("src.agent.transformer.AutoModelForSeq2SeqLM.from_pretrained")
-    @patch("src.agent.transformer.AutoTokenizer.from_pretrained")
+    @patch("lean_reinforcement.agent.transformer.AutoModelForSeq2SeqLM.from_pretrained")
+    @patch("lean_reinforcement.agent.transformer.AutoTokenizer.from_pretrained")
     def setUp(self, mock_tokenizer_from_pretrained, mock_model_from_pretrained):
         self.mock_tokenizer = MagicMock()
         self.mock_transformer_model = MagicMock()

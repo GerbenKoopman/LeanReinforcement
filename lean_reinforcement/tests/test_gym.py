@@ -4,11 +4,11 @@ from unittest.mock import patch, MagicMock, PropertyMock
 from lean_dojo import TacticState, ProofFinished, LeanError, Theorem
 from ReProver.common import Pos
 
-from src.utilities.gym import LeanDojoEnv
+from lean_reinforcement.utilities.gym import LeanDojoEnv
 
 
 class TestLeanDojoEnv(unittest.TestCase):
-    @patch("src.utilities.gym.Dojo")
+    @patch("lean_reinforcement.utilities.gym.Dojo")
     def setUp(self, MockDojo):
         # Mock theorem and position
         self.theorem = MagicMock(spec=Theorem)

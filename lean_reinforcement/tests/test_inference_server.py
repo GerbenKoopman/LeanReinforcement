@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock
 import queue
 import torch
-from src.training.inference_server import InferenceServer
+from lean_reinforcement.training.inference_server import InferenceServer
 
 
 class TestInferenceServer(unittest.TestCase):

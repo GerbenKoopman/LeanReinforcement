@@ -2,12 +2,12 @@ import unittest
 from unittest.mock import patch, MagicMock
 import torch
 
-from src.agent.transformer import Transformer
+from lean_reinforcement.agent.transformer import Transformer
 
 
 class TestTransformer(unittest.TestCase):
-    @patch("src.agent.transformer.AutoModelForSeq2SeqLM.from_pretrained")
-    @patch("src.agent.transformer.AutoTokenizer.from_pretrained")
+    @patch("lean_reinforcement.agent.transformer.AutoModelForSeq2SeqLM.from_pretrained")
+    @patch("lean_reinforcement.agent.transformer.AutoTokenizer.from_pretrained")
     def setUp(self, mock_tokenizer_from_pretrained, mock_model_from_pretrained):
         """Set up the test environment with mocked tokenizer and model."""
         self.mock_tokenizer = MagicMock()

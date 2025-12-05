@@ -3,10 +3,10 @@ from unittest.mock import Mock, MagicMock, patch
 
 from lean_dojo import TacticState, ProofFinished
 
-from src.agent.runner import AgentRunner
-from src.agent.mcts.guidedrollout import MCTS_GuidedRollout
-from src.utilities.gym import LeanDojoEnv
-from src.agent.transformer import Transformer
+from lean_reinforcement.agent.runner import AgentRunner
+from lean_reinforcement.agent.mcts.guidedrollout import MCTS_GuidedRollout
+from lean_reinforcement.utilities.gym import LeanDojoEnv
+from lean_reinforcement.agent.transformer import Transformer
 
 
 class TestAgentRunner(unittest.TestCase):
@@ -42,7 +42,7 @@ class TestAgentRunner(unittest.TestCase):
             max_steps=5,
         )
 
-    @patch("src.agent.runner.MCTS_GuidedRollout")
+    @patch("lean_reinforcement.agent.runner.MCTS_GuidedRollout")
     def test_run_successful_proof(self, MockMCTS):
         # Arrange
         # Mock the MCTS instance and its methods
@@ -96,7 +96,7 @@ class TestAgentRunner(unittest.TestCase):
         mock_mcts_instance.search.assert_called_with(10)
         self.assertEqual(mock_mcts_instance.search.call_count, 2)
 
-    @patch("src.agent.runner.MCTS_GuidedRollout")
+    @patch("lean_reinforcement.agent.runner.MCTS_GuidedRollout")
     def test_run_max_steps_reached(self, MockMCTS):
         # Arrange
         mock_mcts_instance = MockMCTS.return_value
@@ -137,7 +137,7 @@ class TestAgentRunner(unittest.TestCase):
         self.assertEqual(len(trajectory), 0)
         self.assertEqual(self.env.step.call_count, 5)
 
-    @patch("src.agent.runner.MCTS_GuidedRollout")
+    @patch("lean_reinforcement.agent.runner.MCTS_GuidedRollout")
     def test_run_no_action_returned(self, MockMCTS):
         # Arrange
         mock_mcts_instance = MockMCTS.return_value

@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 import sys
-from src.utilities.config import get_config, TrainingConfig
+from lean_reinforcement.utilities.config import get_config, TrainingConfig
 
 
 class TestConfig(unittest.TestCase):
