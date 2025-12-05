@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import MagicMock, patch
-import argparse
+from src.utilities.config import TrainingConfig
 
 from lean_dojo import DojoInitError
 
@@ -10,7 +10,16 @@ from src.agent.mcts.alphazero import MCTS_AlphaZero
 
 class TestWorker(unittest.TestCase):
     def setUp(self):
-        self.args = argparse.Namespace(
+        self.args = TrainingConfig(
+            data_type="novel_premises",
+            num_epochs=1,
+            num_theorems=1,
+            num_workers=1,
+            train_epochs=1,
+            save_training_data=False,
+            save_checkpoints=False,
+            resume=False,
+            checkpoint_dir=None,
             mcts_type="guided_rollout",
             batch_size=16,
             num_iterations=10,

@@ -2,7 +2,6 @@
 TODO: Add module docstring
 """
 
-import argparse
 from typing import Union, List, Dict, Any, Optional
 from loguru import logger
 import torch.multiprocessing as mp
@@ -14,6 +13,7 @@ from ReProver.common import Corpus, Pos
 
 from src.utilities.dataloader import LeanDataLoader
 from src.utilities.gym import LeanDojoEnv
+from src.utilities.config import TrainingConfig
 from src.agent.runner import AgentRunner
 from src.agent.mcts.guidedrollout import MCTS_GuidedRollout
 from src.agent.mcts.alphazero import MCTS_AlphaZero
@@ -26,7 +26,7 @@ def process_theorem(
     dataloader: LeanDataLoader,
     transformer: QueueProxyTransformer,
     value_head: Optional[QueueProxyValueHead],
-    args: argparse.Namespace,
+    args: TrainingConfig,
 ) -> List[Dict[str, Any]]:
     """
     Process a single theorem: initialize env, run agent, collect data.
@@ -54,10 +54,12 @@ def process_theorem(
 
     if args.mcts_type == "alpha_zero":
         mcts_class = MCTS_AlphaZero
-        mcts_kwargs = {"value_head": value_head}
+        mcts_kwargs: Dict[str, Union[QueueProxyValueHead, int, None]] = {
+            "value_head": value_head
+        }
     else:
         mcts_class = MCTS_GuidedRollout
-        mcts_kwargs = {}
+        mcts_kwargs: Dict[str, Union[QueueProxyValueHead, int, None]] = {}
 
     mcts_kwargs["batch_size"] = args.batch_size
 
@@ -96,7 +98,7 @@ def worker_loop(
     theorem_queue: mp.Queue,
     result_queue: mp.Queue,
     corpus_path: Union[str, Corpus],
-    args: argparse.Namespace,
+    args: TrainingConfig,
 ):
     """
     Worker process loop.

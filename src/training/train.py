@@ -3,7 +3,6 @@ Main script for agent training and guided-rollout mcts dataset creation. Will
 implement tactic generation training in the future.
 """
 
-import argparse
 from typing import List, Dict, Any
 from loguru import logger
 import torch
@@ -38,6 +37,8 @@ from src.agent.value_head import ValueHead
 from src.training.datasets import ValueHeadDataset
 from src.training.inference_server import InferenceServer
 from src.training.worker import worker_loop
+from src.utilities.config import get_config, TrainingConfig
+from dataclasses import asdict
 
 
 # Load environment variables from .env file
@@ -145,13 +146,13 @@ def log_gpu_memory(prefix: str = "") -> None:
         )
 
 
-def main(args: argparse.Namespace):
+def main(args: TrainingConfig):
     # --- Setup wandb ---
     if args.use_wandb:
         wandb.init(
             entity="gerbennkoopman-university-of-amsterdam",
             project="lean-reinforcement",
-            config=vars(args),
+            config=asdict(args),
         )
 
     # --- Setup checkpoint directory ---
@@ -341,114 +342,5 @@ def main(args: argparse.Namespace):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="MCTS-based Training Loop for Lean Prover"
-    )
-    # --- Data and MCTS Args ---
-    parser.add_argument(
-        "--data-type",
-        type=str,
-        choices=["random", "novel_premises"],
-        default="novel_premises",
-        help="Dataset split to use.",
-    )
-    parser.add_argument(
-        "--num-epochs",
-        type=int,
-        default=10,
-        help="Number of self-play/training epochs.",
-    )
-    parser.add_argument(
-        "--num-theorems",
-        type=int,
-        default=100,
-        help="Number of theorems to attempt per epoch.",
-    )
-    parser.add_argument(
-        "--num-iterations",
-        type=int,
-        default=20,
-        help="Number of MCTS iterations per step (reduced default for memory efficiency).",
-    )
-    parser.add_argument(
-        "--max-steps",
-        type=int,
-        default=30,
-        help="Max steps per proof (reduced default for memory efficiency).",
-    )
-    parser.add_argument(
-        "--batch-size",
-        type=int,
-        default=16,
-        help="Batch size for MCTS search.",
-    )
-    parser.add_argument(
-        "--num-workers",
-        type=int,
-        default=16,
-        help="Number of parallel workers for processing theorems.",
-    )
-    parser.add_argument(
-        "--mcts-type",
-        type=str,
-        choices=["guided_rollout", "alpha_zero"],
-        default="guided_rollout",
-        help="Which MCTS algorithm to use for self-play.",
-    )
-
-    # --- Training Args ---
-    parser.add_argument(
-        "--train-epochs",
-        type=int,
-        default=1,
-        help="Number of training epochs to run on collected data *per* self-play epoch.",
-    )
-    parser.add_argument(
-        "--train-value-head",
-        action="store_true",
-        help="Train the value head after each epoch.",
-    )
-    parser.add_argument(
-        "--use-final-reward",
-        action="store_true",
-        default=True,
-        help="Whether to use the final reward for training (True) or the MCTS value estimates (False). Default: True.",
-    )
-    parser.add_argument(
-        "--save-training-data",
-        action="store_true",
-        help="Save raw training data to JSON files for offline analysis.",
-    )
-
-    # --- Checkpoint Args ---
-    parser.add_argument(
-        "--save-checkpoints",
-        action="store_true",
-        default=True,
-        help="Save model checkpoints after each epoch (default: True).",
-    )
-    parser.add_argument(
-        "--resume",
-        action="store_true",
-        help="Resume training from the latest checkpoint if available.",
-    )
-    parser.add_argument(
-        "--checkpoint-dir",
-        type=str,
-        default=None,
-        help="Override checkpoint directory (defaults to CHECKPOINT_DIR env var or ./checkpoints).",
-    )
-    parser.add_argument(
-        "--use-wandb",
-        action="store_true",
-        default=True,
-        help="Use wandb for logging.",
-    )
-
-    args = parser.parse_args()
-
-    # Override checkpoint directory if provided
-    if args.checkpoint_dir:
-        os.environ["CHECKPOINT_DIR"] = args.checkpoint_dir
-
+    args = get_config()
     main(args)

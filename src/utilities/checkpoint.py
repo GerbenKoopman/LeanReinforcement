@@ -7,11 +7,11 @@ import json
 from pathlib import Path
 from typing import Dict, Any
 from loguru import logger
-import argparse
 from dotenv import load_dotenv
 
 
 from src.agent.value_head import ValueHead
+from src.utilities.config import TrainingConfig
 
 # Load environment variables
 load_dotenv()
@@ -21,7 +21,7 @@ def save_checkpoint(
     value_head: ValueHead,
     epoch: int,
     checkpoint_dir: Path,
-    args: argparse.Namespace,
+    args: TrainingConfig,
     prefix: str = "value_head",
 ):
     """
