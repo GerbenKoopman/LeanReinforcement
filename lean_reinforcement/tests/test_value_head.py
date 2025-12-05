@@ -78,11 +78,16 @@ class TestValueHead(unittest.TestCase):
         state_str = "state"
 
         encoded_features = torch.randn(1, 1472)
-        with patch.object(
-            self.value_head, "encode_states", return_value=encoded_features
-        ) as mock_encode, patch.object(
-            self.value_head.value_head, "forward", return_value=torch.tensor([[0.5]])
-        ) as mock_forward:
+        with (
+            patch.object(
+                self.value_head, "encode_states", return_value=encoded_features
+            ) as mock_encode,
+            patch.object(
+                self.value_head.value_head,
+                "forward",
+                return_value=torch.tensor([[0.5]]),
+            ) as mock_forward,
+        ):
             # Act
             value = self.value_head.predict(state_str)
 

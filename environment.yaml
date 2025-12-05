@@ -16,7 +16,6 @@ dependencies:
   - networkx
   - lxml
   - pygithub
-  - deprecated
   - git-lfs
   - pip:
     - lean-dojo

@@ -10,8 +10,8 @@ from loguru import logger
 from dotenv import load_dotenv
 
 
-from src.agent.value_head import ValueHead
-from src.utilities.config import TrainingConfig
+from lean_reinforcement.agent.value_head import ValueHead
+from lean_reinforcement.utilities.config import TrainingConfig
 
 # Load environment variables
 load_dotenv()

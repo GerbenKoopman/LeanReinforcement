@@ -11,13 +11,13 @@ import queue
 from lean_dojo import DojoInitError
 from ReProver.common import Corpus, Pos
 
-from src.utilities.dataloader import LeanDataLoader
-from src.utilities.gym import LeanDojoEnv
-from src.utilities.config import TrainingConfig
-from src.agent.runner import AgentRunner
-from src.agent.mcts.guidedrollout import MCTS_GuidedRollout
-from src.agent.mcts.alphazero import MCTS_AlphaZero
-from src.agent.proxies import QueueProxyTransformer, QueueProxyValueHead
+from lean_reinforcement.utilities.dataloader import LeanDataLoader
+from lean_reinforcement.utilities.gym import LeanDojoEnv
+from lean_reinforcement.utilities.config import TrainingConfig
+from lean_reinforcement.agent.runner import AgentRunner
+from lean_reinforcement.agent.mcts.guidedrollout import MCTS_GuidedRollout
+from lean_reinforcement.agent.mcts.alphazero import MCTS_AlphaZero
+from lean_reinforcement.agent.proxies import QueueProxyTransformer, QueueProxyValueHead
 
 
 def process_theorem(

@@ -10,8 +10,8 @@ from loguru import logger
 
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
-from src.utilities.gym import LeanDojoEnv
-from src.agent.transformer import TransformerProtocol
+from lean_reinforcement.utilities.gym import LeanDojoEnv
+from lean_reinforcement.agent.transformer import TransformerProtocol
 
 # Max depth for a single rollout in Part 1
 MAX_ROLLOUT_DEPTH = 30

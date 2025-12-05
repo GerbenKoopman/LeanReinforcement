@@ -21,23 +21,23 @@ import queue
 
 from ReProver.common import Corpus
 
-from src.utilities.dataloader import LeanDataLoader
-from src.utilities.checkpoint import (
+from lean_reinforcement.utilities.dataloader import LeanDataLoader
+from lean_reinforcement.utilities.checkpoint import (
     get_checkpoint_dir,
     save_checkpoint,
     load_checkpoint,
 )
-from src.utilities.analyze_training_data import (
+from lean_reinforcement.utilities.analyze_training_data import (
     analyze_value_data,
     print_training_stats,
     save_training_data,
 )
-from src.agent.transformer import Transformer
-from src.agent.value_head import ValueHead
-from src.training.datasets import ValueHeadDataset
-from src.training.inference_server import InferenceServer
-from src.training.worker import worker_loop
-from src.utilities.config import get_config, TrainingConfig
+from lean_reinforcement.agent.transformer import Transformer
+from lean_reinforcement.agent.value_head import ValueHead
+from lean_reinforcement.training.datasets import ValueHeadDataset
+from lean_reinforcement.training.inference_server import InferenceServer
+from lean_reinforcement.training.worker import worker_loop
+from lean_reinforcement.utilities.config import get_config, TrainingConfig
 from dataclasses import asdict
 
 

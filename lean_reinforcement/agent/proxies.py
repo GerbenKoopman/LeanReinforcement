@@ -6,7 +6,7 @@ from typing import List
 import torch
 import torch.multiprocessing as mp
 
-from src.agent.transformer import TransformerProtocol
+from lean_reinforcement.agent.transformer import TransformerProtocol
 
 
 class QueueProxyTransformer(TransformerProtocol):

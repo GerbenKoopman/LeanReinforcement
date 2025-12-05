@@ -10,9 +10,9 @@ from loguru import logger
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 from lean_dojo.interaction.dojo import DojoTacticTimeoutError
 
-from src.utilities.gym import LeanDojoEnv
-from src.agent.value_head import ValueHead
-from src.agent.mcts.base_mcts import BaseMCTS, Node
+from lean_reinforcement.utilities.gym import LeanDojoEnv
+from lean_reinforcement.agent.value_head import ValueHead
+from lean_reinforcement.agent.mcts.base_mcts import BaseMCTS, Node
 
 # Max depth for a single rollout in Part 1
 MAX_ROLLOUT_DEPTH = 30
