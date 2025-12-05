@@ -119,6 +119,77 @@ class TestInferenceServer(unittest.TestCase):
         res = self.response_queues[0].get_nowait()
         self.assertEqual(res, 0.9)
 
+    def test_mixed_n_batching(self):
+        # Test that requests with different 'n' are not batched together
+        req_type = "generate_tactics"
+
+        # Request 1: n=5
+        self.request_queue.put((0, req_type, ("state1", 5)))
+        # Request 2: n=10
+        self.request_queue.put((1, req_type, ("state2", 10)))
+
+        # Mock transformer response
+        # We expect two calls.
+        # The order depends on sorting. (req_type, n)
+        # ("generate_tactics", 5) comes before ("generate_tactics", 10)
+        self.transformer.generate_tactics_batch.side_effect = [
+            [["tactic1"]],  # For n=5
+            [["tactic2"]],  # For n=10
+        ]
+
+        processed = self.server.process_requests()
+        self.assertTrue(processed)
+
+        # Verify two separate calls
+        self.assertEqual(self.transformer.generate_tactics_batch.call_count, 2)
+
+        # Verify call arguments
+        calls = self.transformer.generate_tactics_batch.call_args_list
+
+        # First call should be for n=5
+        args1, kwargs1 = calls[0]
+        self.assertEqual(args1[0], ["state1"])
+        self.assertEqual(kwargs1["n"], 5)
+
+        # Second call should be for n=10
+        args2, kwargs2 = calls[1]
+        self.assertEqual(args2[0], ["state2"])
+        self.assertEqual(kwargs2["n"], 10)
+
+    def test_oom_handling(self):
+        # Test that OOM is handled by splitting the batch
+        req_type = "generate_tactics_batch"
+        # Create a batch of 4 states
+        states = ["s1", "s2", "s3", "s4"]
+        n = 5
+        # One request with 4 states
+        self.request_queue.put((0, req_type, (states, n)))
+
+        # Mock transformer response
+        # First call (full batch) raises OOM
+        # Second call (first half: s1, s2) succeeds
+        # Third call (second half: s3, s4) succeeds
+
+        def side_effect(batch_states, n=1):
+            if len(batch_states) == 4:
+                raise torch.cuda.OutOfMemoryError("OOM")
+            return [["t"] for _ in batch_states]
+
+        self.transformer.generate_tactics_batch.side_effect = side_effect
+
+        processed = self.server.process_requests()
+        self.assertTrue(processed)
+
+        # Verify calls
+        # 1. Call with 4 states -> OOM
+        # 2. Call with 2 states (s1, s2) -> OK
+        # 3. Call with 2 states (s3, s4) -> OK
+        self.assertEqual(self.transformer.generate_tactics_batch.call_count, 3)
+
+        # Verify result
+        res = self.response_queues[0].get_nowait()
+        self.assertEqual(len(res), 4)
+
 
 if __name__ == "__main__":
     unittest.main()
