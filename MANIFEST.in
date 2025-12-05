@@ -1,0 +1,7 @@
+graft lean_reinforcement
+graft ReProver
+include README.md
+include LICENSE
+include pyproject.toml
+global-exclude *.py[cod]
+global-exclude *.egg-info

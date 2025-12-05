@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lean_reinforcement"
-version = "0.1.0"
+version = "0.1.1"
 description = "Reinforcement learning for Lean theorem proving"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -17,9 +17,14 @@ dependencies = [
     "loguru",
     "networkx",
     "lxml",
-    "ReProver @ file://./ReProver"
+    "deepspeed",
+    "rank_bm25",
+    "vllm"
 ]
+
+[tool.setuptools]
+include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["lean_reinforcement*"]
+include = ["lean_reinforcement*", "ReProver*"]
