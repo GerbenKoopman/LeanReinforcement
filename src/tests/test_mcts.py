@@ -61,12 +61,12 @@ class TestBaseMCTS(unittest.TestCase):
         self.transformer = Mock(spec=Transformer)
 
     def test_base_mcts_initialization(self):
-        mcts = MCTS_GuidedRollout(self.env, self.transformer)
+        mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
         self.assertIsInstance(mcts.root, Node)
         self.assertEqual(mcts.root.state, self.env.current_state)
 
     def test_backpropagate(self):
-        mcts = MCTS_GuidedRollout(self.env, self.transformer)
+        mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
         node1 = Node(Mock(spec=TacticState))
         node2 = Node(Mock(spec=TacticState), parent=node1)
         node3 = Node(Mock(spec=TacticState), parent=node2)
@@ -81,7 +81,7 @@ class TestBaseMCTS(unittest.TestCase):
         self.assertEqual(node1.value_sum, 0.5)
 
     def test_move_root(self):
-        mcts = MCTS_GuidedRollout(self.env, self.transformer)
+        mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
         root = mcts.root
 
         # Create children manually
@@ -114,7 +114,7 @@ class TestMCTSGuidedRollout(unittest.TestCase):
     def setUp(self):
         self.env = MockLeanDojoEnv()
         self.transformer = Mock(spec=Transformer)
-        self.mcts = MCTS_GuidedRollout(self.env, self.transformer)
+        self.mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
 
     def test_ucb1(self):
         parent = Node(Mock(spec=TacticState))
@@ -171,7 +171,9 @@ class TestMCTSAlphaZero(unittest.TestCase):
         self.env = MockLeanDojoEnv()
         self.transformer = Mock(spec=Transformer)
         self.value_head = Mock(spec=ValueHead)
-        self.mcts = MCTS_AlphaZero(self.value_head, self.env, self.transformer)
+        self.mcts = MCTS_AlphaZero(
+            value_head=self.value_head, env=self.env, transformer=self.transformer
+        )
 
     def test_puct_score(self):
         parent = Node(Mock(spec=TacticState))

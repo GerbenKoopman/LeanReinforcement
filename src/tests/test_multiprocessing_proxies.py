@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock
 import torch
-from src.training.train import QueueProxyTransformer, QueueProxyValueHead
+from src.agent.proxies import QueueProxyTransformer, QueueProxyValueHead
 from src.agent.transformer import TransformerProtocol
 
 
