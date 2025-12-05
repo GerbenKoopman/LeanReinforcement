@@ -23,6 +23,7 @@ class InferenceServer:
         self.request_queue = request_queue
         self.response_queues = response_queues
         self.batch_size = batch_size
+        self.max_safe_batch_size = float("inf")
 
     def process_requests(self) -> bool:
         """
@@ -92,15 +93,26 @@ class InferenceServer:
             self._execute_batch(current_type, current_batch, current_indices)
 
     def _run_transformer_batch(self, method, states, n, **kwargs):
+        if len(states) > self.max_safe_batch_size:
+            mid = len(states) // 2
+            left = self._run_transformer_batch(method, states[:mid], n, **kwargs)
+            right = self._run_transformer_batch(method, states[mid:], n, **kwargs)
+            return left + right
+
         try:
             return method(states, n=n, **kwargs)
         except torch.cuda.OutOfMemoryError:
-            logger.warning(
-                f"OOM in transformer batch (size {len(states)}). Splitting batch..."
-            )
-            torch.cuda.empty_cache()
-            if len(states) <= 1:
+            new_limit = len(states) // 2
+            if new_limit < 1:
                 raise RuntimeError(f"OOM even with single sample! n={n}")
+
+            if new_limit < self.max_safe_batch_size:
+                self.max_safe_batch_size = new_limit
+                logger.warning(
+                    f"OOM encountered. Reducing max safe batch size to {self.max_safe_batch_size}"
+                )
+
+            torch.cuda.empty_cache()
 
             mid = len(states) // 2
             left = self._run_transformer_batch(method, states[:mid], n, **kwargs)
