@@ -94,26 +94,27 @@ def get_config() -> TrainingConfig:
     )
     parser.add_argument(
         "--train-value-head",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
         default=True,
         help="Train the value head after each epoch.",
     )
     parser.add_argument(
         "--use-final-reward",
-        action="store_true",
-        default=True,
-        help="Whether to use the final reward for training (True) or the MCTS value estimates (False). Default: True.",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Use the final reward (1.0 or -1.0) for all steps in the proof.",
     )
     parser.add_argument(
         "--save-training-data",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
+        default=True,
         help="Save raw training data to JSON files for offline analysis.",
     )
 
     # --- Checkpoint Args ---
     parser.add_argument(
         "--save-checkpoints",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
         default=True,
         help="Save model checkpoints after each epoch (default: True).",
     )
