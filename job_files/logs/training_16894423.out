@@ -3215,3 +3215,648 @@ MCTS Value Estimates:
 2025-11-23 18:29:08.214 | INFO     | src.utilities.gym:close:98 - Environment closed.
 2025-11-23 18:29:31.330 | INFO     | src.agent.runner:run:81 - Starting proof search for: Polynomial.smeval_neg
 2025-11-23 18:29:35.858 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:30:49.562 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rcases eq_or_ne p 0 with (rfl | hp)
+2025-11-23 18:30:55.235 | INFO     | src.agent.runner:run:112 - Step 2: Running MCTS search for 200 iterations...
+2025-11-23 18:31:09.388 | INFO     | src.agent.runner:run:175 - Step 2: Applying best tactic: swap
+2025-11-23 18:31:13.955 | INFO     | src.agent.runner:run:112 - Step 3: Running MCTS search for 200 iterations...
+2025-11-23 18:31:21.654 | INFO     | src.agent.runner:run:175 - Step 3: Applying best tactic: swap
+2025-11-23 18:31:26.224 | INFO     | src.agent.runner:run:112 - Step 4: Running MCTS search for 200 iterations...
+2025-11-23 18:31:34.107 | INFO     | src.agent.runner:run:175 - Step 4: Applying best tactic: swap
+2025-11-23 18:31:38.740 | INFO     | src.agent.runner:run:112 - Step 5: Running MCTS search for 200 iterations...
+2025-11-23 18:31:46.444 | INFO     | src.agent.runner:run:175 - Step 5: Applying best tactic: swap
+2025-11-23 18:31:51.121 | INFO     | src.agent.runner:run:112 - Step 6: Running MCTS search for 200 iterations...
+2025-11-23 18:31:58.993 | INFO     | src.agent.runner:run:175 - Step 6: Applying best tactic: swap
+2025-11-23 18:32:03.646 | INFO     | src.agent.runner:run:112 - Step 7: Running MCTS search for 200 iterations...
+2025-11-23 18:32:11.350 | INFO     | src.agent.runner:run:175 - Step 7: Applying best tactic: swap
+2025-11-23 18:32:16.078 | INFO     | src.agent.runner:run:112 - Step 8: Running MCTS search for 200 iterations...
+2025-11-23 18:32:23.953 | INFO     | src.agent.runner:run:175 - Step 8: Applying best tactic: swap
+2025-11-23 18:32:28.526 | INFO     | src.agent.runner:run:112 - Step 9: Running MCTS search for 200 iterations...
+2025-11-23 18:32:36.228 | INFO     | src.agent.runner:run:175 - Step 9: Applying best tactic: swap
+2025-11-23 18:32:40.926 | INFO     | src.agent.runner:run:112 - Step 10: Running MCTS search for 200 iterations...
+2025-11-23 18:32:48.796 | INFO     | src.agent.runner:run:175 - Step 10: Applying best tactic: swap
+2025-11-23 18:32:53.570 | INFO     | src.agent.runner:run:112 - Step 11: Running MCTS search for 200 iterations...
+2025-11-23 18:33:01.272 | INFO     | src.agent.runner:run:175 - Step 11: Applying best tactic: swap
+2025-11-23 18:33:05.873 | INFO     | src.agent.runner:run:112 - Step 12: Running MCTS search for 200 iterations...
+2025-11-23 18:33:13.730 | INFO     | src.agent.runner:run:175 - Step 12: Applying best tactic: swap
+2025-11-23 18:33:18.290 | INFO     | src.agent.runner:run:112 - Step 13: Running MCTS search for 200 iterations...
+2025-11-23 18:33:25.983 | INFO     | src.agent.runner:run:175 - Step 13: Applying best tactic: swap
+2025-11-23 18:33:30.842 | INFO     | src.agent.runner:run:112 - Step 14: Running MCTS search for 200 iterations...
+2025-11-23 18:33:38.724 | INFO     | src.agent.runner:run:175 - Step 14: Applying best tactic: swap
+2025-11-23 18:33:43.292 | INFO     | src.agent.runner:run:112 - Step 15: Running MCTS search for 200 iterations...
+2025-11-23 18:33:50.993 | INFO     | src.agent.runner:run:175 - Step 15: Applying best tactic: swap
+2025-11-23 18:33:55.623 | INFO     | src.agent.runner:run:112 - Step 16: Running MCTS search for 200 iterations...
+2025-11-23 18:34:03.481 | INFO     | src.agent.runner:run:175 - Step 16: Applying best tactic: swap
+2025-11-23 18:34:08.158 | INFO     | src.agent.runner:run:112 - Step 17: Running MCTS search for 200 iterations...
+2025-11-23 18:34:15.857 | INFO     | src.agent.runner:run:175 - Step 17: Applying best tactic: swap
+2025-11-23 18:34:20.500 | INFO     | src.agent.runner:run:112 - Step 18: Running MCTS search for 200 iterations...
+2025-11-23 18:34:28.359 | INFO     | src.agent.runner:run:175 - Step 18: Applying best tactic: swap
+2025-11-23 18:34:33.084 | INFO     | src.agent.runner:run:112 - Step 19: Running MCTS search for 200 iterations...
+2025-11-23 18:34:40.782 | INFO     | src.agent.runner:run:175 - Step 19: Applying best tactic: swap
+2025-11-23 18:34:45.355 | INFO     | src.agent.runner:run:112 - Step 20: Running MCTS search for 200 iterations...
+2025-11-23 18:34:53.216 | INFO     | src.agent.runner:run:175 - Step 20: Applying best tactic: swap
+2025-11-23 18:34:57.910 | INFO     | src.agent.runner:run:112 - Step 21: Running MCTS search for 200 iterations...
+2025-11-23 18:35:05.611 | INFO     | src.agent.runner:run:175 - Step 21: Applying best tactic: swap
+2025-11-23 18:35:10.384 | INFO     | src.agent.runner:run:112 - Step 22: Running MCTS search for 200 iterations...
+2025-11-23 18:35:18.242 | INFO     | src.agent.runner:run:175 - Step 22: Applying best tactic: swap
+2025-11-23 18:35:22.845 | INFO     | src.agent.runner:run:112 - Step 23: Running MCTS search for 200 iterations...
+2025-11-23 18:35:30.543 | INFO     | src.agent.runner:run:175 - Step 23: Applying best tactic: swap
+2025-11-23 18:35:35.101 | INFO     | src.agent.runner:run:112 - Step 24: Running MCTS search for 200 iterations...
+2025-11-23 18:35:42.957 | INFO     | src.agent.runner:run:175 - Step 24: Applying best tactic: swap
+2025-11-23 18:35:47.525 | INFO     | src.agent.runner:run:112 - Step 25: Running MCTS search for 200 iterations...
+2025-11-23 18:35:55.229 | INFO     | src.agent.runner:run:175 - Step 25: Applying best tactic: swap
+2025-11-23 18:35:59.788 | INFO     | src.agent.runner:run:112 - Step 26: Running MCTS search for 200 iterations...
+2025-11-23 18:36:07.666 | INFO     | src.agent.runner:run:175 - Step 26: Applying best tactic: swap
+2025-11-23 18:36:12.589 | INFO     | src.agent.runner:run:112 - Step 27: Running MCTS search for 200 iterations...
+2025-11-23 18:36:20.345 | INFO     | src.agent.runner:run:175 - Step 27: Applying best tactic: swap
+2025-11-23 18:36:25.370 | INFO     | src.agent.runner:run:112 - Step 28: Running MCTS search for 200 iterations...
+2025-11-23 18:36:33.229 | INFO     | src.agent.runner:run:175 - Step 28: Applying best tactic: swap
+2025-11-23 18:36:37.863 | INFO     | src.agent.runner:run:112 - Step 29: Running MCTS search for 200 iterations...
+2025-11-23 18:36:45.559 | INFO     | src.agent.runner:run:175 - Step 29: Applying best tactic: swap
+2025-11-23 18:36:50.298 | INFO     | src.agent.runner:run:112 - Step 30: Running MCTS search for 200 iterations...
+2025-11-23 18:36:58.170 | INFO     | src.agent.runner:run:175 - Step 30: Applying best tactic: swap
+2025-11-23 18:36:58.290 | ERROR    | src.agent.runner:run:228 - Proof failed after 30 steps and 446.96s.
+2025-11-23 18:36:58.423 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:37:28.877 | INFO     | src.agent.runner:run:81 - Starting proof search for: NormedAddGroupHom.Equalizer.lift_normNoninc
+2025-11-23 18:37:33.534 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:37:36.733 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: simpa [NormNoninc] using hφ
+2025-11-23 18:37:36.840 | SUCCESS  | src.agent.runner:run:224 - Proof finished in 1 steps and 7.96s.
+2025-11-23 18:37:36.973 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:38:13.838 | INFO     | src.agent.runner:run:81 - Starting proof search for: LinearEquiv.isUnit_det
+2025-11-23 18:38:18.661 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:38:21.536 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: exact Matrix.isUnit_det_of_linearEquiv v f.symm.toLinearEquiv f.symm.toLinearEquiv
+  f.symm.toLinearEquiv f.symm.toLinearEquiv f.symm.toLinearEquiv f.symm.toLinearEquiv
+2025-11-23 18:38:21.604 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="unknown constant 'Matrix.isUnit_det_of_linearEquiv'")
+2025-11-23 18:38:21.604 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 7.77s.
+2025-11-23 18:38:21.605 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="unknown constant 'Matrix.isUnit_det_of_linearEquiv'")
+2025-11-23 18:38:21.737 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:38:44.371 | INFO     | src.agent.runner:run:81 - Starting proof search for: SimpleGraph.Subgraph.edgeSet_bot
+2025-11-23 18:38:49.269 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:38:51.226 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rw [edgeSet_bot, edgeSet_empty]
+2025-11-23 18:38:51.313 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.65268\nι : Sort u_1\nV : Type u\nW : Type v\nG : SimpleGraph V\nG₁ G₂ : G.Subgraph\na b : V\n⊢ ∅ = ∅")
+2025-11-23 18:38:51.313 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 6.94s.
+2025-11-23 18:38:51.313 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.65268\nι : Sort u_1\nV : Type u\nW : Type v\nG : SimpleGraph V\nG₁ G₂ : G.Subgraph\na b : V\n⊢ ∅ = ∅")
+2025-11-23 18:38:51.446 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:39:25.228 | INFO     | src.agent.runner:run:81 - Starting proof search for: Ordnode.Valid'.rotateL_lemma₃
+2025-11-23 18:39:30.198 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:39:32.671 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: omega
+2025-11-23 18:39:32.771 | SUCCESS  | src.agent.runner:run:224 - Proof finished in 1 steps and 7.54s.
+2025-11-23 18:39:32.904 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:40:05.787 | INFO     | src.agent.runner:run:81 - Starting proof search for: LinearMap.IsSymmetric.orthogonalFamily_eigenspaces
+2025-11-23 18:40:10.608 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:40:22.237 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rintro ⟨μ, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, hμ⟩ ⟨ν, h
+2025-11-23 18:40:22.306 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="<stdin>:1:588: unexpected end of input; expected '⟩'")
+2025-11-23 18:40:22.307 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 16.52s.
+2025-11-23 18:40:22.307 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="<stdin>:1:588: unexpected end of input; expected '⟩'")
+2025-11-23 18:40:22.440 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:40:41.143 | INFO     | src.agent.runner:run:81 - Starting proof search for: nontrivial_iff
+2025-11-23 18:40:45.969 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:40:48.105 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rw [nontrivial_iff_exists_ne_one, nontrivial_iff_exists_ne_one]
+2025-11-23 18:40:48.185 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.354\nα : Type u_1\nβ : Type u_2\n⊢ Nontrivial α ↔ ∃ x y, x ≠ y")
+2025-11-23 18:40:48.186 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 7.04s.
+2025-11-23 18:40:48.186 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.354\nα : Type u_1\nβ : Type u_2\n⊢ Nontrivial α ↔ ∃ x y, x ≠ y")
+2025-11-23 18:40:48.319 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:41:15.881 | INFO     | src.agent.runner:run:81 - Starting proof search for: Matrix.det_neg
+2025-11-23 18:41:20.722 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:41:32.329 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rw [← Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg, ←
+  Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg,
+  Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg,
+  Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg,
+  Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg,
+  Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg,
+  Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg,
+  Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg,
+  Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg,
+  Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_neg,
+  Matrix.mul_neg, ← Matrix.mul_neg, ← Matrix.mul_
+2025-11-23 18:41:32.397 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="<stdin>:11:49: unexpected end of input; expected ']'")
+2025-11-23 18:41:32.397 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 16.52s.
+2025-11-23 18:41:32.397 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="<stdin>:11:49: unexpected end of input; expected ']'")
+2025-11-23 18:41:32.530 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:41:55.050 | INFO     | src.agent.runner:run:81 - Starting proof search for: SimpleGraph.componentComplMk_mem
+2025-11-23 18:41:59.744 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:42:25.034 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: simp [componentComplMk, vK]
+2025-11-23 18:42:25.110 | SUCCESS  | src.agent.runner:run:224 - Proof finished in 1 steps and 30.06s.
+2025-11-23 18:42:25.243 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:42:52.611 | INFO     | src.agent.runner:run:81 - Starting proof search for: Set.biUnion_empty
+2025-11-23 18:42:57.476 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:43:05.689 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: simp
+2025-11-23 18:43:05.772 | SUCCESS  | src.agent.runner:run:224 - Proof finished in 1 steps and 13.16s.
+2025-11-23 18:43:05.904 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:43:39.980 | INFO     | src.agent.runner:run:81 - Starting proof search for: IntermediateField.finInsepDegree_bot'
+2025-11-23 18:43:44.867 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:43:54.255 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rw [finInsepDegree_eq_of_injective_isScalarTower F E K, finInsepDegree_eq_of_injective_isScalarTower F E K,
+  finInsepDegree_eq_of_injective_isScalarTower F E K, finInsepDegree_eq_of_injective_isScalarTower F E K,
+  finInsepDegree_eq_of_injective_isScalarTower F E K, finInsepDegree_eq_of_injective_isScalarTower F E K,
+  finInsepDegree_eq_of_injective_isScalarTower F E K, finInsepDegree_eq_of_injective_isScalarTower F E K,
+  finInsepDegree_eq_of_injective_isScalarTower F E K, finInsepDegree_eq_of_injective_isScalarTower F E K,
+  finInsepDegree_eq_of_injective_isScalarTower F E K, finInsepDegree_eq_of_injective_isScalarTower F E K,
+  finInsepDegree_eq_of_injective_isScalarTower F E K]
+2025-11-23 18:43:54.368 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.84587\nF : Type u\nE : Type v\ninst✝⁶ : Field F\ninst✝⁵ : Field E\ninst✝⁴ : Algebra F E\nK : Type w\ninst✝³ : Field K\ninst✝² : Algebra F K\ninst✝¹ : Algebra E K\ninst✝ : IsScalarTower F E K\n⊢ Field.finInsepDegree F ↥⊥ = Field.finInsepDegree F E")
+2025-11-23 18:43:54.368 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 14.39s.
+2025-11-23 18:43:54.369 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.84587\nF : Type u\nE : Type v\ninst✝⁶ : Field F\ninst✝⁵ : Field E\ninst✝⁴ : Algebra F E\nK : Type w\ninst✝³ : Field K\ninst✝² : Algebra F K\ninst✝¹ : Algebra E K\ninst✝ : IsScalarTower F E K\n⊢ Field.finInsepDegree F ↥⊥ = Field.finInsepDegree F E")
+2025-11-23 18:43:54.501 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:44:28.008 | INFO     | src.agent.runner:run:81 - Starting proof search for: CauSeq.le_sup_right
+2025-11-23 18:44:32.864 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:44:35.144 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: induction' b using Quotient.inductionOn with b
+2025-11-23 18:44:35.223 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error='target\n  b\nhas type\n  CauSeq α abs : Type u_1\nbut is expected to have type\n  Quotient ?m.262903 : Sort ?u.262895')
+2025-11-23 18:44:35.223 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 7.21s.
+2025-11-23 18:44:35.224 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error='target\n  b\nhas type\n  CauSeq α abs : Type u_1\nbut is expected to have type\n  Quotient ?m.262903 : Sort ?u.262895')
+2025-11-23 18:44:35.356 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:44:54.823 | INFO     | src.agent.runner:run:81 - Starting proof search for: BoolAlg.coe_of
+2025-11-23 18:44:59.651 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:45:11.254 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: induction α using SetLike.coe_subset_coe with
+| inl h => rw [h]
+| inr h => rw [of_sup_of_left_left h, of_sup_of_right_left h]
+| inr h => rw [of_sup_of_right_left h, of_sup_of_right_left h]
+| inr h => rw [of_sup_of_right_left h, of_sup_of_right_left h]
+| inr h => rw [of_sup_of_right_left h, of_sup_of_right_left h]
+| inr h => rw [of_sup_of_right_left h, of_sup_of_right_left h]
+| inr h => rw [of_sup_of_right_left h, of_sup_of_right_left h]
+| inr h => rw [of_sup_of_right_left h, of_sup_of_right_left h]
+| inr h => rw [of_sup_of_right_left h, of_sup_of_right_left h]
+| inr h => rw [of_sup_of_right_left h, of_sup_of_right_left h]
+| inr h => rw [of_sup_of_right_left h, of_sup_of_right_left h]
+| inr h => rw [of_sup_of_right_left h, of_sup_of_right_left h]
+| inr h => rw [of_sup_of_right_left h, of_sup_of_right_left h]
+| inr h => rw [of_sup_of_right_left h, of_sup_of_right_left h]
+| inr h => rw [of_sup_of_right_left h, of_sup_of_right_left h]
+| inr h => rw [of_sup_of_right_left h, of_sup_of_right_left h]
+| inr h => rw 
+2025-11-23 18:45:11.323 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="<stdin>:18:14: unexpected end of input; expected '['")
+2025-11-23 18:45:11.324 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 16.50s.
+2025-11-23 18:45:11.324 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="<stdin>:18:14: unexpected end of input; expected '['")
+2025-11-23 18:45:11.456 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:45:32.046 | INFO     | src.agent.runner:run:81 - Starting proof search for: Path.Homotopic.pi_proj
+2025-11-23 18:45:36.974 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:46:03.721 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: apply Quotient.inductionOn (motive := _) p
+2025-11-23 18:46:08.900 | INFO     | src.agent.runner:run:112 - Step 2: Running MCTS search for 200 iterations...
+2025-11-23 18:46:09.177 | INFO     | src.agent.runner:run:175 - Step 2: Applying best tactic: apply Quotient.inductionOn (motive := fun i => Quotient.inductionOn (motive := fun i => proj i ⟦a⟧)
+  (motive := fun i => Quotient.inductionOn (motive := fun i => Quotient.inductionOn (motive := fun i => proj i ⟦i⟧)
+  (motive := fun i => Quotient.inductionOn (motive := fun i => Quotient.inductionOn (motive := fun i => proj i ⟦i⟧)
+  (motive := fun i => Quotient.inductionOn (motive := fun i => Quotient.inductionOn (motive := fun i => proj i ⟦i⟧)
+  (motive := fun i => Quotient.inductionOn (motive := fun i => Quotient.inductionOn (motive := fun i => proj i ⟦i⟧)
+  (motive := fun i => Quotient.inductionOn (motive := fun i => Quotient.inductionOn (motive := fun i => proj i ⟦i⟧)
+  (motive := fun i => Quotient.inductionOn (motive := fun i => Quotient.inductionOn (motive := fun i => proj i ⟦i⟧)
+  (motive := fun i => Quotient.inductionOn (motive := fun i => Quotient.inductionOn (motive := fun i => proj i ⟦i⟧)
+  (motive := fun i => Quotient.inductionOn (motive := fun i => Quotient.inducti
+2025-11-23 18:46:09.246 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="<stdin>:9:79: unexpected end of input; expected ')'")
+2025-11-23 18:46:09.246 | ERROR    | src.agent.runner:run:228 - Proof failed after 2 steps and 37.20s.
+2025-11-23 18:46:09.247 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="<stdin>:9:79: unexpected end of input; expected ')'")
+2025-11-23 18:46:09.379 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:46:34.146 | INFO     | src.agent.runner:run:81 - Starting proof search for: Fin.insertNth_sub_same
+2025-11-23 18:46:38.972 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:47:05.618 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: simp only [insertNth, Pi.sub_apply, Fin.succAbove_zero, Pi.zero_apply]
+2025-11-23 18:47:05.686 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error='simp made no progress')
+2025-11-23 18:47:05.687 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 31.54s.
+2025-11-23 18:47:05.687 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error='simp made no progress')
+2025-11-23 18:47:05.819 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:47:25.000 | INFO     | src.agent.runner:run:81 - Starting proof search for: CategoryTheory.Limits.ClosedUnderColimitsOfShape.colimit
+2025-11-23 18:47:29.657 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:47:41.179 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: simp only [CategoryTheory.Limits.colimit.ι_desc, CategoryTheory.Limits.colimit.ι_desc,
+  CategoryTheory.Limits.colimit.ι_desc, CategoryTheory.Limits.colimit.ι_desc,
+  CategoryTheory.Limits.colimit.ι_desc, CategoryTheory.Limits.colimit.ι_desc,
+  CategoryTheory.Limits.colimit.ι_desc, CategoryTheory.Limits.colimit.ι_desc,
+  CategoryTheory.Limits.colimit.ι_desc, CategoryTheory.Limits.colimit.ι_desc,
+  CategoryTheory.Limits.colimit.ι_desc, CategoryTheory.Limits.colimit.ι_desc,
+  CategoryTheory.Limits.colimit.ι_desc, CategoryTheory.Limits.colimit.ι_desc,
+  CategoryTheory.Limits.colimit.ι_desc, CategoryTheory.Limits.colimit.ι_desc,
+  CategoryTheory.Limits.colimit.ι_desc, CategoryTheory.Limits.colimit.ι_desc,
+  CategoryTheory.Limits.colimit.ι_desc, CategoryTheory.Limits.colimit.ι_desc,
+  CategoryTheory.Limits.colimit.ι_desc, CategoryTheory.Limits.colimit.ι_desc,
+  CategoryTheory.Limits.colimit.ι_desc, CategoryTheory.Limits.colimit.ι_desc,
+  CategoryTheory.Limits.colimit.ι_desc, CategoryTheor
+2025-11-23 18:47:41.247 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="<stdin>:13:53: unexpected end of input; expected ']'")
+2025-11-23 18:47:41.247 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 16.25s.
+2025-11-23 18:47:41.248 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="<stdin>:13:53: unexpected end of input; expected ']'")
+2025-11-23 18:47:41.380 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:48:03.524 | INFO     | src.agent.runner:run:81 - Starting proof search for: OrderHom.symm_dual_id
+2025-11-23 18:48:08.349 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:48:13.164 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rfl
+2025-11-23 18:48:13.228 | SUCCESS  | src.agent.runner:run:224 - Proof finished in 1 steps and 9.70s.
+2025-11-23 18:48:13.361 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:48:38.275 | INFO     | src.agent.runner:run:81 - Starting proof search for: Localization.mk_eq_mk_iff
+2025-11-23 18:48:43.065 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:48:55.083 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rw [← QuotientGroup.eq, ← QuotientGroup.eq, ← QuotientGroup.eq, ← QuotientGroup.eq,
+  ← QuotientGroup.eq, ← QuotientGroup.eq, ← QuotientGroup.eq, ← QuotientGroup.eq,
+  ← QuotientGroup.eq, ← QuotientGroup.eq, ← QuotientGroup.eq, ← QuotientGroup.eq,
+  ← QuotientGroup.eq, ← QuotientGroup.eq, ← QuotientGroup.eq, ← QuotientGroup.eq,
+  ← QuotientGroup.eq, ← QuotientGroup.eq, ← QuotientGroup.eq, ← QuotientGroup.eq,
+  ← QuotientGroup.eq, ← QuotientGroup.eq, ← QuotientGroup.eq, ← QuotientGroup.eq,
+  ← QuotientGroup.eq, ← QuotientGroup.eq, ← QuotientGroup.eq, ← QuotientGroup.eq,
+  ← QuotientGroup.eq, ← QuotientGroup.eq, ← QuotientGroup.eq, ← QuotientGroup.eq,
+  ← QuotientGroup.eq, ← QuotientGroup.eq, ← QuotientGroup.eq, ← QuotientGroup.eq,
+  ← QuotientGroup.eq, ← QuotientGroup.eq, ← QuotientGroup.eq, ← QuotientGroup.eq,
+  ← QuotientGroup.eq, ← QuotientGroup.eq, ← QuotientGroup.eq, ← QuotientGroup.eq]
+2025-11-23 18:48:55.194 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.54372\nM : Type u_1\ninst✝² : CommMonoid M\nS : Submonoid M\nN : Type u_2\ninst✝¹ : CommMonoid N\nP : Type u_3\ninst✝ : CommMonoid P\na c : M\nb d : ↥S\n⊢ Localization.mk a b = Localization.mk c d ↔ (Localization.r S) (a, b) (c, d)")
+2025-11-23 18:48:55.194 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 16.92s.
+2025-11-23 18:48:55.194 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.54372\nM : Type u_1\ninst✝² : CommMonoid M\nS : Submonoid M\nN : Type u_2\ninst✝¹ : CommMonoid N\nP : Type u_3\ninst✝ : CommMonoid P\na c : M\nb d : ↥S\n⊢ Localization.mk a b = Localization.mk c d ↔ (Localization.r S) (a, b) (c, d)")
+2025-11-23 18:48:55.327 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:49:17.067 | INFO     | src.agent.runner:run:81 - Starting proof search for: NonUnitalSubsemiring.map_map
+2025-11-23 18:49:21.874 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:49:24.178 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: induction' s using NonUnitalSubsemiring.induction_on with a s ha ih
+2025-11-23 18:49:24.246 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="unknown constant 'NonUnitalSubsemiring.induction_on'")
+2025-11-23 18:49:24.247 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 7.18s.
+2025-11-23 18:49:24.247 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="unknown constant 'NonUnitalSubsemiring.induction_on'")
+2025-11-23 18:49:24.380 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:49:44.874 | INFO     | src.agent.runner:run:81 - Starting proof search for: OpenEmbedding.open_iff_image_open
+2025-11-23 18:49:49.523 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:49:52.217 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rw [← isOpen_compl_iff, hf.isOpen_image_iff]
+2025-11-23 18:49:52.333 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  IsClosed ?m.43187\nX : Type u_1\nY : Type u_2\nZ : Type u_3\nι : Type u_4\nf : X → Y\ng : Y → Z\ninst✝² : TopologicalSpace X\ninst✝¹ : TopologicalSpace Y\ninst✝ : TopologicalSpace Z\nhf : OpenEmbedding f\ns : Set X\n⊢ IsOpen s ↔ IsOpen (f '' s)")
+2025-11-23 18:49:52.334 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 7.46s.
+2025-11-23 18:49:52.334 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  IsClosed ?m.43187\nX : Type u_1\nY : Type u_2\nZ : Type u_3\nι : Type u_4\nf : X → Y\ng : Y → Z\ninst✝² : TopologicalSpace X\ninst✝¹ : TopologicalSpace Y\ninst✝ : TopologicalSpace Z\nhf : OpenEmbedding f\ns : Set X\n⊢ IsOpen s ↔ IsOpen (f '' s)")
+2025-11-23 18:49:52.467 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:50:13.708 | INFO     | src.agent.runner:run:81 - Starting proof search for: Cardinal.exists_aleph
+2025-11-23 18:50:18.477 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:50:50.963 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rcases le_or_lt ℵ₀ c with hc | hc
+2025-11-23 18:50:56.054 | INFO     | src.agent.runner:run:112 - Step 2: Running MCTS search for 200 iterations...
+2025-11-23 18:50:56.270 | INFO     | src.agent.runner:run:175 - Step 2: Applying best tactic: exact ⟨fun ⟨o, h⟩ => ⟨o, h⟩, fun ⟨o, h⟩ => ⟨o, h⟩⟩
+2025-11-23 18:50:56.381 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error='invalid constructor ⟨...⟩, expected type must be an inductive type \n  Quot.lift ((fun α β => Nonempty (α ↪ β)) (ULift.{u_1, 0} ℕ)) ⋯ c\ninvalid constructor ⟨...⟩, expected type must be an inductive type \n  Quot.lift ((fun α β => Nonempty (α ↪ β)) (ULift.{u_1, 0} ℕ)) ⋯ c')
+2025-11-23 18:50:56.382 | ERROR    | src.agent.runner:run:228 - Proof failed after 2 steps and 42.67s.
+2025-11-23 18:50:56.382 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error='invalid constructor ⟨...⟩, expected type must be an inductive type \n  Quot.lift ((fun α β => Nonempty (α ↪ β)) (ULift.{u_1, 0} ℕ)) ⋯ c\ninvalid constructor ⟨...⟩, expected type must be an inductive type \n  Quot.lift ((fun α β => Nonempty (α ↪ β)) (ULift.{u_1, 0} ℕ)) ⋯ c')
+2025-11-23 18:50:56.514 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:51:21.287 | INFO     | src.agent.runner:run:81 - Starting proof search for: Equiv.sumProdDistrib_apply_right
+2025-11-23 18:51:26.115 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:51:28.002 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: simp [sumProdDistrib]
+2025-11-23 18:51:28.071 | SUCCESS  | src.agent.runner:run:224 - Proof finished in 1 steps and 6.78s.
+2025-11-23 18:51:28.204 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:52:00.231 | INFO     | src.agent.runner:run:81 - Starting proof search for: CategoryTheory.Subobject.top_factors
+2025-11-23 18:52:05.120 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:52:19.040 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: constructor
+2025-11-23 18:52:24.066 | INFO     | src.agent.runner:run:112 - Step 2: Running MCTS search for 200 iterations...
+2025-11-23 18:52:27.374 | INFO     | src.agent.runner:run:175 - Step 2: Applying best tactic: swap
+2025-11-23 18:52:32.247 | INFO     | src.agent.runner:run:112 - Step 3: Running MCTS search for 200 iterations...
+2025-11-23 18:52:32.350 | INFO     | src.agent.runner:run:175 - Step 3: Applying best tactic: rw [Category.assoc, Category.comp_id, Category.assoc, Category.comp_id, Category.assoc,
+  Category.comp_id, Category.assoc, Category.comp_id, Category.id_comp]
+2025-11-23 18:52:32.459 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  (?f ≫ ?g) ≫ ?h\ncase w\nC : Type u₁\ninst✝¹ : CategoryTheory.Category.{v₁, u₁} C\nX Y Z : C\nD : Type u₂\ninst✝ : CategoryTheory.Category.{v₂, u₂} D\nA B : C\nf : A ⟶ B\n⊢ A ⟶ ⊤.obj.left")
+2025-11-23 18:52:32.459 | ERROR    | src.agent.runner:run:228 - Proof failed after 3 steps and 32.23s.
+2025-11-23 18:52:32.460 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  (?f ≫ ?g) ≫ ?h\ncase w\nC : Type u₁\ninst✝¹ : CategoryTheory.Category.{v₁, u₁} C\nX Y Z : C\nD : Type u₂\ninst✝ : CategoryTheory.Category.{v₂, u₂} D\nA B : C\nf : A ⟶ B\n⊢ A ⟶ ⊤.obj.left")
+2025-11-23 18:52:32.592 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:52:55.846 | INFO     | src.agent.runner:run:81 - Starting proof search for: Filter.blimsup_eq_limsup_subtype
+2025-11-23 18:53:00.615 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:53:26.198 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: simp only [blimsup_eq, limsup_comap, Subtype.coe_injective.eq_iff]
+2025-11-23 18:53:26.267 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="unknown identifier 'limsup_comap'")
+2025-11-23 18:53:26.268 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 30.42s.
+2025-11-23 18:53:26.268 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="unknown identifier 'limsup_comap'")
+2025-11-23 18:53:26.401 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 18:53:51.291 | INFO     | src.agent.runner:run:81 - Starting proof search for: Asymptotics.isBigO_iff''
+2025-11-23 18:53:56.042 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 18:55:43.183 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rcases eq_or_ne c 0 with (rfl | hc)
+2025-11-23 18:55:48.625 | INFO     | src.agent.runner:run:112 - Step 2: Running MCTS search for 200 iterations...
+2025-11-23 18:56:28.776 | INFO     | src.agent.runner:run:175 - Step 2: Applying best tactic: swap
+2025-11-23 18:56:34.026 | INFO     | src.agent.runner:run:112 - Step 3: Running MCTS search for 200 iterations...
+2025-11-23 18:56:53.824 | INFO     | src.agent.runner:run:175 - Step 3: Applying best tactic: swap
+2025-11-23 18:56:58.724 | INFO     | src.agent.runner:run:112 - Step 4: Running MCTS search for 200 iterations...
+2025-11-23 18:57:19.891 | INFO     | src.agent.runner:run:175 - Step 4: Applying best tactic: swap
+2025-11-23 18:57:25.050 | INFO     | src.agent.runner:run:112 - Step 5: Running MCTS search for 200 iterations...
+2025-11-23 18:57:44.891 | INFO     | src.agent.runner:run:175 - Step 5: Applying best tactic: swap
+2025-11-23 18:57:49.723 | INFO     | src.agent.runner:run:112 - Step 6: Running MCTS search for 200 iterations...
+2025-11-23 18:58:10.889 | INFO     | src.agent.runner:run:175 - Step 6: Applying best tactic: swap
+2025-11-23 18:58:15.981 | INFO     | src.agent.runner:run:112 - Step 7: Running MCTS search for 200 iterations...
+2025-11-23 18:58:35.833 | INFO     | src.agent.runner:run:175 - Step 7: Applying best tactic: swap
+2025-11-23 18:58:41.082 | INFO     | src.agent.runner:run:112 - Step 8: Running MCTS search for 200 iterations...
+2025-11-23 18:59:02.330 | INFO     | src.agent.runner:run:175 - Step 8: Applying best tactic: swap
+2025-11-23 18:59:07.668 | INFO     | src.agent.runner:run:112 - Step 9: Running MCTS search for 200 iterations...
+2025-11-23 18:59:27.514 | INFO     | src.agent.runner:run:175 - Step 9: Applying best tactic: swap
+2025-11-23 18:59:32.693 | INFO     | src.agent.runner:run:112 - Step 10: Running MCTS search for 200 iterations...
+2025-11-23 18:59:53.884 | INFO     | src.agent.runner:run:175 - Step 10: Applying best tactic: swap
+2025-11-23 18:59:59.269 | INFO     | src.agent.runner:run:112 - Step 11: Running MCTS search for 200 iterations...
+2025-11-23 19:00:19.081 | INFO     | src.agent.runner:run:175 - Step 11: Applying best tactic: swap
+2025-11-23 19:00:24.164 | INFO     | src.agent.runner:run:112 - Step 12: Running MCTS search for 200 iterations...
+2025-11-23 19:00:45.395 | INFO     | src.agent.runner:run:175 - Step 12: Applying best tactic: swap
+2025-11-23 19:00:50.481 | INFO     | src.agent.runner:run:112 - Step 13: Running MCTS search for 200 iterations...
+2025-11-23 19:01:10.320 | INFO     | src.agent.runner:run:175 - Step 13: Applying best tactic: swap
+2025-11-23 19:01:15.494 | INFO     | src.agent.runner:run:112 - Step 14: Running MCTS search for 200 iterations...
+2025-11-23 19:01:36.702 | INFO     | src.agent.runner:run:175 - Step 14: Applying best tactic: swap
+2025-11-23 19:01:41.853 | INFO     | src.agent.runner:run:112 - Step 15: Running MCTS search for 200 iterations...
+2025-11-23 19:02:01.688 | INFO     | src.agent.runner:run:175 - Step 15: Applying best tactic: swap
+2025-11-23 19:02:06.774 | INFO     | src.agent.runner:run:112 - Step 16: Running MCTS search for 200 iterations...
+2025-11-23 19:02:27.970 | INFO     | src.agent.runner:run:175 - Step 16: Applying best tactic: swap
+2025-11-23 19:02:33.167 | INFO     | src.agent.runner:run:112 - Step 17: Running MCTS search for 200 iterations...
+2025-11-23 19:02:52.981 | INFO     | src.agent.runner:run:175 - Step 17: Applying best tactic: swap
+2025-11-23 19:02:57.931 | INFO     | src.agent.runner:run:112 - Step 18: Running MCTS search for 200 iterations...
+2025-11-23 19:03:19.125 | INFO     | src.agent.runner:run:175 - Step 18: Applying best tactic: swap
+2025-11-23 19:03:24.202 | INFO     | src.agent.runner:run:112 - Step 19: Running MCTS search for 200 iterations...
+2025-11-23 19:03:44.033 | INFO     | src.agent.runner:run:175 - Step 19: Applying best tactic: swap
+2025-11-23 19:03:49.190 | INFO     | src.agent.runner:run:112 - Step 20: Running MCTS search for 200 iterations...
+2025-11-23 19:04:10.395 | INFO     | src.agent.runner:run:175 - Step 20: Applying best tactic: swap
+2025-11-23 19:04:15.397 | INFO     | src.agent.runner:run:112 - Step 21: Running MCTS search for 200 iterations...
+2025-11-23 19:04:35.166 | INFO     | src.agent.runner:run:175 - Step 21: Applying best tactic: swap
+2025-11-23 19:04:40.163 | INFO     | src.agent.runner:run:112 - Step 22: Running MCTS search for 200 iterations...
+2025-11-23 19:05:01.358 | INFO     | src.agent.runner:run:175 - Step 22: Applying best tactic: swap
+2025-11-23 19:05:06.367 | INFO     | src.agent.runner:run:112 - Step 23: Running MCTS search for 200 iterations...
+2025-11-23 19:05:26.135 | INFO     | src.agent.runner:run:175 - Step 23: Applying best tactic: swap
+2025-11-23 19:05:30.952 | INFO     | src.agent.runner:run:112 - Step 24: Running MCTS search for 200 iterations...
+2025-11-23 19:05:52.102 | INFO     | src.agent.runner:run:175 - Step 24: Applying best tactic: swap
+2025-11-23 19:05:56.984 | INFO     | src.agent.runner:run:112 - Step 25: Running MCTS search for 200 iterations...
+2025-11-23 19:06:16.763 | INFO     | src.agent.runner:run:175 - Step 25: Applying best tactic: swap
+2025-11-23 19:06:21.721 | INFO     | src.agent.runner:run:112 - Step 26: Running MCTS search for 200 iterations...
+2025-11-23 19:06:42.853 | INFO     | src.agent.runner:run:175 - Step 26: Applying best tactic: swap
+2025-11-23 19:06:47.783 | INFO     | src.agent.runner:run:112 - Step 27: Running MCTS search for 200 iterations...
+2025-11-23 19:07:07.537 | INFO     | src.agent.runner:run:175 - Step 27: Applying best tactic: swap
+2025-11-23 19:07:12.533 | INFO     | src.agent.runner:run:112 - Step 28: Running MCTS search for 200 iterations...
+2025-11-23 19:07:33.662 | INFO     | src.agent.runner:run:175 - Step 28: Applying best tactic: swap
+2025-11-23 19:07:38.616 | INFO     | src.agent.runner:run:112 - Step 29: Running MCTS search for 200 iterations...
+2025-11-23 19:07:58.359 | INFO     | src.agent.runner:run:175 - Step 29: Applying best tactic: swap
+2025-11-23 19:08:03.118 | INFO     | src.agent.runner:run:112 - Step 30: Running MCTS search for 200 iterations...
+2025-11-23 19:08:24.259 | INFO     | src.agent.runner:run:175 - Step 30: Applying best tactic: swap
+2025-11-23 19:08:24.648 | ERROR    | src.agent.runner:run:228 - Proof failed after 30 steps and 873.36s.
+2025-11-23 19:08:24.801 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 19:08:49.656 | INFO     | src.agent.runner:run:81 - Starting proof search for: AffineIsometryEquiv.range_eq_univ
+2025-11-23 19:08:54.128 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 19:08:58.472 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rw [← image_univ, e.image_eq_univ]
+2025-11-23 19:08:58.724 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.148428\n𝕜 : Type u_1\nV : Type u_2\nV₁ : Type u_3\nV₁' : Type u_4\nV₂ : Type u_5\nV₃ : Type u_6\nV₄ : Type u_7\nP₁ : Type u_8\nP₁' : Type u_9\nP : Type u_10\nP₂ : Type u_11\nP₃ : Type u_12\nP₄ : Type u_13\ninst✝²⁴ : NormedField 𝕜\ninst✝²³ : SeminormedAddCommGroup V\ninst✝²² : NormedSpace 𝕜 V\ninst✝²¹ : PseudoMetricSpace P\ninst✝²⁰ : NormedAddTorsor V P\ninst✝¹⁹ : SeminormedAddCommGroup V₁\ninst✝¹⁸ : NormedSpace 𝕜 V₁\ninst✝¹⁷ : PseudoMetricSpace P₁\ninst✝¹⁶ : NormedAddTorsor V₁ P₁\ninst✝¹⁵ : SeminormedAddCommGroup V₁'\ninst✝¹⁴ : NormedSpace 𝕜 V₁'\ninst✝¹³ : MetricSpace P₁'\ninst✝¹² : NormedAddTorsor V₁' P₁'\ninst✝¹¹ : SeminormedAddCommGroup V₂\ninst✝¹⁰ : NormedSpace 𝕜 V₂\ninst✝⁹ : PseudoMetricSpace P₂\ninst✝⁸ : NormedAddTorsor V₂ P₂\ninst✝⁷ : SeminormedAddCommGroup V₃\ninst✝⁶ : NormedSpace 𝕜 V₃\ninst✝⁵ : PseudoMetricSpace P₃\ninst✝⁴ : NormedAddTorsor V₃ P₃\ninst✝³ : SeminormedAddCommGroup V₄\ninst✝² : NormedSpace 𝕜 V₄\ninst✝¹ : PseudoMetricSpace P₄\ninst✝ : NormedAddTorsor V₄ P₄\ne✝ e : P ≃ᵃⁱ[𝕜] P₂\n⊢ ⇑e '' Set.univ = Set.univ")
+2025-11-23 19:08:58.724 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 9.07s.
+2025-11-23 19:08:58.725 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.148428\n𝕜 : Type u_1\nV : Type u_2\nV₁ : Type u_3\nV₁' : Type u_4\nV₂ : Type u_5\nV₃ : Type u_6\nV₄ : Type u_7\nP₁ : Type u_8\nP₁' : Type u_9\nP : Type u_10\nP₂ : Type u_11\nP₃ : Type u_12\nP₄ : Type u_13\ninst✝²⁴ : NormedField 𝕜\ninst✝²³ : SeminormedAddCommGroup V\ninst✝²² : NormedSpace 𝕜 V\ninst✝²¹ : PseudoMetricSpace P\ninst✝²⁰ : NormedAddTorsor V P\ninst✝¹⁹ : SeminormedAddCommGroup V₁\ninst✝¹⁸ : NormedSpace 𝕜 V₁\ninst✝¹⁷ : PseudoMetricSpace P₁\ninst✝¹⁶ : NormedAddTorsor V₁ P₁\ninst✝¹⁵ : SeminormedAddCommGroup V₁'\ninst✝¹⁴ : NormedSpace 𝕜 V₁'\ninst✝¹³ : MetricSpace P₁'\ninst✝¹² : NormedAddTorsor V₁' P₁'\ninst✝¹¹ : SeminormedAddCommGroup V₂\ninst✝¹⁰ : NormedSpace 𝕜 V₂\ninst✝⁹ : PseudoMetricSpace P₂\ninst✝⁸ : NormedAddTorsor V₂ P₂\ninst✝⁷ : SeminormedAddCommGroup V₃\ninst✝⁶ : NormedSpace 𝕜 V₃\ninst✝⁵ : PseudoMetricSpace P₃\ninst✝⁴ : NormedAddTorsor V₃ P₃\ninst✝³ : SeminormedAddCommGroup V₄\ninst✝² : NormedSpace 𝕜 V₄\ninst✝¹ : PseudoMetricSpace P₄\ninst✝ : NormedAddTorsor V₄ P₄\ne✝ e : P ≃ᵃⁱ[𝕜] P₂\n⊢ ⇑e '' Set.univ = Set.univ")
+2025-11-23 19:08:58.857 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 19:09:22.063 | INFO     | src.agent.runner:run:81 - Starting proof search for: Set.range_some_inter_none
+2025-11-23 19:09:26.701 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 19:09:29.189 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: simp [eq_empty_iff_forall_not_mem]
+2025-11-23 19:09:29.277 | SUCCESS  | src.agent.runner:run:224 - Proof finished in 1 steps and 7.21s.
+2025-11-23 19:09:29.409 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 19:09:58.270 | INFO     | src.agent.runner:run:81 - Starting proof search for: BoxIntegral.hasIntegral_GP_divergence_of_forall_hasDerivWithinAt
+2025-11-23 19:10:02.698 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 19:10:16.874 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rw [hasIntegral_iff_hasFDerivWithinAt, hasFDerivWithinAt_iff_hasFDerivWithinAt,
+  hasFDerivWithinAt_iff_hasFDerivWithinAt, hasFDerivWithinAt_iff_hasFDerivWithinAt,
+  hasFDerivWithinAt_iff_hasFDerivWithinAt, hasFDerivWithinAt_iff_hasFDerivWithinAt,
+  hasFDerivWithinAt_iff_hasFDerivWithinAt, hasFDerivWithinAt_iff_hasFDerivWithinAt,
+  hasFDerivWithinAt_iff_hasFDerivWithinAt, hasFDerivWithinAt_iff_hasFDerivWithinAt,
+  hasFDerivWithinAt_iff_hasFDerivWithinAt, hasFDerivWithinAt_iff_hasFDerivWithinAt,
+  hasFDerivWithinAt_iff_hasFDerivWithinAt, hasFDerivWithinAt_iff_hasFDerivWithinAt,
+  hasFDerivWithinAt_iff_hasFDerivWithinAt, hasFDerivWithinAt_iff_hasFDerivWithinAt,
+  hasFDerivWithinAt_iff_hasFDerivWithinAt, hasFDerivWithinAt_iff_hasFDerivWithinAt,
+  hasFDerivWithinAt_iff_hasFDerivWithinAt, hasFDerivWithinAt_iff_hasFDerivWithinAt,
+  hasFDerivWithinAt_iff_hasFDerivWithinAt, hasFDerivWithinAt_iff_hasFDerivWithinAt,
+  hasFDerivWithinAt_iff_hasFDerivWithinAt]
+2025-11-23 19:10:17.125 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.117296\nE : Type u\ninst✝² : NormedAddCommGroup E\ninst✝¹ : NormedSpace ℝ E\nn : ℕ\ninst✝ : CompleteSpace E\nI : BoxIntegral.Box (Fin (n + 1))\ni : Fin (n + 1)\nf : (Fin (n + 1) → ℝ) → Fin (n + 1) → E\nf' : (Fin (n + 1) → ℝ) → (Fin (n + 1) → ℝ) →L[ℝ] Fin (n + 1) → E\ns : Set (Fin (n + 1) → ℝ)\nhs : s.Countable\nHs : ∀ x ∈ s, ContinuousWithinAt f (BoxIntegral.Box.Icc I) x\nHd : ∀ x ∈ BoxIntegral.Box.Icc I \\ s, HasFDerivWithinAt f (f' x) (BoxIntegral.Box.Icc I) x\n⊢ BoxIntegral.HasIntegral I BoxIntegral.IntegrationParams.GP (fun x => ∑ i : Fin (n + 1), (f' x) (Pi.single i 1) i)\n    BoxIntegral.BoxAdditiveMap.volume\n    (∑ i : Fin (n + 1),\n      (BoxIntegral.integral (I.face i) BoxIntegral.IntegrationParams.GP (fun x => f (i.insertNth (I.upper i) x) i)\n          BoxIntegral.BoxAdditiveMap.volume -\n        BoxIntegral.integral (I.face i) BoxIntegral.IntegrationParams.GP (fun x => f (i.insertNth (I.lower i) x) i)\n          BoxIntegral.BoxAdditiveMap.volume))")
+2025-11-23 19:10:17.125 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 18.85s.
+2025-11-23 19:10:17.125 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.117296\nE : Type u\ninst✝² : NormedAddCommGroup E\ninst✝¹ : NormedSpace ℝ E\nn : ℕ\ninst✝ : CompleteSpace E\nI : BoxIntegral.Box (Fin (n + 1))\ni : Fin (n + 1)\nf : (Fin (n + 1) → ℝ) → Fin (n + 1) → E\nf' : (Fin (n + 1) → ℝ) → (Fin (n + 1) → ℝ) →L[ℝ] Fin (n + 1) → E\ns : Set (Fin (n + 1) → ℝ)\nhs : s.Countable\nHs : ∀ x ∈ s, ContinuousWithinAt f (BoxIntegral.Box.Icc I) x\nHd : ∀ x ∈ BoxIntegral.Box.Icc I \\ s, HasFDerivWithinAt f (f' x) (BoxIntegral.Box.Icc I) x\n⊢ BoxIntegral.HasIntegral I BoxIntegral.IntegrationParams.GP (fun x => ∑ i : Fin (n + 1), (f' x) (Pi.single i 1) i)\n    BoxIntegral.BoxAdditiveMap.volume\n    (∑ i : Fin (n + 1),\n      (BoxIntegral.integral (I.face i) BoxIntegral.IntegrationParams.GP (fun x => f (i.insertNth (I.upper i) x) i)\n          BoxIntegral.BoxAdditiveMap.volume -\n        BoxIntegral.integral (I.face i) BoxIntegral.IntegrationParams.GP (fun x => f (i.insertNth (I.lower i) x) i)\n          BoxIntegral.BoxAdditiveMap.volume))")
+2025-11-23 19:10:17.258 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 19:10:35.154 | INFO     | src.agent.runner:run:81 - Starting proof search for: Finset.toColex_inj
+2025-11-23 19:10:39.593 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 19:10:43.842 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rw [toColex_eq_toColex, toColex_eq_toColex, toColex_eq_toColex, toColex_eq_toColex]
+2025-11-23 19:10:43.928 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.492\nα : Type u_1\nβ : Type u_2\ns t : Finset α\n⊢ { ofColex := s } = { ofColex := t } ↔ s = t")
+2025-11-23 19:10:43.928 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 8.77s.
+2025-11-23 19:10:43.928 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.492\nα : Type u_1\nβ : Type u_2\ns t : Finset α\n⊢ { ofColex := s } = { ofColex := t } ↔ s = t")
+2025-11-23 19:10:44.061 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 19:11:21.025 | INFO     | src.agent.runner:run:81 - Starting proof search for: Associates.le_of_count_ne_zero
+2025-11-23 19:11:25.710 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 19:11:39.682 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: simp only [Ne, count_eq_zero_iff, factors_eq_zero_iff, factors_eq_zero_iff,
+  factors_eq_zero_iff, factors_eq_zero_iff, factors_eq_zero_iff, factors_eq_zero_iff,
+  factors_eq_zero_iff, factors_eq_zero_iff, factors_eq_zero_iff, factors_eq_zero_iff,
+  factors_eq_zero_iff, factors_eq_zero_iff, factors_eq_zero_iff, factors_eq_zero_iff,
+  factors_eq_zero_iff, factors_eq_zero_iff, factors_eq_zero_iff, factors_eq_zero_iff,
+  factors_eq_zero_iff, factors_eq_zero_iff, factors_eq_zero_iff, factors_eq_zero_iff,
+  factors_eq_zero_iff, factors_eq_zero_iff, factors_eq_zero_iff, factors_eq_zero_iff,
+  factors_eq_zero_iff, factors_eq_zero_iff, factors_eq_zero_iff, factors_eq_zero_iff,
+  factors_eq_zero_iff, factors_eq_zero_iff, factors_eq_zero_iff, factors_eq_zero_iff,
+  factors_eq_zero_iff, factors_eq_zero_iff, factors_eq_zero_iff, factors_eq_zero_iff,
+  factors_eq_zero_iff, factors_eq_zero_iff, factors_eq_zero_iff, factors_eq_zero_iff,
+  factors_eq_zero_iff, factors_eq_zero_iff, factors_eq_zero_iff]
+2025-11-23 19:11:40.086 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="unknown identifier 'count_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'")
+2025-11-23 19:11:40.087 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 19.06s.
+2025-11-23 19:11:40.087 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="unknown identifier 'count_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'\nunknown identifier 'factors_eq_zero_iff'")
+2025-11-23 19:11:40.220 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 19:11:59.607 | INFO     | src.agent.runner:run:81 - Starting proof search for: CategoryTheory.GradedObject.Monoidal.tensorHom_def
+2025-11-23 19:12:04.037 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 19:12:16.839 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: dsimp [tensorHom, AddMonoidalCategory.tensorHom, AddMonoidalCategory.tensorHom,
+  AddMonoidalCategory.tensorHom, AddMonoidalCategory.tensorHom, AddMonoidalCategory.tensorHom,
+  AddMonoidalCategory.tensorHom, AddMonoidalCategory.tensorHom, AddMonoidalCategory.tensorHom,
+  AddMonoidalCategory.tensorHom, AddMonoidalCategory.tensorHom, AddMonoidalCategory.tensorHom,
+  AddMonoidalCategory.tensorHom, AddMonoidalCategory.tensorHom, AddMonoidalCategory.tensorHom,
+  AddMonoidalCategory.tensorHom, AddMonoidalCategory.tensorHom, AddMonoidalCategory.tensorHom,
+  AddMonoidalCategory.tensorHom, AddMonoidalCategory.tensorHom, AddMonoidalCategory.tensorHom,
+  AddMonoidalCategory.tensorHom, AddMonoidalCategory.tensorHom, AddMonoidalCategory.tensorHom,
+  AddMonoidalCategory.tensorHom, AddMonoidalCategory.tensorHom, AddMonoidalCategory.tensorHom,
+  AddMonoidalCategory.tensorHom, AddMonoidalCategory.tensorHom, AddMonoidalCategory.tensorHom,
+  AddMonoidalCategory.tensorHom, AddMonoidalCategory.tensorHom, AddMonoidalCategory.tens
+2025-11-23 19:12:16.907 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="<stdin>:11:88: unexpected end of input; expected ']'")
+2025-11-23 19:12:16.908 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 17.30s.
+2025-11-23 19:12:16.908 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="<stdin>:11:88: unexpected end of input; expected ']'")
+2025-11-23 19:12:17.043 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 19:12:35.452 | INFO     | src.agent.runner:run:81 - Starting proof search for: AddLECancellable.tsub_lt_tsub_right_of_le
+2025-11-23 19:12:39.886 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 19:12:46.118 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: obtain ⟨d, rfl⟩ := exists_add_of_le h2
+2025-11-23 19:12:46.265 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="tactic 'subst' failed, invalid equality proof, it is not of the form (x = t) or (t = x)\n  ?m.17457 = ?m.17456 + d\ncase intro\nα : Type u_1\ninst✝⁵ : AddCommSemigroup α\ninst✝⁴ : PartialOrder α\ninst✝³ : ExistsAddOfLE α\ninst✝² : CovariantClass α α (fun x x_1 => x + x_1) fun x x_1 => x ≤ x_1\ninst✝¹ : Sub α\ninst✝ : OrderedSub α\na b c d✝ : α\nhc : AddLECancellable c\nh : c ≤ a\nh2 : a < b\nd : ?m.17452\nh✝ : ?m.17457 = ?m.17456 + d\n⊢ a - c < b - c")
+2025-11-23 19:12:46.265 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 10.81s.
+2025-11-23 19:12:46.265 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="tactic 'subst' failed, invalid equality proof, it is not of the form (x = t) or (t = x)\n  ?m.17457 = ?m.17456 + d\ncase intro\nα : Type u_1\ninst✝⁵ : AddCommSemigroup α\ninst✝⁴ : PartialOrder α\ninst✝³ : ExistsAddOfLE α\ninst✝² : CovariantClass α α (fun x x_1 => x + x_1) fun x x_1 => x ≤ x_1\ninst✝¹ : Sub α\ninst✝ : OrderedSub α\na b c d✝ : α\nhc : AddLECancellable c\nh : c ≤ a\nh2 : a < b\nd : ?m.17452\nh✝ : ?m.17457 = ?m.17456 + d\n⊢ a - c < b - c")
+2025-11-23 19:12:46.397 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 19:13:05.548 | INFO     | src.agent.runner:run:81 - Starting proof search for: WithBot.coe_eq_coe
+2025-11-23 19:13:09.987 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 19:13:21.115 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rw [← coe_inj, coe_inj, coe_inj]
+2025-11-23 19:13:21.179 | SUCCESS  | src.agent.runner:run:224 - Proof finished in 1 steps and 15.63s.
+2025-11-23 19:13:21.312 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 19:13:42.085 | INFO     | src.agent.runner:run:81 - Starting proof search for: CategoryTheory.MonoidalOfChosenFiniteProducts.symmetry
+2025-11-23 19:13:46.568 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 19:16:27.118 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: dsimp [BinaryFan.braiding, Limits.BinaryFan.braiding, Limits.BinaryFan.braiding,
+  Limits.BinaryFan.braiding, Limits.BinaryFan.braiding, Limits.BinaryFan.braiding,
+  Limits.BinaryFan.braiding, Limits.BinaryFan.braiding, Limits.BinaryFan.braiding,
+  Limits.BinaryFan.braiding, Limits.BinaryFan.braiding, Limits.BinaryFan.braiding,
+  Limits.BinaryFan.braiding, Limits.BinaryFan.braiding, Limits.BinaryFan.braiding,
+  Limits.BinaryFan.braiding, Limits.BinaryFan.braiding, Limits.BinaryFan.braiding,
+  Limits.BinaryFan.braiding, Limits.BinaryFan.braiding, Limits.BinaryFan.braiding,
+  Limits.BinaryFan.braiding, Limits.BinaryFan.braiding, Limits.BinaryFan.braiding,
+  Limits.BinaryFan.braiding, Limits.BinaryFan.braiding, Limits.BinaryFan.braiding,
+  Limits.BinaryFan.braiding, Limits.BinaryFan.braiding, Limits.BinaryFan.braiding,
+  Limits.BinaryFan.braiding, Limits.BinaryFan.braiding, Limits.BinaryFan.braiding,
+  Limits.BinaryFan.braiding, Limits.BinaryFan.braiding, Limits.BinaryFan.braiding,
+  Limits.BinaryFan.braiding, 
+2025-11-23 19:16:27.187 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="<stdin>:13:29: unexpected end of input; expected ']'")
+2025-11-23 19:16:27.188 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 165.10s.
+2025-11-23 19:16:27.188 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="<stdin>:13:29: unexpected end of input; expected ']'")
+2025-11-23 19:16:27.321 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 19:16:54.885 | INFO     | src.agent.runner:run:81 - Starting proof search for: ProbabilityTheory.kernel.Invariant.comp
+2025-11-23 19:16:59.484 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 19:17:10.927 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rintro _ ⟨x, hx, rfl⟩ ⟨y, hy, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, rfl⟩ ⟨z, hz, r
+2025-11-23 19:17:10.997 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="<stdin>:1:785: unexpected end of input; expected '⟩'")
+2025-11-23 19:17:10.997 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 16.11s.
+2025-11-23 19:17:10.997 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="<stdin>:1:785: unexpected end of input; expected '⟩'")
+2025-11-23 19:17:11.130 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 19:17:34.073 | INFO     | src.agent.runner:run:81 - Starting proof search for: contMDiffWithinAt_const
+2025-11-23 19:17:38.772 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 19:18:41.600 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: simp only [contMDiffWithinAt_iff_target, contMDiffWithinAt_const]
+2025-11-23 19:19:41.710 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: simp only [ContMDiffWithinAt, contMDiffWithinAt_const]
+2025-11-23 19:20:41.821 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: simp [ContMDiffWithinAt, ContMDiffWithinAt, ContMDiffWithinAt]
+2025-11-23 19:21:41.931 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: simp only [ContMDiffWithinAt, ContMDiffWithinAt, left_inv, contMDiffWithinAt_const]
+2025-11-23 19:22:42.042 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: simp only [ContMDiffWithinAt, ContMDiffWithinAt, left_inv, ContMDiffWithinAt,
+  ContMDiffWithinAt]
+2025-11-23 19:23:42.153 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: simp only [ContMDiffWithinAt, ContMDiffWithinAt, contMDiffWithinAt_id']
+2025-11-23 19:24:42.263 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: simp only [ContMDiffWithinAt, ContMDiffWithinAt, left_inv, contMDiffWithinAt_inter]
+2025-11-23 19:25:42.374 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: simp only [ContMDiffWithinAt, ContMDiffWithinAt, left_inv, contMDiffWithinAt_univ]
+2025-11-23 19:26:42.485 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: simp only [ContMDiffWithinAt, ContMDiffWithinAt, left_inv, contMDiffWithinAt_id']
+2025-11-23 19:27:42.595 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: simp only [ContMDiffWithinAt, contMDiffWithinAt_id']
+2025-11-23 19:28:42.706 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: simp only [ContMDiffWithinAt, ContMDiffWithinAt, left_inv, ContMDiffWithinAt,
+  ContMDiffWithinAt, c
+2025-11-23 19:29:42.817 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: simp only [ContMDiffWithinAt, ContMDiffWithinAt, left_inv, contMDiffWithinAt_inter']
+2025-11-23 19:30:42.927 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: simp only [ContMDiffWithinAt, ContMDiffWithinAt, contMDiffWithinAt_const]
+2025-11-23 19:31:53.712 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: rw [ChartedSpace.LiftPropWithinAt, ChartedSpace.ChartedSpace.ChartedSpace.ChartedSpace.ChartedSpace.
+2025-11-23 19:32:53.823 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: rw [ChartedSpace.LiftPropWithinAt, ChartedSpace.ChartedSpace.ChartedSpace.LiftPropWithinAt,
+  Charte
+2025-11-23 19:33:53.934 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: rw [ChartedSpace.LiftPropWithinAt, ChartedSpace.ChartedSpace.ChartedSpace.ChartedSpace.ChartedSpace.
+2025-11-23 19:34:54.044 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: rw [ChartedSpace.LiftPropWithinAt, ChartedSpace.ChartedSpace.ChartedSpace.ChartedSpace.ChartedSpace.
+2025-11-23 19:35:54.155 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: rw [ChartedSpace.LiftPropWithinAt, ChartedSpace.ChartedSpace.ChartedSpace.ChartedSpace.ChartedSpace.
+2025-11-23 19:36:54.207 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: rw [ChartedSpace.LiftPropWithinAt, ChartedSpace.ChartedSpace.ChartedSpace.ChartedSpace.ChartedSpace.
+2025-11-23 19:37:54.259 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: rw [ChartedSpace.LiftPropWithinAt, ChartedSpace.ChartedSpace.ChartedSpace.ChartedSpace.ChartedSpace.
+2025-11-23 19:38:54.311 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: rw [ChartedSpace.LiftPropWithinAt, ChartedSpace.ChartedSpace.ChartedSpace.ChartedSpace.ChartedSpace.
+2025-11-23 19:39:54.422 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: rw [ChartedSpace.LiftPropWithinAt, ChartedSpace.ChartedSpace.ChartedSpace.ChartedSpace.ChartedSpace.
+2025-11-23 19:40:54.532 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: rw [ChartedSpace.LiftPropWithinAt, ChartedSpace.ChartedSpace.ChartedSpace.ChartedSpace.ChartedSpace.
+2025-11-23 19:41:54.643 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: rw [ChartedSpace.LiftPropWithinAt, ChartedSpace.ChartedSpace.ChartedSpace.ChartedSpace.ChartedSpace.
+2025-11-23 19:42:54.754 | WARNING  | src.agent.mcts:_expand:313 - Tactic timed out: rw [ChartedSpace.LiftPropWithinAt, ChartedSpace.ChartedSpace.ChartedSpace.ChartedSpace.ChartedSpace.
+2025-11-23 19:42:54.754 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: exact contMDiffWithinAt_const
+2025-11-23 19:43:54.865 | WARNING  | src.utilities.gym:step:63 - Tactic timed out: exact contMDiffWithinAt_const
+2025-11-23 19:43:54.865 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error='Tactic execution timed out')
+2025-11-23 19:43:54.865 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 1580.79s.
+2025-11-23 19:43:54.865 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error='Tactic execution timed out')
+2025-11-23 19:43:59.086 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 19:44:13.166 | INFO     | src.agent.runner:run:81 - Starting proof search for: vadd_vsub_assoc
+2025-11-23 19:44:17.546 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 19:44:20.742 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rw [vsub_vadd_eq_vsub_sub, vsub_vadd_eq_vsub_sub, vsub_sub_vsub_cancel_right]
+2025-11-23 19:44:20.834 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.5499\nG : Type u_1\nP : Type u_2\ninst✝ : AddGroup G\nT : AddTorsor G P\ng : G\np₁ p₂ : P\n⊢ g +ᵥ p₁ -ᵥ p₂ = g + (p₁ -ᵥ p₂)")
+2025-11-23 19:44:20.834 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 7.67s.
+2025-11-23 19:44:20.834 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.5499\nG : Type u_1\nP : Type u_2\ninst✝ : AddGroup G\nT : AddTorsor G P\ng : G\np₁ p₂ : P\n⊢ g +ᵥ p₁ -ᵥ p₂ = g + (p₁ -ᵥ p₂)")
+2025-11-23 19:44:20.966 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 19:44:37.877 | INFO     | src.agent.runner:run:81 - Starting proof search for: EmbeddingLike.apply_eq_iff_eq
+2025-11-23 19:44:42.206 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 19:44:44.755 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rw [i.apply_eq_iff_eq_symm_apply, i.symm_apply_eq_iff_eq_symm_apply]
+2025-11-23 19:44:44.849 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.463\nF : Sort u_1\nα : Sort u_2\nβ : Sort u_3\nγ : Sort u_4\ninst✝ : FunLike F α β\ni : EmbeddingLike F α β\nf : F\nx y : α\n⊢ f x = f y ↔ x = y")
+2025-11-23 19:44:44.850 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 6.97s.
+2025-11-23 19:44:44.850 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.463\nF : Sort u_1\nα : Sort u_2\nβ : Sort u_3\nγ : Sort u_4\ninst✝ : FunLike F α β\ni : EmbeddingLike F α β\nf : F\nx y : α\n⊢ f x = f y ↔ x = y")
+2025-11-23 19:44:44.982 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 19:45:05.647 | INFO     | src.agent.runner:run:81 - Starting proof search for: PFun.core_eq
+2025-11-23 19:45:10.054 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 19:45:12.588 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rw [core_eq_preimage_compl, core_eq_preimage_compl]
+2025-11-23 19:45:12.684 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.27920\nα : Type u_1\nβ : Type u_2\nγ : Type u_3\nδ : Type u_4\nε : Type u_5\nι : Type u_6\nf✝ f : α →. β\ns : Set β\n⊢ f.core s = f.preimage s ∪ f.Domᶜ")
+2025-11-23 19:45:12.684 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 7.04s.
+2025-11-23 19:45:12.684 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.27920\nα : Type u_1\nβ : Type u_2\nγ : Type u_3\nδ : Type u_4\nε : Type u_5\nι : Type u_6\nf✝ f : α →. β\ns : Set β\n⊢ f.core s = f.preimage s ∪ f.Domᶜ")
+2025-11-23 19:45:12.817 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 19:45:31.039 | INFO     | src.agent.runner:run:81 - Starting proof search for: Multiset.noncommProd_cons
+2025-11-23 19:45:35.367 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 19:45:47.414 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rw [Multiset.noncommProd_cons, Multiset.noncommProd_cons, Multiset.noncommProd_cons,
+  Multiset.noncommProd_cons, Multiset.noncommProd_cons, Multiset.noncommProd_cons,
+  Multiset.noncommProd_cons, Multiset.noncommProd_cons, Multiset.noncommProd_cons,
+  Multiset.noncommProd_cons, Multiset.noncommProd_cons, Multiset.noncommProd_cons,
+  Multiset.noncommProd_cons, Multiset.noncommProd_cons, Multiset.noncommProd_cons,
+  Multiset.noncommProd_cons, Multiset.noncommProd_cons, Multiset.noncommProd_cons,
+  Multiset.noncommProd_cons, Multiset.noncommProd_cons, Multiset.noncommProd_cons,
+  Multiset.noncommProd_cons, Multiset.noncommProd_cons, Multiset.noncommProd_cons,
+  Multiset.noncommProd_cons, Multiset.noncommProd_cons, Multiset.noncommProd_cons,
+  Multiset.noncommProd_cons, Multiset.noncommProd_cons, Multiset.noncommProd_cons,
+  Multiset.noncommProd_cons, Multiset.noncommProd_cons, Multiset.noncommProd_cons,
+  Multiset.noncommProd_cons, Multiset.noncommProd_cons, Multiset.noncommProd_cons,
+  Multiset.noncommProd_co
+2025-11-23 19:45:47.482 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="<stdin>:13:25: unexpected end of input; expected ']'")
+2025-11-23 19:45:47.482 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 16.44s.
+2025-11-23 19:45:47.482 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="<stdin>:13:25: unexpected end of input; expected ']'")
+2025-11-23 19:45:47.617 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 19:46:13.504 | INFO     | src.agent.runner:run:81 - Starting proof search for: MeasureTheory.integral_integral_sub'
+2025-11-23 19:46:17.890 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 19:46:29.659 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rw [integral_sub hf hg.integrableOn, integral_sub hf hg.integrableOn, integral_sub hf hg.integrableOn,
+  integral_sub hf.integrableOn, integral_sub hf.integrableOn, integral_sub hf.integrableOn,
+  integral_sub hf.integrableOn, integral_sub hf.integrableOn, integral_sub hg.integrableOn,
+  integral_sub hf.integrableOn, integral_sub hf.integrableOn, integral_sub hf.integrableOn,
+  integral_sub hf.integrableOn, integral_sub hf.integrableOn, integral_sub hf.integrableOn,
+  integral_sub hf.integrableOn, integral_sub hf.integrableOn, integral_sub hf.integrableOn,
+  integral_sub hf.integrableOn, integral_sub hf.integrableOn, integral_sub hf.integrableOn,
+  integral_sub hf.integrableOn, integral_sub hf.integrableOn, integral_sub hf.integrableOn,
+  integral_sub hf.integrableOn, integral_sub hf.integrableOn, integral_sub hf.integrableOn,
+  integral_sub hf.integrableOn, integral_sub hf.integrableOn, integral_sub hf.integrableOn,
+  integral_sub hf.integrableOn, integral_sub hf.integrableOn, integral_sub hf.integrableOn,
+
+2025-11-23 19:46:29.728 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="<stdin>:12:0: unexpected end of input; expected ']'")
+2025-11-23 19:46:29.728 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 16.22s.
+2025-11-23 19:46:29.728 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="<stdin>:12:0: unexpected end of input; expected ']'")
+2025-11-23 19:46:29.861 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 19:46:50.637 | INFO     | src.agent.runner:run:81 - Starting proof search for: IsMulFreimanIso.mulRothNumber_congr
+2025-11-23 19:46:55.028 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 19:47:06.478 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rw [mulRothNumber_eq_mulRothNumber, mulRothNumber_eq_mulRothNumber, mulRothNumber_eq_mulRothNumber,
+  mulRothNumber_eq_mulRothNumber, mulRothNumber_eq_mulRothNumber, mulRothNumber_eq_mulRothNumber,
+  mulRothNumber_eq_mulRothNumber, mulRothNumber_eq_mulRothNumber, mulRothNumber_eq_mulRothNumber,
+  mulRothNumber_eq_mulRothNumber, mulRothNumber_eq_mulRothNumber, mulRothNumber_eq_mulRothNumber,
+  mulRothNumber_eq_mulRothNumber, mulRothNumber_eq_mulRothNumber, mulRothNumber_eq_mulRothNumber,
+  mulRothNumber_eq_mulRothNumber, mulRothNumber_eq_mulRothNumber, mulRothNumber_eq_mulRothNumber,
+  mulRothNumber_eq_mulRothNumber, mulRothNumber_eq_mulRothNumber, mulRothNumber_eq_mulRothNumber,
+  mulRothNumber_eq_mulRothNumber, mulRothNumber_eq_mulRothNumber, mulRothNumber_eq_mulRothNumber,
+  mulRothNumber_eq_mulRothNumber, mulRothNumber_eq_mulRothNumber, mulRothNumber_eq_mulRothNumber,
+  mulRothNumber_eq_mulRothNumber, mulRothNumber_eq_mulRothNumber]
+2025-11-23 19:47:06.596 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.63336\nF : Type u_1\nα : Type u_2\nβ : Type u_3\n𝕜 : Type u_4\nE : Type u_5\ninst✝³ : DecidableEq α\ninst✝² : CommMonoid α\ninst✝¹ : CommMonoid β\ninst✝ : DecidableEq β\nA : Finset α\nB : Finset β\nf : α → β\nhf : IsMulFreimanIso 2 (↑A) (↑B) f\n⊢ mulRothNumber A = mulRothNumber B")
+2025-11-23 19:47:06.597 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 15.96s.
+2025-11-23 19:47:06.597 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.63336\nF : Type u_1\nα : Type u_2\nβ : Type u_3\n𝕜 : Type u_4\nE : Type u_5\ninst✝³ : DecidableEq α\ninst✝² : CommMonoid α\ninst✝¹ : CommMonoid β\ninst✝ : DecidableEq β\nA : Finset α\nB : Finset β\nf : α → β\nhf : IsMulFreimanIso 2 (↑A) (↑B) f\n⊢ mulRothNumber A = mulRothNumber B")
+2025-11-23 19:47:06.729 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 19:47:46.430 | INFO     | src.agent.runner:run:81 - Starting proof search for: LieHom.idealRange_eq_lieSpan_range
+2025-11-23 19:47:50.826 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 19:48:03.102 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rw [← LieSubmodule.coe_toSubmodule_eq_idealRange, ← LieSubmodule.coe_toSubmodule,
+  ← LieSubmodule.coe_toSubmodule_eq_idealRange, ← LieSubmodule.coe_toSubmodule_eq_idealRange,
+  ← LieSubmodule.coe_toSubmodule_eq_idealRange, ← LieSubmodule.coe_toSubmodule_eq_idealRange,
+  ← LieSubmodule.coe_toSubmodule_eq_idealRange, ← LieSubmodule.coe_toSubmodule_eq_idealRange,
+  ← LieSubmodule.coe_toSubmodule_eq_idealRange, ← LieSubmodule.coe_toSubmodule_eq_idealRange,
+  ← LieSubmodule.coe_toSubmodule_eq_idealRange, ← LieSubmodule.coe_toSubmodule_eq_idealRange,
+  ← LieSubmodule.coe_toSubmodule_eq_idealRange, ← LieSubmodule.coe_toSubmodule_eq_idealRange,
+  ← LieSubmodule.coe_toSubmodule_eq_idealRange, ← LieSubmodule.coe_toSubmodule_eq_idealRange,
+  ← LieSubmodule.coe_toSubmodule_eq_idealRange, ← LieSubmodule.coe_toSubmodule_eq_idealRange,
+  ← LieSubmodule.coe_toSubmodule_eq_idealRange, ← LieSubmodule.coe_toSubmodule_eq_idealRange,
+  ← LieSubmodule.coe_toSubmodule_eq_idealRange]
+2025-11-23 19:48:03.258 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.569671\nR : Type u\nL : Type v\nL' : Type w₂\nM : Type w\nM' : Type w₁\ninst✝¹² : CommRing R\ninst✝¹¹ : LieRing L\ninst✝¹⁰ : LieAlgebra R L\ninst✝⁹ : LieRing L'\ninst✝⁸ : LieAlgebra R L'\ninst✝⁷ : AddCommGroup M\ninst✝⁶ : Module R M\ninst✝⁵ : LieRingModule L M\ninst✝⁴ : LieModule R L M\ninst✝³ : AddCommGroup M'\ninst✝² : Module R M'\ninst✝¹ : LieRingModule L M'\ninst✝ : LieModule R L M'\nf : L →ₗ⁅R⁆ L'\nI : LieIdeal R L\nJ : LieIdeal R L'\n⊢ f.idealRange = LieSubmodule.lieSpan R L' ↑f.range")
+2025-11-23 19:48:03.258 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 16.83s.
+2025-11-23 19:48:03.258 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.569671\nR : Type u\nL : Type v\nL' : Type w₂\nM : Type w\nM' : Type w₁\ninst✝¹² : CommRing R\ninst✝¹¹ : LieRing L\ninst✝¹⁰ : LieAlgebra R L\ninst✝⁹ : LieRing L'\ninst✝⁸ : LieAlgebra R L'\ninst✝⁷ : AddCommGroup M\ninst✝⁶ : Module R M\ninst✝⁵ : LieRingModule L M\ninst✝⁴ : LieModule R L M\ninst✝³ : AddCommGroup M'\ninst✝² : Module R M'\ninst✝¹ : LieRingModule L M'\ninst✝ : LieModule R L M'\nf : L →ₗ⁅R⁆ L'\nI : LieIdeal R L\nJ : LieIdeal R L'\n⊢ f.idealRange = LieSubmodule.lieSpan R L' ↑f.range")
+2025-11-23 19:48:03.391 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 19:48:21.575 | INFO     | src.agent.runner:run:81 - Starting proof search for: Nat.div2_two
+2025-11-23 19:48:26.138 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 19:48:29.500 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: simp [div2]
+2025-11-23 19:48:34.171 | INFO     | src.agent.runner:run:112 - Step 2: Running MCTS search for 200 iterations...
+2025-11-23 19:48:34.444 | INFO     | src.agent.runner:run:175 - Step 2: Applying best tactic: simp [boddDiv2, Nat.succ_eq_add_one]
+2025-11-23 19:48:34.509 | SUCCESS  | src.agent.runner:run:224 - Proof finished in 2 steps and 12.93s.
+2025-11-23 19:48:34.642 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 19:48:56.090 | INFO     | src.agent.runner:run:81 - Starting proof search for: Matrix.GLPos.det_ne_zero
+2025-11-23 19:49:00.584 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 19:49:02.790 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: exact mod_cast det_ne_zero_of_det_ne_zero A.det_ne_zero A.det_ne_zero
+2025-11-23 19:49:02.879 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="unknown identifier 'det_ne_zero_of_det_ne_zero'")
+2025-11-23 19:49:02.879 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 6.79s.
+2025-11-23 19:49:02.879 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="unknown identifier 'det_ne_zero_of_det_ne_zero'")
+2025-11-23 19:49:03.012 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 19:49:23.562 | INFO     | src.agent.runner:run:81 - Starting proof search for: Matrix.cons_add_cons
+2025-11-23 19:49:28.123 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 19:49:32.312 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: rw [vecCons_add, vecCons_add, vecCons_add, vecCons_add, vecCons_add, vecCons_add]
+2025-11-23 19:49:32.418 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.47927\nα : Type u\nm n o : ℕ\nm' : Type u_1\nn' : Type u_2\no' : Type u_3\ninst✝ : Add α\nx : α\nv : Fin n → α\ny : α\nw : Fin n → α\n⊢ Matrix.vecCons x v + Matrix.vecCons y w = Matrix.vecCons (x + y) (v + w)")
+2025-11-23 19:49:32.419 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 8.86s.
+2025-11-23 19:49:32.419 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.47927\nα : Type u\nm n o : ℕ\nm' : Type u_1\nn' : Type u_2\no' : Type u_3\ninst✝ : Add α\nx : α\nv : Fin n → α\ny : α\nw : Fin n → α\n⊢ Matrix.vecCons x v + Matrix.vecCons y w = Matrix.vecCons (x + y) (v + w)")
+2025-11-23 19:49:32.551 | INFO     | src.utilities.gym:close:98 - Environment closed.
+2025-11-23 19:49:36.957 | INFO     | src.utilities.analyze_training_data:print_training_stats:87 - ============================================================
+2025-11-23 19:49:36.957 | INFO     | src.utilities.analyze_training_data:print_training_stats:88 - TRAINING DATA STATISTICS
+2025-11-23 19:49:36.957 | INFO     | src.utilities.analyze_training_data:print_training_stats:89 - ============================================================
+2025-11-23 19:49:36.957 | INFO     | src.utilities.analyze_training_data:print_training_stats:91 - Total samples: 203
+2025-11-23 19:49:36.957 | INFO     | src.utilities.analyze_training_data:print_training_stats:92 -   Positive (successful proofs): 21 (10.3%)
+2025-11-23 19:49:36.957 | INFO     | src.utilities.analyze_training_data:print_training_stats:96 -   Negative (failed proofs): 182 (89.7%)
+2025-11-23 19:49:36.957 | INFO     | src.utilities.analyze_training_data:print_training_stats:101 - 
+Value Targets:
+2025-11-23 19:49:36.957 | INFO     | src.utilities.analyze_training_data:print_training_stats:103 -   Mean: -0.7931, Std: 0.6091, Range: [-1.0000, 1.0000]
+2025-11-23 19:49:36.958 | INFO     | src.utilities.analyze_training_data:print_training_stats:107 - 
+Visit Counts:
+2025-11-23 19:49:36.958 | INFO     | src.utilities.analyze_training_data:print_training_stats:109 -   Mean: 210.0, Std: 10.6, Range: [200, 275]
+2025-11-23 19:49:36.958 | INFO     | src.utilities.analyze_training_data:print_training_stats:113 - 
+Steps in Trajectory:
+2025-11-23 19:49:36.958 | INFO     | src.utilities.analyze_training_data:print_training_stats:115 -   Mean: 7.5, Std: 9.2, Range: [1, 30]
+2025-11-23 19:49:36.958 | INFO     | src.utilities.analyze_training_data:print_training_stats:120 - 
+MCTS Value Estimates:
+2025-11-23 19:49:36.958 | INFO     | src.utilities.analyze_training_data:print_training_stats:122 -   Mean: -0.8543, Std: 0.4548, Range: [-1.0000, 0.9800]
+2025-11-23 19:49:36.958 | INFO     | src.utilities.analyze_training_data:print_training_stats:125 -   Samples with MCTS values: 203
+2025-11-23 19:49:36.958 | INFO     | src.utilities.analyze_training_data:print_training_stats:127 - ============================================================
+2025-11-23 19:49:36.975 | INFO     | src.utilities.analyze_training_data:save_training_data:143 - Training data saved to /gpfs/scratch1/shared/lean-reinforcement/checkpoints/training_data_epoch_3.json
+2025-11-23 19:49:36.977 | INFO     | __main__:train_value_head:97 - Training Value Head on 203 samples...
+2025-11-23 19:49:36.977 | INFO     | __main__:train_value_head:98 -   Data distribution: 21 positive, 182 negative
+2025-11-23 19:49:36.977 | INFO     | __main__:train_value_head:101 -   Average target value: -0.7931
+2025-11-23 19:49:36.979 | INFO     | __main__:train_value_head:108 -   Average MCTS value estimate: -0.8543
+2025-11-23 19:49:51.688 | INFO     | __main__:train_value_head:150 - Value Head Epoch 1/1, Avg. Loss: 0.8576
+2025-11-23 19:49:55.860 | INFO     | src.agent.value_head:save_checkpoint:127 - Checkpoint saved to /gpfs/scratch1/shared/lean-reinforcement/checkpoints/value_head_latest.pth
+2025-11-23 19:49:55.863 | INFO     | src.agent.value_head:save_checkpoint:127 - Checkpoint saved to /gpfs/scratch1/shared/lean-reinforcement/checkpoints/value_head_epoch_3.pth
+2025-11-23 19:49:55.864 | INFO     | __main__:save_checkpoint:206 - Saved checkpoints: value_head_latest.pth and value_head_epoch_3.pth
+2025-11-23 19:49:55.864 | INFO     | __main__:main:419 - Checkpoint saved for epoch 3
+2025-11-23 19:49:55.864 | INFO     | __main__:main:301 - Starting Epoch 4/10
+2025-11-23 19:50:12.209 | INFO     | src.agent.runner:run:81 - Starting proof search for: Homeomorph.coe_unitBall_apply_zero
+2025-11-23 19:50:16.538 | INFO     | src.agent.runner:run:112 - Step 1: Running MCTS search for 200 iterations...
+2025-11-23 19:50:20.683 | INFO     | src.agent.runner:run:175 - Step 1: Applying best tactic: simp [SeminormedAddCommGroup.unitBall_def]
+2025-11-23 19:50:20.898 | WARNING  | src.agent.runner:run:184 - Tactic resulted in error: LeanError(error='simp made no progress')
+2025-11-23 19:50:20.898 | ERROR    | src.agent.runner:run:228 - Proof failed after 1 steps and 8.69s.
+2025-11-23 19:50:20.898 | WARNING  | src.agent.runner:run:232 - Final state: LeanError(error='simp made no progress')
+2025-11-23 19:50:21.031 | INFO     | src.utilities.gym:close:98 - Environment closed.
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+[2025-11-23T19:50:50.985] error: *** JOB 16894423 ON gcn14 CANCELLED AT 2025-11-23T19:50:50 DUE to SIGNAL Terminated ***
+[2025-11-23T19:50:50.986] error: *** STEP 16894423.0 ON gcn14 CANCELLED AT 2025-11-23T19:50:50 DUE to SIGNAL Terminated ***
