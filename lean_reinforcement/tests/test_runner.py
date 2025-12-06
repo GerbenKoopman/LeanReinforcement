@@ -77,11 +77,11 @@ class TestAgentRunner(unittest.TestCase):
                 next_state = Mock(spec=TacticState)
                 next_state.pp = "next_state_pp"
                 self.env.current_state = next_state
-                return (next_state, 0, False, False, {})
+                return (next_state, 0, False)
             else:
                 proof_finished = Mock(spec=ProofFinished)
                 self.env.current_state = proof_finished
-                return (proof_finished, 1, True, False, {})
+                return (proof_finished, 1, True)
 
         self.env.step.side_effect = mock_step
 
@@ -124,7 +124,7 @@ class TestAgentRunner(unittest.TestCase):
             next_state = Mock(spec=TacticState)
             next_state.pp = "next_state_pp"
             self.env.current_state = next_state
-            return (next_state, 0, False, False, {})
+            return (next_state, 0, False)
 
         self.env.step.side_effect = mock_step
 
