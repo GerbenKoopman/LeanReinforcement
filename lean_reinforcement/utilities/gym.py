@@ -2,7 +2,6 @@
 Environment for interacting with LeanDojo via a Gymnasium extension.
 """
 
-from typing import Any
 from loguru import logger
 
 from lean_dojo import (
@@ -44,7 +43,7 @@ class LeanDojoEnv:
             logger.error(f"Unexpected error during environment reset: {e}")
             raise e
 
-    def step(self, action: str) -> tuple[str, float, bool, bool, dict[str, Any]]:
+    def step(self, action: str) -> tuple[str, float, bool]:
         # Interact with Lean
         assert isinstance(self.current_state, TacticState)
 
@@ -75,7 +74,7 @@ class LeanDojoEnv:
         else:
             raise ValueError(f"Unhandled state: {next_state}")
 
-        return observation, reward, done, False, {}
+        return observation, reward, done
 
     def close(self):
         """Explicitly clean up the last running 'lean' process."""

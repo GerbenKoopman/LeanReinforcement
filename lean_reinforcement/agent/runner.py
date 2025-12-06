@@ -177,7 +177,7 @@ class AgentRunner:
                 logger.info(f"Step {step_num}: Applying best tactic: {best_action}")
 
                 try:
-                    _, _, terminated, _, _ = self.env.step(best_action)
+                    _, _, terminated = self.env.step(best_action)
                 except Exception as e:
                     logger.error(f"Environment step failed with error: {e}")
                     break
