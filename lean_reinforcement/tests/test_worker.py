@@ -55,7 +55,6 @@ class TestWorker(unittest.TestCase):
         # Run function
         result = process_theorem(
             self.thm_data,
-            self.corpus,
             self.dataloader,
             self.transformer,
             self.value_head,
@@ -82,7 +81,6 @@ class TestWorker(unittest.TestCase):
         # Run function
         result = process_theorem(
             self.thm_data,
-            self.corpus,
             self.dataloader,
             self.transformer,
             self.value_head,
@@ -111,7 +109,6 @@ class TestWorker(unittest.TestCase):
 
         process_theorem(
             self.thm_data,
-            self.corpus,
             self.dataloader,
             self.transformer,
             self.value_head,
