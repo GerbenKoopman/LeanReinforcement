@@ -42,7 +42,7 @@ class TestLeanDojoEnv(unittest.TestCase):
         self.mock_dojo.run_tac.return_value = next_tactic_state
 
         # Act
-        obs, reward, done, _, _ = self.env.step(action)
+        obs, reward, done = self.env.step(action)
 
         # Assert
         self.mock_dojo.run_tac.assert_called_once_with(self.initial_state, action)
@@ -59,7 +59,7 @@ class TestLeanDojoEnv(unittest.TestCase):
         self.mock_dojo.run_tac.return_value = proof_finished_state
 
         # Act
-        obs, reward, done, _, _ = self.env.step(action)
+        obs, reward, done = self.env.step(action)
 
         # Assert
         self.assertEqual(obs, str(proof_finished_state))
@@ -74,7 +74,7 @@ class TestLeanDojoEnv(unittest.TestCase):
         self.mock_dojo.run_tac.return_value = lean_error_state
 
         # Act
-        obs, reward, done, _, _ = self.env.step(action)
+        obs, reward, done = self.env.step(action)
 
         # Assert
         self.assertEqual(obs, str(lean_error_state))
