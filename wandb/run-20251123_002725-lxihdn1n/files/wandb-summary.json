@@ -1,1 +1,0 @@
-{"value_head/avg_mcts_value":-0.8805171444498873,"proof_search/steps":1,"_wandb":{"runtime":10568},"proof_search/time":16.343940019607544,"_runtime":10568,"value_head/avg_target":-0.8564593301435407,"_step":96,"proof_search/success":false,"value_head/positive_samples":15,"value_head/negative_samples":194,"_timestamp":1.7638646133742692e+09}
