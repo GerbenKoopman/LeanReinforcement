@@ -22,7 +22,6 @@ from lean_reinforcement.agent.proxies import QueueProxyTransformer, QueueProxyVa
 
 def process_theorem(
     thm_data: Dict[str, Any],
-    corpus: Corpus,
     dataloader: LeanDataLoader,
     transformer: QueueProxyTransformer,
     value_head: Optional[QueueProxyValueHead],
@@ -129,7 +128,6 @@ def worker_loop(
         # Process theorem
         data = process_theorem(
             thm_data,
-            corpus,
             dataloader,
             transformer_proxy,
             value_head_proxy,
