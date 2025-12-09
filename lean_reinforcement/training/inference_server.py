@@ -7,6 +7,7 @@ from loguru import logger
 import torch
 import torch.multiprocessing as mp
 import queue
+import gc
 
 
 class InferenceServer:
@@ -112,6 +113,7 @@ class InferenceServer:
                     f"OOM encountered. Reducing max safe batch size to {self.max_safe_batch_size}"
                 )
 
+            gc.collect()
             torch.cuda.empty_cache()
 
             mid = len(states) // 2

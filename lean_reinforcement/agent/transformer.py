@@ -37,7 +37,9 @@ class Transformer:
 
     @torch.no_grad()
     def generate_tactics(self, state: str, n: int = 1) -> List[str]:
-        tokenized_state = self.tokenizer(state, return_tensors="pt").to(self.device)
+        tokenized_state = self.tokenizer(
+            state, return_tensors="pt", truncation=True, max_length=1024
+        ).to(self.device)
 
         tactics_ids = self.model.generate(
             tokenized_state.input_ids,
@@ -49,13 +51,18 @@ class Transformer:
         )
         tactics = self.tokenizer.batch_decode(tactics_ids, skip_special_tokens=True)
 
+        del tokenized_state
+        del tactics_ids
+
         return tactics
 
     @torch.no_grad()
     def generate_tactics_with_probs(
         self, state: str, n: int = 1
     ) -> List[tuple[str, float]]:
-        tokenized_state = self.tokenizer(state, return_tensors="pt").to(self.device)
+        tokenized_state = self.tokenizer(
+            state, return_tensors="pt", truncation=True, max_length=1024
+        ).to(self.device)
 
         outputs = self.model.generate(
             tokenized_state.input_ids,
@@ -74,7 +81,13 @@ class Transformer:
         sequence_scores = outputs.sequences_scores
         probs = torch.softmax(sequence_scores, dim=0)
 
-        return list(zip(tactics, probs.tolist()))
+        result = list(zip(tactics, probs.tolist()))
+
+        del tokenized_state
+        del outputs
+        del sequence_scores
+
+        return result
 
     @torch.no_grad()
     def generate_tactics_batch(self, states: List[str], n: int = 1) -> List[List[str]]:
@@ -86,7 +99,11 @@ class Transformer:
             return []
 
         tokenized_states = self.tokenizer(
-            states, return_tensors="pt", padding=True, truncation=True
+            states,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=1024,
         ).to(self.device)
 
         tactics_ids = self.model.generate(
@@ -99,14 +116,17 @@ class Transformer:
         )
 
         # tactics_ids shape: (batch_size * n, sequence_length)
-        all_tactics = self.tokenizer.batch_decode(tactics_ids, skip_special_tokens=True)
+        tactics = self.tokenizer.batch_decode(tactics_ids, skip_special_tokens=True)
 
-        # Reshape result to List[List[str]]
-        results = []
-        for i in range(len(states)):
-            results.append(all_tactics[i * n : (i + 1) * n])
+        del tokenized_states
+        del tactics_ids
 
-        return results
+        # Reshape the flat list of tactics into a list of lists
+        result = []
+        for i in range(0, len(tactics), n):
+            result.append(tactics[i : i + n])
+
+        return result
 
     @torch.no_grad()
     def generate_tactics_with_probs_batch(
@@ -119,7 +139,11 @@ class Transformer:
             return []
 
         tokenized_states = self.tokenizer(
-            states, return_tensors="pt", padding=True, truncation=True
+            states,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=1024,
         ).to(self.device)
 
         outputs = self.model.generate(
@@ -151,5 +175,9 @@ class Transformer:
             batch_probs = torch.softmax(batch_scores, dim=0).tolist()
 
             results.append(list(zip(batch_tactics, batch_probs)))
+
+        del tokenized_states
+        del outputs
+        del sequence_scores
 
         return results
