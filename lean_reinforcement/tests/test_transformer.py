@@ -46,7 +46,9 @@ class TestTransformer(unittest.TestCase):
         tactics = self.transformer.generate_tactics(state, n=1)
 
         # Assert
-        self.mock_tokenizer.assert_called_once_with(state, return_tensors="pt")
+        self.mock_tokenizer.assert_called_once_with(
+            state, return_tensors="pt", truncation=True, max_length=1024
+        )
         self.mock_model.generate.assert_called_once()
         self.mock_tokenizer.batch_decode.assert_called_once_with(
             mock_tactics_ids, skip_special_tokens=True
