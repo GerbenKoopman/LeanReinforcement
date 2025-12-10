@@ -85,7 +85,24 @@ class InferenceServer:
                 # Process previous batch
                 if current_batch:
                     assert current_type is not None
-                    self._execute_batch(current_type, current_batch, current_indices)
+                    if len(current_batch) > self.max_safe_batch_size:
+                        # Split into smaller chunks
+                        for i in range(
+                            0, len(current_batch), int(self.max_safe_batch_size)
+                        ):
+                            chunk_batch = current_batch[
+                                i : i + int(self.max_safe_batch_size)
+                            ]
+                            chunk_indices = current_indices[
+                                i : i + int(self.max_safe_batch_size)
+                            ]
+                            self._execute_batch(
+                                current_type, chunk_batch, chunk_indices
+                            )
+                    else:
+                        self._execute_batch(
+                            current_type, current_batch, current_indices
+                        )
 
                 current_type = req_type
                 current_n = this_n
@@ -98,7 +115,15 @@ class InferenceServer:
         # Process last batch
         if current_batch:
             assert current_type is not None
-            self._execute_batch(current_type, current_batch, current_indices)
+            if len(current_batch) > self.max_safe_batch_size:
+                for i in range(0, len(current_batch), int(self.max_safe_batch_size)):
+                    chunk_batch = current_batch[i : i + int(self.max_safe_batch_size)]
+                    chunk_indices = current_indices[
+                        i : i + int(self.max_safe_batch_size)
+                    ]
+                    self._execute_batch(current_type, chunk_batch, chunk_indices)
+            else:
+                self._execute_batch(current_type, current_batch, current_indices)
 
     def _run_transformer_batch(self, method, states, n, **kwargs):
         if len(states) > self.max_safe_batch_size:
@@ -112,7 +137,12 @@ class InferenceServer:
         except torch.cuda.OutOfMemoryError:
             new_limit = len(states) // 2
             if new_limit < 1:
-                raise RuntimeError(f"OOM even with single sample! n={n}")
+                gc.collect()
+                torch.cuda.empty_cache()
+                try:
+                    return method(states, n=n, **kwargs)
+                except torch.cuda.OutOfMemoryError:
+                    raise RuntimeError(f"OOM even with single sample! n={n}")
 
             if new_limit < self.max_safe_batch_size:
                 self.max_safe_batch_size = new_limit
