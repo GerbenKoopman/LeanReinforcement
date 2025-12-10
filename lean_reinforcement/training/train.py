@@ -81,6 +81,29 @@ def train_value_head(
         avg_mcts = sum(mcts_values) / len(mcts_values)
         logger.info(f"  Average MCTS value estimate: {avg_mcts:.4f}")
 
+    # --- Balancing Logic ---
+    positive_data = [item for item in data_buffer if item["value_target"] > 0]
+    negative_data = [item for item in data_buffer if item["value_target"] < 0]
+
+    if positive_data and negative_data:
+        min_count = min(len(positive_data), len(negative_data))
+        logger.info(f"  Balancing dataset to {min_count} samples per class.")
+
+        # Subsample the majority class
+        random.shuffle(positive_data)
+        random.shuffle(negative_data)
+
+        balanced_data = positive_data[:min_count] + negative_data[:min_count]
+        random.shuffle(balanced_data)
+
+        # Use the balanced dataset for training
+        training_data = balanced_data
+    else:
+        logger.warning(
+            "  Cannot balance dataset: One class is missing. Using full dataset."
+        )
+        training_data = data_buffer
+
     if use_wandb:
         wandb.log(
             {
@@ -88,12 +111,13 @@ def train_value_head(
                 "value_head/positive_samples": positive_samples,
                 "value_head/negative_samples": negative_samples,
                 "value_head/avg_mcts_value": avg_mcts,
+                "value_head/training_samples": len(training_data),
             }
         )
 
     value_head.train()  # Set model to training mode
 
-    dataset = ValueHeadDataset(data_buffer)
+    dataset = ValueHeadDataset(training_data)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
     optimizer = optim.AdamW(value_head.value_head.parameters(), lr=1e-4)
     loss_fn = torch.nn.MSELoss()
