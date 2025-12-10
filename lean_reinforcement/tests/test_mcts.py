@@ -20,7 +20,6 @@ class TestNode(unittest.TestCase):
         self.assertIsNone(node.action)
         self.assertEqual(node.prior_p, 0.0)
         self.assertEqual(node.visit_count, 0)
-        self.assertEqual(node.value_sum, 0.0)
         self.assertFalse(node.is_terminal)
         self.assertIsNone(node.untried_actions)
 
@@ -28,8 +27,8 @@ class TestNode(unittest.TestCase):
         node = Node(Mock(spec=TacticState))
         self.assertEqual(node.value(), 0.0)
         node.visit_count = 10
-        node.value_sum = 5.0
-        self.assertEqual(node.value(), 0.5)
+        node.max_value = 0.8
+        self.assertEqual(node.value(), 0.8)
 
     def test_is_fully_expanded(self):
         node = Node(Mock(spec=TacticState))
@@ -76,11 +75,11 @@ class TestBaseMCTS(unittest.TestCase):
         mcts._backpropagate(node3, 0.5)
 
         self.assertEqual(node3.visit_count, 1)
-        self.assertEqual(node3.value_sum, 0.5)
+        self.assertEqual(node3.max_value, 0.5)
         self.assertEqual(node2.visit_count, 1)
-        self.assertEqual(node2.value_sum, 0.5)
+        self.assertEqual(node2.max_value, 0.5)
         self.assertEqual(node1.visit_count, 1)
-        self.assertEqual(node1.value_sum, 0.5)
+        self.assertEqual(node1.max_value, 0.5)
 
     def test_move_root(self):
         mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
@@ -118,21 +117,25 @@ class TestMCTSGuidedRollout(unittest.TestCase):
         self.transformer = Mock(spec=Transformer)
         self.mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
 
-    def test_ucb1(self):
+    def test_puct_score(self):
         parent = Node(Mock(spec=TacticState))
         parent.visit_count = 10
         child = Node(Mock(spec=TacticState), parent=parent)
         child.visit_count = 1
-        child.value_sum = 0.5
-        score = self.mcts._ucb1(child)
-        expected_score = 0.5 + self.mcts.exploration_weight * (math.log(10.0) ** 0.5)
+        child.max_value = 0.8
+        child.prior_p = 0.5
+
+        score = self.mcts._puct_score(child)
+        expected_score = 0.8 + self.mcts.exploration_weight * 0.5 * (
+            math.sqrt(10.0) / (1 + 1)
+        )
         self.assertAlmostEqual(score, expected_score, places=5)
 
     def test_expand(self):
         state = Mock(spec=TacticState)
         state.pp = "state_pp"
         node = Node(state)
-        self.transformer.generate_tactics.return_value = ["tactic1"]
+        self.transformer.generate_tactics_with_probs.return_value = [("tactic1", 0.5)]
         self.env.dojo.run_tac.return_value = Mock(spec=TacticState)
 
         child = self.mcts._expand(node)
@@ -140,7 +143,8 @@ class TestMCTSGuidedRollout(unittest.TestCase):
         self.assertEqual(len(node.children), 1)
         self.assertIs(child.parent, node)
         self.assertEqual(child.action, "tactic1")
-        self.transformer.generate_tactics.assert_called_once()
+        self.assertEqual(child.prior_p, 0.5)
+        self.transformer.generate_tactics_with_probs.assert_called_once()
         self.env.dojo.run_tac.assert_called_once_with(state, "tactic1")
 
     def test_simulate_proof_finished(self):
@@ -180,13 +184,27 @@ class TestMCTSAlphaZero(unittest.TestCase):
     def test_puct_score(self):
         parent = Node(Mock(spec=TacticState))
         parent.visit_count = 10
+
         child = Node(Mock(spec=TacticState), parent=parent)
         child.visit_count = 1
-        child.value_sum = 0.5
+        child.max_value = 0.8
         child.prior_p = 0.8
+
         score = self.mcts._puct_score(child)
-        expected_score = 0.5 + self.mcts.exploration_weight * 0.8 * ((10) ** 0.5 / 2)
+        # Q-value is now max_value (0.8) instead of mean (0.5)
+        expected_score = 0.8 + self.mcts.exploration_weight * 0.8 * ((10) ** 0.5 / 2)
         self.assertAlmostEqual(score, expected_score, places=5)
+
+        child_unvisited = Node(Mock(spec=TacticState), parent=parent)
+        child_unvisited.visit_count = 0
+        child_unvisited.max_value = float("-inf")
+        child_unvisited.prior_p = 0.5
+
+        score_unvisited = self.mcts._puct_score(child_unvisited)
+        expected_score_unvisited = 0.0 + self.mcts.exploration_weight * 0.5 * (
+            (10) ** 0.5 / 1
+        )
+        self.assertAlmostEqual(score_unvisited, expected_score_unvisited, places=5)
 
     def test_expand_alphazero(self):
         state = Mock(spec=TacticState)

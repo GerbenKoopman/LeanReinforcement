@@ -40,7 +40,10 @@ class TestParallelMCTS(unittest.TestCase):
         nodes = [node1, node2]
 
         # Mock transformer batch generation
-        self.transformer.generate_tactics_batch.return_value = [["t1"], ["t2"]]
+        self.transformer.generate_tactics_with_probs_batch.return_value = [
+            [("t1", 0.5)],
+            [("t2", 0.6)],
+        ]
 
         # Mock run_tac on the single env
         self.env.dojo.run_tac.side_effect = [
@@ -55,9 +58,11 @@ class TestParallelMCTS(unittest.TestCase):
         self.assertEqual(children[1].action, "t2")
         self.assertEqual(len(node1.children), 1)
         self.assertEqual(len(node2.children), 1)
+        self.assertEqual(node1.children[0].prior_p, 0.5)
+        self.assertEqual(node2.children[0].prior_p, 0.6)
 
         # Verify batch generation called
-        self.transformer.generate_tactics_batch.assert_called_once()
+        self.transformer.generate_tactics_with_probs_batch.assert_called_once()
 
     def test_simulate_batch(self):
         node1 = Node(TacticState("pp1", 0, "id1"))
