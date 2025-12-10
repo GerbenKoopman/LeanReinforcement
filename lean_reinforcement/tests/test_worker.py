@@ -50,7 +50,8 @@ class TestWorker(unittest.TestCase):
         mock_runner = MagicMock()
         MockAgentRunner.return_value = mock_runner
         expected_data = [{"type": "value", "value": 1.0}]
-        mock_runner.run.return_value = (None, expected_data)
+        expected_metrics = {"proof_search/success": True}
+        mock_runner.run.return_value = (expected_metrics, expected_data)
 
         # Run function
         result = process_theorem(
@@ -66,7 +67,7 @@ class TestWorker(unittest.TestCase):
         MockLeanDojoEnv.assert_called_once()
         MockAgentRunner.assert_called_once()
         mock_runner.run.assert_called_once()
-        self.assertEqual(result, expected_data)
+        self.assertEqual(result, {"metrics": expected_metrics, "data": expected_data})
 
     @patch("lean_reinforcement.training.worker.LeanDojoEnv")
     def test_process_theorem_env_error(self, MockLeanDojoEnv):
@@ -87,8 +88,8 @@ class TestWorker(unittest.TestCase):
             self.args,
         )
 
-        # Should return empty list on error
-        self.assertEqual(result, [])
+        # Should return empty dict on error
+        self.assertEqual(result, {})
 
     @patch("lean_reinforcement.training.worker.LeanDojoEnv")
     @patch("lean_reinforcement.training.worker.AgentRunner")

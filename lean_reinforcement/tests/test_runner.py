@@ -86,10 +86,10 @@ class TestAgentRunner(unittest.TestCase):
         self.env.step.side_effect = mock_step
 
         # Act
-        success, trajectory = runner.run()
+        metrics, trajectory = runner.run()
 
         # Assert
-        self.assertTrue(success)
+        self.assertTrue(metrics["proof_search/success"])
         # Training data is empty by default (collect_value_data=False)
         self.assertEqual(len(trajectory), 0)
         self.assertEqual(self.env.step.call_count, 2)
@@ -129,10 +129,10 @@ class TestAgentRunner(unittest.TestCase):
         self.env.step.side_effect = mock_step
 
         # Act
-        success, trajectory = runner.run()
+        metrics, trajectory = runner.run()
 
         # Assert
-        self.assertFalse(success)
+        self.assertFalse(metrics["proof_search/success"])
         # Training data is empty by default (collect_value_data=False)
         self.assertEqual(len(trajectory), 0)
         self.assertEqual(self.env.step.call_count, 5)
@@ -160,10 +160,10 @@ class TestAgentRunner(unittest.TestCase):
         self.env.step.return_value = (Mock(spec=TacticState), 0, False, False, {})
 
         # Act
-        success, trajectory = runner.run()
+        metrics, trajectory = runner.run()
 
         # Assert
-        self.assertFalse(success)
+        self.assertFalse(metrics["proof_search/success"])
         # Training data is empty by default (collect_value_data=False)
         self.assertEqual(len(trajectory), 0)
         self.env.step.assert_not_called()
