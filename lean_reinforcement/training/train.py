@@ -246,6 +246,10 @@ def main(args: TrainingConfig):
             workers.append(p)
 
         # --- Self-Play and Training Loop ---
+        inference_server = InferenceServer(
+            transformer, value_head, request_queue, response_queues, args.batch_size
+        )
+
         for epoch in range(start_epoch, start_epoch + args.num_epochs):
             logger.info(f"Starting Epoch {epoch + 1}/{args.num_epochs}")
             training_data_buffer = []
@@ -269,10 +273,6 @@ def main(args: TrainingConfig):
 
             # Inference Loop
             completed_theorems = 0
-
-            inference_server = InferenceServer(
-                transformer, value_head, request_queue, response_queues, args.batch_size
-            )
 
             while completed_theorems < len(theorems_to_process):
                 # 1. Process Inference Requests
