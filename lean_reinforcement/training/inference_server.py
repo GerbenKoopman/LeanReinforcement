@@ -33,9 +33,16 @@ class InferenceServer:
         """
         batch_requests = []
 
+        target_size = self.batch_size
+        if self.max_safe_batch_size < target_size:
+            target_size = int(self.max_safe_batch_size)
+
+        # Ensure at least 1
+        target_size = max(1, target_size)
+
         # Try to get as many requests as possible without blocking too long
         try:
-            while len(batch_requests) < self.batch_size:
+            while len(batch_requests) < target_size:
                 req = self.request_queue.get_nowait()
                 batch_requests.append(req)
         except queue.Empty:
