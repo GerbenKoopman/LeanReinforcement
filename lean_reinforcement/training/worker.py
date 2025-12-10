@@ -2,7 +2,7 @@
 Worker module for parallel theorem proving.
 """
 
-from typing import Union, List, Dict, Any, Optional
+from typing import Union, Dict, Any, Optional
 from loguru import logger
 import torch.multiprocessing as mp
 import gc
@@ -27,17 +27,17 @@ def process_theorem(
     transformer: QueueProxyTransformer,
     value_head: Optional[QueueProxyValueHead],
     args: TrainingConfig,
-) -> List[Dict[str, Any]]:
+) -> Dict[str, Any]:
     """
     Process a single theorem: initialize env, run agent, collect data.
     """
     theorem = dataloader.extract_theorem(thm_data)
     if not theorem:
-        return []
+        return {}
 
     theorem_pos = Pos(*thm_data["start"])
     if not theorem_pos:
-        return []
+        return {}
 
     try:
         env = LeanDojoEnv(theorem, theorem_pos)
@@ -45,12 +45,12 @@ def process_theorem(
         logger.error(
             f"Failed to initialize environment for theorem {theorem.full_name}: {e}"
         )
-        return []
+        return {}
     except Exception as e:
         logger.error(
             f"Unexpected error initializing environment for theorem {theorem.full_name}: {e}"
         )
-        return []
+        return {}
 
     if args.mcts_type == "alpha_zero":
         mcts_class = MCTS_AlphaZero
@@ -73,7 +73,7 @@ def process_theorem(
     )
 
     try:
-        _, theorem_training_data = runner.run(
+        metrics, theorem_training_data = runner.run(
             collect_value_data=args.train_value_head,
             use_final_reward=args.use_final_reward,
             use_wandb=args.use_wandb,
@@ -81,10 +81,10 @@ def process_theorem(
         logger.debug(
             f"Collected {len(theorem_training_data)} training samples for theorem: {theorem.full_name}"
         )
-        return theorem_training_data
+        return {"metrics": metrics, "data": theorem_training_data}
     except Exception as e:
         logger.error(f"Error during proof search for theorem {theorem.full_name}: {e}")
-        return []
+        return {}
     finally:
         del runner
         del env

@@ -6,7 +6,6 @@ import time
 import gc
 import torch
 from typing import Type, Optional
-import wandb
 from loguru import logger
 
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
@@ -64,7 +63,7 @@ class AgentRunner:
         collect_value_data: bool = False,
         use_final_reward: bool = True,
         use_wandb: bool = True,
-    ) -> tuple[bool, list[dict]]:
+    ) -> tuple[dict, list[dict]]:
         """
         Run the proof search loop and collect lightweight training data.
 
@@ -76,7 +75,7 @@ class AgentRunner:
 
         Returns:
             A tuple containing:
-            - bool: True if the proof was successful, False otherwise.
+            - dict: Metrics about the run (success, steps, time).
             - list[dict]: Lightweight training data collected during the run
         """
         start_time = time.time()
@@ -209,18 +208,11 @@ class AgentRunner:
         elapsed_time = time.time() - start_time
         success = isinstance(self.env.current_state, ProofFinished)
 
-        if use_wandb:
-            try:
-                if wandb.run is not None:
-                    wandb.log(
-                        {
-                            "proof_search/success": success,
-                            "proof_search/steps": step_num,
-                            "proof_search/time": elapsed_time,
-                        }
-                    )
-            except Exception as e:
-                logger.debug(f"Could not log to wandb: {e}")
+        metrics = {
+            "proof_search/success": success,
+            "proof_search/steps": step_num,
+            "proof_search/time": elapsed_time,
+        }
 
         if success:
             logger.success(
@@ -248,4 +240,4 @@ class AgentRunner:
                 # Store the raw final reward for analysis
                 data_point["final_reward"] = final_reward
 
-        return success, training_data
+        return metrics, training_data

@@ -283,7 +283,15 @@ def main(args: TrainingConfig):
                     while True:
                         res = result_queue.get_nowait()
                         if res:
-                            training_data_buffer.extend(res)
+                            if "metrics" in res and args.use_wandb:
+                                wandb.log(res["metrics"])
+
+                            if "data" in res:
+                                training_data_buffer.extend(res["data"])
+                            elif isinstance(res, list):
+                                # Fallback for legacy format if any
+                                training_data_buffer.extend(res)
+
                         completed_theorems += 1
                         if completed_theorems % 10 == 0:
                             logger.info(
