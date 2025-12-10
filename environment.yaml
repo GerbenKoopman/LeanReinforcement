@@ -31,3 +31,4 @@ dependencies:
     - -e ReProver/
     - pre-commit
     - gymnasium
+    - autoflake
