@@ -38,7 +38,7 @@ class Node:
 
         self.children: List["Node"] = []
         self.visit_count = 0
-        self.value_sum = 0.0
+        self.max_value = float("-inf")
 
         self.is_terminal = isinstance(state, (ProofFinished, LeanError, ProofGivenUp))
         self.untried_actions: Optional[List[str]] = None
@@ -46,10 +46,11 @@ class Node:
         self.encoder_features: Optional[torch.Tensor] = None
 
     def value(self) -> float:
-        """Calculates the UCT value of this node."""
+        """Calculates the value of this node. Using max_value for max-backup."""
         if self.visit_count == 0:
             return 0.0
-        return self.value_sum / self.visit_count
+        # Return max_value instead of mean value
+        return self.max_value
 
     def is_fully_expanded(self) -> bool:
         """Checks if all promising actions from this node have been expanded."""
@@ -230,7 +231,7 @@ class BaseMCTS:
         current: Optional[Node] = node
         while current is not None:
             current.visit_count += 1
-            current.value_sum += reward
+            current.max_value = max(current.max_value, reward)
             current = current.parent
 
     def get_best_action(self) -> Optional[str]:

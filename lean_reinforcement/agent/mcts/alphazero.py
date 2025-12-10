@@ -42,11 +42,11 @@ class MCTS_AlphaZero(BaseMCTS):
         visit_count = node.visit_count + v_loss
 
         # Q(s,a): Exploitation term
-        # Penalize Q value with virtual loss
+        # Use max_value instead of mean value for max-backup
         if visit_count == 0:
             q_value = 0.0
         else:
-            q_value = (node.value_sum - v_loss) / visit_count
+            q_value = node.max_value - (v_loss / visit_count)
 
         # U(s,a): Exploration term
         exploration = (

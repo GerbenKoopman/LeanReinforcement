@@ -29,131 +29,120 @@ class MCTS_GuidedRollout(BaseMCTS):
     def __init__(self, batch_size: int = 16, *args, **kwargs):
         super().__init__(batch_size=batch_size, *args, **kwargs)
 
-    def _ucb1(self, node: Node) -> float:
-        """Calculates the UCB1 score for a node."""
-        # Virtual loss increases visit count to discourage selection
-        visit_count = node.visit_count + self._get_virtual_loss(node)
+    def _puct_score(self, node: Node) -> float:
+        """Calculates the PUCT score for a node."""
+        if node.parent is None:
+            return 0.0  # Should not happen for children
 
+        # Virtual loss
+        v_loss = self._get_virtual_loss(node)
+        visit_count = node.visit_count + v_loss
+
+        # Q(s,a): Exploitation term
+        # Use max_value instead of mean value for max-backup
         if visit_count == 0:
-            return float("inf")
+            q_value = 0.0
+        else:
+            q_value = node.max_value - (v_loss / visit_count)
 
-        if (
-            node.parent is None
-        ):  # Should not happen for nodes in _select, but as a safeguard.
-            return node.value()
-
-        # Exploitation term
-        exploitation = node.value()
-
-        # Exploration term
-        # Use parent's visit count.
-        # Note: We don't add virtual loss to parent's visit count here,
-        # effectively reducing exploration for siblings of nodes being visited.
-        exploration = self.exploration_weight * math.sqrt(
-            math.log(node.parent.visit_count) / visit_count
+        # U(s,a): Exploration term
+        exploration = (
+            self.exploration_weight
+            * node.prior_p
+            * (math.sqrt(node.parent.visit_count) / (1 + visit_count))
         )
 
-        return exploitation + exploration
+        return q_value + exploration
 
     def _get_best_child(self, node: Node) -> Node:
-        """Selects the best child based on the UCB1 score."""
-        return max(node.children, key=self._ucb1)
+        """Selects the best child based on the PUCT score."""
+        return max(node.children, key=self._puct_score)
 
     def _expand(self, node: Node) -> Node:
         """
         Phase 2: Expansion
-        If the node hasn't been expanded yet, generate tactics,
-        pick one untried tactic, and create a new child node for it.
+        Expand the leaf node by generating all promising actions from the
+        policy head, creating a child for each, and storing their prior
+        probabilities.
         """
         if not isinstance(node.state, TacticState):
             raise TypeError("Cannot expand a node without a TacticState.")
 
-        if node.untried_actions is None:
-            # First visit to this node: generate tactics
-            state_str = node.state.pp
+        state_str = node.state.pp
 
-            node.untried_actions = self.transformer.generate_tactics(
-                state_str, n=NUM_TACTICS_TO_EXPAND
-            )
-            node.untried_actions.reverse()
+        # Use generate_tactics_with_probs to get priors
+        tactics_with_probs = self.transformer.generate_tactics_with_probs(
+            state_str, n=NUM_TACTICS_TO_EXPAND
+        )
 
-        # Pop one untried action
-        tactic = ""
-        if node.untried_actions:
-            tactic = node.untried_actions.pop()
+        # Create a child for each promising tactic
+        for tactic, prob in tactics_with_probs:
+            try:
+                next_state = self.env.dojo.run_tac(node.state, tactic)
+            except DojoTacticTimeoutError:
+                logger.warning(f"Tactic timed out: {tactic[:100]}")
+                # Treat timeout as an error state and continue with other tactics
+                next_state = LeanError(error="Tactic execution timed out")
+            except Exception as e:
+                logger.warning(f"Error running tactic '{tactic[:100]}': {e}")
+                next_state = LeanError(error=f"Exception: {str(e)}")
 
-        # Run the tactic in the environment to get the next state
-        # This is fast as it doesn't modify the main env, just computes the next state
-        try:
-            next_state_or_result = self.env.dojo.run_tac(node.state, tactic)
-        except DojoTacticTimeoutError:
-            logger.warning(f"Tactic timed out: {tactic[:100]}")
-            # Treat timeout as an error state
-            next_state_or_result = LeanError(error="Tactic execution timed out")
-        except Exception as e:
-            logger.warning(f"Error running tactic '{tactic[:100]}': {e}")
-            next_state_or_result = LeanError(error=f"Exception: {str(e)}")
+            child = Node(next_state, parent=node, action=tactic)
+            child.prior_p = prob  # Store the Prior
+            node.children.append(child)
+            self.node_count += 1
 
-        # Create the new child node
-        child = Node(next_state_or_result, parent=node, action=tactic)
-        node.children.append(child)
-        self.node_count += 1
+        node.untried_actions = []
 
-        return child
+        # Return the best child based on PUCT score to start simulation from
+        return self._get_best_child(node)
 
     def _expand_batch(self, nodes: List[Node]) -> List[Node]:
         # 1. Generate tactics for all nodes
         states = []
         nodes_to_generate = []
-        indices_to_generate = []
 
-        for i, node in enumerate(nodes):
-            if node.untried_actions is None:
-                if isinstance(node.state, TacticState):
-                    states.append(node.state.pp)
-                    nodes_to_generate.append(node)
-                    indices_to_generate.append(i)
-                else:
-                    # Should not happen given _select logic
-                    node.untried_actions = []
-
-        if states:
-            batch_tactics = self.transformer.generate_tactics_batch(
-                states, n=NUM_TACTICS_TO_EXPAND
-            )
-            for i, tactics in enumerate(batch_tactics):
-                node = nodes_to_generate[i]
-                node.untried_actions = tactics
-                node.untried_actions.reverse()
-
-        # 2. Pick one tactic for each node
-        tactics_to_run = []
         for node in nodes:
-            tactic = ""
-            if node.untried_actions:
-                tactic = node.untried_actions.pop()
-            tactics_to_run.append(tactic)
+            if isinstance(node.state, TacticState):
+                states.append(node.state.pp)
+                nodes_to_generate.append(node)
 
-        # 3. Run tactics sequentially (single env)
-        children = []
-        for node, tactic in zip(nodes, tactics_to_run):
-            if not tactic:
-                child = Node(
-                    LeanError(error="No tactics generated"), parent=node, action=tactic
-                )
-            else:
-                try:
-                    next_state = self.env.dojo.run_tac(node.state, tactic)  # type: ignore
-                except Exception as e:
-                    next_state = LeanError(error=str(e))
-                child = Node(next_state, parent=node, action=tactic)
-            children.append(child)
+        if not states:
+            return nodes
 
-        self.node_count += len(children)
-        for i, node in enumerate(nodes):
-            node.children.append(children[i])
+        # Batch generate tactics with probabilities
+        batch_tactics_with_probs = self.transformer.generate_tactics_with_probs_batch(
+            states, n=NUM_TACTICS_TO_EXPAND
+        )
 
-        return children
+        # 2. Prepare tasks for parallel execution
+        tasks = []
+        for i, tactics_probs in enumerate(batch_tactics_with_probs):
+            node = nodes_to_generate[i]
+            for tactic, prob in tactics_probs:
+                tasks.append((node, tactic, prob))
+
+        # 3. Run tactics sequentially
+        results = []
+        for node, tactic, prob in tasks:
+            try:
+                next_state = self.env.dojo.run_tac(node.state, tactic)
+            except Exception as e:
+                next_state = LeanError(error=str(e))
+            results.append((node, tactic, prob, next_state))
+
+        # 4. Create children
+        for node, tactic, prob, next_state in results:
+            child = Node(next_state, parent=node, action=tactic)
+            child.prior_p = prob
+            node.children.append(child)
+            self.node_count += 1
+
+        for node in nodes_to_generate:
+            node.untried_actions = []
+
+        # Return the best child for each node to start simulation
+        return [self._get_best_child(node) for node in nodes]
 
     def _simulate(self, node: Node, env: Optional[LeanDojoEnv] = None) -> float:
         """
