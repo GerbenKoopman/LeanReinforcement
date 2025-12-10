@@ -142,7 +142,7 @@ class MCTS_GuidedRollout(BaseMCTS):
             node.untried_actions = []
 
         # Return the best child for each node to start simulation
-        return [self._get_best_child(node) for node in nodes]
+        return [self._get_best_child(node) if node.children else node for node in nodes]
 
     def _simulate(self, node: Node, env: Optional[LeanDojoEnv] = None) -> float:
         """
