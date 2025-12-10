@@ -7,6 +7,7 @@ from loguru import logger
 import torch.multiprocessing as mp
 import gc
 import queue
+import os
 
 from lean_dojo import DojoInitError
 from ReProver.common import Corpus, Pos
@@ -102,6 +103,8 @@ def worker_loop(
     """
     Worker process loop.
     """
+    os.environ["CUDA_VISIBLE_DEVICES"] = ""
+
     if isinstance(corpus_path, str):
         corpus = Corpus(corpus_path)
     else:
