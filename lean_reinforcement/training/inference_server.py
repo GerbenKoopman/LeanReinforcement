@@ -135,28 +135,28 @@ class InferenceServer:
         try:
             return method(states, n=n, **kwargs)
         except torch.cuda.OutOfMemoryError:
-            new_limit = len(states) // 2
-            if new_limit < 1:
-                gc.collect()
-                torch.cuda.empty_cache()
-                try:
-                    return method(states, n=n, **kwargs)
-                except torch.cuda.OutOfMemoryError:
-                    raise RuntimeError(f"OOM even with single sample! n={n}")
+            pass
 
-            if new_limit < self.max_safe_batch_size:
-                self.max_safe_batch_size = new_limit
-                logger.warning(
-                    f"OOM encountered. Reducing max safe batch size to {self.max_safe_batch_size}"
-                )
+        gc.collect()
+        torch.cuda.empty_cache()
 
-            gc.collect()
-            torch.cuda.empty_cache()
+        new_limit = len(states) // 2
+        if new_limit < 1:
+            try:
+                return method(states, n=n, **kwargs)
+            except torch.cuda.OutOfMemoryError:
+                raise RuntimeError(f"OOM even with single sample! n={n}")
 
-            mid = len(states) // 2
-            left = self._run_transformer_batch(method, states[:mid], n, **kwargs)
-            right = self._run_transformer_batch(method, states[mid:], n, **kwargs)
-            return left + right
+        if new_limit < self.max_safe_batch_size:
+            self.max_safe_batch_size = new_limit
+            logger.warning(
+                f"OOM encountered. Reducing max safe batch size to {self.max_safe_batch_size}"
+            )
+
+        mid = len(states) // 2
+        left = self._run_transformer_batch(method, states[:mid], n, **kwargs)
+        right = self._run_transformer_batch(method, states[mid:], n, **kwargs)
+        return left + right
 
     def _execute_batch(self, req_type: str, batch: List[Any], indices: List[int]):
         results = []
