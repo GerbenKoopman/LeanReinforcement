@@ -17,7 +17,7 @@ from lean_reinforcement.agent.mcts.base_mcts import BaseMCTS, Node
 # Max depth for a single rollout in Part 1
 MAX_ROLLOUT_DEPTH = 30
 # Number of tactics to expand from the generator
-NUM_TACTICS_TO_EXPAND = 16
+NUM_TACTICS_TO_EXPAND = 8
 
 
 class MCTS_AlphaZero(BaseMCTS):
@@ -28,7 +28,7 @@ class MCTS_AlphaZero(BaseMCTS):
     to the ValueHead for evaluation.
     """
 
-    def __init__(self, value_head: ValueHead, batch_size: int = 16, *args, **kwargs):
+    def __init__(self, value_head: ValueHead, batch_size: int = 8, *args, **kwargs):
         super().__init__(batch_size=batch_size, *args, **kwargs)
         self.value_head = value_head
 

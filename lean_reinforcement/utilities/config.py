@@ -68,7 +68,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--batch-size",
         type=int,
-        default=16,
+        default=8,
         help="Batch size for MCTS search.",
     )
     parser.add_argument(

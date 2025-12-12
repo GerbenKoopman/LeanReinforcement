@@ -15,7 +15,7 @@ from lean_reinforcement.agent.mcts.base_mcts import BaseMCTS, Node
 # Max depth for a single rollout in Part 1
 MAX_ROLLOUT_DEPTH = 30
 # Number of tactics to expand from the generator
-NUM_TACTICS_TO_EXPAND = 16
+NUM_TACTICS_TO_EXPAND = 8
 
 
 class MCTS_GuidedRollout(BaseMCTS):
@@ -26,7 +26,7 @@ class MCTS_GuidedRollout(BaseMCTS):
     finished or max depth is reached.
     """
 
-    def __init__(self, batch_size: int = 16, *args, **kwargs):
+    def __init__(self, batch_size: int = 8, *args, **kwargs):
         super().__init__(batch_size=batch_size, *args, **kwargs)
 
     def _puct_score(self, node: Node) -> float:

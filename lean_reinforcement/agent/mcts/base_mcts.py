@@ -16,7 +16,7 @@ from lean_reinforcement.agent.transformer import TransformerProtocol
 # Max depth for a single rollout in Part 1
 MAX_ROLLOUT_DEPTH = 30
 # Number of tactics to expand from the generator
-NUM_TACTICS_TO_EXPAND = 16
+NUM_TACTICS_TO_EXPAND = 8
 
 
 class Node:
@@ -69,7 +69,7 @@ class BaseMCTS:
         transformer: TransformerProtocol,
         exploration_weight: float = math.sqrt(2),
         max_tree_nodes: int = 10000,
-        batch_size: int = 16,
+        batch_size: int = 8,
     ):
         self.env = env
         self.transformer = transformer
