@@ -317,7 +317,7 @@ def main(args: TrainingConfig):
                                 training_data_buffer.extend(res)
 
                         completed_theorems += 1
-                        if completed_theorems % 10 == 0:
+                        if completed_theorems % args.num_workers == 0:
                             logger.info(
                                 f"Completed {completed_theorems}/{len(theorems_to_process)} proofs"
                             )
