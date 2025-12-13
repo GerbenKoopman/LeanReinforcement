@@ -60,7 +60,7 @@ class LeanDojoEnv:
         self.current_state = next_state
 
         if isinstance(next_state, LeanError):  # Error occurred
-            reward = -0.1
+            reward = -1.0
             done = True
             observation = str(next_state)
         elif isinstance(next_state, ProofFinished):  # No goals left
@@ -68,7 +68,7 @@ class LeanDojoEnv:
             done = True
             observation = str(next_state)
         elif isinstance(next_state, TacticState):  # Proof still ongoing
-            reward = 0.1
+            reward = 0.0
             done = False
             observation = next_state.pp
         else:
