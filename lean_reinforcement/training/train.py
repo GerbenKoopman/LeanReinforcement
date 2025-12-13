@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 import gc
 import os
 import time
+import json
 from dotenv import load_dotenv
 import wandb
 import random
@@ -215,28 +216,31 @@ def main(args: TrainingConfig):
 
     workers = []
     try:
-        for i in range(args.num_workers):
-            p = mp.Process(
-                target=worker_loop,
-                args=(
-                    i,
-                    request_queue,
-                    response_queues[i],
-                    theorem_queue,
-                    result_queue,
-                    corpus,
-                    args,
-                ),
-            )
-            p.start()
-            workers.append(p)
-
         # --- Self-Play and Training Loop ---
         inference_server = InferenceServer(
             transformer, value_head, request_queue, response_queues, args.batch_size
         )
 
         for epoch in range(start_epoch, start_epoch + args.num_epochs):
+            # Start workers for this epoch
+            logger.info(f"Starting {args.num_workers} workers for epoch {epoch + 1}")
+            workers = []
+            for i in range(args.num_workers):
+                p = mp.Process(
+                    target=worker_loop,
+                    args=(
+                        i,
+                        request_queue,
+                        response_queues[i],
+                        theorem_queue,
+                        result_queue,
+                        corpus,
+                        args,
+                    ),
+                )
+                p.start()
+                workers.append(p)
+
             logger.info(f"Starting Epoch {epoch + 1}/{args.num_epochs}")
             training_data_buffer = []
 
@@ -260,6 +264,11 @@ def main(args: TrainingConfig):
             # Inference Loop
             completed_theorems = 0
 
+            # Temporary file for incremental saving to prevent OOM
+            temp_data_file = checkpoint_dir / f"temp_data_epoch_{epoch + 1}.jsonl"
+            if os.path.exists(temp_data_file):
+                os.remove(temp_data_file)
+
             while completed_theorems < len(theorems_to_process):
                 # 1. Process Inference Requests
                 processed_batch = inference_server.process_requests()
@@ -277,6 +286,13 @@ def main(args: TrainingConfig):
                             elif isinstance(res, list):
                                 # Fallback for legacy format if any
                                 training_data_buffer.extend(res)
+
+                            # Incremental save if buffer gets too large
+                            if len(training_data_buffer) > 500:
+                                with open(temp_data_file, "a") as f:
+                                    for item in training_data_buffer:
+                                        f.write(json.dumps(item) + "\n")
+                                training_data_buffer = []
 
                         completed_theorems += 1
                         if completed_theorems % args.num_workers == 0:
@@ -307,8 +323,54 @@ def main(args: TrainingConfig):
                         "One or more worker processes died unexpectedly."
                     )
 
+            # Stop workers to free memory
+            logger.info("Stopping workers for this epoch...")
+            for p in workers:
+                p.terminate()
+                p.join()
+            workers = []
+
+            # Drain queues to prevent stale data in next epoch
+            logger.info("Draining queues...")
+            try:
+                while not request_queue.empty():
+                    request_queue.get_nowait()
+            except Exception:
+                pass
+
+            for q in response_queues:
+                try:
+                    while not q.empty():
+                        q.get_nowait()
+                except Exception:
+                    pass
+
+            try:
+                while not result_queue.empty():
+                    result_queue.get_nowait()
+            except Exception:
+                pass
+
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
+
+            # Load all data back
+            if os.path.exists(temp_data_file):
+                # Flush remaining buffer
+                if training_data_buffer:
+                    with open(temp_data_file, "a") as f:
+                        for item in training_data_buffer:
+                            f.write(json.dumps(item) + "\n")
+                    training_data_buffer = []
+
+                # Load back
+                logger.info("Loading training data from temporary file...")
+                with open(temp_data_file, "r") as f:
+                    for line in f:
+                        training_data_buffer.append(json.loads(line))
+
+                # Remove temp file
+                os.remove(temp_data_file)
 
             # --- MODEL TRAINING STEP ---
             if not training_data_buffer:
