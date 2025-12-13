@@ -130,11 +130,14 @@ def train_value_head(
                 device="cuda" if torch.cuda.is_available() else "cpu",
             )
 
+            # Clip targets for stability
+            value_targets = torch.clamp(value_targets, min=-0.99, max=0.99)
+
             # Get features from the frozen encoder
             features = value_head.encode_states(states)
 
             # Get value prediction from the trainable head
-            value_preds = value_head.value_head(features).squeeze()
+            value_preds = torch.tanh(value_head.value_head(features).squeeze())
 
             loss = loss_fn(value_preds, value_targets)
 
