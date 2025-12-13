@@ -288,7 +288,7 @@ def main(args: TrainingConfig):
                                 training_data_buffer.extend(res)
 
                             # Incremental save if buffer gets too large
-                            if len(training_data_buffer) > 500:
+                            if len(training_data_buffer) > 100:
                                 with open(temp_data_file, "a") as f:
                                     for item in training_data_buffer:
                                         f.write(json.dumps(item) + "\n")
