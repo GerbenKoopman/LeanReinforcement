@@ -162,7 +162,7 @@ class MCTS_GuidedRollout(BaseMCTS):
         # Use provided env or fallback to self.env
         sim_env = env if env else self.env
 
-        for _ in range(MAX_ROLLOUT_DEPTH):
+        for step_idx in range(MAX_ROLLOUT_DEPTH):
             state_str = current_state.pp
 
             # Get a single greedy tactic
@@ -182,7 +182,8 @@ class MCTS_GuidedRollout(BaseMCTS):
 
             # Check result
             if isinstance(result, ProofFinished):
-                return 1.0
+                # Reward shorter proofs: 1.0 - 0.01 per step
+                return 1.0 - 0.01 * (step_idx + 1)
             if isinstance(result, (LeanError, ProofGivenUp)):
                 return -1.0  # Penalize errors
 
