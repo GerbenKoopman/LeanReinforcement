@@ -11,8 +11,6 @@ import torch.multiprocessing as mp
 from torch.utils.data import DataLoader
 import gc
 import os
-import subprocess
-import shutil
 import time
 from dotenv import load_dotenv
 import wandb
@@ -205,43 +203,7 @@ def main(args: TrainingConfig):
     dataloader = LeanDataLoader(
         corpus, dataset_path="leandojo_benchmark_4", data_type=args.data_type
     )
-    traced_repo = dataloader.trace_repo()
-
-    # Ensure the repo is built (fix for missing .lake/lakefile.olean)
-    repo_path = traced_repo.root_dir
-    lakefile_path = repo_path / ".lake" / "lakefile.olean"
-
-    # Robust check and copy for lakefile.olean
-    if not lakefile_path.exists():
-        logger.warning(f"{lakefile_path} missing. Checking build artifacts...")
-
-        def find_and_copy_lakefile():
-            candidates = list(repo_path.glob(".lake/**/lakefile.olean"))
-            if candidates:
-                src = candidates[0]
-                logger.info(
-                    f"Found lakefile.olean at {src}, copying to {lakefile_path}"
-                )
-                lakefile_path.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(src, lakefile_path)
-                return True
-            return False
-
-        if not find_and_copy_lakefile():
-            logger.warning(
-                f"lakefile.olean not found in build artifacts. Running lake build in {repo_path}..."
-            )
-            try:
-                subprocess.run(["lake", "build"], cwd=repo_path, check=True)
-                logger.info("lake build completed successfully.")
-                if not lakefile_path.exists():
-                    if not find_and_copy_lakefile():
-                        logger.warning(
-                            "Could not find lakefile.olean even after build."
-                        )
-            except subprocess.CalledProcessError as e:
-                logger.error(f"lake build failed: {e}")
-                raise e
+    dataloader.trace_repo()
 
     # --- Multiprocessing Setup ---
     mp.set_start_method("spawn", force=True)  # Force spawn for CUDA safety
