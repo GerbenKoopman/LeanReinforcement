@@ -6,7 +6,7 @@ value (win probability) of a given proof state.
 from typing_extensions import Self
 import torch
 import torch.nn as nn
-from typing import List
+from typing import List, cast
 import os
 from loguru import logger
 
@@ -50,7 +50,7 @@ class ValueHead(nn.Module):
         del hidden_state
         del lens
 
-        return features
+        return cast(torch.Tensor, features)
 
     @torch.no_grad()
     def predict(self, state_str: str) -> float:
@@ -68,7 +68,7 @@ class ValueHead(nn.Module):
         value = self.value_head(features).squeeze()
 
         # Apply tanh to squash the value between -1 and 1
-        result = torch.tanh(value).item()
+        result: float = torch.tanh(value).item()
 
         # Clean up
         del features
@@ -92,7 +92,7 @@ class ValueHead(nn.Module):
         if values.ndim == 0:
             values = values.unsqueeze(0)
 
-        results = torch.tanh(values).tolist()
+        results: List[float] = torch.tanh(values).tolist()
 
         # Clean up
         del features
@@ -121,7 +121,7 @@ class ValueHead(nn.Module):
         value = self.value_head(features).squeeze()
 
         # Apply tanh to squash the value between -1 and 1
-        result = torch.tanh(value).item()
+        result: float = torch.tanh(value).item()
 
         # Clean up
         del value
@@ -142,7 +142,7 @@ class ValueHead(nn.Module):
         if values.ndim == 0:
             values = values.unsqueeze(0)
 
-        results = torch.tanh(values).tolist()
+        results: List[float] = torch.tanh(values).tolist()
 
         # Clean up
         del values
@@ -192,7 +192,9 @@ class ValueHead(nn.Module):
         logger.info(f"Checkpoint loaded from {filepath}")
 
     def train(self, mode: bool = True) -> Self:
-        return super().train(mode)
+        super().train(mode)
+        return self
 
     def eval(self) -> Self:
-        return super().eval()
+        super().eval()
+        return self

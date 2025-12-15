@@ -13,11 +13,6 @@ from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 from lean_reinforcement.utilities.gym import LeanDojoEnv
 from lean_reinforcement.agent.transformer import TransformerProtocol
 
-# Max depth for a single rollout in Part 1
-MAX_ROLLOUT_DEPTH = 30
-# Number of tactics to expand from the generator
-NUM_TACTICS_TO_EXPAND = 8
-
 
 class Node:
     """
@@ -70,12 +65,16 @@ class BaseMCTS:
         exploration_weight: float = math.sqrt(2),
         max_tree_nodes: int = 10000,
         batch_size: int = 8,
+        num_tactics_to_expand: int = 8,
+        max_rollout_depth: int = 30,
     ):
         self.env = env
         self.transformer = transformer
         self.exploration_weight = exploration_weight
         self.max_tree_nodes = max_tree_nodes
         self.batch_size = batch_size
+        self.num_tactics_to_expand = num_tactics_to_expand
+        self.max_rollout_depth = max_rollout_depth
         self.node_count = 0
         self.virtual_losses: Dict[Node, int] = {}
 
@@ -104,7 +103,7 @@ class BaseMCTS:
             if self.virtual_losses[node] <= 0:
                 del self.virtual_losses[node]
 
-    def _log_gpu_memory(self):
+    def _log_gpu_memory(self) -> None:
         """Log current GPU memory usage."""
         if torch.cuda.is_available():
             allocated = torch.cuda.memory_allocated() / 1024**3
@@ -247,7 +246,7 @@ class BaseMCTS:
                 state_str = self.root.state.pp
 
                 self.root.untried_actions = self.transformer.generate_tactics(
-                    state_str, n=NUM_TACTICS_TO_EXPAND
+                    state_str, n=self.num_tactics_to_expand
                 )
 
             if self.root.untried_actions:

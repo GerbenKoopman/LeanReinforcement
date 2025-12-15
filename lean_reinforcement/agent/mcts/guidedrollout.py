@@ -4,18 +4,12 @@ Guided Rollout MCTS implementation.
 
 import math
 from typing import List, Optional
-from loguru import logger
 
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
-from lean_dojo.interaction.dojo import DojoTacticTimeoutError
 
 from lean_reinforcement.utilities.gym import LeanDojoEnv
 from lean_reinforcement.agent.mcts.base_mcts import BaseMCTS, Node
-
-# Max depth for a single rollout in Part 1
-MAX_ROLLOUT_DEPTH = 30
-# Number of tactics to expand from the generator
-NUM_TACTICS_TO_EXPAND = 8
+from lean_reinforcement.agent.transformer import TransformerProtocol
 
 
 class MCTS_GuidedRollout(BaseMCTS):
@@ -26,8 +20,26 @@ class MCTS_GuidedRollout(BaseMCTS):
     finished or max depth is reached.
     """
 
-    def __init__(self, batch_size: int = 8, *args, **kwargs):
-        super().__init__(batch_size=batch_size, *args, **kwargs)
+    def __init__(
+        self,
+        env: LeanDojoEnv,
+        transformer: TransformerProtocol,
+        exploration_weight: float = math.sqrt(2),
+        max_tree_nodes: int = 10000,
+        batch_size: int = 8,
+        num_tactics_to_expand: int = 8,
+        max_rollout_depth: int = 30,
+        **kwargs,
+    ):
+        super().__init__(
+            env=env,
+            transformer=transformer,
+            exploration_weight=exploration_weight,
+            max_tree_nodes=max_tree_nodes,
+            batch_size=batch_size,
+            num_tactics_to_expand=num_tactics_to_expand,
+            max_rollout_depth=max_rollout_depth,
+        )
 
     def _puct_score(self, node: Node) -> float:
         """Calculates the PUCT score for a node."""
@@ -72,20 +84,12 @@ class MCTS_GuidedRollout(BaseMCTS):
 
         # Use generate_tactics_with_probs to get priors
         tactics_with_probs = self.transformer.generate_tactics_with_probs(
-            state_str, n=NUM_TACTICS_TO_EXPAND
+            state_str, n=self.num_tactics_to_expand
         )
 
         # Create a child for each promising tactic
         for tactic, prob in tactics_with_probs:
-            try:
-                next_state = self.env.dojo.run_tac(node.state, tactic)
-            except DojoTacticTimeoutError:
-                logger.warning(f"Tactic timed out: {tactic[:100]}")
-                # Treat timeout as an error state and continue with other tactics
-                next_state = LeanError(error="Tactic execution timed out")
-            except Exception as e:
-                logger.warning(f"Error running tactic '{tactic[:100]}': {e}")
-                next_state = LeanError(error=f"Exception: {str(e)}")
+            next_state = self.env.run_tactic_stateless(node.state, tactic)
 
             child = Node(next_state, parent=node, action=tactic)
             child.prior_p = prob  # Store the Prior
@@ -112,7 +116,7 @@ class MCTS_GuidedRollout(BaseMCTS):
 
         # Batch generate tactics with probabilities
         batch_tactics_with_probs = self.transformer.generate_tactics_with_probs_batch(
-            states, n=NUM_TACTICS_TO_EXPAND
+            states, n=self.num_tactics_to_expand
         )
 
         # 2. Prepare tasks for parallel execution
@@ -125,10 +129,7 @@ class MCTS_GuidedRollout(BaseMCTS):
         # 3. Run tactics sequentially
         results = []
         for node, tactic, prob in tasks:
-            try:
-                next_state = self.env.dojo.run_tac(node.state, tactic)
-            except Exception as e:
-                next_state = LeanError(error=str(e))
+            next_state = self.env.run_tactic_stateless(node.state, tactic)
             results.append((node, tactic, prob, next_state))
 
         # 4. Create children
@@ -162,23 +163,14 @@ class MCTS_GuidedRollout(BaseMCTS):
         # Use provided env or fallback to self.env
         sim_env = env if env else self.env
 
-        for step_idx in range(MAX_ROLLOUT_DEPTH):
+        for step_idx in range(self.max_rollout_depth):
             state_str = current_state.pp
 
             # Get a single greedy tactic
             tactic = self.transformer.generate_tactics(state_str, n=1)[0]
 
             # Run the tactic with timeout handling
-            try:
-                result = sim_env.dojo.run_tac(current_state, tactic)
-            except DojoTacticTimeoutError:
-                logger.warning(f"Tactic timed out during simulation: {tactic[:100]}")
-                return -1.0  # Penalize timeouts
-            except Exception as e:
-                logger.warning(
-                    f"Error during simulation with tactic '{tactic[:100]}': {e}"
-                )
-                return -1.0
+            result = sim_env.run_tactic_stateless(current_state, tactic)
 
             # Check result
             if isinstance(result, ProofFinished):

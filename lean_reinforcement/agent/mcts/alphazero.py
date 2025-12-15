@@ -5,19 +5,13 @@ AlphaZero MCTS implementation.
 import math
 import torch
 from typing import List, Optional
-from loguru import logger
 
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
-from lean_dojo.interaction.dojo import DojoTacticTimeoutError
 
 from lean_reinforcement.utilities.gym import LeanDojoEnv
 from lean_reinforcement.agent.value_head import ValueHead
 from lean_reinforcement.agent.mcts.base_mcts import BaseMCTS, Node
-
-# Max depth for a single rollout in Part 1
-MAX_ROLLOUT_DEPTH = 30
-# Number of tactics to expand from the generator
-NUM_TACTICS_TO_EXPAND = 8
+from lean_reinforcement.agent.transformer import TransformerProtocol
 
 
 class MCTS_AlphaZero(BaseMCTS):
@@ -28,8 +22,27 @@ class MCTS_AlphaZero(BaseMCTS):
     to the ValueHead for evaluation.
     """
 
-    def __init__(self, value_head: ValueHead, batch_size: int = 8, *args, **kwargs):
-        super().__init__(batch_size=batch_size, *args, **kwargs)
+    def __init__(
+        self,
+        value_head: ValueHead,
+        env: LeanDojoEnv,
+        transformer: TransformerProtocol,
+        exploration_weight: float = math.sqrt(2),
+        max_tree_nodes: int = 10000,
+        batch_size: int = 8,
+        num_tactics_to_expand: int = 8,
+        max_rollout_depth: int = 30,
+        **kwargs,
+    ):
+        super().__init__(
+            env=env,
+            transformer=transformer,
+            exploration_weight=exploration_weight,
+            max_tree_nodes=max_tree_nodes,
+            batch_size=batch_size,
+            num_tactics_to_expand=num_tactics_to_expand,
+            max_rollout_depth=max_rollout_depth,
+        )
         self.value_head = value_head
 
     def _puct_score(self, node: Node) -> float:
@@ -79,20 +92,12 @@ class MCTS_AlphaZero(BaseMCTS):
             node.encoder_features = self.value_head.encode_states([state_str])
 
         tactics_with_probs = self.transformer.generate_tactics_with_probs(
-            state_str, n=NUM_TACTICS_TO_EXPAND
+            state_str, n=self.num_tactics_to_expand
         )
 
         # Create a child for each promising tactic
         for tactic, prob in tactics_with_probs:
-            try:
-                next_state = self.env.dojo.run_tac(node.state, tactic)
-            except DojoTacticTimeoutError:
-                logger.warning(f"Tactic timed out: {tactic[:100]}")
-                # Treat timeout as an error state and continue with other tactics
-                next_state = LeanError(error="Tactic execution timed out")
-            except Exception as e:
-                logger.warning(f"Error running tactic '{tactic[:100]}': {e}")
-                next_state = LeanError(error=f"Exception: {str(e)}")
+            next_state = self.env.run_tactic_stateless(node.state, tactic)
 
             child = Node(next_state, parent=node, action=tactic)
             child.prior_p = prob
@@ -128,7 +133,7 @@ class MCTS_AlphaZero(BaseMCTS):
 
         # Batch generate tactics
         batch_tactics_with_probs = self.transformer.generate_tactics_with_probs_batch(
-            states, n=NUM_TACTICS_TO_EXPAND
+            states, n=self.num_tactics_to_expand
         )
 
         # 2. Prepare tasks for parallel execution

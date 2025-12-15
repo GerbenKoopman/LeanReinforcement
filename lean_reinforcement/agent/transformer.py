@@ -26,14 +26,10 @@ class TransformerProtocol(Protocol):
 
 
 class Transformer:
-    def __init__(self):
+    def __init__(self, model_name: str = "kaiyuy/leandojo-lean4-tacgen-byt5-small"):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            "kaiyuy/leandojo-lean4-tacgen-byt5-small"
-        )
-        self.model = AutoModelForSeq2SeqLM.from_pretrained(
-            "kaiyuy/leandojo-lean4-tacgen-byt5-small"
-        ).to(self.device)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name).to(self.device)
 
     @torch.no_grad()
     def generate_tactics(self, state: str, n: int = 1) -> List[str]:
@@ -49,11 +45,16 @@ class Transformer:
             num_return_sequences=n,
             early_stopping=False,
         )
-        tactics = self.tokenizer.batch_decode(tactics_ids, skip_special_tokens=True)
+        tactics: List[str] = self.tokenizer.batch_decode(
+            tactics_ids, skip_special_tokens=True
+        )
 
         del tokenized_state
         del tactics_ids
 
+        assert isinstance(
+            tactics, list
+        ), f"Expected list of tactics, got {type(tactics)}"
         return tactics
 
     @torch.no_grad()
