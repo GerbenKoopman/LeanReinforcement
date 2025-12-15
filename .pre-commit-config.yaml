@@ -29,14 +29,11 @@ repos:
         args: ["--max-line-length=88", "--ignore=E501,W503,E203,E704"]
 
   # 4. Mypy (Local)
-  # Uses the 'mypy' installed in your active environment so it can see
-  # installed packages like torch, transformers, etc.
   - repo: local
     hooks:
       - id: mypy
         name: mypy
-        entry: python -m mypy
+        entry: /home/gerben-koopman/conda/envs/lean-reinforcement/bin/python -m mypy
         language: system
         types: [python]
-        # Uses your existing config file
         args: ["--config-file=mypy.ini"]
