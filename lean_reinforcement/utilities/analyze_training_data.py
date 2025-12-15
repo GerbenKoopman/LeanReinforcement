@@ -3,7 +3,7 @@ Utility functions to analyze and visualize training data collected from MCTS rol
 """
 
 import json
-from typing import List, Dict
+from typing import List, Dict, Any, cast
 from pathlib import Path
 import numpy as np
 from loguru import logger
@@ -157,4 +157,4 @@ def load_training_data(input_path: Path) -> List[Dict]:
         training_data = json.load(f)
 
     logger.info(f"Loaded {len(training_data)} training samples from {input_path}")
-    return training_data
+    return cast(List[Dict[Any, Any]], training_data)

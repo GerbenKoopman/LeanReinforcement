@@ -4,7 +4,7 @@ Data loader for LeanDojo traced repositories and theorems.
 
 import os
 import json
-from typing import List, Optional
+from typing import List, Optional, Dict, Any, cast
 
 from lean_dojo import LeanGitRepo, TracedRepo, trace, Theorem
 from ReProver.common import Corpus, Pos
@@ -32,7 +32,7 @@ class LeanDataLoader:
         """
         file_path = os.path.join(self.dataset_path, self.data_type, f"{split}.json")
         with open(file_path, "r") as f:
-            return json.load(f)
+            return cast(List[Dict[Any, Any]], json.load(f))
 
     def extract_theorem(self, data: dict) -> Optional[Theorem]:
         url = data["url"]
@@ -46,7 +46,7 @@ class LeanDataLoader:
         repo = LeanGitRepo(url, commit)
         theorem = Theorem(repo, file_path, full_name)
 
-        return theorem
+        return cast(Theorem, theorem)
 
     def extract_tactics(self, data: dict) -> List[str]:
         traced_tactics = data["traced_tactics"]
