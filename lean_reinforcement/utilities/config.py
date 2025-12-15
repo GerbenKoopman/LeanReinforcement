@@ -28,6 +28,35 @@ class TrainingConfig:
     checkpoint_dir: Optional[str]
     use_wandb: bool
 
+    # Model Args
+    model_name: str = "kaiyuy/leandojo-lean4-tacgen-byt5-small"
+    num_tactics_to_expand: int = 8
+    max_rollout_depth: int = 30
+
+    @classmethod
+    def from_args(cls, args: argparse.Namespace) -> "TrainingConfig":
+        return cls(
+            data_type=args.data_type,
+            num_epochs=args.num_epochs,
+            num_theorems=args.num_theorems,
+            num_iterations=args.num_iterations,
+            max_steps=args.max_steps,
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
+            mcts_type=args.mcts_type,
+            model_name=args.model_name,
+            num_tactics_to_expand=args.num_tactics_to_expand,
+            max_rollout_depth=args.max_rollout_depth,
+            train_epochs=args.train_epochs,
+            train_value_head=args.train_value_head,
+            use_final_reward=args.use_final_reward,
+            save_training_data=args.save_training_data,
+            save_checkpoints=args.save_checkpoints,
+            resume=args.resume,
+            checkpoint_dir=args.checkpoint_dir,
+            use_wandb=args.use_wandb,
+        )
+
 
 def get_config() -> TrainingConfig:
     parser = argparse.ArgumentParser(
@@ -83,6 +112,24 @@ def get_config() -> TrainingConfig:
         choices=["guided_rollout", "alpha_zero"],
         default="guided_rollout",
         help="Which MCTS algorithm to use for self-play.",
+    )
+    parser.add_argument(
+        "--model-name",
+        type=str,
+        default="kaiyuy/leandojo-lean4-tacgen-byt5-small",
+        help="HuggingFace model name for tactic generation.",
+    )
+    parser.add_argument(
+        "--num-tactics-to-expand",
+        type=int,
+        default=8,
+        help="Number of tactics to expand in MCTS.",
+    )
+    parser.add_argument(
+        "--max-rollout-depth",
+        type=int,
+        default=30,
+        help="Max depth for MCTS rollout.",
     )
 
     # --- Training Args ---
@@ -142,21 +189,4 @@ def get_config() -> TrainingConfig:
     if args.checkpoint_dir:
         os.environ["CHECKPOINT_DIR"] = args.checkpoint_dir
 
-    return TrainingConfig(
-        data_type=args.data_type,
-        num_epochs=args.num_epochs,
-        num_theorems=args.num_theorems,
-        num_iterations=args.num_iterations,
-        max_steps=args.max_steps,
-        batch_size=args.batch_size,
-        num_workers=args.num_workers,
-        mcts_type=args.mcts_type,
-        train_epochs=args.train_epochs,
-        train_value_head=args.train_value_head,
-        use_final_reward=args.use_final_reward,
-        save_training_data=args.save_training_data,
-        save_checkpoints=args.save_checkpoints,
-        resume=args.resume,
-        checkpoint_dir=args.checkpoint_dir,
-        use_wandb=args.use_wandb,
-    )
+    return TrainingConfig.from_args(args)
