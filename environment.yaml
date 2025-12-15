@@ -14,7 +14,6 @@ dependencies:
   - ipykernel
   - pytorch
   - loguru
-  - networkx
   - lxml
   - pygithub
   - git-lfs
@@ -32,3 +31,5 @@ dependencies:
     - pre-commit
     - gymnasium
     - autoflake
+    - networkx
+    - types-tqdm

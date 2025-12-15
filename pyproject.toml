@@ -11,7 +11,7 @@ requires-python = ">=3.10"
 dependencies = [
     "lean-dojo",
     "wandb",
-    "pytorch-lightning",
+    "pytorch-lightning[extra]",
     "transformers",
     "gymnasium",
     "loguru",
@@ -19,7 +19,18 @@ dependencies = [
     "lxml",
     "deepspeed",
     "rank_bm25",
-    "vllm"
+    "vllm",
+    "tqdm",
+    "numpy",
+    "matplotlib",
+    "jupyter",
+    "ipykernel",
+    "torch",
+    "PyGithub",
+    "openai",
+    "pre-commit",
+    "autoflake",
+    "types-tqdm"
 ]
 
 [tool.setuptools]
