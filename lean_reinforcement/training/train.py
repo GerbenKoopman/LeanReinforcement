@@ -328,9 +328,18 @@ def main(args: TrainingConfig):
 
             # Stop workers to free memory
             logger.info("Stopping workers for this epoch...")
+
+            for _ in range(args.num_workers):
+                theorem_queue.put(None)
+
             for p in workers:
-                p.terminate()
-                p.join()
+                p.join(timeout=5)
+                if p.is_alive():
+                    logger.warning(
+                        f"Worker {p.pid} did not exit gracefully. Terminating."
+                    )
+                    p.terminate()
+                    p.join()
             workers = []
 
             # Drain queues to prevent stale data in next epoch

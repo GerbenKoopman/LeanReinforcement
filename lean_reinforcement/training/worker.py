@@ -86,6 +86,12 @@ def process_theorem(
         logger.error(f"Error during proof search for theorem {theorem.full_name}: {e}")
         return {}
     finally:
+        if env:
+            try:
+                env.close()
+            except Exception as e:
+                logger.error(f"Error closing environment: {e}")
+
         del runner
         del env
         gc.collect()
