@@ -30,9 +30,9 @@ repos:
 
   # 4. Mypy (Type Checker for Pylance-like attribute warnings)
   # Essential for catching issues like the "Cannot access attribute...".
-  # - repo: https://github.com/pre-commit/mirrors-mypy
-  #   rev: v1.8.0
-  #   hooks:
-  #     - id: mypy
-  #       # You may need to install typing stubs for popular libraries
-  #       additional_dependencies: ['types-requests', 'types-dataclasses']
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        # You may need to install typing stubs for popular libraries
+        additional_dependencies: ['types-requests', 'types-dataclasses']
