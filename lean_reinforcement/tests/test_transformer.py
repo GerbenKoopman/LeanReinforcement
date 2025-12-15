@@ -18,12 +18,12 @@ class TestTransformer(unittest.TestCase):
 
         self.transformer = Transformer()
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test that the Transformer is initialized with the correct model and tokenizer."""
         self.assertIsNotNone(self.transformer.tokenizer)
         self.assertIsNotNone(self.transformer.model)
 
-    def test_generate_tactics_single(self):
+    def test_generate_tactics_single(self) -> None:
         """Test generating a single tactic."""
         # Arrange
         state = "example_state"
@@ -56,7 +56,7 @@ class TestTransformer(unittest.TestCase):
         self.assertEqual(len(tactics), 1)
         self.assertEqual(tactics[0], expected_tactic)
 
-    def test_generate_tactics_multiple(self):
+    def test_generate_tactics_multiple(self) -> None:
         """Test generating multiple tactics."""
         # Arrange
         state = "example_state"
@@ -87,7 +87,7 @@ class TestTransformer(unittest.TestCase):
         self.assertEqual(len(tactics), n)
         self.assertEqual(tactics, expected_tactics)
 
-    def test_generate_tactics_with_probs(self):
+    def test_generate_tactics_with_probs(self) -> None:
         """Test generating tactics with probabilities."""
         # Arrange
         state = "example_state"
@@ -129,7 +129,7 @@ class TestTransformer(unittest.TestCase):
             self.assertGreaterEqual(prob, 0.0)
             self.assertLessEqual(prob, 1.0)
 
-    def test_generate_tactics_with_probs_probabilities_sum(self):
+    def test_generate_tactics_with_probs_probabilities_sum(self) -> None:
         """Test that probabilities from softmax sum to approximately 1.0."""
         # Arrange
         state = "example_state"
@@ -160,7 +160,7 @@ class TestTransformer(unittest.TestCase):
         prob_sum = sum(prob for _, prob in tactics_with_probs)
         self.assertAlmostEqual(prob_sum, 1.0, places=5)
 
-    def test_generate_tactics_beam_search_parameters(self):
+    def test_generate_tactics_beam_search_parameters(self) -> None:
         """Test that beam search parameters are correctly set."""
         # Arrange
         state = "example_state"
@@ -188,7 +188,7 @@ class TestTransformer(unittest.TestCase):
         self.assertEqual(call_kwargs["num_return_sequences"], 5)
         self.assertFalse(call_kwargs["early_stopping"])
 
-    def test_generate_tactics_with_torch_no_grad(self):
+    def test_generate_tactics_with_torch_no_grad(self) -> None:
         """Test that torch.no_grad() is used during generation."""
         # Arrange
         state = "example_state"

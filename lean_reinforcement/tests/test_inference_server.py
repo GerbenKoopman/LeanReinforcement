@@ -6,11 +6,11 @@ from lean_reinforcement.training.inference_server import InferenceServer
 
 
 class TestInferenceServer(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.transformer = MagicMock()
         self.value_head = MagicMock()
-        self.request_queue = queue.Queue()
-        self.response_queues = [queue.Queue() for _ in range(4)]
+        self.request_queue: queue.Queue = queue.Queue()
+        self.response_queues: list[queue.Queue] = [queue.Queue() for _ in range(4)]
         self.batch_size = 4
         self.server = InferenceServer(
             self.transformer,
@@ -20,11 +20,11 @@ class TestInferenceServer(unittest.TestCase):
             self.batch_size,
         )
 
-    def test_process_requests_empty(self):
+    def test_process_requests_empty(self) -> None:
         processed = self.server.process_requests()
         self.assertFalse(processed)
 
-    def test_process_requests_single_batch(self):
+    def test_process_requests_single_batch(self) -> None:
         # Setup a request
         # Request format: (worker_id, req_type, payload)
         worker_id = 0
@@ -51,7 +51,7 @@ class TestInferenceServer(unittest.TestCase):
         response = self.response_queues[worker_id].get_nowait()
         self.assertEqual(response, ["tactic1"])
 
-    def test_process_requests_mixed_batch(self):
+    def test_process_requests_mixed_batch(self) -> None:
         # Add requests of different types
         # 1. generate_tactics
         self.request_queue.put((0, "generate_tactics", ("s1", 1)))
@@ -73,7 +73,7 @@ class TestInferenceServer(unittest.TestCase):
         self.assertEqual(self.response_queues[0].get_nowait(), ["t1"])
         self.assertEqual(self.response_queues[1].get_nowait(), 0.5)
 
-    def test_predict_value_batch(self):
+    def test_predict_value_batch(self) -> None:
         # Test batching of predict_value
         self.request_queue.put((0, "predict_value", ("s1",)))
         self.request_queue.put((1, "predict_value", ("s2",)))
@@ -91,7 +91,7 @@ class TestInferenceServer(unittest.TestCase):
         self.assertEqual(self.response_queues[0].get_nowait(), 0.1)
         self.assertEqual(self.response_queues[1].get_nowait(), 0.2)
 
-    def test_encode_states(self):
+    def test_encode_states(self) -> None:
         self.request_queue.put((0, "encode_states", (["s1"],)))
 
         # Mock return value needs to be a tensor
@@ -106,7 +106,7 @@ class TestInferenceServer(unittest.TestCase):
         res = self.response_queues[0].get_nowait()
         self.assertTrue(torch.equal(res, mock_tensor))
 
-    def test_predict_from_features(self):
+    def test_predict_from_features(self) -> None:
         feature = torch.tensor([1.0])
         self.request_queue.put((0, "predict_from_features", (feature,)))
 
@@ -119,7 +119,7 @@ class TestInferenceServer(unittest.TestCase):
         res = self.response_queues[0].get_nowait()
         self.assertEqual(res, 0.9)
 
-    def test_mixed_n_batching(self):
+    def test_mixed_n_batching(self) -> None:
         # Test that requests with different 'n' are not batched together
         req_type = "generate_tactics"
 
@@ -156,7 +156,7 @@ class TestInferenceServer(unittest.TestCase):
         self.assertEqual(args2[0], ["state2"])
         self.assertEqual(kwargs2["n"], 10)
 
-    def test_oom_handling(self):
+    def test_oom_handling(self) -> None:
         # Test that OOM is handled by splitting the batch
         req_type = "generate_tactics_batch"
         # Create a batch of 4 states
@@ -190,7 +190,7 @@ class TestInferenceServer(unittest.TestCase):
         res = self.response_queues[0].get_nowait()
         self.assertEqual(len(res), 4)
 
-    def test_oom_handling_persistent(self):
+    def test_oom_handling_persistent(self) -> None:
         # Test that max_safe_batch_size is remembered
         self.server.batch_size = 1  # Process one request at a time
 

@@ -33,7 +33,7 @@ class TestValueHead(unittest.TestCase):
 
         self.value_head = ValueHead(mock_transformer)
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         # Check if encoder parameters are frozen
         for param in self.value_head.encoder.parameters():
             self.assertFalse(param.requires_grad)
@@ -42,7 +42,7 @@ class TestValueHead(unittest.TestCase):
         for param in self.value_head.value_head.parameters():
             self.assertTrue(param.requires_grad)
 
-    def test_encode_states(self):
+    def test_encode_states(self) -> None:
         # Arrange
         test_list = ["string1", "string2"]
         input_ids = torch.tensor([[1, 2], [3, 4]])
@@ -73,7 +73,7 @@ class TestValueHead(unittest.TestCase):
         self.mock_encoder.assert_called_once()
         self.assertEqual(features.shape, (2, 1472))
 
-    def test_predict(self):
+    def test_predict(self) -> None:
         # Arrange
         state_str = "state"
 
@@ -97,7 +97,7 @@ class TestValueHead(unittest.TestCase):
             self.assertIsInstance(value, float)
             self.assertAlmostEqual(value, torch.tanh(torch.tensor(0.5)).item())
 
-    def test_value_head_forward(self):
+    def test_value_head_forward(self) -> None:
         # Arrange
         # Create pre-computed features with the expected dimension (1, 1472)
         features = torch.randn(1, 1472)

@@ -5,7 +5,7 @@ from lean_reinforcement.utilities.config import get_config, TrainingConfig
 
 
 class TestConfig(unittest.TestCase):
-    def test_defaults(self):
+    def test_defaults(self) -> None:
         """Test that default values are set correctly."""
         with patch.object(sys, "argv", ["prog"]):
             config = get_config()
@@ -15,7 +15,7 @@ class TestConfig(unittest.TestCase):
             self.assertEqual(config.mcts_type, "guided_rollout")
             self.assertTrue(config.train_value_head)
 
-    def test_custom_args(self):
+    def test_custom_args(self) -> None:
         """Test that command line arguments override defaults."""
         test_args = [
             "prog",

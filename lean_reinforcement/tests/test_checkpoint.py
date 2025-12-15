@@ -6,7 +6,7 @@ from lean_reinforcement.utilities.config import TrainingConfig
 
 
 class TestCheckpoint(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.mock_value_head = MagicMock()
         self.checkpoint_dir = Path("/tmp/checkpoints")
         self.args = TrainingConfig(

@@ -6,7 +6,7 @@ from lean_dojo import TacticState
 
 
 class TestParallelMCTS(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.env = MagicMock()
         self.env.current_state = TacticState("pp", 0, "id")
         self.env.theorem = MagicMock()
@@ -16,7 +16,7 @@ class TestParallelMCTS(unittest.TestCase):
 
         self.mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
 
-    def test_virtual_loss(self):
+    def test_virtual_loss(self) -> None:
         node = Node(TacticState("pp", 0, "id"))
 
         self.assertEqual(self.mcts._get_virtual_loss(node), 0)
@@ -33,7 +33,7 @@ class TestParallelMCTS(unittest.TestCase):
         self.mcts._remove_virtual_loss(node)
         self.assertEqual(self.mcts._get_virtual_loss(node), 0)
 
-    def test_expand_batch(self):
+    def test_expand_batch(self) -> None:
         # Setup nodes
         node1 = Node(TacticState("pp1", 0, "id1"))
         node2 = Node(TacticState("pp2", 0, "id2"))
@@ -64,7 +64,7 @@ class TestParallelMCTS(unittest.TestCase):
         # Verify batch generation called
         self.transformer.generate_tactics_with_probs_batch.assert_called_once()
 
-    def test_simulate_batch(self):
+    def test_simulate_batch(self) -> None:
         node1 = Node(TacticState("pp1", 0, "id1"))
         node2 = Node(TacticState("pp2", 0, "id2"))
         nodes = [node1, node2]

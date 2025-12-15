@@ -5,7 +5,7 @@ from lean_reinforcement.agent.transformer import Transformer
 
 
 class TestBatchTransformer(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.tokenizer_patcher = patch(
             "lean_reinforcement.agent.transformer.AutoTokenizer.from_pretrained"
         )
@@ -27,11 +27,11 @@ class TestBatchTransformer(unittest.TestCase):
 
         self.transformer = Transformer()
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         self.tokenizer_patcher.stop()
         self.model_patcher.stop()
 
-    def test_generate_tactics_batch(self):
+    def test_generate_tactics_batch(self) -> None:
         states = ["state1", "state2"]
         n = 2
 
@@ -61,7 +61,7 @@ class TestBatchTransformer(unittest.TestCase):
             states, return_tensors="pt", padding=True, truncation=True, max_length=1024
         )
 
-    def test_generate_tactics_with_probs_batch(self):
+    def test_generate_tactics_with_probs_batch(self) -> None:
         states = ["state1"]
         n = 2
 

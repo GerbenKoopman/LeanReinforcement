@@ -6,7 +6,7 @@ from lean_reinforcement.agent.transformer import TransformerProtocol
 
 
 class TestQueueProxyTransformer(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.request_queue = MagicMock()
         self.response_queue = MagicMock()
         self.worker_id = 1
@@ -14,10 +14,10 @@ class TestQueueProxyTransformer(unittest.TestCase):
             self.request_queue, self.response_queue, self.worker_id
         )
 
-    def test_is_transformer_protocol(self):
+    def test_is_transformer_protocol(self) -> None:
         self.assertIsInstance(self.proxy, TransformerProtocol)
 
-    def test_generate_tactics(self):
+    def test_generate_tactics(self) -> None:
         state = "example_state"
         n = 5
         expected_result = ["tactic1", "tactic2"]
@@ -30,7 +30,7 @@ class TestQueueProxyTransformer(unittest.TestCase):
         )
         self.assertEqual(result, expected_result)
 
-    def test_generate_tactics_with_probs(self):
+    def test_generate_tactics_with_probs(self) -> None:
         state = "example_state"
         n = 5
         expected_result = [("tactic1", 0.9), ("tactic2", 0.1)]
@@ -43,7 +43,7 @@ class TestQueueProxyTransformer(unittest.TestCase):
         )
         self.assertEqual(result, expected_result)
 
-    def test_generate_tactics_batch(self):
+    def test_generate_tactics_batch(self) -> None:
         states = ["state1", "state2"]
         n = 2
         expected_result = [["t1", "t2"], ["t3", "t4"]]
@@ -56,7 +56,7 @@ class TestQueueProxyTransformer(unittest.TestCase):
         )
         self.assertEqual(result, expected_result)
 
-    def test_generate_tactics_with_probs_batch(self):
+    def test_generate_tactics_with_probs_batch(self) -> None:
         states = ["state1"]
         n = 1
         expected_result = [[("t1", 1.0)]]
@@ -71,7 +71,7 @@ class TestQueueProxyTransformer(unittest.TestCase):
 
 
 class TestQueueProxyValueHead(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.request_queue = MagicMock()
         self.response_queue = MagicMock()
         self.worker_id = 2
@@ -79,7 +79,7 @@ class TestQueueProxyValueHead(unittest.TestCase):
             self.request_queue, self.response_queue, self.worker_id
         )
 
-    def test_predict(self):
+    def test_predict(self) -> None:
         state = "state"
         expected_result = 0.5
         self.response_queue.get.return_value = expected_result
@@ -91,7 +91,7 @@ class TestQueueProxyValueHead(unittest.TestCase):
         )
         self.assertEqual(result, expected_result)
 
-    def test_predict_batch(self):
+    def test_predict_batch(self) -> None:
         states = ["s1", "s2"]
         expected_result = [0.1, 0.9]
         self.response_queue.get.return_value = expected_result
@@ -103,7 +103,7 @@ class TestQueueProxyValueHead(unittest.TestCase):
         )
         self.assertEqual(result, expected_result)
 
-    def test_encode_states(self):
+    def test_encode_states(self) -> None:
         states = ["s1"]
         expected_result = torch.tensor([1.0, 2.0])
         self.response_queue.get.return_value = expected_result
@@ -115,7 +115,7 @@ class TestQueueProxyValueHead(unittest.TestCase):
         )
         self.assertTrue(torch.equal(result, expected_result))
 
-    def test_predict_from_features(self):
+    def test_predict_from_features(self) -> None:
         features = torch.tensor([1.0])
         expected_result = 0.3
         self.response_queue.get.return_value = expected_result
@@ -127,7 +127,7 @@ class TestQueueProxyValueHead(unittest.TestCase):
         )
         self.assertEqual(result, expected_result)
 
-    def test_predict_from_features_batch(self):
+    def test_predict_from_features_batch(self) -> None:
         features = torch.tensor([[1.0], [2.0]])
         expected_result = [0.3, 0.4]
         self.response_queue.get.return_value = expected_result

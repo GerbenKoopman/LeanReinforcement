@@ -9,7 +9,7 @@ from lean_reinforcement.utilities.dataloader import LeanDataLoader
 
 
 class TestDataLoader(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.dataset_path = "test_dataset"
         self.data_type = "test_type"
         self.jsonl_path = os.path.join(self.dataset_path, "corpus.jsonl")
@@ -66,7 +66,7 @@ class TestDataLoader(unittest.TestCase):
             MockLeanGitRepo.return_value, "test_file.lean", "test_theorem"
         )
 
-    def test_extract_tactics(self):
+    def test_extract_tactics(self) -> None:
         # Arrange
         mock_corpus = MagicMock()
         loader = LeanDataLoader(corpus=mock_corpus)
@@ -99,7 +99,7 @@ class TestDataLoader(unittest.TestCase):
         MockLeanGitRepo.assert_called_once_with(url, commit)
         mock_trace.assert_called_once_with(MockLeanGitRepo.return_value)
 
-    def test_get_premises(self):
+    def test_get_premises(self) -> None:
         # Arrange
         mock_corpus = MagicMock()
         mock_corpus.get_accessible_premises.return_value = ["p1", "p2"]

@@ -26,15 +26,15 @@ class TestLeanDojoEnv(unittest.TestCase):
         # Instantiate the environment
         self.env = LeanDojoEnv(self.theorem, self.theorem_pos)
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         # Assert that dependencies were called correctly
         self.assertEqual(self.env.current_state, self.initial_state)
 
-    def test_reset(self):
+    def test_reset(self) -> None:
         self.env.reset()
         self.mock_dojo.__enter__.assert_called()
 
-    def test_step_tactic_state(self):
+    def test_step_tactic_state(self) -> None:
         # Arrange
         action = "test_tactic"
         next_tactic_state = MagicMock(spec=TacticState)
@@ -48,10 +48,10 @@ class TestLeanDojoEnv(unittest.TestCase):
         self.mock_dojo.run_tac.assert_called_once_with(self.initial_state, action)
         self.assertEqual(self.env.current_state, next_tactic_state)
         self.assertEqual(obs, "next_state_pp")
-        self.assertEqual(reward, 0.1)
+        self.assertEqual(reward, 0.0)
         self.assertFalse(done)
 
-    def test_step_proof_finished(self):
+    def test_step_proof_finished(self) -> None:
         # Arrange
         action = "finish_proof_tactic"
         proof_finished_state = MagicMock(spec=ProofFinished)
@@ -66,7 +66,7 @@ class TestLeanDojoEnv(unittest.TestCase):
         self.assertEqual(reward, 1.0)
         self.assertTrue(done)
 
-    def test_step_lean_error(self):
+    def test_step_lean_error(self) -> None:
         # Arrange
         action = "error_tactic"
         lean_error_state = MagicMock(spec=LeanError)
@@ -78,7 +78,7 @@ class TestLeanDojoEnv(unittest.TestCase):
 
         # Assert
         self.assertEqual(obs, str(lean_error_state))
-        self.assertEqual(reward, -0.1)
+        self.assertEqual(reward, -1.0)
         self.assertTrue(done)
 
 

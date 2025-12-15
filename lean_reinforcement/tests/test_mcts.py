@@ -12,7 +12,7 @@ from lean_reinforcement.agent.value_head import ValueHead
 
 
 class TestNode(unittest.TestCase):
-    def test_node_initialization(self):
+    def test_node_initialization(self) -> None:
         state = Mock(spec=TacticState)
         node = Node(state)
         self.assertEqual(node.state, state)
@@ -23,14 +23,14 @@ class TestNode(unittest.TestCase):
         self.assertFalse(node.is_terminal)
         self.assertIsNone(node.untried_actions)
 
-    def test_node_value(self):
+    def test_node_value(self) -> None:
         node = Node(Mock(spec=TacticState))
         self.assertEqual(node.value(), 0.0)
         node.visit_count = 10
         node.max_value = 0.8
         self.assertEqual(node.value(), 0.8)
 
-    def test_is_fully_expanded(self):
+    def test_is_fully_expanded(self) -> None:
         node = Node(Mock(spec=TacticState))
         self.assertFalse(node.is_fully_expanded())
         node.untried_actions = ["tactic1", "tactic2"]
@@ -38,7 +38,7 @@ class TestNode(unittest.TestCase):
         node.untried_actions = []
         self.assertTrue(node.is_fully_expanded())
 
-    def test_is_terminal(self):
+    def test_is_terminal(self) -> None:
         self.assertFalse(Node(Mock(spec=TacticState)).is_terminal)
         self.assertTrue(Node(Mock(spec=ProofFinished)).is_terminal)
         self.assertTrue(Node(Mock(spec=LeanError)).is_terminal)
@@ -57,16 +57,16 @@ class MockLeanDojoEnv(MagicMock):
 
 
 class TestBaseMCTS(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.env = MockLeanDojoEnv()
         self.transformer = Mock(spec=Transformer)
 
-    def test_base_mcts_initialization(self):
+    def test_base_mcts_initialization(self) -> None:
         mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
         self.assertIsInstance(mcts.root, Node)
         self.assertEqual(mcts.root.state, self.env.current_state)
 
-    def test_backpropagate(self):
+    def test_backpropagate(self) -> None:
         mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
         node1 = Node(Mock(spec=TacticState))
         node2 = Node(Mock(spec=TacticState), parent=node1)
@@ -81,7 +81,7 @@ class TestBaseMCTS(unittest.TestCase):
         self.assertEqual(node1.visit_count, 1)
         self.assertEqual(node1.max_value, 0.5)
 
-    def test_move_root(self):
+    def test_move_root(self) -> None:
         mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
         root = mcts.root
 
@@ -112,12 +112,12 @@ class TestBaseMCTS(unittest.TestCase):
 
 
 class TestMCTSGuidedRollout(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.env = MockLeanDojoEnv()
         self.transformer = Mock(spec=Transformer)
         self.mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
 
-    def test_puct_score(self):
+    def test_puct_score(self) -> None:
         parent = Node(Mock(spec=TacticState))
         parent.visit_count = 10
         child = Node(Mock(spec=TacticState), parent=parent)
@@ -131,12 +131,12 @@ class TestMCTSGuidedRollout(unittest.TestCase):
         )
         self.assertAlmostEqual(score, expected_score, places=5)
 
-    def test_expand(self):
+    def test_expand(self) -> None:
         state = Mock(spec=TacticState)
         state.pp = "state_pp"
         node = Node(state)
         self.transformer.generate_tactics_with_probs.return_value = [("tactic1", 0.5)]
-        self.env.dojo.run_tac.return_value = Mock(spec=TacticState)
+        self.env.run_tactic_stateless = Mock(return_value=Mock(spec=TacticState))
 
         child = self.mcts._expand(node)
 
@@ -145,14 +145,14 @@ class TestMCTSGuidedRollout(unittest.TestCase):
         self.assertEqual(child.action, "tactic1")
         self.assertEqual(child.prior_p, 0.5)
         self.transformer.generate_tactics_with_probs.assert_called_once()
-        self.env.dojo.run_tac.assert_called_once_with(state, "tactic1")
+        self.env.run_tactic_stateless.assert_called_once_with(state, "tactic1")
 
-    def test_simulate_proof_finished(self):
+    def test_simulate_proof_finished(self) -> None:
         node = Node(Mock(spec=ProofFinished))
         reward = self.mcts._simulate(node)
         self.assertEqual(reward, 1.0)
 
-    def test_simulate_rollout(self):
+    def test_simulate_rollout(self) -> None:
         initial_state = Mock(spec=TacticState)
         initial_state.pp = "initial_state"
         node = Node(initial_state)
@@ -162,18 +162,20 @@ class TestMCTSGuidedRollout(unittest.TestCase):
         # First step in rollout leads to another tactic state
         intermediate_state = Mock(spec=TacticState)
         intermediate_state.pp = "intermediate_state"
-        self.env.dojo.run_tac.side_effect = [
-            intermediate_state,
-            Mock(spec=ProofFinished),
-        ]
+        self.env.run_tactic_stateless = Mock(
+            side_effect=[
+                intermediate_state,
+                Mock(spec=ProofFinished),
+            ]
+        )
 
         reward = self.mcts._simulate(node)
-        self.assertEqual(reward, 1.0)
-        self.assertEqual(self.env.dojo.run_tac.call_count, 2)
+        self.assertAlmostEqual(reward, 0.98)
+        self.assertEqual(self.env.run_tactic_stateless.call_count, 2)
 
 
 class TestMCTSAlphaZero(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.env = MockLeanDojoEnv()
         self.transformer = Mock(spec=Transformer)
         self.value_head = Mock(spec=ValueHead)
@@ -181,7 +183,7 @@ class TestMCTSAlphaZero(unittest.TestCase):
             value_head=self.value_head, env=self.env, transformer=self.transformer
         )
 
-    def test_puct_score(self):
+    def test_puct_score(self) -> None:
         parent = Node(Mock(spec=TacticState))
         parent.visit_count = 10
 
@@ -206,7 +208,7 @@ class TestMCTSAlphaZero(unittest.TestCase):
         )
         self.assertAlmostEqual(score_unvisited, expected_score_unvisited, places=5)
 
-    def test_expand_alphazero(self):
+    def test_expand_alphazero(self) -> None:
         state = Mock(spec=TacticState)
         state.pp = "state_pp"
         node = Node(state)
@@ -227,7 +229,7 @@ class TestMCTSAlphaZero(unittest.TestCase):
         self.assertEqual(node.children[1].prior_p, 0.4)
         self.assertTrue(node.is_fully_expanded())
 
-    def test_simulate_alphazero(self):
+    def test_simulate_alphazero(self) -> None:
         state = Mock(spec=TacticState)
         state.pp = "state_pp"
         node = Node(state)

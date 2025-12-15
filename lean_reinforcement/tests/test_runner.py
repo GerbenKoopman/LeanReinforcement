@@ -10,7 +10,7 @@ from lean_reinforcement.agent.transformer import Transformer
 
 
 class TestAgentRunner(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.env = MagicMock(spec=LeanDojoEnv)
         self.transformer = Mock(spec=Transformer)
 

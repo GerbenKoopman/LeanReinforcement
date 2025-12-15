@@ -9,7 +9,7 @@ from lean_reinforcement.agent.mcts.alphazero import MCTS_AlphaZero
 
 
 class TestWorker(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.args = TrainingConfig(
             data_type="novel_premises",
             num_epochs=1,
