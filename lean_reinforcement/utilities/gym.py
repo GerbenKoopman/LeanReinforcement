@@ -11,6 +11,7 @@ from lean_dojo import (
     ProofFinished,
     LeanError,
     DojoInitError,
+    ProofGivenUp,
 )
 from lean_dojo.interaction.dojo import DojoTacticTimeoutError
 from ReProver.common import Pos
@@ -47,16 +48,7 @@ class LeanDojoEnv:
         # Interact with Lean
         assert isinstance(self.current_state, TacticState)
 
-        try:
-            next_state = self.dojo.run_tac(self.current_state, action)
-        except DojoTacticTimeoutError:
-            logger.warning(f"Tactic timed out: {action[:100]}")
-            # Treat timeout as an error state
-            next_state = LeanError(error="Tactic execution timed out")
-        except Exception as e:
-            logger.error(f"Error running tactic '{action[:100]}': {e}")
-            next_state = LeanError(error=f"Exception: {str(e)}")
-
+        next_state = self.run_tactic_stateless(self.current_state, action)
         self.current_state = next_state
 
         if isinstance(next_state, LeanError):  # Error occurred
@@ -76,7 +68,26 @@ class LeanDojoEnv:
 
         return observation, reward, done
 
-    def close(self):
+    def run_tactic_stateless(
+        self, state: TacticState, action: str
+    ) -> TacticState | ProofFinished | LeanError | ProofGivenUp:
+        """
+        Run a tactic on a given state without modifying the environment's current state.
+        Handles timeouts and exceptions.
+        """
+        try:
+            next_state = self.dojo.run_tac(state, action)
+        except DojoTacticTimeoutError:
+            logger.warning(f"Tactic timed out: {action[:100]}")
+            # Treat timeout as an error state
+            next_state = LeanError(error="Tactic execution timed out")
+        except Exception as e:
+            logger.error(f"Error running tactic '{action[:100]}': {e}")
+            next_state = LeanError(error=f"Exception: {str(e)}")
+
+        return next_state
+
+    def close(self) -> None:
         """Explicitly clean up the last running 'lean' process."""
         if hasattr(self, "dojo") and self.dojo is not None:
             try:
@@ -87,6 +98,6 @@ class LeanDojoEnv:
         self.dojo: Dojo = None  # type: ignore
         logger.info("Environment closed.")
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Ensure cleanup when object is garbage collected."""
         self.close()
