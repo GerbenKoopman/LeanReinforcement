@@ -28,11 +28,15 @@ repos:
       - id: flake8
         args: ["--max-line-length=88", "--ignore=E501,W503,E203,E704"]
 
-  # 4. Mypy (Type Checker for Pylance-like attribute warnings)
-  # Essential for catching issues like the "Cannot access attribute...".
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
+  # 4. Mypy (Local)
+  # Uses the 'mypy' installed in your active environment so it can see
+  # installed packages like torch, transformers, etc.
+  - repo: local
     hooks:
       - id: mypy
+        name: mypy
+        entry: python -m mypy
+        language: system
+        types: [python]
+        # Uses your existing config file
         args: ["--config-file=mypy.ini"]
-        additional_dependencies: ['types-requests']
