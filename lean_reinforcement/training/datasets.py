@@ -2,8 +2,13 @@
 PyTorch Datasets for training the policy and value heads.
 """
 
-from typing import List, Dict, Any
+from typing import List, Dict, Any, TypedDict
 from torch.utils.data import Dataset
+
+
+class ValueData(TypedDict):
+    state: str
+    value_target: float
 
 
 class ValueHeadDataset(Dataset):
@@ -15,7 +20,7 @@ class ValueHeadDataset(Dataset):
     def __len__(self) -> int:
         return len(self.data)
 
-    def __getitem__(self, idx: int) -> Dict[str, Any]:
+    def __getitem__(self, idx: int) -> ValueData:
         item = self.data[idx]
         return {
             "state": item["state"],

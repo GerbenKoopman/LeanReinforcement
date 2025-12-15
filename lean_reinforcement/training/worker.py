@@ -2,7 +2,7 @@
 Worker module for parallel theorem proving.
 """
 
-from typing import Union, Dict, Any, Optional
+from typing import Union, Dict, Any, Optional, Type
 from loguru import logger
 import torch.multiprocessing as mp
 import gc
@@ -16,6 +16,7 @@ from lean_reinforcement.utilities.dataloader import LeanDataLoader
 from lean_reinforcement.utilities.gym import LeanDojoEnv
 from lean_reinforcement.utilities.config import TrainingConfig
 from lean_reinforcement.agent.runner import AgentRunner
+from lean_reinforcement.agent.mcts.base_mcts import BaseMCTS
 from lean_reinforcement.agent.mcts.guidedrollout import MCTS_GuidedRollout
 from lean_reinforcement.agent.mcts.alphazero import MCTS_AlphaZero
 from lean_reinforcement.agent.proxies import QueueProxyTransformer, QueueProxyValueHead
@@ -52,16 +53,19 @@ def process_theorem(
         )
         return {}
 
+    mcts_class: Type[BaseMCTS]
+    mcts_kwargs: Dict[str, Any]
+
     if args.mcts_type == "alpha_zero":
         mcts_class = MCTS_AlphaZero
-        mcts_kwargs: Dict[str, Union[QueueProxyValueHead, int, None]] = {
-            "value_head": value_head
-        }
+        mcts_kwargs = {"value_head": value_head}
     else:
         mcts_class = MCTS_GuidedRollout
-        mcts_kwargs: Dict[str, Union[QueueProxyValueHead, int, None]] = {}
+        mcts_kwargs = {}
 
     mcts_kwargs["batch_size"] = args.batch_size
+    mcts_kwargs["num_tactics_to_expand"] = args.num_tactics_to_expand
+    mcts_kwargs["max_rollout_depth"] = args.max_rollout_depth
 
     runner = AgentRunner(
         env=env,
@@ -109,6 +113,9 @@ def worker_loop(
     """
     Worker process loop.
     """
+    # Configure logging for this worker
+    logger.add(f"logs/worker_{worker_id}.log", rotation="10 MB")
+
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
     if isinstance(corpus_path, str):
