@@ -34,5 +34,5 @@ repos:
     rev: v1.8.0
     hooks:
       - id: mypy
-        # You may need to install typing stubs for popular libraries
-        additional_dependencies: ['types-requests', 'types-dataclasses']
+        args: ["--config-file=mypy.ini"]
+        additional_dependencies: ['types-requests']
