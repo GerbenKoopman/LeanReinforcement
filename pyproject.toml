@@ -30,7 +30,9 @@ dependencies = [
     "openai",
     "pre-commit",
     "autoflake",
-    "types-tqdm"
+    "types-tqdm",
+    "types-setuptools",
+    "cython",
 ]
 
 [tool.setuptools]

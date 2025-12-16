@@ -33,3 +33,6 @@ dependencies:
     - autoflake
     - networkx
     - types-tqdm
+    - types-setuptools
+    - cython
+    
