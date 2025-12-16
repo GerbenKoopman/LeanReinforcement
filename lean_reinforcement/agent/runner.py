@@ -10,8 +10,7 @@ from loguru import logger
 
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
-from lean_reinforcement.agent.mcts.base_mcts import BaseMCTS
-from lean_reinforcement.agent.mcts.guidedrollout import MCTS_GuidedRollout
+from lean_reinforcement.agent.mcts import BaseMCTS, MCTS_GuidedRollout
 from lean_reinforcement.utilities.gym import LeanDojoEnv
 from lean_reinforcement.agent.transformer import TransformerProtocol
 
