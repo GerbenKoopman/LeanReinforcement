@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lean_reinforcement"
-version = "0.1.4"
+version = "0.2.0"
 description = "Reinforcement learning for Lean theorem proving"
 readme = "README.md"
 requires-python = ">=3.10"
