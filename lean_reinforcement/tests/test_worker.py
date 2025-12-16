@@ -5,7 +5,7 @@ from lean_reinforcement.utilities.config import TrainingConfig
 from lean_dojo import DojoInitError
 
 from lean_reinforcement.training.worker import process_theorem
-from lean_reinforcement.agent.mcts.alphazero import MCTS_AlphaZero
+from lean_reinforcement.agent.mcts import MCTS_AlphaZero
 
 
 class TestWorker(unittest.TestCase):

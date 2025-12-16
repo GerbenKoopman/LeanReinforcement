@@ -4,7 +4,7 @@ from unittest.mock import Mock, MagicMock, patch
 from lean_dojo import TacticState, ProofFinished
 
 from lean_reinforcement.agent.runner import AgentRunner
-from lean_reinforcement.agent.mcts.guidedrollout import MCTS_GuidedRollout
+from lean_reinforcement.agent.mcts import MCTS_GuidedRollout
 from lean_reinforcement.utilities.gym import LeanDojoEnv
 from lean_reinforcement.agent.transformer import Transformer
 
