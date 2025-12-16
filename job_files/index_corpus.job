@@ -26,7 +26,7 @@ set +a
 
 cd $HOME/lean_reinforcement
 
-srun python3 ReProver/retrieval/index.py \
+srun python3 -m ReProver.retrieval.index \
     --ckpt_path kaiyuy/leandojo-lean4-retriever-byt5-small \
     --corpus-path leandojo_benchmark_4/corpus.jsonl \
     --output-path $CORPUS_DIR/indexed_corpus.pkl
