@@ -1,0 +1,23 @@
+from typing import Any, List, Optional
+from lean_reinforcement.agent.mcts.mcts_cy.base_mcts_cy import BaseMCTS, Node
+
+class MCTS_AlphaZero(BaseMCTS):
+    value_head: Any
+    def __init__(
+        self,
+        value_head: Any,
+        env: Any,
+        transformer: Any,
+        exploration_weight: float = ...,
+        max_tree_nodes: int = ...,
+        batch_size: int = ...,
+        num_tactics_to_expand: int = ...,
+        max_rollout_depth: int = ...,
+        **kwargs: Any,
+    ) -> None: ...
+    def _puct_score(self, node: Node) -> float: ...
+    def _get_best_child(self, node: Node) -> Node: ...
+    def _expand(self, node: Node) -> Node: ...
+    def _expand_batch(self, nodes: List[Node]) -> List[Node]: ...
+    def _simulate(self, node: Node) -> float: ...
+    def _simulate_batch(self, nodes: List[Node]) -> List[float]: ...
