@@ -24,6 +24,8 @@ set -a
 source $HOME/lean_reinforcement/.env
 set +a
 
+cd $HOME/lean_reinforcement
+
 srun python3 ReProver/retrieval/index.py \
     --ckpt_path kaiyuy/leandojo-lean4-retriever-byt5-small \
     --corpus-path leandojo_benchmark_4/corpus.jsonl \
