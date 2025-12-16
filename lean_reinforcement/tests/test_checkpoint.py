@@ -18,6 +18,7 @@ class TestCheckpoint(unittest.TestCase):
             batch_size=16,
             num_workers=16,
             mcts_type="guided_rollout",
+            indexed_corpus_path=None,
             train_epochs=1,
             train_value_head=True,
             use_final_reward=False,

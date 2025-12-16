@@ -21,6 +21,7 @@ class TestWorker(unittest.TestCase):
             resume=False,
             checkpoint_dir=None,
             mcts_type="guided_rollout",
+            indexed_corpus_path=None,
             batch_size=16,
             num_iterations=10,
             max_steps=20,

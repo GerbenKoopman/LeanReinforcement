@@ -14,6 +14,7 @@ class TestTrainingConfig(unittest.TestCase):
             batch_size=4,
             num_workers=2,
             mcts_type="alpha_zero",
+            indexed_corpus_path=None,
             model_name="test/model",
             num_tactics_to_expand=4,
             max_rollout_depth=10,
