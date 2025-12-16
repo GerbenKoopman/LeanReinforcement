@@ -1,6 +1,7 @@
 import os
 import time
 import json
+import pickle
 import random
 import queue
 import gc
@@ -69,8 +70,20 @@ class Trainer:
 
     def _setup_data(self) -> None:
         logger.info(f"Loading data from 'leandojo_benchmark_4/{self.config.data_type}'")
-        corpus_path = os.path.join("leandojo_benchmark_4/corpus.jsonl")
-        self.corpus = Corpus(corpus_path)
+
+        if self.config.indexed_corpus_path and os.path.exists(
+            self.config.indexed_corpus_path
+        ):
+            logger.info(
+                f"Loading indexed corpus from {self.config.indexed_corpus_path}"
+            )
+            with open(self.config.indexed_corpus_path, "rb") as f:
+                indexed_corpus = pickle.load(f)
+            self.corpus = indexed_corpus.corpus
+        else:
+            corpus_path = os.path.join("leandojo_benchmark_4/corpus.jsonl")
+            self.corpus = Corpus(corpus_path)
+
         self.dataloader = LeanDataLoader(
             self.corpus,
             dataset_path="leandojo_benchmark_4",

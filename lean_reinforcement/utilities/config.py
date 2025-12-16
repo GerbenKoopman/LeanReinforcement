@@ -15,6 +15,7 @@ class TrainingConfig:
     batch_size: int
     num_workers: int
     mcts_type: str
+    indexed_corpus_path: Optional[str]
 
     # Training Args
     train_epochs: int
@@ -44,6 +45,7 @@ class TrainingConfig:
             batch_size=args.batch_size,
             num_workers=args.num_workers,
             mcts_type=args.mcts_type,
+            indexed_corpus_path=args.indexed_corpus_path,
             model_name=args.model_name,
             num_tactics_to_expand=args.num_tactics_to_expand,
             max_rollout_depth=args.max_rollout_depth,
@@ -112,6 +114,12 @@ def get_config() -> TrainingConfig:
         choices=["guided_rollout", "alpha_zero"],
         default="guided_rollout",
         help="Which MCTS algorithm to use for self-play.",
+    )
+    parser.add_argument(
+        "--indexed-corpus-path",
+        type=str,
+        default=None,
+        help="Path to a pickled IndexedCorpus file. If provided, loads corpus from this file instead of recomputing.",
     )
     parser.add_argument(
         "--model-name",
