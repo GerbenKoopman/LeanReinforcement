@@ -26,6 +26,10 @@ set +a
 
 cd $HOME/lean_reinforcement
 
+# Build Cython extensions
+echo "Building Cython extensions..."
+python3 setup.py build_ext --inplace
+
 echo "Starting training run with distributed environment..."
 srun python3 -m lean_reinforcement.training.train \
     --data-type novel_premises \
