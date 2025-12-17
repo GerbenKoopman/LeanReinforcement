@@ -3061,7 +3061,7 @@ static int __pyx_pw_18lean_reinforcement_5agent_4mcts_7mcts_cy_12alphazero_cy_14
     if (values[8]) {
       __pyx_v_max_time = __Pyx_PyFloat_AsFloat(values[8]); if (unlikely((__pyx_v_max_time == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 20, __pyx_L3_error)
     } else {
-      __pyx_v_max_time = ((float)600.0);
+      __pyx_v_max_time = ((float)1200.0);
     }
   }
   goto __pyx_L6_skip;

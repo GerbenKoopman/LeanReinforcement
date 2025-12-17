@@ -32,7 +32,7 @@ class MCTS_AlphaZero(BaseMCTS):
         batch_size: int = 8,
         num_tactics_to_expand: int = 8,
         max_rollout_depth: int = 30,
-        max_time: float = 600.0,
+        max_time: float = 1200.0,
         **kwargs,
     ):
         super().__init__(

@@ -6158,7 +6158,7 @@ static int __pyx_pw_18lean_reinforcement_5agent_4mcts_7mcts_cy_12base_mcts_cy_8B
     if (values[7]) {
       __pyx_v_max_time = __Pyx_PyFloat_AsFloat(values[7]); if (unlikely((__pyx_v_max_time == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 47, __pyx_L3_error)
     } else {
-      __pyx_v_max_time = ((float)600.0);
+      __pyx_v_max_time = ((float)1200.0);
     }
   }
   goto __pyx_L6_skip;
@@ -6201,7 +6201,7 @@ static int __pyx_pf_18lean_reinforcement_5agent_4mcts_7mcts_cy_12base_mcts_cy_8B
   __Pyx_RefNannySetupContext("__init__", 0);
 
   /* "lean_reinforcement/agent/mcts/mcts_cy/base_mcts_cy.pyx":49
- *         float max_time=600.0,
+ *         float max_time=1200.0,
  *     ):
  *         self.env = env             # <<<<<<<<<<<<<<
  *         self.transformer = transformer

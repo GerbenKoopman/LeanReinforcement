@@ -17,7 +17,7 @@ cdef class MCTS_AlphaZero(BaseMCTS):
         int batch_size=8,
         int num_tactics_to_expand=8,
         int max_rollout_depth=30,
-        float max_time=600.0,
+        float max_time=1200.0,
         **kwargs,
     ):
         super().__init__(
