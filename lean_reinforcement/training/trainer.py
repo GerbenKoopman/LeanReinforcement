@@ -5,7 +5,7 @@ import pickle
 import random
 import queue
 import gc
-from typing import List, Dict, Any, Optional
+from typing import List, Optional
 from dataclasses import asdict
 import torch
 import torch.optim as optim
@@ -27,6 +27,7 @@ from lean_reinforcement.utilities.analyze_training_data import (
     print_training_stats,
     save_training_data,
 )
+from lean_reinforcement.utilities.types import TrainingDataPoint, TheoremData
 from lean_reinforcement.agent.transformer import Transformer
 from lean_reinforcement.agent.value_head import ValueHead
 from lean_reinforcement.training.datasets import ValueHeadDataset
@@ -240,12 +241,12 @@ class Trainer:
 
     def _collect_data(
         self,
-        theorems_to_process: List[Any],
+        theorems_to_process: List[TheoremData],
         inference_server: InferenceServer,
         epoch: int,
-    ) -> List[Dict[str, Any]]:
+    ) -> List[TrainingDataPoint]:
         completed_theorems = 0
-        training_data_buffer: List[Dict[str, Any]] = []
+        training_data_buffer: List[TrainingDataPoint] = []
 
         temp_data_file = self.checkpoint_dir / f"temp_data_epoch_{epoch + 1}.jsonl"
         if os.path.exists(temp_data_file):
@@ -312,7 +313,7 @@ class Trainer:
         return training_data_buffer
 
     def _analyze_and_save_data(
-        self, training_data_buffer: List[Dict[str, Any]], epoch: int
+        self, training_data_buffer: List[TrainingDataPoint], epoch: int
     ):
         if self.config.train_value_head:
             stats = analyze_value_data(training_data_buffer)
@@ -324,7 +325,7 @@ class Trainer:
                 )
                 save_training_data(training_data_buffer, data_save_path)
 
-    def _train_value_head_epoch(self, training_data_buffer: List[Dict[str, Any]]):
+    def _train_value_head_epoch(self, training_data_buffer: List[TrainingDataPoint]):
         value_data = [d for d in training_data_buffer if d.get("type") == "value"]
         assert (
             self.value_head is not None
@@ -341,7 +342,7 @@ class Trainer:
     def _train_value_head_model(
         self,
         value_head: ValueHead,
-        data_buffer: List[Dict[str, Any]],
+        data_buffer: List[TrainingDataPoint],
         epochs: int = 1,
         batch_size: int = 32,
         use_wandb: bool = True,
@@ -350,7 +351,7 @@ class Trainer:
             logger.warning("Value Head training skipped: No data provided.")
             return
 
-        value_targets = [item["value_target"] for item in data_buffer]
+        value_targets = [item.get("value_target", 0.0) for item in data_buffer]
         avg_target = sum(value_targets) / len(value_targets)
         positive_samples = sum(1 for v in value_targets if v > 0)
         negative_samples = sum(1 for v in value_targets if v < 0)
@@ -362,13 +363,20 @@ class Trainer:
         logger.info(f"  Average target value: {avg_target:.4f}")
 
         avg_mcts = None
-        if "mcts_value" in data_buffer[0]:
-            mcts_values = [item["mcts_value"] for item in data_buffer]
+        # Check if mcts_value is available in the data
+        mcts_values = [
+            item["mcts_value"] for item in data_buffer if "mcts_value" in item
+        ]
+        if mcts_values:
             avg_mcts = sum(mcts_values) / len(mcts_values)
             logger.info(f"  Average MCTS value estimate: {avg_mcts:.4f}")
 
-        positive_data = [item for item in data_buffer if item["value_target"] > 0]
-        negative_data = [item for item in data_buffer if item["value_target"] < 0]
+        positive_data = [
+            item for item in data_buffer if item.get("value_target", 0.0) > 0
+        ]
+        negative_data = [
+            item for item in data_buffer if item.get("value_target", 0.0) < 0
+        ]
 
         if positive_data and negative_data:
             min_count = min(len(positive_data), len(negative_data))

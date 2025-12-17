@@ -2,16 +2,19 @@ from libc.math cimport sqrt
 from lean_reinforcement.agent.mcts.mcts_cy.base_mcts_cy cimport Node, Edge, BaseMCTS
 import math
 import torch
+from lean_reinforcement.agent.value_head import ValueHead
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
+from lean_reinforcement.utilities.gym import LeanDojoEnv
+from lean_reinforcement.agent.transformer import TransformerProtocol
 
 cdef class MCTS_AlphaZero(BaseMCTS):
     cdef public object value_head
 
     def __init__(
         self,
-        value_head,
-        env,
-        transformer,
+        value_head: ValueHead,
+        env: LeanDojoEnv,
+        transformer: TransformerProtocol,
         float exploration_weight=1.41421356,
         int max_tree_nodes=10000,
         int batch_size=8,

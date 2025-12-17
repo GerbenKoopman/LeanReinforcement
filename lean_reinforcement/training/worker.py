@@ -2,7 +2,7 @@
 Worker module for parallel theorem proving.
 """
 
-from typing import Union, Dict, Any, Optional, Type
+from typing import Union, Optional, Type
 from loguru import logger
 import torch.multiprocessing as mp
 import gc
@@ -18,15 +18,16 @@ from lean_reinforcement.utilities.config import TrainingConfig
 from lean_reinforcement.agent.runner import AgentRunner
 from lean_reinforcement.agent.mcts import BaseMCTS, MCTS_GuidedRollout, MCTS_AlphaZero
 from lean_reinforcement.agent.proxies import QueueProxyTransformer, QueueProxyValueHead
+from lean_reinforcement.utilities.types import TheoremData, WorkerResult, MCTSOptions
 
 
 def process_theorem(
-    thm_data: Dict[str, Any],
+    thm_data: TheoremData,
     dataloader: LeanDataLoader,
     transformer: QueueProxyTransformer,
     value_head: Optional[QueueProxyValueHead],
     args: TrainingConfig,
-) -> Dict[str, Any]:
+) -> WorkerResult:
     """
     Process a single theorem: initialize env, run agent, collect data.
     """
@@ -52,7 +53,7 @@ def process_theorem(
         return {}
 
     mcts_class: Type[BaseMCTS]
-    mcts_kwargs: Dict[str, Any]
+    mcts_kwargs: MCTSOptions
 
     if args.mcts_type == "alpha_zero":
         mcts_class = MCTS_AlphaZero

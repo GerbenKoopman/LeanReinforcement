@@ -1,9 +1,11 @@
 import math
 import time
 import torch
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Union
 from loguru import logger
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
+from lean_reinforcement.utilities.gym import LeanDojoEnv
+from lean_reinforcement.agent.transformer import TransformerProtocol
 
 cdef class Edge:
     def __init__(self, action, float prior, Node child):
@@ -14,7 +16,7 @@ cdef class Edge:
 
 cdef class Node:
 
-    def __init__(self, state):
+    def __init__(self, state: Union[TacticState, ProofFinished, LeanError, ProofGivenUp]):
         self.state = state
         # self.parent and self.action are removed for Graph Search
         # self.prior_p is moved to Edge
@@ -37,8 +39,8 @@ cdef class BaseMCTS:
 
     def __init__(
         self,
-        env,
-        transformer,
+        env: LeanDojoEnv,
+        transformer: TransformerProtocol,
         float exploration_weight=1.41421356,
         int max_tree_nodes=10000,
         int batch_size=8,

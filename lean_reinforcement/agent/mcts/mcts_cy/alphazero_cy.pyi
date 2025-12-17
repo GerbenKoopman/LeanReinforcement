@@ -1,13 +1,16 @@
 from typing import Any, List, Optional, Tuple
 from lean_reinforcement.agent.mcts.mcts_cy.base_mcts_cy import BaseMCTS, Node, Edge
+from lean_reinforcement.agent.value_head import ValueHead
+from lean_reinforcement.utilities.gym import LeanDojoEnv
+from lean_reinforcement.agent.transformer import TransformerProtocol
 
 class MCTS_AlphaZero(BaseMCTS):
-    value_head: Any
+    value_head: ValueHead
     def __init__(
         self,
-        value_head: Any,
-        env: Any,
-        transformer: Any,
+        value_head: ValueHead,
+        env: LeanDojoEnv,
+        transformer: TransformerProtocol,
         exploration_weight: float = ...,
         max_tree_nodes: int = ...,
         batch_size: int = ...,

@@ -1,11 +1,13 @@
 import unittest
 import os
+from pathlib import Path
 from unittest.mock import patch, mock_open, MagicMock
 
 from lean_dojo import Theorem
 from ReProver.common import Pos
 
 from lean_reinforcement.utilities.dataloader import LeanDataLoader
+from lean_reinforcement.utilities.types import TheoremData
 
 
 class TestDataLoader(unittest.TestCase):
@@ -15,13 +17,28 @@ class TestDataLoader(unittest.TestCase):
         self.jsonl_path = os.path.join(self.dataset_path, "corpus.jsonl")
 
         # Mock the file system
+        self.valid_item_dict = {
+            "url": "u",
+            "commit": "c",
+            "file_path": "f",
+            "full_name": "n",
+            "start": [1, 1],
+        }
+        import json
+
+        valid_item_str = json.dumps(self.valid_item_dict)
+
         self.mock_fs = {
             self.jsonl_path: '{"key": "value"}',
             os.path.join(
                 self.dataset_path, self.data_type, "train.json"
-            ): '[{"id": 1}]',
-            os.path.join(self.dataset_path, self.data_type, "test.json"): '[{"id": 2}]',
-            os.path.join(self.dataset_path, self.data_type, "val.json"): '[{"id": 3}]',
+            ): f"[{valid_item_str}]",
+            os.path.join(
+                self.dataset_path, self.data_type, "test.json"
+            ): f"[{valid_item_str}]",
+            os.path.join(
+                self.dataset_path, self.data_type, "val.json"
+            ): f"[{valid_item_str}]",
         }
 
     @patch("builtins.open", new_callable=mock_open)
@@ -40,9 +57,9 @@ class TestDataLoader(unittest.TestCase):
 
         # Assert
         self.assertEqual(loader.corpus, mock_corpus)
-        self.assertEqual(loader.train_data, [{"id": 1}])
-        self.assertEqual(loader.test_data, [{"id": 2}])
-        self.assertEqual(loader.val_data, [{"id": 3}])
+        self.assertEqual(loader.train_data, [self.valid_item_dict])
+        self.assertEqual(loader.test_data, [self.valid_item_dict])
+        self.assertEqual(loader.val_data, [self.valid_item_dict])
 
     @patch("lean_reinforcement.utilities.dataloader.LeanGitRepo")
     @patch("lean_reinforcement.utilities.dataloader.Theorem")
@@ -50,11 +67,12 @@ class TestDataLoader(unittest.TestCase):
         # Arrange
         mock_corpus = MagicMock()
         loader = LeanDataLoader(corpus=mock_corpus)
-        data = {
+        data: TheoremData = {
             "url": "test_url",
             "commit": "test_commit",
             "file_path": "test_file.lean",
             "full_name": "test_theorem",
+            "start": (0, 0),
         }
 
         # Act
@@ -63,7 +81,7 @@ class TestDataLoader(unittest.TestCase):
         # Assert
         MockLeanGitRepo.assert_called_once_with("test_url", "test_commit")
         MockTheorem.assert_called_once_with(
-            MockLeanGitRepo.return_value, "test_file.lean", "test_theorem"
+            MockLeanGitRepo.return_value, Path("test_file.lean"), "test_theorem"
         )
 
     def test_extract_tactics(self) -> None:

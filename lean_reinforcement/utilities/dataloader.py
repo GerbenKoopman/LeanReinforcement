@@ -4,10 +4,14 @@ Data loader for LeanDojo traced repositories and theorems.
 
 import os
 import json
-from typing import List, Optional, Dict, Any, cast
+from typing import List, Optional
+from pathlib import Path
 
 from lean_dojo import LeanGitRepo, TracedRepo, trace, Theorem
 from ReProver.common import Corpus, Pos
+
+from lean_reinforcement.utilities.types import TheoremData
+from lean_reinforcement.utilities.validation import is_list_of_theorem_data
 
 
 class LeanDataLoader:
@@ -26,27 +30,30 @@ class LeanDataLoader:
         self.test_data = self._load_split("test")
         self.val_data = self._load_split("val")
 
-    def _load_split(self, split: str) -> List[dict]:
+    def _load_split(self, split: str) -> List[TheoremData]:
         """
         Loads a specific split of the dataset (train, test, or val).
         """
         file_path = os.path.join(self.dataset_path, self.data_type, f"{split}.json")
         with open(file_path, "r") as f:
-            return cast(List[Dict[Any, Any]], json.load(f))
+            data = json.load(f)
+            if is_list_of_theorem_data(data):
+                return data
+            raise ValueError(f"Invalid data format in {file_path}")
 
-    def extract_theorem(self, data: dict) -> Optional[Theorem]:
+    def extract_theorem(self, data: TheoremData) -> Optional[Theorem]:
         url = data["url"]
         commit = data["commit"]
         file_path = data["file_path"]
         full_name = data["full_name"]
 
-        if any(x is None for x in [url, commit, file_path, full_name]):
+        if url is None or commit is None or file_path is None or full_name is None:
             return None
 
         repo = LeanGitRepo(url, commit)
-        theorem = Theorem(repo, file_path, full_name)
+        theorem = Theorem(repo, Path(file_path), full_name)
 
-        return cast(Theorem, theorem)
+        return theorem
 
     def extract_tactics(self, data: dict) -> List[str]:
         traced_tactics = data["traced_tactics"]

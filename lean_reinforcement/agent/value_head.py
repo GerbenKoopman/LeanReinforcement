@@ -6,7 +6,7 @@ value (win probability) of a given proof state.
 from typing_extensions import Self
 import torch
 import torch.nn as nn
-from typing import List, cast
+from typing import List
 import os
 from loguru import logger
 
@@ -41,16 +41,16 @@ class ValueHead(nn.Module):
 
         hidden_state = self.encoder(tokenized_s.input_ids).last_hidden_state
         lens = tokenized_s.attention_mask.sum(dim=1)
-        features = (hidden_state * tokenized_s.attention_mask.unsqueeze(2)).sum(
-            dim=1
-        ) / lens.unsqueeze(1)
+        features: torch.Tensor = (
+            hidden_state * tokenized_s.attention_mask.unsqueeze(2)
+        ).sum(dim=1) / lens.unsqueeze(1)
 
         # Clean up intermediate tensors
         del tokenized_s
         del hidden_state
         del lens
 
-        return cast(torch.Tensor, features)
+        return features
 
     @torch.no_grad()
     def predict(self, state_str: str) -> float:

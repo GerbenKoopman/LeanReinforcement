@@ -20,6 +20,8 @@ def mock_config() -> MagicMock:
     config.save_training_data = False
     config.save_checkpoints = False
     config.train_epochs = 1
+    config.indexed_corpus_path = None
+    config.use_final_reward = False
     return config
 
 
@@ -88,26 +90,8 @@ def test_trainer_train_loop(
     mock_dataloader_instance = mock_dataloader.return_value
     mock_dataloader_instance.train_data = ["thm1", "thm2"]
 
-    # Mock inference server process_requests to return False initially then True?
-    # Actually process_requests returns a boolean indicating if it processed something.
-    # We need to control the loop in _collect_data.
-    # The loop condition is `completed_theorems < len(theorems_to_process)`.
-    # We need result_queue.get_nowait() to return results to increment completed_theorems.
-
-    # mock_result_queue = MagicMock()
-    # First call raises Empty (simulating wait), second call returns result, third call raises Empty...
-    # But get_nowait is called in a loop.
-
-    # Let's just test that _run_epoch calls the right things.
     trainer = Trainer(mock_config)
 
-    # Mock _collect_data to avoid complex queue mocking for now
-    # Use object.__setattr__ to bypass method assignment restriction if necessary,
-    # or just mock the method on the instance if it's not a frozen dataclass or similar.
-    # Since Trainer is a normal class, we can just assign.
-    # However, mypy complains about assigning to a method.
-    # We can use a cast or type ignore, but user asked to avoid ignore.
-    # A cleaner way for testing is to subclass or use `unittest.mock.patch.object`.
     with patch.object(
         trainer,
         "_collect_data",
@@ -121,9 +105,6 @@ def test_trainer_train_loop(
         mock_loss = MagicMock()
         mock_loss.item.return_value = 0.5
         mock_mse_loss.return_value.return_value = mock_loss
-
-        # Mock _train_value_head
-        # trainer._train_value_head = MagicMock() # Don't mock this, we want to test the loop calling it
 
         trainer.train()
 

@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 from lean_reinforcement.utilities.config import TrainingConfig
+from lean_reinforcement.utilities.types import TheoremData
 
 from lean_dojo import DojoInitError
 
@@ -33,7 +34,13 @@ class TestWorker(unittest.TestCase):
         self.dataloader = MagicMock()
         self.transformer = MagicMock()
         self.value_head = MagicMock()
-        self.thm_data = {"start": [0, 0]}
+        self.thm_data: TheoremData = {
+            "url": "test_url",
+            "commit": "test_commit",
+            "file_path": "test_file.lean",
+            "full_name": "test_theorem",
+            "start": (0, 0),
+        }
 
     @patch("lean_reinforcement.training.worker.LeanDojoEnv")
     @patch("lean_reinforcement.training.worker.AgentRunner")

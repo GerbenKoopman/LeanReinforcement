@@ -3,13 +3,16 @@ Utility functions to analyze and visualize training data collected from MCTS rol
 """
 
 import json
-from typing import List, Dict, Any, cast
+from typing import List, Dict
 from pathlib import Path
 import numpy as np
 from loguru import logger
 
+from lean_reinforcement.utilities.types import TrainingDataPoint
+from lean_reinforcement.utilities.validation import is_list_of_training_data_point
 
-def analyze_value_data(training_data: List[Dict]) -> Dict:
+
+def analyze_value_data(training_data: List[TrainingDataPoint]) -> Dict:
     """
     Analyze value head training data and compute statistics.
 
@@ -29,7 +32,7 @@ def analyze_value_data(training_data: List[Dict]) -> Dict:
         return {}
 
     # Extract relevant fields
-    value_targets = [d["value_target"] for d in value_data]
+    value_targets = [d.get("value_target", 0.0) for d in value_data]
     final_rewards = [d.get("final_reward", 0) for d in value_data]
     mcts_values = [d.get("mcts_value", None) for d in value_data if "mcts_value" in d]
     visit_counts = [d.get("visit_count", 0) for d in value_data]
@@ -127,7 +130,7 @@ def print_training_stats(stats: Dict):
     logger.info("=" * 60)
 
 
-def save_training_data(training_data: List[Dict], output_path: Path):
+def save_training_data(training_data: List[TrainingDataPoint], output_path: Path):
     """
     Save training data to a JSON file.
 
@@ -143,7 +146,7 @@ def save_training_data(training_data: List[Dict], output_path: Path):
     logger.info(f"Training data saved to {output_path}")
 
 
-def load_training_data(input_path: Path) -> List[Dict]:
+def load_training_data(input_path: Path) -> List[TrainingDataPoint]:
     """
     Load training data from a JSON file.
 
@@ -157,4 +160,6 @@ def load_training_data(input_path: Path) -> List[Dict]:
         training_data = json.load(f)
 
     logger.info(f"Loaded {len(training_data)} training samples from {input_path}")
-    return cast(List[Dict[Any, Any]], training_data)
+    if is_list_of_training_data_point(training_data):
+        return training_data
+    raise ValueError(f"Invalid training data format in {input_path}")

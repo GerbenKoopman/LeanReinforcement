@@ -2,14 +2,29 @@
 Inference Server for centralized model execution.
 """
 
-from typing import List, Any, Union, Sequence, Tuple
+from typing import List, Union, Sequence
 from loguru import logger
 import torch
 import torch.multiprocessing as mp
 import queue
 import gc
 
-Request = Tuple[int, str, Tuple[Any, ...]]
+from lean_reinforcement.utilities.types import (
+    InferenceRequest,
+    InferencePayload,
+    InferenceResult,
+)
+from lean_reinforcement.utilities.validation import (
+    is_tactic_gen_payload_list,
+    is_tactic_gen_batch_payload_list,
+    is_value_pred_payload_list,
+    is_value_pred_batch_payload_list,
+    is_feature_payload_list,
+    is_feature_batch_payload_list,
+    is_encode_states_payload_list,
+)
+
+Request = InferenceRequest
 
 
 class InferenceServer:
@@ -33,7 +48,7 @@ class InferenceServer:
         Collects a batch of requests and processes them.
         Returns True if a batch was processed, False otherwise.
         """
-        batch_requests: List[Tuple[int, str, Tuple[Any, ...]]] = []
+        batch_requests: List[Request] = []
 
         target_size = self.batch_size
         if self.max_safe_batch_size < target_size:
@@ -58,7 +73,7 @@ class InferenceServer:
 
     def _process_batch(self, batch_requests: List[Request]):
         # Helper to extract 'n' from payload safely for sorting
-        def get_n(payload: Tuple[Any, ...]) -> int:
+        def get_n(payload: InferencePayload) -> int:
             if len(payload) >= 2 and isinstance(payload[1], int):
                 return payload[1]
             return 0
@@ -72,7 +87,7 @@ class InferenceServer:
 
         current_type = None
         current_n = -1
-        current_batch: List[Tuple[Any, ...]] = []
+        current_batch: List[InferencePayload] = []
         current_indices: List[int] = []
 
         for worker_id, req_type, payload in batch_requests:
@@ -156,11 +171,15 @@ class InferenceServer:
         right = self._run_transformer_batch(method, states[mid:], n, **kwargs)
         return left + right
 
-    def _execute_batch(self, req_type: str, batch: List[Any], indices: List[int]):
-        execution_results: List[Any] = []
+    def _execute_batch(
+        self, req_type: str, batch: List[InferencePayload], indices: List[int]
+    ):
+        execution_results: List[InferenceResult] = []
 
         if req_type == "generate_tactics_with_probs":
-            states_tuple, ns_tuple = zip(*batch)
+            assert is_tactic_gen_payload_list(batch)
+            batch_gen = batch
+            states_tuple, ns_tuple = zip(*batch_gen)
             n = ns_tuple[0]
             execution_results = self._run_transformer_batch(
                 self.transformer.generate_tactics_with_probs_batch,
@@ -168,19 +187,23 @@ class InferenceServer:
                 n=n,
             )
         elif req_type == "generate_tactics":
-            states_tuple, ns_tuple = zip(*batch)
+            assert is_tactic_gen_payload_list(batch)
+            batch_gen = batch
+            states_tuple, ns_tuple = zip(*batch_gen)
             n = ns_tuple[0]
             execution_results = self._run_transformer_batch(
                 self.transformer.generate_tactics_batch, list(states_tuple), n=n
             )
         elif req_type == "generate_tactics_batch":
             # payload is (states, n)
+            assert is_tactic_gen_batch_payload_list(batch)
+            batch_batch = batch
             # Flatten
             all_states_list: List[str] = []
             lengths_list: List[int] = []
             ns_list: List[int] = []
-            for p in batch:
-                s, n = p
+            for gen_batch_payload in batch_batch:
+                s, n = gen_batch_payload
                 all_states_list.extend(s)
                 lengths_list.append(len(s))
                 ns_list.append(n)
@@ -199,11 +222,13 @@ class InferenceServer:
 
         elif req_type == "generate_tactics_with_probs_batch":
             # payload is (states, n)
+            assert is_tactic_gen_batch_payload_list(batch)
+            batch_batch = batch
             all_states_list_probs: List[str] = []
             lengths_list_probs: List[int] = []
             ns_list_probs: List[int] = []
-            for p in batch:
-                s, n = p
+            for gen_probs_batch_payload in batch_batch:
+                s, n = gen_probs_batch_payload
                 all_states_list_probs.extend(s)
                 lengths_list_probs.append(len(s))
                 ns_list_probs.append(n)
@@ -223,7 +248,9 @@ class InferenceServer:
 
         elif req_type == "predict_value":
             if self.value_head is not None:
-                states = [p[0] for p in batch]
+                assert is_value_pred_payload_list(batch)
+                batch_val = batch
+                states = [val_payload[0] for val_payload in batch_val]
                 execution_results = self.value_head.predict_batch(list(states))
             else:
                 logger.error("Received predict_value request but value_head is None")
@@ -231,10 +258,12 @@ class InferenceServer:
 
         elif req_type == "predict_batch":
             if self.value_head is not None:
+                assert is_value_pred_batch_payload_list(batch)
+                batch_val_batch = batch
                 all_states = []
                 lengths = []
-                for p in batch:
-                    s = p[0]
+                for val_batch_payload in batch_val_batch:
+                    s = val_batch_payload[0]
                     all_states.extend(s)
                     lengths.append(len(s))
 
@@ -251,10 +280,12 @@ class InferenceServer:
 
         elif req_type == "encode_states":
             if self.value_head is not None:
+                assert is_encode_states_payload_list(batch)
+                batch_encode = batch
                 all_states = []
                 lengths = []
-                for p in batch:
-                    s = p[0]
+                for encode_payload in batch_encode:
+                    s = encode_payload[0]
                     all_states.extend(s)
                     lengths.append(len(s))
 
@@ -272,10 +303,12 @@ class InferenceServer:
 
         elif req_type == "predict_from_features":
             if self.value_head is not None:
+                assert is_feature_payload_list(batch)
+                batch_feat = batch
                 device = "cuda" if torch.cuda.is_available() else "cpu"
                 features_batch = []
-                for p in batch:
-                    f = p[0].to(device)
+                for feat_payload in batch_feat:
+                    f = feat_payload[0].to(device)
                     if f.ndim == 1:
                         f = f.unsqueeze(0)
                     features_batch.append(f)
@@ -295,8 +328,10 @@ class InferenceServer:
 
         elif req_type == "predict_from_features_batch":
             if self.value_head is not None:
+                assert is_feature_batch_payload_list(batch)
+                batch_feat_batch = batch
                 device = "cuda" if torch.cuda.is_available() else "cpu"
-                features_list = [p[0].to(device) for p in batch]
+                features_list = [p[0].to(device) for p in batch_feat_batch]
                 full_batch = torch.cat(features_list, dim=0)
                 all_results = self.value_head.predict_from_features_batch(full_batch)
 

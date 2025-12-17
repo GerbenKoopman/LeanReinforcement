@@ -129,9 +129,6 @@ class TestInferenceServer(unittest.TestCase):
         self.request_queue.put((1, req_type, ("state2", 10)))
 
         # Mock transformer response
-        # We expect two calls.
-        # The order depends on sorting. (req_type, n)
-        # ("generate_tactics", 5) comes before ("generate_tactics", 10)
         self.transformer.generate_tactics_batch.side_effect = [
             [["tactic1"]],  # For n=5
             [["tactic2"]],  # For n=10

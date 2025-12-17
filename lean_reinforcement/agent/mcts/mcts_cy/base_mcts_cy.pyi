@@ -1,29 +1,34 @@
-from typing import List, Optional, Dict, Any, Tuple
+from typing import List, Optional, Dict, Any, Tuple, Union
 import torch
+from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
+from lean_reinforcement.utilities.gym import LeanDojoEnv
+from lean_reinforcement.agent.transformer import TransformerProtocol
 
 class Edge:
-    action: Any
+    action: str
     prior: float
     child: Node
     visit_count: int
-    def __init__(self, action: Any, prior: float, child: Node) -> None: ...
+    def __init__(self, action: str, prior: float, child: Node) -> None: ...
 
 class Node:
-    state: Any
+    state: Union[TacticState, ProofFinished, LeanError, ProofGivenUp]
     children: List[Edge]
     visit_count: int
     max_value: float
     is_terminal: bool
     untried_actions: Optional[List[str]]
-    encoder_features: Optional[Any]
+    encoder_features: Optional[torch.Tensor]
 
-    def __init__(self, state: Any) -> None: ...
+    def __init__(
+        self, state: Union[TacticState, ProofFinished, LeanError, ProofGivenUp]
+    ) -> None: ...
     def value(self) -> float: ...
     def is_fully_expanded(self) -> bool: ...
 
 class BaseMCTS:
-    env: Any
-    transformer: Any
+    env: LeanDojoEnv
+    transformer: TransformerProtocol
     exploration_weight: float
     max_tree_nodes: int
     batch_size: int
@@ -39,8 +44,8 @@ class BaseMCTS:
 
     def __init__(
         self,
-        env: Any,
-        transformer: Any,
+        env: LeanDojoEnv,
+        transformer: TransformerProtocol,
         exploration_weight: float = ...,
         max_tree_nodes: int = ...,
         batch_size: int = ...,

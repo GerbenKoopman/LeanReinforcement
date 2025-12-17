@@ -5,7 +5,7 @@ Main agent loop for running MCTS-based proof search.
 import time
 import gc
 import torch
-from typing import Type, Optional
+from typing import Type, Optional, Tuple, List, Union, Dict, Any
 from loguru import logger
 
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
@@ -13,6 +13,7 @@ from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 from lean_reinforcement.agent.mcts import BaseMCTS, MCTS_GuidedRollout
 from lean_reinforcement.utilities.gym import LeanDojoEnv
 from lean_reinforcement.agent.transformer import TransformerProtocol
+from lean_reinforcement.utilities.types import Metrics, TrainingDataPoint, MCTSOptions
 
 
 class AgentRunner:
@@ -25,7 +26,7 @@ class AgentRunner:
         env: LeanDojoEnv,
         transformer: TransformerProtocol,
         mcts_class: Type[BaseMCTS] = MCTS_GuidedRollout,
-        mcts_kwargs: Optional[dict] = None,
+        mcts_kwargs: Optional[Union[Dict[str, Any], MCTSOptions]] = None,
         num_iterations: int = 100,
         max_steps: int = 100,
     ):
@@ -46,7 +47,9 @@ class AgentRunner:
         self.num_iterations = num_iterations
         self.max_steps = max_steps
 
-        self.mcts_kwargs = mcts_kwargs if mcts_kwargs is not None else {}
+        self.mcts_kwargs: Dict[str, Any] = (
+            dict(mcts_kwargs) if mcts_kwargs is not None else {}
+        )
 
     def _log_gpu_memory(self, prefix: str = ""):
         """Log current GPU memory usage."""
@@ -62,7 +65,7 @@ class AgentRunner:
         collect_value_data: bool = False,
         use_final_reward: bool = True,
         use_wandb: bool = True,
-    ) -> tuple[dict, list[dict]]:
+    ) -> Tuple[Metrics, List[TrainingDataPoint]]:
         """
         Run the proof search loop and collect lightweight training data.
 
@@ -81,7 +84,7 @@ class AgentRunner:
         logger.info(f"Starting proof search for: {self.env.theorem.full_name}")
         self._log_gpu_memory("Initial ")
 
-        training_data = []
+        training_data: List[TrainingDataPoint] = []
         step_num = 0
         mcts_instance = None
 
@@ -207,7 +210,7 @@ class AgentRunner:
         elapsed_time = time.time() - start_time
         success = isinstance(self.env.current_state, ProofFinished)
 
-        metrics = {
+        metrics: Metrics = {
             "proof_search/success": success,
             "proof_search/steps": step_num,
             "proof_search/time": elapsed_time,
@@ -228,7 +231,7 @@ class AgentRunner:
         final_reward = 1.0 if success else -1.0
 
         for i, data_point in enumerate(training_data):
-            if data_point["type"] == "value":
+            if data_point.get("type") == "value":
                 if use_final_reward:
                     data_point["value_target"] = final_reward
                 elif "mcts_value" in data_point:

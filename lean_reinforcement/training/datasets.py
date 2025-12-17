@@ -2,8 +2,9 @@
 PyTorch Datasets for training the policy and value heads.
 """
 
-from typing import List, Dict, Any, TypedDict
+from typing import List, TypedDict
 from torch.utils.data import Dataset
+from lean_reinforcement.utilities.types import TrainingDataPoint
 
 
 class ValueData(TypedDict):
@@ -14,7 +15,7 @@ class ValueData(TypedDict):
 class ValueHeadDataset(Dataset):
     """Dataset for state -> value_target."""
 
-    def __init__(self, data: List[Dict[str, Any]]):
+    def __init__(self, data: List[TrainingDataPoint]):
         self.data = data
 
     def __len__(self) -> int:
@@ -23,19 +24,6 @@ class ValueHeadDataset(Dataset):
     def __getitem__(self, idx: int) -> ValueData:
         item = self.data[idx]
         return {
-            "state": item["state"],
-            "value_target": item["value_target"],
+            "state": item.get("state", ""),
+            "value_target": item.get("value_target", 0.0),
         }
-
-
-class PolicyHeadDataset(Dataset):
-    """Dataset for (state, premises) -> tactic_target."""
-
-    def __init__(self, data: Dict[Any, Any]):
-        self.data = data
-
-    def __len__(self) -> int:
-        return len(self.data)
-
-    def __getitem__(self, idx: int) -> Any:
-        return self.data[idx]
