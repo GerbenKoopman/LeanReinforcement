@@ -4,6 +4,7 @@ simulation, AlphaZero MCTS calls a trained value network for evaluation.
 """
 
 import math
+import time
 import torch
 from typing import List, Optional, Dict
 from loguru import logger
@@ -14,24 +15,34 @@ from lean_reinforcement.utilities.gym import LeanDojoEnv
 from lean_reinforcement.agent.transformer import TransformerProtocol
 
 
+class Edge:
+    """
+    An edge in the Monte Carlo Search Graph.
+    Stores action, prior probability, and points to a child Node.
+    """
+
+    def __init__(self, action: str, prior: float, child: "Node"):
+        self.action = action
+        self.prior = prior
+        self.child = child
+        self.visit_count = 0
+
+
 class Node:
     """
-    A node in the Monte Carlo Tree Search.
-    Holds state, statistics, and child nodes.
+    A node in the Monte Carlo Search Graph.
+    Holds state, statistics, and outgoing edges.
     """
 
     def __init__(
         self,
         state: TacticState | ProofFinished | LeanError | ProofGivenUp,
-        parent: Optional["Node"] = None,
-        action: Optional[str] = None,
     ):
         self.state = state
-        self.parent = parent
-        self.action = action
-        self.prior_p = 0.0
+        # self.parent and self.action are removed for Graph Search
+        # self.prior_p is moved to Edge
 
-        self.children: List["Node"] = []
+        self.children: List[Edge] = []
         self.visit_count = 0
         self.max_value = float("-inf")
 
@@ -67,6 +78,7 @@ class BaseMCTS:
         batch_size: int = 8,
         num_tactics_to_expand: int = 8,
         max_rollout_depth: int = 30,
+        max_time: float = 600.0,
     ):
         self.env = env
         self.transformer = transformer
@@ -75,8 +87,12 @@ class BaseMCTS:
         self.batch_size = batch_size
         self.num_tactics_to_expand = num_tactics_to_expand
         self.max_rollout_depth = max_rollout_depth
+        self.max_time = max_time
         self.node_count = 0
         self.virtual_losses: Dict[Node, int] = {}
+
+        # Transposition Table
+        self.nodes: Dict[str, Node] = {}
 
         # Get theorem info from the environment
         self.theorem = env.theorem
@@ -88,8 +104,24 @@ class BaseMCTS:
         ):
             raise TypeError(f"Invalid initial state type: {type(env.current_state)}")
 
-        self.root = Node(state=env.current_state)
+        self.root = self._get_or_create_node(env.current_state)
         self.node_count = 1
+
+    def _get_or_create_node(
+        self, state: TacticState | ProofFinished | LeanError | ProofGivenUp
+    ) -> Node:
+        """
+        Retrieve an existing node from the transposition table or create a new one.
+        """
+        if isinstance(state, TacticState):
+            key = state.pp
+            if key in self.nodes:
+                return self.nodes[key]
+            node = Node(state)
+            self.nodes[key] = node
+            return node
+        else:
+            return Node(state)
 
     def _get_virtual_loss(self, node: Node) -> int:
         return self.virtual_losses.get(node, 0)
@@ -119,85 +151,106 @@ class BaseMCTS:
         if batch_size is None:
             batch_size = self.batch_size
 
+        start_time = time.time()
+
         with torch.no_grad():
             for iteration in range(0, num_iterations, batch_size):
+                # Check time limit
+                if time.time() - start_time > self.max_time:
+                    break
+
                 # Stop if tree is too large
                 if self.node_count >= self.max_tree_nodes:
                     break
 
                 current_batch_size = min(batch_size, num_iterations - iteration)
                 leaves = []
+                paths = []
 
                 # 1. Selection Phase (Batch)
                 for _ in range(current_batch_size):
-                    leaf = self._select(self.root)
+                    leaf, path = self._select(self.root)
 
                     if leaf.is_terminal:
                         if isinstance(leaf.state, ProofFinished):
-                            self._backpropagate(leaf, 1.0)
+                            self._backpropagate(path, 1.0)
                         elif isinstance(leaf.state, (LeanError, ProofGivenUp)):
-                            self._backpropagate(leaf, -1.0)
+                            self._backpropagate(path, -1.0)
                         continue
 
                     if not isinstance(leaf.state, TacticState):
                         if isinstance(leaf.state, ProofFinished):
-                            self._backpropagate(leaf, 1.0)
+                            self._backpropagate(path, 1.0)
                         else:
-                            self._backpropagate(leaf, -1.0)
+                            self._backpropagate(path, -1.0)
                         continue
 
                     # Apply virtual loss to encourage diversity in the batch
                     self._add_virtual_loss(leaf)
                     leaves.append(leaf)
+                    paths.append(path)
 
                 if not leaves:
                     continue
 
                 # 2. Expansion Phase
-                expanded_nodes = self._expand_batch(leaves)
+                expanded_results = self._expand_batch(leaves)
 
                 # 3. Simulation Phase
-                rewards = self._simulate_batch(expanded_nodes)
+                nodes_to_simulate = [res[0] for res in expanded_results]
+                rewards = self._simulate_batch(nodes_to_simulate)
 
                 # 4. Backpropagation Phase
                 for i, leaf in enumerate(leaves):
                     self._remove_virtual_loss(leaf)
-                    child = expanded_nodes[i]
                     reward = rewards[i]
-                    self._backpropagate(child, reward)
+
+                    path = paths[i]
+                    node_to_sim, edge_to_sim = expanded_results[i]
+
+                    if edge_to_sim is not None:
+                        path.append((node_to_sim, edge_to_sim))
+
+                    self._backpropagate(path, reward)
 
                 # Clear CUDA cache periodically
                 if torch.cuda.is_available() and iteration % 20 == 0 and iteration > 0:
                     torch.cuda.empty_cache()
 
-    def _select(self, node: Node) -> Node:
+    def _select(self, node: Node) -> tuple[Node, List[tuple[Node, Optional[Edge]]]]:
         """
         Phase 1: Selection
         Traverse the tree from the root, picking the best child until a leaf node is reached.
+        Returns the leaf node and the path taken (list of (node, edge)).
         """
         current = node
+        path: List[tuple[Node, Optional[Edge]]] = [(current, None)]
+
         while not current.is_terminal and current.is_fully_expanded():
             if not current.children:
-                return current
-            current = self._get_best_child(current)
-        return current
+                return current, path
+            edge = self._get_best_edge(current)
+            current = edge.child
+            path.append((current, edge))
+        return current, path
 
-    def _get_best_child(self, node: Node) -> Node:
+    def _get_best_edge(self, node: Node) -> Edge:
         """
-        Selects the best child based on the specific MCTS strategy (e.g., UCB1, PUCT).
+        Selects the best edge based on the specific MCTS strategy (e.g., UCB1, PUCT).
         This method should be implemented by subclasses.
         """
         raise NotImplementedError
 
-    def _expand(self, node: Node) -> Node:
+    def _expand(self, node: Node) -> tuple[Node, Optional[Edge]]:
         """
         Phase 2: Expansion
         This method should be implemented by subclasses. It should expand the
-        tree from the given node and return the node from which to start the simulation.
+        tree from the given node and return the node from which to start the simulation,
+        and optionally the edge taken to reach it.
         """
         raise NotImplementedError
 
-    def _expand_batch(self, nodes: List[Node]) -> List[Node]:
+    def _expand_batch(self, nodes: List[Node]) -> List[tuple[Node, Optional[Edge]]]:
         """
         Phase 2: Batch Expansion
         Default implementation calls _expand sequentially.
@@ -220,18 +273,16 @@ class BaseMCTS:
         """
         return [self._simulate(node) for node in nodes]
 
-    def _backpropagate(self, node: Node, reward: float):
+    def _backpropagate(self, path: List[tuple[Node, Optional[Edge]]], reward: float):
         """
         Phase 4: Backpropagation
-        Update visit counts and value sums from the given node
-        all the way back up to the root.
+        Update visit counts and value maximums along the path.
         """
-        # Optional because current.parent is later assigned, which can be None
-        current: Optional[Node] = node
-        while current is not None:
-            current.visit_count += 1
-            current.max_value = max(current.max_value, reward)
-            current = current.parent
+        for node, edge in reversed(path):
+            node.visit_count += 1
+            node.max_value = max(node.max_value, reward)
+            if edge:
+                edge.visit_count += 1
 
     def get_best_action(self) -> Optional[str]:
         """
@@ -255,24 +306,22 @@ class BaseMCTS:
             return None
 
         # Select the child with the most visits (most robust)
-        best_child = max(self.root.children, key=lambda c: c.visit_count)
-        return best_child.action
+        best_edge = max(self.root.children, key=lambda e: e.visit_count)
+        return best_edge.action
 
     def move_root(self, action: str):
         """
         Moves the root of the tree to the child corresponding to the given action.
         This allows for subtree reuse.
         """
-        found_child = None
-        for child in self.root.children:
-            if child.action == action:
-                found_child = child
+        found_edge = None
+        for edge in self.root.children:
+            if edge.action == action:
+                found_edge = edge
                 break
 
-        if found_child:
-            self.root = found_child
-            self.root.parent = None
-            self.node_count = self._count_nodes(self.root)
+        if found_edge:
+            self.root = found_edge.child
         else:
             # If child not found, reset the tree with the current environment state
             if not isinstance(
@@ -283,12 +332,5 @@ class BaseMCTS:
                     f"Invalid state type for new root: {type(self.env.current_state)}"
                 )
 
-            self.root = Node(state=self.env.current_state)
+            self.root = self._get_or_create_node(self.env.current_state)
             self.node_count = 1
-
-    def _count_nodes(self, node: Node) -> int:
-        """Recursively counts the number of nodes in the subtree."""
-        count = 1
-        for child in node.children:
-            count += self._count_nodes(child)
-        return count

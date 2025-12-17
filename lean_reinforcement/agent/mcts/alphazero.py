@@ -10,7 +10,7 @@ from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
 from lean_reinforcement.utilities.gym import LeanDojoEnv
 from lean_reinforcement.agent.value_head import ValueHead
-from lean_reinforcement.agent.mcts.base_mcts import BaseMCTS, Node
+from lean_reinforcement.agent.mcts.base_mcts import BaseMCTS, Node, Edge
 from lean_reinforcement.agent.transformer import TransformerProtocol
 
 
@@ -32,6 +32,7 @@ class MCTS_AlphaZero(BaseMCTS):
         batch_size: int = 8,
         num_tactics_to_expand: int = 8,
         max_rollout_depth: int = 30,
+        max_time: float = 600.0,
         **kwargs,
     ):
         super().__init__(
@@ -42,39 +43,39 @@ class MCTS_AlphaZero(BaseMCTS):
             batch_size=batch_size,
             num_tactics_to_expand=num_tactics_to_expand,
             max_rollout_depth=max_rollout_depth,
+            max_time=max_time,
         )
         self.value_head = value_head
 
-    def _puct_score(self, node: Node) -> float:
-        """Calculates the PUCT score for a node."""
-        if node.parent is None:
-            return 0.0  # Should not happen for children
+    def _puct_score(self, parent: Node, edge: Edge) -> float:
+        """Calculates the PUCT score for an edge."""
+        child = edge.child
 
         # Virtual loss
-        v_loss = self._get_virtual_loss(node)
-        visit_count = node.visit_count + v_loss
+        v_loss = self._get_virtual_loss(child)
+        visit_count = edge.visit_count + v_loss
 
         # Q(s,a): Exploitation term
         # Use max_value instead of mean value for max-backup
         if visit_count == 0:
             q_value = 0.0
         else:
-            q_value = node.max_value - (v_loss / visit_count)
+            q_value = child.max_value - (v_loss / visit_count)
 
         # U(s,a): Exploration term
         exploration = (
             self.exploration_weight
-            * node.prior_p
-            * (math.sqrt(node.parent.visit_count) / (1 + visit_count))
+            * edge.prior
+            * (math.sqrt(parent.visit_count) / (1 + visit_count))
         )
 
         return q_value + exploration
 
-    def _get_best_child(self, node: Node) -> Node:
-        """Selects the best child based on the PUCT score."""
-        return max(node.children, key=self._puct_score)
+    def _get_best_edge(self, node: Node) -> Edge:
+        """Selects the best edge based on the PUCT score."""
+        return max(node.children, key=lambda edge: self._puct_score(node, edge))
 
-    def _expand(self, node: Node) -> Node:
+    def _expand(self, node: Node) -> tuple[Node, Optional[Edge]]:
         """
         Phase 2: Expansion (AlphaZero-style)
         Expand the leaf node by generating all promising actions from the
@@ -99,20 +100,30 @@ class MCTS_AlphaZero(BaseMCTS):
         for tactic, prob in tactics_with_probs:
             next_state = self.env.run_tactic_stateless(node.state, tactic)
 
-            child = Node(next_state, parent=node, action=tactic)
-            child.prior_p = prob
-            node.children.append(child)
-            self.node_count += 1
+            # Prune Error States
+            if isinstance(next_state, (LeanError, ProofGivenUp)):
+                continue
+
+            # Check Transposition Table
+            child_node = self._get_or_create_node(next_state)
+
+            edge = Edge(action=tactic, prior=prob, child=child_node)
+            node.children.append(edge)
 
             # Pre-compute encoder features for children if they're non-terminal TacticStates
-            if isinstance(next_state, TacticState):
-                child.encoder_features = self.value_head.encode_states([next_state.pp])
+            if (
+                isinstance(next_state, TacticState)
+                and child_node.encoder_features is None
+            ):
+                child_node.encoder_features = self.value_head.encode_states(
+                    [next_state.pp]
+                )
 
         node.untried_actions = []
 
-        return node
+        return node, None
 
-    def _expand_batch(self, nodes: List[Node]) -> List[Node]:
+    def _expand_batch(self, nodes: List[Node]) -> List[tuple[Node, Optional[Edge]]]:
         # 1. Generate tactics for all nodes
         states = []
         nodes_to_generate = []
@@ -122,14 +133,11 @@ class MCTS_AlphaZero(BaseMCTS):
                 states.append(node.state.pp)
                 nodes_to_generate.append(node)
 
-                # Cache encoder features if missing
-                if node.encoder_features is None:
-                    # We will compute them in batch later or now?
-                    # Let's compute them now for simplicity or add to a list
-                    pass
-
         if not states:
-            return nodes
+            empty_results: List[tuple[Node, Optional[Edge]]] = [
+                (node, None) for node in nodes
+            ]
+            return empty_results
 
         # Batch generate tactics
         batch_tactics_with_probs = self.transformer.generate_tactics_with_probs_batch(
@@ -150,21 +158,26 @@ class MCTS_AlphaZero(BaseMCTS):
                 next_state = self.env.dojo.run_tac(node.state, tactic)
             except Exception as e:
                 next_state = LeanError(error=str(e))
+
+            # Prune Error States
+            if isinstance(next_state, (LeanError, ProofGivenUp)):
+                continue
+
             results.append((node, tactic, prob, next_state))
 
         # 4. Create children
-        new_children_nodes = []
         for node, tactic, prob, next_state in results:
-            child = Node(next_state, parent=node, action=tactic)
-            child.prior_p = prob
-            node.children.append(child)
-            self.node_count += 1
-            new_children_nodes.append(child)
+            child_node = self._get_or_create_node(next_state)
+            edge = Edge(action=tactic, prior=prob, child=child_node)
+            node.children.append(edge)
 
         for node in nodes_to_generate:
             node.untried_actions = []
 
-        return nodes
+        final_results: List[tuple[Node, Optional[Edge]]] = [
+            (node, None) for node in nodes
+        ]
+        return final_results
 
     def _simulate(self, node: Node, env: Optional[LeanDojoEnv] = None) -> float:
         """
