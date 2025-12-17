@@ -1,21 +1,23 @@
 from typing import List, Optional, Dict, Any
 import torch
 
+class Edge:
+    action: Any
+    prior: float
+    child: Node
+    visit_count: int
+    def __init__(self, action: Any, prior: float, child: Node) -> None: ...
+
 class Node:
     state: Any
-    parent: Optional[Node]
-    action: Optional[str]
-    prior_p: float
-    children: List[Node]
+    children: List[Edge]
     visit_count: int
     max_value: float
     is_terminal: bool
     untried_actions: Optional[List[str]]
     encoder_features: Optional[Any]
 
-    def __init__(
-        self, state: Any, parent: Optional[Node] = ..., action: Optional[str] = ...
-    ) -> None: ...
+    def __init__(self, state: Any) -> None: ...
     def value(self) -> float: ...
     def is_fully_expanded(self) -> bool: ...
 
@@ -27,8 +29,10 @@ class BaseMCTS:
     batch_size: int
     num_tactics_to_expand: int
     max_rollout_depth: int
+    max_time: float
     node_count: int
     virtual_losses: Dict[Node, int]
+    nodes: Dict[str, Node]
     theorem: Any
     theorem_pos: Any
     root: Node
@@ -42,7 +46,9 @@ class BaseMCTS:
         batch_size: int = ...,
         num_tactics_to_expand: int = ...,
         max_rollout_depth: int = ...,
+        max_time: float = ...,
     ) -> None: ...
+    def _get_or_create_node(self, state: Any) -> Node: ...
     def _get_virtual_loss(self, node: Node) -> int: ...
     def _add_virtual_loss(self, node: Node, loss: int = ...) -> None: ...
     def _remove_virtual_loss(self, node: Node, loss: int = ...) -> None: ...
