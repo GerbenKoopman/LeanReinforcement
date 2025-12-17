@@ -31,7 +31,7 @@ class TrainingConfig:
 
     # Model Args
     model_name: str = "kaiyuy/leandojo-lean4-tacgen-byt5-small"
-    num_tactics_to_expand: int = 64
+    num_tactics_to_expand: int = 32
     max_rollout_depth: int = 30
     max_time: float = 1200.0
     env_timeout: int = 100
@@ -134,7 +134,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--num-tactics-to-expand",
         type=int,
-        default=64,
+        default=32,
         help="Number of tactics to generate/expand at each node.",
     )
     parser.add_argument(
