@@ -155,6 +155,10 @@ class BaseMCTS:
 
         with torch.no_grad():
             for iteration in range(0, num_iterations, batch_size):
+                # Early stopping if solution found
+                if self.root.max_value == 1.0:
+                    break
+
                 # Check time limit
                 if time.time() - start_time > self.max_time:
                     break
@@ -174,6 +178,7 @@ class BaseMCTS:
                     if leaf.is_terminal:
                         if isinstance(leaf.state, ProofFinished):
                             self._backpropagate(path, 1.0)
+                            return
                         elif isinstance(leaf.state, (LeanError, ProofGivenUp)):
                             self._backpropagate(path, -1.0)
                         continue
@@ -207,12 +212,14 @@ class BaseMCTS:
 
                     path = paths[i]
                     node_to_sim, edge_to_sim = expanded_results[i]
-
                     if edge_to_sim is not None:
                         path.append((node_to_sim, edge_to_sim))
 
                     self._backpropagate(path, reward)
+                    if reward == 1.0:
+                        return
 
+                # Clear CUDA cache periodically
                 # Clear CUDA cache periodically
                 if torch.cuda.is_available() and iteration % 20 == 0 and iteration > 0:
                     torch.cuda.empty_cache()
@@ -306,6 +313,11 @@ class BaseMCTS:
             return None
 
         # Select the child with the most visits (most robust)
+        winning_edges = [e for e in self.root.children if e.child.max_value == 1.0]
+        if winning_edges:
+            best_edge = max(winning_edges, key=lambda e: e.visit_count)
+            return best_edge.action
+
         best_edge = max(self.root.children, key=lambda e: e.visit_count)
         return best_edge.action
 

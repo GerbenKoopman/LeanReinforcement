@@ -129,6 +129,10 @@ cdef class BaseMCTS:
 
         with torch.no_grad():
             for iteration in range(0, num_iterations, b_size):
+                # Early stopping if solution found
+                if self.root.max_value == 1.0:
+                    break
+
                 # Check time limit
                 if time.time() - start_time > self.max_time:
                     break
@@ -147,6 +151,7 @@ cdef class BaseMCTS:
                     if leaf.is_terminal:
                         if isinstance(leaf.state, ProofFinished):
                             self._backpropagate(path, 1.0)
+                            return
                         elif isinstance(leaf.state, (LeanError, ProofGivenUp)):
                             self._backpropagate(path, -1.0)
                         continue
@@ -187,6 +192,8 @@ cdef class BaseMCTS:
                         path.append((node_to_sim, edge_to_sim))
                         
                     self._backpropagate(path, reward)
+                    if reward == 1.0:
+                        return
 
                 # Clear CUDA cache periodically
                 if torch.cuda.is_available() and iteration % 20 == 0 and iteration > 0:
@@ -234,6 +241,8 @@ cdef class BaseMCTS:
                 edge.visit_count += 1
 
     def get_best_action(self):
+        cdef Edge best_edge
+
         if not self.root.children:
             if self.root.untried_actions is None and isinstance(
                 self.root.state, TacticState
@@ -247,7 +256,12 @@ cdef class BaseMCTS:
                 return self.root.untried_actions[0]
             return None
 
-        cdef Edge best_edge = max(self.root.children, key=lambda Edge e: e.visit_count)
+        winning_edges = [e for e in self.root.children if e.child.max_value == 1.0]
+        if winning_edges:
+            best_edge = max(winning_edges, key=lambda Edge e: e.visit_count)
+            return best_edge.action
+
+        best_edge = max(self.root.children, key=lambda Edge e: e.visit_count)
         return best_edge.action
 
     def move_root(self, str action):
