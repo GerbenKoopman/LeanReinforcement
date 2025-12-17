@@ -22,7 +22,7 @@ class LeanDojoEnv:
         self,
         theorem: Theorem,
         theorem_pos: Pos,
-        timeout: int = 60,
+        timeout: int = 100,
     ):
         super().__init__()
         self.theorem = theorem

@@ -31,8 +31,10 @@ class TrainingConfig:
 
     # Model Args
     model_name: str = "kaiyuy/leandojo-lean4-tacgen-byt5-small"
-    num_tactics_to_expand: int = 8
+    num_tactics_to_expand: int = 64
     max_rollout_depth: int = 30
+    max_time: float = 600.0
+    env_timeout: int = 100
 
     @classmethod
     def from_args(cls, args: argparse.Namespace) -> "TrainingConfig":
@@ -49,6 +51,8 @@ class TrainingConfig:
             model_name=args.model_name,
             num_tactics_to_expand=args.num_tactics_to_expand,
             max_rollout_depth=args.max_rollout_depth,
+            max_time=args.max_time,
+            env_timeout=args.env_timeout,
             train_epochs=args.train_epochs,
             train_value_head=args.train_value_head,
             use_final_reward=args.use_final_reward,
@@ -87,7 +91,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--num-iterations",
         type=int,
-        default=20,
+        default=2000,
         help="Number of MCTS iterations per step (reduced default for memory efficiency).",
     )
     parser.add_argument(
@@ -130,14 +134,26 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--num-tactics-to-expand",
         type=int,
-        default=8,
-        help="Number of tactics to expand in MCTS.",
+        default=64,
+        help="Number of tactics to generate/expand at each node.",
     )
     parser.add_argument(
         "--max-rollout-depth",
         type=int,
         default=30,
-        help="Max depth for MCTS rollout.",
+        help="Max depth for rollout simulations.",
+    )
+    parser.add_argument(
+        "--max-time",
+        type=float,
+        default=600.0,
+        help="Max time (seconds) for MCTS search.",
+    )
+    parser.add_argument(
+        "--env-timeout",
+        type=int,
+        default=100,
+        help="Max time (seconds) per tactic.",
     )
 
     # --- Training Args ---
