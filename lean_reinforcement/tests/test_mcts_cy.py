@@ -5,7 +5,7 @@ from unittest.mock import Mock, MagicMock
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
 # Import Cython modules
-from lean_reinforcement.agent.mcts.mcts_cy.base_mcts_cy import Node
+from lean_reinforcement.agent.mcts.mcts_cy.base_mcts_cy import Node, Edge
 from lean_reinforcement.agent.mcts.mcts_cy.guidedrollout_cy import MCTS_GuidedRollout
 from lean_reinforcement.agent.mcts.mcts_cy.alphazero_cy import MCTS_AlphaZero
 from lean_reinforcement.agent.transformer import Transformer
@@ -17,9 +17,7 @@ class TestNodeCy(unittest.TestCase):
         state = Mock(spec=TacticState)
         node = Node(state)
         self.assertEqual(node.state, state)
-        self.assertIsNone(node.parent)
-        self.assertIsNone(node.action)
-        self.assertEqual(node.prior_p, 0.0)
+        self.assertEqual(node.children, [])
         self.assertEqual(node.visit_count, 0)
         self.assertFalse(node.is_terminal)
         self.assertIsNone(node.untried_actions)
@@ -50,6 +48,7 @@ class MockLeanDojoEnv(MagicMock):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.current_state = Mock(spec=TacticState)
+        self.current_state.pp = "mock_state_pp"
         self.theorem = "mock_theorem"
         self.theorem_pos = "mock_pos"
         self.dataloader = Mock()
@@ -70,44 +69,72 @@ class TestBaseMCTSCy(unittest.TestCase):
     def test_backpropagate(self) -> None:
         mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
         node1 = Node(Mock(spec=TacticState))
-        node2 = Node(Mock(spec=TacticState), parent=node1)
-        node3 = Node(Mock(spec=TacticState), parent=node2)
+        node2 = Node(Mock(spec=TacticState))
+        node3 = Node(Mock(spec=TacticState))
 
-        mcts._backpropagate(node3, 0.5)
+        edge1 = Edge(action="t1", prior=0.5, child=node2)
+        edge2 = Edge(action="t2", prior=0.5, child=node3)
+
+        node1.children.append(edge1)
+        node2.children.append(edge2)
+
+        # Path is list of (Node, Edge)
+        path = [(node1, edge1), (node2, edge2), (node3, None)]
+
+        mcts._backpropagate(path, 0.5)
 
         self.assertEqual(node3.visit_count, 1)
         self.assertEqual(node3.max_value, 0.5)
+
         self.assertEqual(node2.visit_count, 1)
         self.assertEqual(node2.max_value, 0.5)
+        self.assertEqual(edge2.visit_count, 1)
+
         self.assertEqual(node1.visit_count, 1)
         self.assertEqual(node1.max_value, 0.5)
+        self.assertEqual(edge1.visit_count, 1)
 
     def test_move_root(self) -> None:
         mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
         root = mcts.root
 
         # Create children manually
-        child1 = Node(Mock(spec=TacticState), parent=root, action="tactic1")
-        child2 = Node(Mock(spec=TacticState), parent=root, action="tactic2")
-        root.children = [child1, child2]
+        child1 = Node(Mock(spec=TacticState))
+        child2 = Node(Mock(spec=TacticState))
+
+        edge1 = Edge(action="tactic1", prior=0.5, child=child1)
+        edge2 = Edge(action="tactic2", prior=0.5, child=child2)
+
+        root.children = [edge1, edge2]
 
         # Add some grandchildren to test node counting
-        grandchild = Node(Mock(spec=TacticState), parent=child1, action="tactic1_1")
-        child1.children = [grandchild]
+        grandchild = Node(Mock(spec=TacticState))
+        edge_gc = Edge(action="tactic1_1", prior=0.5, child=grandchild)
+        child1.children = [edge_gc]
+
+        # Register nodes in transposition table for counting
+        mcts.nodes["root"] = root
+        mcts.nodes["child1"] = child1
+        mcts.nodes["child2"] = child2
+        mcts.nodes["grandchild"] = grandchild
+        mcts.node_count = 4
 
         # Test moving to an existing child
         mcts.move_root("tactic1")
         self.assertIs(mcts.root, child1)
-        self.assertIsNone(mcts.root.parent)
-        self.assertEqual(mcts.node_count, 2)  # child1 + grandchild
+        # Node count is just len(self.nodes) in new implementation
+        self.assertEqual(mcts.node_count, 4)
 
         # Test moving to a non-existent child (should reset)
+        # First, update env.current_state to match what we expect for a reset
         new_state = Mock(spec=TacticState)
+        new_state.pp = "new_state_pp"
         self.env.current_state = new_state
 
         mcts.move_root("non_existent_tactic")
         self.assertIsNot(mcts.root, child1)
         self.assertEqual(mcts.root.state, new_state)
+        # Reset clears nodes
         self.assertEqual(mcts.node_count, 1)
 
 
@@ -120,12 +147,14 @@ class TestMCTSGuidedRolloutCy(unittest.TestCase):
     def test_puct_score(self) -> None:
         parent = Node(Mock(spec=TacticState))
         parent.visit_count = 10
-        child = Node(Mock(spec=TacticState), parent=parent)
-        child.visit_count = 1
-        child.max_value = 0.8
-        child.prior_p = 0.5
 
-        score = self.mcts._puct_score(child)
+        child = Node(Mock(spec=TacticState))
+        child.max_value = 0.8
+
+        edge = Edge(action="t1", prior=0.5, child=child)
+        edge.visit_count = 1
+
+        score = self.mcts._puct_score(parent, edge)
         expected_score = 0.8 + self.mcts.exploration_weight * 0.5 * (
             math.sqrt(10.0) / (1 + 1)
         )
@@ -136,14 +165,21 @@ class TestMCTSGuidedRolloutCy(unittest.TestCase):
         state.pp = "state_pp"
         node = Node(state)
         self.transformer.generate_tactics_with_probs.return_value = [("tactic1", 0.5)]
-        self.env.run_tactic_stateless = Mock(return_value=Mock(spec=TacticState))
+        mock_next_state = Mock(spec=TacticState)
+        mock_next_state.pp = "next_state_pp"
+        self.env.run_tactic_stateless = Mock(return_value=mock_next_state)
 
-        child = self.mcts._expand(node)
+        node_res, edge_res = self.mcts._expand(node)
 
         self.assertEqual(len(node.children), 1)
-        self.assertIs(child.parent, node)
-        self.assertEqual(child.action, "tactic1")
-        self.assertEqual(child.prior_p, 0.5)
+        edge = node.children[0]
+        self.assertEqual(edge.action, "tactic1")
+        self.assertEqual(edge.prior, 0.5)
+        self.assertIsInstance(edge.child, Node)
+
+        self.assertIs(node_res, node)
+        self.assertIs(edge_res, edge)  # Best edge is the only edge
+
         self.transformer.generate_tactics_with_probs.assert_called_once()
         self.env.run_tactic_stateless.assert_called_once_with(state, "tactic1")
 
@@ -187,22 +223,26 @@ class TestMCTSAlphaZeroCy(unittest.TestCase):
         parent = Node(Mock(spec=TacticState))
         parent.visit_count = 10
 
-        child = Node(Mock(spec=TacticState), parent=parent)
+        child = Node(Mock(spec=TacticState))
         child.visit_count = 1
         child.max_value = 0.8
-        child.prior_p = 0.8
 
-        score = self.mcts._puct_score(child)
+        edge = Edge(action="t1", prior=0.8, child=child)
+        edge.visit_count = 1
+
+        score = self.mcts._puct_score(parent, edge)
         # Q-value is now max_value (0.8) instead of mean (0.5)
         expected_score = 0.8 + self.mcts.exploration_weight * 0.8 * ((10) ** 0.5 / 2)
         self.assertAlmostEqual(score, expected_score, places=5)
 
-        child_unvisited = Node(Mock(spec=TacticState), parent=parent)
+        child_unvisited = Node(Mock(spec=TacticState))
         child_unvisited.visit_count = 0
         child_unvisited.max_value = float("-inf")
-        child_unvisited.prior_p = 0.5
 
-        score_unvisited = self.mcts._puct_score(child_unvisited)
+        edge_unvisited = Edge(action="t2", prior=0.5, child=child_unvisited)
+        edge_unvisited.visit_count = 0
+
+        score_unvisited = self.mcts._puct_score(parent, edge_unvisited)
         expected_score_unvisited = 0.0 + self.mcts.exploration_weight * 0.5 * (
             (10) ** 0.5 / 1
         )
@@ -222,13 +262,18 @@ class TestMCTSAlphaZeroCy(unittest.TestCase):
         # Mock run_tactic_stateless directly as Cython calls it
         self.env.run_tactic_stateless = Mock(return_value=next_state_mock)
 
-        expanded_node = self.mcts._expand(node)
+        expanded_node, best_edge = self.mcts._expand(node)
         self.assertIs(expanded_node, node)
         self.assertEqual(len(node.children), 2)
-        self.assertEqual(node.children[0].action, "tactic1")
-        self.assertAlmostEqual(node.children[0].prior_p, 0.6, places=5)
-        self.assertEqual(node.children[1].action, "tactic2")
-        self.assertAlmostEqual(node.children[1].prior_p, 0.4, places=5)
+
+        edge1 = node.children[0]
+        self.assertEqual(edge1.action, "tactic1")
+        self.assertAlmostEqual(edge1.prior, 0.6, places=5)
+
+        edge2 = node.children[1]
+        self.assertEqual(edge2.action, "tactic2")
+        self.assertAlmostEqual(edge2.prior, 0.4, places=5)
+
         self.assertTrue(node.is_fully_expanded())
 
     def test_simulate_alphazero(self) -> None:

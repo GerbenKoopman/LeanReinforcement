@@ -6,6 +6,9 @@ from lean_reinforcement.utilities.config import TrainingConfig
 class TestTrainingConfig(unittest.TestCase):
     def test_from_args(self) -> None:
         args = argparse.Namespace(
+            config_file=None,
+            output_dir="output",
+            resume=False,
             data_type="random",
             num_epochs=5,
             num_theorems=50,
@@ -18,12 +21,13 @@ class TestTrainingConfig(unittest.TestCase):
             model_name="test/model",
             num_tactics_to_expand=4,
             max_rollout_depth=10,
+            max_time=600.0,
+            env_timeout=100,
             train_epochs=2,
             train_value_head=False,
             use_final_reward=True,
             save_training_data=False,
             save_checkpoints=False,
-            resume=True,
             checkpoint_dir="/tmp/ckpt",
             use_wandb=False,
         )

@@ -54,12 +54,17 @@ class TestParallelMCTS(unittest.TestCase):
         children = self.mcts._expand_batch(nodes)
 
         self.assertEqual(len(children), 2)
-        self.assertEqual(children[0].action, "t1")
-        self.assertEqual(children[1].action, "t2")
+        # children is list of (Node, Edge)
+        edge1 = children[0][1]
+        edge2 = children[1][1]
+        assert edge1 is not None
+        assert edge2 is not None
+        self.assertEqual(edge1.action, "t1")
+        self.assertEqual(edge2.action, "t2")
         self.assertEqual(len(node1.children), 1)
         self.assertEqual(len(node2.children), 1)
-        self.assertEqual(node1.children[0].prior_p, 0.5)
-        self.assertEqual(node2.children[0].prior_p, 0.6)
+        self.assertEqual(node1.children[0].prior, 0.5)
+        self.assertEqual(node2.children[0].prior, 0.6)
 
         # Verify batch generation called
         self.transformer.generate_tactics_with_probs_batch.assert_called_once()

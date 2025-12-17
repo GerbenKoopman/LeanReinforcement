@@ -106,7 +106,7 @@ class MCTS_GuidedRollout(BaseMCTS):
 
         if node.children:
             best_edge = self._get_best_edge(node)
-            return best_edge.child, best_edge
+            return node, best_edge
         return node, None
 
     def _expand_batch(self, nodes: List[Node]) -> List[tuple[Node, Optional[Edge]]]:
