@@ -11,7 +11,7 @@ import os
 import pickle
 
 from lean_dojo import DojoInitError
-from ReProver.common import Corpus, Pos
+from ReProver.common import Corpus, IndexedCorpus, Pos
 
 from lean_reinforcement.utilities.dataloader import LeanDataLoader
 from lean_reinforcement.utilities.gym import LeanDojoEnv
@@ -121,8 +121,11 @@ def worker_loop(
     if isinstance(corpus_path, str):
         if corpus_path.endswith(".pkl") or corpus_path.endswith(".pickle"):
             with open(corpus_path, "rb") as f:
-                indexed_corpus = pickle.load(f)
-            corpus = indexed_corpus.corpus
+                obj = pickle.load(f)
+            if isinstance(obj, IndexedCorpus):
+                corpus = obj.corpus
+            else:
+                corpus = obj
         else:
             corpus = Corpus(corpus_path)
     else:
