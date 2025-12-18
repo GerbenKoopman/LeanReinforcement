@@ -8,6 +8,7 @@ import torch.multiprocessing as mp
 import gc
 import queue
 import os
+import pickle
 
 from lean_dojo import DojoInitError
 from ReProver.common import Corpus, Pos
@@ -118,7 +119,12 @@ def worker_loop(
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
     if isinstance(corpus_path, str):
-        corpus = Corpus(corpus_path)
+        if corpus_path.endswith(".pkl") or corpus_path.endswith(".pickle"):
+            with open(corpus_path, "rb") as f:
+                indexed_corpus = pickle.load(f)
+            corpus = indexed_corpus.corpus
+        else:
+            corpus = Corpus(corpus_path)
     else:
         corpus = corpus_path
 
