@@ -13,7 +13,6 @@ import torch.multiprocessing as mp
 from torch.utils.data import DataLoader
 from loguru import logger
 import wandb
-import tempfile
 
 from ReProver.common import Corpus
 
@@ -183,14 +182,11 @@ class Trainer:
     def _start_workers(self) -> None:
         logger.info(f"Starting {self.config.num_workers} workers")
         self.workers = []
-
-        # Create a named temp file that persists so workers can read it
-        self.temp_corpus_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pkl")
-        logger.info(f"Saving temporary corpus to {self.temp_corpus_file.name}")
-        pickle.dump(self.corpus, self.temp_corpus_file)
-        self.temp_corpus_file.close()
-
-        corpus_arg = self.temp_corpus_file.name
+        corpus_arg = (
+            self.config.indexed_corpus_path
+            if self.config.indexed_corpus_path
+            else self.corpus
+        )
 
         for i in range(self.config.num_workers):
             p = mp.Process(
@@ -220,15 +216,6 @@ class Trainer:
                 p.terminate()
                 p.join()
         self.workers = []
-
-        # Clean up temp file
-        if hasattr(self, "temp_corpus_file") and os.path.exists(
-            self.temp_corpus_file.name
-        ):
-            try:
-                os.unlink(self.temp_corpus_file.name)
-            except Exception as e:
-                logger.warning(f"Failed to delete temp corpus file: {e}")
 
     def _cleanup_workers(self) -> None:
         logger.info("Shutting down workers...")
