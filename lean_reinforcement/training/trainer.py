@@ -182,12 +182,6 @@ class Trainer:
     def _start_workers(self) -> None:
         logger.info(f"Starting {self.config.num_workers} workers")
         self.workers = []
-        corpus_arg = (
-            self.config.indexed_corpus_path
-            if self.config.indexed_corpus_path
-            else self.corpus
-        )
-
         for i in range(self.config.num_workers):
             p = mp.Process(
                 target=worker_loop,
@@ -197,7 +191,7 @@ class Trainer:
                     self.response_queues[i],
                     self.theorem_queue,
                     self.result_queue,
-                    corpus_arg,
+                    self.corpus,
                     self.config,
                 ),
             )
