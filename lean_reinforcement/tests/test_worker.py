@@ -20,6 +20,7 @@ class TestWorker(unittest.TestCase):
             save_training_data=False,
             save_checkpoints=False,
             resume=False,
+            use_test_value_head=False,
             checkpoint_dir=None,
             mcts_type="guided_rollout",
             indexed_corpus_path=None,

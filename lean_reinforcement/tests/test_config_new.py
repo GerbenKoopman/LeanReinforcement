@@ -28,6 +28,7 @@ class TestTrainingConfig(unittest.TestCase):
             use_final_reward=True,
             save_training_data=False,
             save_checkpoints=False,
+            use_test_value_head=False,
             checkpoint_dir="/tmp/ckpt",
             use_wandb=False,
         )

@@ -25,6 +25,7 @@ class TestCheckpoint(unittest.TestCase):
             save_training_data=True,
             save_checkpoints=True,
             resume=False,
+            use_test_value_head=False,
             checkpoint_dir=str(self.checkpoint_dir),
             use_wandb=False,
         )
