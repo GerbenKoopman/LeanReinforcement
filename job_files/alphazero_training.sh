@@ -2,11 +2,11 @@
 
 #SBATCH --partition=gpu_a100
 #SBATCH --gpus=1
-#SBATCH --job-name=training
+#SBATCH --job-name=alphazero_training
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=18
 #SBATCH --time=12:00:00
-#SBATCH --output=logs/training_%A.out
+#SBATCH --output=logs/alphazero_training_%A.out
 
 module purge
 module load 2024
@@ -41,7 +41,7 @@ srun python3 -m lean_reinforcement.training.train \
     --batch-size 4 \
     --num-tactics-to-expand 16 \
     --num-workers 16 \
-    --mcts-type guided_rollout \
+    --mcts-type alpha_zero \
     --train-epochs 1 \
     --train-value-head \
     --use-final-reward \

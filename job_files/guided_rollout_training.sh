@@ -2,11 +2,11 @@
 
 #SBATCH --partition=gpu_a100
 #SBATCH --gpus=1
-#SBATCH --job-name=training
+#SBATCH --job-name=guided_rollout_training
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=18
 #SBATCH --time=12:00:00
-#SBATCH --output=logs/training_%A.out
+#SBATCH --output=logs/guided_rollout_training_%A.out
 
 module purge
 module load 2024
