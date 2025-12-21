@@ -63,9 +63,24 @@ class Trainer:
         if self.config.mcts_type == "alpha_zero" or self.config.train_value_head:
             self.value_head = ValueHead(self.transformer)
 
-            if self.config.resume:
-                self.start_epoch = load_checkpoint(self.value_head, self.checkpoint_dir)
-                logger.info(f"Resuming training from epoch {self.start_epoch}")
+            if self.config.resume or self.config.use_test_value_head:
+                if self.config.use_test_value_head:
+                    prefix = "value_head_test"
+                else:
+                    prefix = f"value_head_{self.config.mcts_type}"
+
+                loaded_epoch = load_checkpoint(
+                    self.value_head, self.checkpoint_dir, prefix=prefix
+                )
+
+                if self.config.resume:
+                    self.start_epoch = loaded_epoch
+                    logger.info(f"Resuming training from epoch {self.start_epoch}")
+                else:
+                    logger.info(
+                        f"Initialized value head from {prefix} (epoch {loaded_epoch})"
+                    )
+                    self.start_epoch = 0
 
         self._log_gpu_memory("After model initialization - ")
 
@@ -174,8 +189,13 @@ class Trainer:
             and self.value_head is not None
             and self.config.save_checkpoints
         ):
+            prefix = f"value_head_{self.config.mcts_type}"
             save_checkpoint(
-                self.value_head, epoch + 1, self.checkpoint_dir, self.config
+                self.value_head,
+                epoch + 1,
+                self.checkpoint_dir,
+                self.config,
+                prefix=prefix,
             )
             logger.info(f"Checkpoint saved for epoch {epoch + 1}")
 
