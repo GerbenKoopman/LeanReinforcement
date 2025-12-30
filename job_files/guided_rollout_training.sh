@@ -5,7 +5,7 @@
 #SBATCH --job-name=guided_rollout_training
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=18
-#SBATCH --time=12:00:00
+#SBATCH --time=48:00:00
 #SBATCH --output=logs/guided_rollout_training_%A.out
 
 module purge
@@ -34,13 +34,13 @@ echo "Starting training run with distributed environment..."
 srun python3 -m lean_reinforcement.training.train \
     --data-type novel_premises \
     --indexed-corpus-path $CORPUS_DIR/indexed_corpus.pkl \
-    --num-epochs 10 \
+    --num-epochs 30 \
     --num-theorems 128 \
-    --num-iterations 200 \
+    --num-iterations 1000 \
     --max-steps 30 \
-    --batch-size 4 \
+    --batch-size 8 \
     --num-tactics-to-expand 16 \
-    --num-workers 16 \
+    --num-workers 8 \
     --mcts-type guided_rollout \
     --train-epochs 1 \
     --train-value-head \
