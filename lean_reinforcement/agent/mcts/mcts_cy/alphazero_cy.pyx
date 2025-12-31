@@ -89,7 +89,10 @@ cdef class MCTS_AlphaZero(BaseMCTS):
         )
 
         for tactic, prob in tactics_with_probs:
-            next_state = self.env.run_tactic_stateless(node.state, tactic)
+            try:
+                next_state = self.env.run_tactic_stateless(node.state, tactic)
+            except Exception as e:
+                next_state = LeanError(error=str(e))
             
             if isinstance(next_state, (LeanError, ProofGivenUp)):
                 continue

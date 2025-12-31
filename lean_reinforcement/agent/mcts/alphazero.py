@@ -98,7 +98,10 @@ class MCTS_AlphaZero(BaseMCTS):
 
         # Create a child for each promising tactic
         for tactic, prob in tactics_with_probs:
-            next_state = self.env.run_tactic_stateless(node.state, tactic)
+            try:
+                next_state = self.env.run_tactic_stateless(node.state, tactic)
+            except Exception as e:
+                next_state = LeanError(error=str(e))
 
             # Prune Error States
             if isinstance(next_state, (LeanError, ProofGivenUp)):
