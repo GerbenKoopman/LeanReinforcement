@@ -4,8 +4,10 @@ Data loader for LeanDojo traced repositories and theorems.
 
 import os
 import json
+import shutil
 from typing import List, Optional
 from pathlib import Path
+from loguru import logger
 
 from lean_dojo import LeanGitRepo, TracedRepo, trace, Theorem
 from ReProver.common import Corpus, Pos
@@ -65,16 +67,39 @@ class LeanDataLoader:
         self,
         url: str = "https://github.com/leanprover-community/mathlib4",
         commit: str = "29dcec074de168ac2bf835a77ef68bbe069194c5",
+        max_retries: int = 2,
     ) -> TracedRepo:
         """
         Traces a Lean Repository using the LeanDojo library.
+        Handles corrupted cache by clearing and retrying.
         """
+        from git.exc import InvalidGitRepositoryError
 
         repo = LeanGitRepo(url, commit)
 
-        traced_repo = trace(repo)
+        for attempt in range(max_retries):
+            try:
+                traced_repo = trace(repo)
+                return traced_repo
+            except InvalidGitRepositoryError as e:
+                if attempt < max_retries - 1:
+                    logger.warning(
+                        f"Corrupted LeanDojo cache detected (attempt {attempt + 1}/{max_retries}): {e}"
+                    )
+                    # Clear the corrupted cache
+                    cache_dir = Path.home() / ".cache" / "lean_dojo"
+                    if cache_dir.exists():
+                        logger.info(f"Clearing LeanDojo cache at {cache_dir}")
+                        shutil.rmtree(cache_dir, ignore_errors=True)
+                    logger.info("Retrying trace operation...")
+                else:
+                    logger.error(
+                        f"Failed to trace repository after {max_retries} attempts. "
+                        f"Cache may be corrupted at: {e}"
+                    )
+                    raise
 
-        return traced_repo
+        raise RuntimeError("trace_repo failed to return or raise")
 
     def get_premises(self, theorem: Theorem, theorem_pos: Pos) -> List[str]:
         """Retrieve all accessible premises given a theorem."""
