@@ -86,11 +86,17 @@ class LeanDataLoader:
                     logger.warning(
                         f"Corrupted LeanDojo cache detected (attempt {attempt + 1}/{max_retries}): {e}"
                     )
-                    # Clear the corrupted cache
-                    cache_dir = Path.home() / ".cache" / "lean_dojo"
-                    if cache_dir.exists():
-                        logger.info(f"Clearing LeanDojo cache at {cache_dir}")
-                        shutil.rmtree(cache_dir, ignore_errors=True)
+                    cache_paths: List[Path] = []
+                    cache_env = os.environ.get("LEAN_DOJO_CACHE_DIR") or os.environ.get(
+                        "CACHE_DIR"
+                    )
+                    if cache_env:
+                        cache_paths.append(Path(cache_env))
+                    else:
+                        cache_paths.append(Path.home() / ".cache" / "lean_dojo")
+
+                    cache_paths.append(Path(str(e)))
+                    self._clear_cache_paths(cache_paths)
                     logger.info("Retrying trace operation...")
                 else:
                     logger.error(
@@ -100,6 +106,12 @@ class LeanDataLoader:
                     raise
 
         raise RuntimeError("trace_repo failed to return or raise")
+
+    def _clear_cache_paths(self, paths: List[Path]) -> None:
+        for path in paths:
+            if path.exists():
+                logger.info(f"Clearing LeanDojo cache at {path}")
+                shutil.rmtree(path, ignore_errors=True)
 
     def get_premises(self, theorem: Theorem, theorem_pos: Pos) -> List[str]:
         """Retrieve all accessible premises given a theorem."""
