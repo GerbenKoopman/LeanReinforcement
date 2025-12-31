@@ -302,9 +302,11 @@ class BaseMCTS:
         """
         if not self.root.children:
             # If no children, we might need to generate tactics from the root
-            if self.root.untried_actions is None and isinstance(
-                self.root.state, TacticState
-            ):
+            should_generate = (
+                self.root.untried_actions is None or len(self.root.untried_actions) == 0
+            )
+
+            if should_generate and isinstance(self.root.state, TacticState):
                 state_str = self.root.state.pp
 
                 self.root.untried_actions = self.transformer.generate_tactics(

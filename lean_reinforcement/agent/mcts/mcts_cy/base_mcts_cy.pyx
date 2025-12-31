@@ -248,9 +248,12 @@ cdef class BaseMCTS:
         cdef Edge best_edge
 
         if not self.root.children:
-            if self.root.untried_actions is None and isinstance(
-                self.root.state, TacticState
-            ):
+            should_generate = (
+                self.root.untried_actions is None
+                or len(self.root.untried_actions) == 0
+            )
+
+            if should_generate and isinstance(self.root.state, TacticState):
                 state_str = self.root.state.pp
                 self.root.untried_actions = self.transformer.generate_tactics(
                     state_str, n=self.num_tactics_to_expand
