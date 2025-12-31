@@ -105,7 +105,6 @@ class BaseMCTS:
             raise TypeError(f"Invalid initial state type: {type(env.current_state)}")
 
         self.root = self._get_or_create_node(env.current_state)
-        self.node_count = 1
 
     def _get_or_create_node(
         self, state: TacticState | ProofFinished | LeanError | ProofGivenUp
@@ -115,13 +114,18 @@ class BaseMCTS:
         """
         if isinstance(state, TacticState):
             key = state.pp
-            if key in self.nodes:
-                return self.nodes[key]
+            node = self.nodes.get(key)
+            if node is not None:
+                return node
+
             node = Node(state)
             self.nodes[key] = node
+            self.node_count += 1
             return node
-        else:
-            return Node(state)
+
+        node = Node(state)
+        self.node_count += 1
+        return node
 
     def _get_virtual_loss(self, node: Node) -> int:
         return self.virtual_losses.get(node, 0)
@@ -344,5 +348,9 @@ class BaseMCTS:
                     f"Invalid state type for new root: {type(self.env.current_state)}"
                 )
 
+            # Fully reset transposition table and virtual losses to avoid mixing trees.
+            self.nodes.clear()
+            self.virtual_losses.clear()
+            self.node_count = 0
+
             self.root = self._get_or_create_node(self.env.current_state)
-            self.node_count = 1
