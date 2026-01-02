@@ -35,4 +35,5 @@ dependencies:
     - types-tqdm
     - types-setuptools
     - cython
+    - bitsandbytes
     
