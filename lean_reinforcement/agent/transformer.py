@@ -3,8 +3,9 @@ A transformer class that loads the ReProver model and provides easy
 tactic generation.
 """
 
+import os
 import torch
-from typing import List, Protocol, Tuple, runtime_checkable
+from typing import List, Protocol, Tuple, runtime_checkable, Optional
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 
@@ -26,10 +27,56 @@ class TransformerProtocol(Protocol):
 
 
 class Transformer:
-    def __init__(self, model_name: str = "kaiyuy/leandojo-lean4-tacgen-byt5-small"):
+    def __init__(
+        self,
+        model_name: str = "kaiyuy/leandojo-lean4-tacgen-byt5-small",
+        torch_dtype: Optional[torch.dtype] = None,
+        load_in_8bit: bool = False,
+        load_in_4bit: bool = False,
+        device_map: Optional[str] = "auto",
+    ):
+        """
+        Lightweight HF model loader; defaults to mixed precision to save memory.
+
+        Args:
+            model_name: HF repo id or path.
+            torch_dtype: dtype for weights; if None, auto-select bfloat16 on CUDA,
+                         else float32 on CPU. Override via env LEAN_TRANSFORMER_DTYPE.
+            load_in_8bit/load_in_4bit: bitsandbytes quantization flags (mutually exclusive).
+            device_map: passed to HF for sharded placement; defaults to "auto".
+        """
+
+        env_dtype = os.environ.get("LEAN_TRANSFORMER_DTYPE")
+        if torch_dtype is None:
+            if env_dtype:
+                env_dtype_lower = env_dtype.lower()
+                if env_dtype_lower in {"bf16", "bfloat16"}:
+                    torch_dtype = torch.bfloat16
+                elif env_dtype_lower in {"fp16", "float16", "half"}:
+                    torch_dtype = torch.float16
+                elif env_dtype_lower in {"fp32", "float32", "full"}:
+                    torch_dtype = torch.float32
+            if torch_dtype is None:
+                torch_dtype = (
+                    torch.bfloat16 if torch.cuda.is_available() else torch.float32
+                )
+
+        if load_in_8bit and load_in_4bit:
+            raise ValueError("Choose only one of load_in_8bit or load_in_4bit")
+
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name).to(self.device)
+
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(
+            model_name,
+            torch_dtype=torch_dtype,
+            load_in_8bit=load_in_8bit,
+            load_in_4bit=load_in_4bit,
+            device_map=device_map,
+        )
+
+        if device_map is None:
+            self.model.to(self.device)
 
     @torch.no_grad()
     def generate_tactics(self, state: str, n: int = 1) -> List[str]:

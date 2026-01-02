@@ -30,6 +30,9 @@ class TrainingConfig:
     checkpoint_dir: Optional[str]
     use_wandb: bool
 
+    # Quantization / loading
+    load_in_8bit: bool = False
+
     # Model Args
     model_name: str = "kaiyuy/leandojo-lean4-tacgen-byt5-small"
     num_tactics_to_expand: int = 32
@@ -63,6 +66,7 @@ class TrainingConfig:
             use_test_value_head=args.use_test_value_head,
             checkpoint_dir=args.checkpoint_dir,
             use_wandb=args.use_wandb,
+            load_in_8bit=args.load_in_8bit,
         )
 
 
@@ -213,6 +217,13 @@ def get_config() -> TrainingConfig:
         action="store_true",
         default=True,
         help="Use wandb for logging.",
+    )
+
+    parser.add_argument(
+        "--load-in-8bit",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Load transformer weights in 8-bit (bitsandbytes) to reduce memory.",
     )
 
     args = parser.parse_args()
