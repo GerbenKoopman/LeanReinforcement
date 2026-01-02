@@ -48,4 +48,5 @@ srun python3 -m lean_reinforcement.training.train \
     --save-training-data \
     --save-checkpoints \
     --resume \
-    --use-wandb
+    --use-wandb \
+    --load-in-8bit
