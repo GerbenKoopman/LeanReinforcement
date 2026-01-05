@@ -121,8 +121,9 @@ class TestBaseMCTS(unittest.TestCase):
         # Test moving to an existing child
         mcts.move_root("tactic1")
         self.assertIs(mcts.root, child1)
-        # Node count is just len(self.nodes) in new implementation
-        self.assertEqual(mcts.node_count, 4)
+        # After move_root, unreachable nodes (root, child2) are pruned
+        # Only child1 and grandchild remain reachable
+        self.assertEqual(mcts.node_count, 2)
 
         # Test moving to a non-existent child (should reset)
         # First, update env.current_state to match what we expect for a reset
