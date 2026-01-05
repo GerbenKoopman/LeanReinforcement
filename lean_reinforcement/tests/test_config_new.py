@@ -32,6 +32,7 @@ class TestTrainingConfig(unittest.TestCase):
             checkpoint_dir="/tmp/ckpt",
             use_wandb=False,
             load_in_8bit=False,
+            max_theorems_per_worker=8,
         )
 
         config = TrainingConfig.from_args(args)
