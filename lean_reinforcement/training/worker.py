@@ -131,6 +131,9 @@ def worker_loop(
         corpus, dataset_path="leandojo_benchmark_4", data_type=args.data_type
     )
 
+    theorems_processed = 0
+    max_theorems = args.max_theorems_per_worker
+
     while True:
         try:
             thm_data = theorem_queue.get(timeout=1)
@@ -138,6 +141,17 @@ def worker_loop(
             continue
 
         if thm_data is None:
+            break
+
+        # Check if we need to be recycled (signal back via special result)
+        if theorems_processed >= max_theorems:
+            # Put theorem back for another worker
+            theorem_queue.put(thm_data)
+            # Signal that this worker needs recycling
+            result_queue.put({"recycle_worker": worker_id})
+            logger.info(
+                f"Worker {worker_id} requesting recycle after {theorems_processed} theorems"
+            )
             break
 
         # Process theorem
@@ -151,3 +165,7 @@ def worker_loop(
 
         # Send result back
         result_queue.put(data)
+        theorems_processed += 1
+
+        # Force garbage collection after each theorem
+        gc.collect()

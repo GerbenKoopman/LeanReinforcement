@@ -234,6 +234,33 @@ class Trainer:
                 p.join()
         self.workers = []
 
+    def _recycle_worker(self, worker_id: int) -> None:
+        """Recycle a worker that has requested to be restarted due to memory limits."""
+        old_worker = self.workers[worker_id]
+
+        # Wait for old worker to finish
+        old_worker.join(timeout=5)
+        if old_worker.is_alive():
+            old_worker.terminate()
+            old_worker.join()
+
+        # Start new worker with same ID
+        new_worker = mp.Process(
+            target=worker_loop,
+            args=(
+                worker_id,
+                self.request_queue,
+                self.response_queues[worker_id],
+                self.theorem_queue,
+                self.result_queue,
+                self.corpus,
+                self.config,
+            ),
+        )
+        new_worker.start()
+        self.workers[worker_id] = new_worker
+        logger.info(f"Worker {worker_id} recycled successfully")
+
     def _cleanup_workers(self) -> None:
         logger.info("Shutting down workers...")
         for p in self.workers:
@@ -282,6 +309,13 @@ class Trainer:
                 while True:
                     res = self.result_queue.get_nowait()
                     if res:
+                        # Handle worker recycle request
+                        if "recycle_worker" in res:
+                            worker_id = res["recycle_worker"]
+                            logger.info(f"Recycling worker {worker_id} to free memory")
+                            self._recycle_worker(worker_id)
+                            continue  # Don't count as completed theorem
+
                         if "metrics" in res and self.config.use_wandb:
                             wandb.log(res["metrics"])
 
@@ -296,28 +330,38 @@ class Trainer:
                                     f.write(json.dumps(item) + "\n")
                             training_data_buffer = []
 
-                    completed_theorems += 1
-                    if completed_theorems % self.config.num_workers == 0:
-                        logger.info(
-                            f"Completed {completed_theorems}/{len(theorems_to_process)} proofs"
-                        )
+                        # Only count actual theorem completions (not recycle requests)
+                        completed_theorems += 1
+                        if completed_theorems % self.config.num_workers == 0:
+                            logger.info(
+                                f"Completed {completed_theorems}/{len(theorems_to_process)} proofs"
+                            )
             except queue.Empty:
                 pass
 
             if not processed_batch:
                 time.sleep(0.01)
 
-            dead_workers = [p for p in self.workers if not p.is_alive()]
+            dead_workers = [
+                (i, p) for i, p in enumerate(self.workers) if not p.is_alive()
+            ]
             if dead_workers:
-                logger.error(
-                    f"Found {len(dead_workers)} dead worker(s). Stopping training."
-                )
-                for p in dead_workers:
-                    logger.error(f"Worker exit code: {p.exitcode}")
-                for p in self.workers:
-                    if p.is_alive():
-                        p.terminate()
-                raise RuntimeError("One or more worker processes died unexpectedly.")
+                # Check if it's a graceful exit (recycling) vs crash
+                crashed = [
+                    (i, p) for i, p in dead_workers if p.exitcode not in (0, None)
+                ]
+                if crashed:
+                    logger.error(
+                        f"Found {len(crashed)} crashed worker(s). Stopping training."
+                    )
+                    for i, p in crashed:
+                        logger.error(f"Worker {i} exit code: {p.exitcode}")
+                    for p in self.workers:
+                        if p.is_alive():
+                            p.terminate()
+                    raise RuntimeError(
+                        "One or more worker processes died unexpectedly."
+                    )
 
         # Load back temp data
         if os.path.exists(temp_data_file):

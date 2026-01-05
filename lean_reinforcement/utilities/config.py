@@ -33,6 +33,11 @@ class TrainingConfig:
     # Quantization / loading
     load_in_8bit: bool = False
 
+    # Worker memory management
+    max_theorems_per_worker: int = (
+        8  # Restart workers after this many theorems to prevent memory leaks
+    )
+
     # Model Args
     model_name: str = "kaiyuy/leandojo-lean4-tacgen-byt5-small"
     num_tactics_to_expand: int = 32
@@ -67,6 +72,7 @@ class TrainingConfig:
             checkpoint_dir=args.checkpoint_dir,
             use_wandb=args.use_wandb,
             load_in_8bit=args.load_in_8bit,
+            max_theorems_per_worker=args.max_theorems_per_worker,
         )
 
 
@@ -160,6 +166,12 @@ def get_config() -> TrainingConfig:
         type=int,
         default=100,
         help="Max time (seconds) per tactic.",
+    )
+    parser.add_argument(
+        "--max-theorems-per-worker",
+        type=int,
+        default=8,
+        help="Restart workers after processing this many theorems to prevent memory leaks.",
     )
 
     # --- Training Args ---
