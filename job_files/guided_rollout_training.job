@@ -38,9 +38,9 @@ srun python3 -m lean_reinforcement.training.train \
     --num-theorems 128 \
     --num-iterations 256 \
     --max-steps 30 \
-    --batch-size 8 \
-    --num-tactics-to-expand 16 \
-    --num-workers 8 \
+    --batch-size 32 \
+    --num-tactics-to-expand 32 \
+    --num-workers 16 \
     --mcts-type guided_rollout \
     --train-epochs 4 \
     --train-value-head \
