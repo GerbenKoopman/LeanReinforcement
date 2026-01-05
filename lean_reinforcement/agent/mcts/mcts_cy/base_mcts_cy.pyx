@@ -111,6 +111,63 @@ cdef class BaseMCTS:
                 f"GPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved"
             )
 
+    cpdef set _get_reachable_nodes(self, Node root):
+        """
+        Find all nodes reachable from the given root via BFS.
+        Used for pruning unreachable nodes from the transposition table.
+        """
+        cdef set reachable = set()
+        cdef list queue = [root]
+        cdef Node node
+        cdef Edge edge
+        
+        while queue:
+            node = queue.pop(0)
+            if node in reachable:
+                continue
+            reachable.add(node)
+            
+            for edge in node.children:
+                if edge.child not in reachable:
+                    queue.append(edge.child)
+        
+        return reachable
+
+    cpdef int _prune_unreachable_nodes(self, Node new_root):
+        """
+        Remove nodes from the transposition table that are not reachable from new_root.
+        Returns the number of nodes pruned.
+        """
+        cdef set reachable = self._get_reachable_nodes(new_root)
+        cdef list keys_to_remove = []
+        cdef str key
+        cdef Node node
+        cdef int pruned_count
+        
+        # Find keys to remove
+        for key, node in self.nodes.items():
+            if node not in reachable:
+                keys_to_remove.append(key)
+                # Clear any cached tensors on unreachable nodes
+                if node.encoder_features is not None:
+                    del node.encoder_features
+                    node.encoder_features = None
+        
+        # Remove unreachable nodes
+        for key in keys_to_remove:
+            del self.nodes[key]
+        
+        # Clean up virtual losses for unreachable nodes
+        cdef list nodes_with_vl = list(self.virtual_losses.keys())
+        for node in nodes_with_vl:
+            if node not in reachable:
+                del self.virtual_losses[node]
+        
+        pruned_count = len(keys_to_remove)
+        self.node_count = len(self.nodes)
+        
+        return pruned_count
+
     def search(self, int num_iterations, batch_size=None):
         cdef int iteration
         cdef int current_batch_size
@@ -272,7 +329,12 @@ cdef class BaseMCTS:
         return best_edge.action
 
     def move_root(self, str action):
+        """
+        Moves the root of the tree to the child corresponding to the given action.
+        This allows for subtree reuse while pruning unreachable nodes.
+        """
         cdef Edge edge
+        cdef int pruned
         found_edge = None
         for edge in self.root.children:
             if edge.action == action:
@@ -281,6 +343,10 @@ cdef class BaseMCTS:
 
         if found_edge:
             self.root = found_edge.child
+            # Prune nodes that are no longer reachable from the new root
+            pruned = self._prune_unreachable_nodes(self.root)
+            if pruned > 0:
+                logger.debug(f"Pruned {pruned} unreachable nodes from transposition table")
         else:
             if not isinstance(
                 self.env.current_state,

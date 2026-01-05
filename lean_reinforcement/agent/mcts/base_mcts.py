@@ -148,6 +148,61 @@ class BaseMCTS:
                 f"GPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved"
             )
 
+    def _get_reachable_nodes(self, root: Node) -> set:
+        """
+        Find all nodes reachable from the given root via BFS.
+        Used for pruning unreachable nodes from the transposition table.
+        """
+        reachable = set()
+        queue = [root]
+
+        while queue:
+            node = queue.pop(0)
+            if node in reachable:
+                continue
+            reachable.add(node)
+
+            for edge in node.children:
+                if edge.child not in reachable:
+                    queue.append(edge.child)
+
+        return reachable
+
+    def _prune_unreachable_nodes(self, new_root: Node) -> int:
+        """
+        Remove nodes from the transposition table that are not reachable from new_root.
+        Returns the number of nodes pruned.
+        """
+        reachable = self._get_reachable_nodes(new_root)
+
+        # Find keys to remove
+        keys_to_remove = []
+        for key, node in self.nodes.items():
+            if node not in reachable:
+                keys_to_remove.append(key)
+                # Clear any cached tensors on unreachable nodes
+                if (
+                    hasattr(node, "encoder_features")
+                    and node.encoder_features is not None
+                ):
+                    del node.encoder_features
+                    node.encoder_features = None
+
+        # Remove unreachable nodes
+        for key in keys_to_remove:
+            del self.nodes[key]
+
+        # Clean up virtual losses for unreachable nodes
+        nodes_with_vl = list(self.virtual_losses.keys())
+        for node in nodes_with_vl:
+            if node not in reachable:
+                del self.virtual_losses[node]
+
+        pruned_count = len(keys_to_remove)
+        self.node_count = len(self.nodes)
+
+        return pruned_count
+
     def search(self, num_iterations: int, batch_size: Optional[int] = None) -> None:
         """
         Run the MCTS search for a given number of iterations with batching.
@@ -330,7 +385,7 @@ class BaseMCTS:
     def move_root(self, action: str):
         """
         Moves the root of the tree to the child corresponding to the given action.
-        This allows for subtree reuse.
+        This allows for subtree reuse while pruning unreachable nodes.
         """
         found_edge = None
         for edge in self.root.children:
@@ -340,6 +395,12 @@ class BaseMCTS:
 
         if found_edge:
             self.root = found_edge.child
+            # Prune nodes that are no longer reachable from the new root
+            pruned = self._prune_unreachable_nodes(self.root)
+            if pruned > 0:
+                logger.debug(
+                    f"Pruned {pruned} unreachable nodes from transposition table"
+                )
         else:
             # If child not found, reset the tree with the current environment state
             if not isinstance(

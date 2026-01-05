@@ -37,6 +37,8 @@ cdef class BaseMCTS:
     cpdef int _get_virtual_loss(self, Node node)
     cpdef void _add_virtual_loss(self, Node node, int loss=*)
     cpdef void _remove_virtual_loss(self, Node node, int loss=*)
+    cpdef set _get_reachable_nodes(self, Node root)
+    cpdef int _prune_unreachable_nodes(self, Node new_root)
     cpdef tuple _select(self, Node node)
     cpdef Edge _get_best_edge(self, Node node)
     cpdef tuple _expand(self, Node node)
