@@ -1,3 +1,4 @@
+import gc
 import math
 import time
 import torch
@@ -186,10 +187,15 @@ cdef class BaseMCTS:
             batch_size = self.batch_size
         
         cdef int b_size = batch_size
+        cdef int gc_interval = 50
         start_time = time.time()
 
         with torch.no_grad():
             for iteration in range(0, num_iterations, b_size):
+                # Periodic garbage collection to prevent memory buildup
+                if iteration > 0 and iteration % gc_interval == 0:
+                    gc.collect()
+
                 # Early stopping if solution found
                 if self.root.max_value == 1.0:
                     break
