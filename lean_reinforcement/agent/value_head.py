@@ -45,6 +45,9 @@ class ValueHead(nn.Module):
             hidden_state * tokenized_s.attention_mask.unsqueeze(2)
         ).sum(dim=1) / lens.unsqueeze(1)
 
+        # Convert to float32 for value head compatibility (encoder may output float16/bfloat16)
+        features = features.float()
+
         # Clean up intermediate tensors
         del tokenized_s
         del hidden_state

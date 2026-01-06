@@ -57,9 +57,12 @@ class Transformer:
                 elif env_dtype_lower in {"fp32", "float32", "full"}:
                     torch_dtype = torch.float32
             if torch_dtype is None:
-                torch_dtype = (
-                    torch.bfloat16 if torch.cuda.is_available() else torch.float32
-                )
+                if load_in_8bit or load_in_4bit:
+                    torch_dtype = torch.float16
+                else:
+                    torch_dtype = (
+                        torch.bfloat16 if torch.cuda.is_available() else torch.float32
+                    )
 
         if load_in_8bit and load_in_4bit:
             raise ValueError("Choose only one of load_in_8bit or load_in_4bit")
