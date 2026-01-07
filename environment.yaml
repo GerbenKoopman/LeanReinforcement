@@ -27,7 +27,6 @@ dependencies:
     - openai
     - rank_bm25
     - vllm
-    - accelerate
     - -e ReProver/
     - pre-commit
     - gymnasium
@@ -36,5 +35,4 @@ dependencies:
     - types-tqdm
     - types-setuptools
     - cython
-    - bitsandbytes
     
