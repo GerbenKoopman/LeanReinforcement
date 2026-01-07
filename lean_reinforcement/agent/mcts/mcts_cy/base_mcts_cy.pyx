@@ -164,6 +164,12 @@ cdef class BaseMCTS:
             if node not in reachable:
                 del self.virtual_losses[node]
         
+        for node in reachable:
+            if node is not new_root:
+                if node.encoder_features is not None:
+                    del node.encoder_features
+                    node.encoder_features = None
+        
         pruned_count = len(keys_to_remove)
         self.node_count = len(self.nodes)
         
@@ -188,6 +194,8 @@ cdef class BaseMCTS:
         
         cdef int b_size = batch_size
         cdef int gc_interval = 50
+        cdef int prune_interval = 100
+        cdef int pruned
         start_time = time.time()
 
         with torch.no_grad():
@@ -195,6 +203,20 @@ cdef class BaseMCTS:
                 # Periodic garbage collection to prevent memory buildup
                 if iteration > 0 and iteration % gc_interval == 0:
                     gc.collect()
+
+                if iteration > 0 and iteration % prune_interval == 0:
+                    pruned = self._prune_unreachable_nodes(self.root)
+                    if pruned > 0:
+                        logger.debug(
+                            f"Iteration {iteration}: Pruned {pruned} unreachable nodes"
+                        )
+
+                if len(self.nodes) > self.max_tree_nodes:
+                    pruned = self._prune_unreachable_nodes(self.root)
+                    logger.warning(
+                        f"Transposition table exceeded max ({self.max_tree_nodes}), "
+                        f"pruned {pruned} nodes"
+                    )
 
                 # Early stopping if solution found
                 if self.root.max_value == 1.0:
