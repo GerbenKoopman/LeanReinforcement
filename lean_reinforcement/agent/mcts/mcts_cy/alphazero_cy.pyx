@@ -16,7 +16,7 @@ cdef class MCTS_AlphaZero(BaseMCTS):
         env: LeanDojoEnv,
         transformer: TransformerProtocol,
         float exploration_weight=1.41421356,
-        int max_tree_nodes=10000,
+        int max_tree_nodes=1000,
         int batch_size=8,
         int num_tactics_to_expand=8,
         int max_rollout_depth=30,
@@ -101,8 +101,6 @@ cdef class MCTS_AlphaZero(BaseMCTS):
             edge = Edge(action=tactic, prior=prob, child=child_node)
             node.children.append(edge)
             
-            if isinstance(next_state, TacticState) and child_node.encoder_features is None:
-                child_node.encoder_features = self.value_head.encode_states([next_state.pp])
 
         node.untried_actions = []
         return node, None

@@ -28,7 +28,7 @@ class MCTS_AlphaZero(BaseMCTS):
         env: LeanDojoEnv,
         transformer: TransformerProtocol,
         exploration_weight: float = math.sqrt(2),
-        max_tree_nodes: int = 10000,
+        max_tree_nodes: int = 1000,
         batch_size: int = 8,
         num_tactics_to_expand: int = 8,
         max_rollout_depth: int = 30,
@@ -112,15 +112,6 @@ class MCTS_AlphaZero(BaseMCTS):
 
             edge = Edge(action=tactic, prior=prob, child=child_node)
             node.children.append(edge)
-
-            # Pre-compute encoder features for children if they're non-terminal TacticStates
-            if (
-                isinstance(next_state, TacticState)
-                and child_node.encoder_features is None
-            ):
-                child_node.encoder_features = self.value_head.encode_states(
-                    [next_state.pp]
-                )
 
         node.untried_actions = []
 

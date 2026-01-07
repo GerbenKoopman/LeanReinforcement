@@ -125,6 +125,10 @@ class AgentRunner:
                 # Extract lightweight data immediately after search
                 root_node = mcts_instance.root
 
+                if root_node is None:
+                    logger.error("MCTS root is None after search")
+                    break
+
                 # Get the best child based on visit count
                 best_child = None
                 best_action = None
@@ -198,12 +202,14 @@ class AgentRunner:
             except Exception as e:
                 logger.error(f"Error in agent loop: {e}")
                 if mcts_instance:
+                    mcts_instance.cleanup()
                     del mcts_instance
                     mcts_instance = None
                 break
 
         # Clean up MCTS instance after loop
         if mcts_instance is not None:
+            mcts_instance.cleanup()
             del mcts_instance
 
         # Final status check

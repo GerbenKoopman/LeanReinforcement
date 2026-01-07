@@ -75,7 +75,7 @@ class BaseMCTS:
         env: LeanDojoEnv,
         transformer: TransformerProtocol,
         exploration_weight: float = math.sqrt(2),
-        max_tree_nodes: int = 10000,
+        max_tree_nodes: int = 1000,
         batch_size: int = 8,
         num_tactics_to_expand: int = 8,
         max_rollout_depth: int = 30,
@@ -94,6 +94,7 @@ class BaseMCTS:
 
         # Transposition Table
         self.nodes: Dict[str, Node] = {}
+        self.terminal_nodes: List[Node] = []
 
         # Get theorem info from the environment
         self.theorem = env.theorem
@@ -105,13 +106,14 @@ class BaseMCTS:
         ):
             raise TypeError(f"Invalid initial state type: {type(env.current_state)}")
 
-        self.root = self._get_or_create_node(env.current_state)
+        self.root: Optional[Node] = self._get_or_create_node(env.current_state)
 
     def _get_or_create_node(
         self, state: TacticState | ProofFinished | LeanError | ProofGivenUp
     ) -> Node:
         """
         Retrieve an existing node from the transposition table or create a new one.
+        Terminal nodes are tracked separately to allow cleanup.
         """
         if isinstance(state, TacticState):
             key = state.pp
@@ -125,6 +127,7 @@ class BaseMCTS:
             return node
 
         node = Node(state)
+        self.terminal_nodes.append(node)
         self.node_count += 1
         return node
 
@@ -199,6 +202,9 @@ class BaseMCTS:
             if node not in reachable:
                 del self.virtual_losses[node]
 
+        # Clean up terminal nodes that are no longer reachable
+        self.terminal_nodes = [n for n in self.terminal_nodes if n in reachable]
+
         for node in reachable:
             if node is not new_root:
                 if (
@@ -209,7 +215,7 @@ class BaseMCTS:
                     node.encoder_features = None
 
         pruned_count = len(keys_to_remove)
-        self.node_count = len(self.nodes)
+        self.node_count = len(self.nodes) + len(self.terminal_nodes)
 
         return pruned_count
 
@@ -217,6 +223,11 @@ class BaseMCTS:
         """
         Run the MCTS search for a given number of iterations with batching.
         """
+        if self.root is None:
+            raise RuntimeError(
+                "Cannot search: MCTS has been cleaned up or not initialized"
+            )
+
         if batch_size is None:
             batch_size = self.batch_size
 
@@ -385,6 +396,9 @@ class BaseMCTS:
         After searching, returns the best tactic (action)
         from the root node, based on the highest visit count.
         """
+        if self.root is None:
+            return None
+
         if not self.root.children:
             # If no children, we might need to generate tactics from the root
             should_generate = (
@@ -417,6 +431,11 @@ class BaseMCTS:
         Moves the root of the tree to the child corresponding to the given action.
         This allows for subtree reuse while pruning unreachable nodes.
         """
+        if self.root is None:
+            raise RuntimeError(
+                "Cannot move root: MCTS has been cleaned up or not initialized"
+            )
+
         found_edge = None
         for edge in self.root.children:
             if edge.action == action:
@@ -443,7 +462,37 @@ class BaseMCTS:
 
             # Fully reset transposition table and virtual losses to avoid mixing trees.
             self.nodes.clear()
+            self.terminal_nodes.clear()
             self.virtual_losses.clear()
             self.node_count = 0
 
             self.root = self._get_or_create_node(self.env.current_state)
+
+    def cleanup(self) -> None:
+        """
+        Explicitly clean up all MCTS resources to prevent memory leaks.
+        Should be called when the MCTS instance is no longer needed.
+        """
+        # Clear encoder features from all nodes (both transposition table and terminal)
+        for node in self.nodes.values():
+            if hasattr(node, "encoder_features") and node.encoder_features is not None:
+                del node.encoder_features
+                node.encoder_features = None
+            # Clear children edges to break reference cycles
+            node.children.clear()
+
+        for node in self.terminal_nodes:
+            node.children.clear()
+
+        # Clear all data structures
+        self.nodes.clear()
+        self.terminal_nodes.clear()
+        self.virtual_losses.clear()
+        self.node_count = 0
+        self.root = None  # type: ignore
+
+        # Force garbage collection
+        gc.collect()
+
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()

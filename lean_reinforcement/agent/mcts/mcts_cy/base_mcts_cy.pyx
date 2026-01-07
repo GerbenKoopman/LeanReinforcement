@@ -43,7 +43,7 @@ cdef class BaseMCTS:
         env: LeanDojoEnv,
         transformer: TransformerProtocol,
         float exploration_weight=1.41421356,
-        int max_tree_nodes=10000,
+        int max_tree_nodes=1000,
         int batch_size=8,
         int num_tactics_to_expand=8,
         int max_rollout_depth=30,
@@ -62,6 +62,7 @@ cdef class BaseMCTS:
         
         # Transposition Table
         self.nodes = {}
+        self.terminal_nodes = []
 
         self.theorem = env.theorem
         self.theorem_pos = env.theorem_pos
@@ -89,6 +90,7 @@ cdef class BaseMCTS:
             return node
 
         node = Node(state)
+        self.terminal_nodes.append(node)
         self.node_count += 1
         return node
 
@@ -164,6 +166,9 @@ cdef class BaseMCTS:
             if node not in reachable:
                 del self.virtual_losses[node]
         
+        # Clean up terminal nodes that are no longer reachable
+        self.terminal_nodes = [n for n in self.terminal_nodes if n in reachable]
+        
         for node in reachable:
             if node is not new_root:
                 if node.encoder_features is not None:
@@ -171,11 +176,14 @@ cdef class BaseMCTS:
                     node.encoder_features = None
         
         pruned_count = len(keys_to_remove)
-        self.node_count = len(self.nodes)
+        self.node_count = len(self.nodes) + len(self.terminal_nodes)
         
         return pruned_count
 
     def search(self, int num_iterations, batch_size=None):
+        if self.root is None:
+            raise RuntimeError("Cannot search: MCTS has been cleaned up or not initialized")
+
         cdef int iteration
         cdef int current_batch_size
         cdef list leaves
@@ -332,6 +340,9 @@ cdef class BaseMCTS:
     def get_best_action(self):
         cdef Edge best_edge
 
+        if self.root is None:
+            return None
+
         if not self.root.children:
             should_generate = (
                 self.root.untried_actions is None
@@ -361,6 +372,9 @@ cdef class BaseMCTS:
         Moves the root of the tree to the child corresponding to the given action.
         This allows for subtree reuse while pruning unreachable nodes.
         """
+        if self.root is None:
+            raise RuntimeError("Cannot move root: MCTS has been cleaned up or not initialized")
+
         cdef Edge edge
         cdef int pruned
         found_edge = None
@@ -386,10 +400,40 @@ cdef class BaseMCTS:
 
             # Fully reset transposition table and virtual losses to avoid mixing trees.
             self.nodes.clear()
+            self.terminal_nodes = []
             self.virtual_losses.clear()
             self.node_count = 0
 
             self.root = self._get_or_create_node(self.env.current_state)
+
+    def cleanup(self):
+        """
+        Explicitly clean up all MCTS resources to prevent memory leaks.
+        """
+        cdef Node node
+        
+        # Clear encoder features and children from all nodes
+        for node in self.nodes.values():
+            if node.encoder_features is not None:
+                del node.encoder_features
+                node.encoder_features = None
+            node.children = []
+
+        for node in self.terminal_nodes:
+            node.children = []
+
+        # Clear all data structures
+        self.nodes.clear()
+        self.terminal_nodes = []
+        self.virtual_losses.clear()
+        self.node_count = 0
+        self.root = None
+
+        # Force garbage collection
+        gc.collect()
+
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
     cpdef int _count_nodes(self, Node node):
         return len(self.nodes)

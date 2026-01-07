@@ -25,7 +25,7 @@ class MCTS_GuidedRollout(BaseMCTS):
         env: LeanDojoEnv,
         transformer: TransformerProtocol,
         exploration_weight: float = math.sqrt(2),
-        max_tree_nodes: int = 10000,
+        max_tree_nodes: int = 1000,
         batch_size: int = 8,
         num_tactics_to_expand: int = 8,
         max_rollout_depth: int = 30,
