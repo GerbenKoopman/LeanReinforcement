@@ -49,5 +49,4 @@ srun python3 -m lean_reinforcement.training.train \
     --save-checkpoints \
     --resume \
     --use-wandb \
-    --use-test-value-head \
-    --load-in-8bit
+    --use-test-value-head
