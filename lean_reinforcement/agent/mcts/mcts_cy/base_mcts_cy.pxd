@@ -30,6 +30,7 @@ cdef class BaseMCTS:
     cdef public int node_count
     cdef public dict virtual_losses
     cdef public dict nodes
+    cdef public list terminal_nodes
     cdef public object theorem
     cdef public object theorem_pos
     cdef public Node root
