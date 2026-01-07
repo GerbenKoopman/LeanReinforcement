@@ -57,7 +57,6 @@ class Trainer:
         logger.info(f"Using checkpoint directory: {self.checkpoint_dir}")
         self.transformer = Transformer(
             model_name=self.config.model_name,
-            load_in_8bit=self.config.load_in_8bit,
         )
 
         self.value_head: Optional[ValueHead] = None

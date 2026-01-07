@@ -31,8 +31,6 @@ class Transformer:
         self,
         model_name: str = "kaiyuy/leandojo-lean4-tacgen-byt5-small",
         torch_dtype: Optional[torch.dtype] = None,
-        load_in_8bit: bool = False,
-        load_in_4bit: bool = False,
         device_map: Optional[str] = "auto",
     ):
         """
@@ -42,7 +40,6 @@ class Transformer:
             model_name: HF repo id or path.
             torch_dtype: dtype for weights; if None, auto-select bfloat16 on CUDA,
                          else float32 on CPU. Override via env LEAN_TRANSFORMER_DTYPE.
-            load_in_8bit/load_in_4bit: bitsandbytes quantization flags (mutually exclusive).
             device_map: passed to HF for sharded placement; defaults to "auto".
         """
 
@@ -57,15 +54,9 @@ class Transformer:
                 elif env_dtype_lower in {"fp32", "float32", "full"}:
                     torch_dtype = torch.float32
             if torch_dtype is None:
-                if load_in_8bit or load_in_4bit:
-                    torch_dtype = torch.float16
-                else:
-                    torch_dtype = (
-                        torch.bfloat16 if torch.cuda.is_available() else torch.float32
-                    )
-
-        if load_in_8bit and load_in_4bit:
-            raise ValueError("Choose only one of load_in_8bit or load_in_4bit")
+                torch_dtype = (
+                    torch.bfloat16 if torch.cuda.is_available() else torch.float32
+                )
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -73,8 +64,6 @@ class Transformer:
         self.model = AutoModelForSeq2SeqLM.from_pretrained(
             model_name,
             torch_dtype=torch_dtype,
-            load_in_8bit=load_in_8bit,
-            load_in_4bit=load_in_4bit,
             device_map=device_map,
         )
 
