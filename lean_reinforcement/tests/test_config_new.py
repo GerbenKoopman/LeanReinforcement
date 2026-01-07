@@ -31,7 +31,6 @@ class TestTrainingConfig(unittest.TestCase):
             use_test_value_head=False,
             checkpoint_dir="/tmp/ckpt",
             use_wandb=False,
-            load_in_8bit=False,
             max_theorems_per_worker=8,
         )
 
