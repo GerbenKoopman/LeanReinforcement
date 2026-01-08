@@ -63,6 +63,8 @@ class TestBaseMCTS(unittest.TestCase):
     def test_base_mcts_initialization(self) -> None:
         mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
         self.assertIsInstance(mcts.root, Node)
+        self.assertIsNotNone(mcts.root)
+        assert mcts.root is not None  # Type narrowing for mypy
         self.assertEqual(mcts.root.state, self.env.current_state)
 
     def test_backpropagate(self) -> None:
@@ -96,6 +98,8 @@ class TestBaseMCTS(unittest.TestCase):
     def test_move_root(self) -> None:
         mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
         root = mcts.root
+        self.assertIsNotNone(root)
+        assert root is not None  # Type narrowing for mypy
 
         # Create children manually
         child1 = Node(Mock(spec=TacticState))
@@ -133,6 +137,8 @@ class TestBaseMCTS(unittest.TestCase):
 
         mcts.move_root("non_existent_tactic")
         self.assertIsNot(mcts.root, child1)
+        self.assertIsNotNone(mcts.root)
+        assert mcts.root is not None  # Type narrowing for mypy
         self.assertEqual(mcts.root.state, new_state)
         # Reset clears nodes
         self.assertEqual(mcts.node_count, 1)

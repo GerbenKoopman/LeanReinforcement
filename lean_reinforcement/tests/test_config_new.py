@@ -21,7 +21,7 @@ class TestTrainingConfig(unittest.TestCase):
             model_name="test/model",
             num_tactics_to_expand=4,
             max_rollout_depth=10,
-            max_time=600.0,
+            max_time=300.0,
             env_timeout=100,
             train_epochs=2,
             train_value_head=False,
