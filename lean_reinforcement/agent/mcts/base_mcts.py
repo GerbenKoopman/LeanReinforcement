@@ -7,7 +7,8 @@ import gc
 import math
 import time
 import torch
-from typing import List, Optional, Dict
+from collections import deque
+from typing import List, Optional, Dict, Set
 from loguru import logger
 
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
@@ -44,6 +45,9 @@ class Node:
         # self.prior_p is moved to Edge
 
         self.children: List[Edge] = []
+        self._child_actions: Set[str] = (
+            set()
+        )  # Track actions to prevent duplicate edges
         self.visit_count = 0
         self.max_value = float("-inf")
 
@@ -51,6 +55,21 @@ class Node:
         self.untried_actions: Optional[List[str]] = None
 
         self.encoder_features: Optional[torch.Tensor] = None
+
+    def add_edge(self, edge: Edge) -> bool:
+        """
+        Add an edge to this node, returning True if added, False if duplicate.
+        Prevents duplicate edges with the same action.
+        """
+        if edge.action in self._child_actions:
+            return False
+        self._child_actions.add(edge.action)
+        self.children.append(edge)
+        return True
+
+    def has_edge_for_action(self, action: str) -> bool:
+        """Check if an edge with the given action already exists."""
+        return action in self._child_actions
 
     def value(self) -> float:
         """Calculates the value of this node. Using max_value for max-backup."""
@@ -92,9 +111,11 @@ class BaseMCTS:
         self.node_count = 0
         self.virtual_losses: Dict[Node, int] = {}
 
-        # Transposition Table
+        # Transposition Table: maps state string -> Node for TacticStates
         self.nodes: Dict[str, Node] = {}
-        self.terminal_nodes: List[Node] = []
+        # Terminal nodes are tracked separately (they have no string key)
+        # We use a set to prevent duplicates
+        self.terminal_nodes: Set[Node] = set()
 
         # Get theorem info from the environment
         self.theorem = env.theorem
@@ -127,7 +148,7 @@ class BaseMCTS:
             return node
 
         node = Node(state)
-        self.terminal_nodes.append(node)
+        self.terminal_nodes.add(node)
         self.node_count += 1
         return node
 
@@ -152,16 +173,17 @@ class BaseMCTS:
                 f"GPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved"
             )
 
-    def _get_reachable_nodes(self, root: Node) -> set:
+    def _get_reachable_nodes(self, root: Node) -> Set[Node]:
         """
         Find all nodes reachable from the given root via BFS.
         Used for pruning unreachable nodes from the transposition table.
+        Uses deque for O(1) popleft instead of O(n) pop(0).
         """
-        reachable = set()
-        queue = [root]
+        reachable: Set[Node] = set()
+        queue = deque([root])
 
         while queue:
-            node = queue.pop(0)
+            node = queue.popleft()
             if node in reachable:
                 continue
             reachable.add(node)
@@ -179,20 +201,20 @@ class BaseMCTS:
         """
         reachable = self._get_reachable_nodes(new_root)
 
-        # Find keys to remove
+        # Find keys to remove and clean up unreachable nodes
         keys_to_remove = []
         for key, node in self.nodes.items():
             if node not in reachable:
                 keys_to_remove.append(key)
                 # Clear any cached tensors on unreachable nodes
-                if (
-                    hasattr(node, "encoder_features")
-                    and node.encoder_features is not None
-                ):
+                if node.encoder_features is not None:
                     del node.encoder_features
                     node.encoder_features = None
+                # Clear children to break reference cycles
+                node.children.clear()
+                node._child_actions.clear()
 
-        # Remove unreachable nodes
+        # Remove unreachable nodes from transposition table
         for key in keys_to_remove:
             del self.nodes[key]
 
@@ -203,18 +225,13 @@ class BaseMCTS:
                 del self.virtual_losses[node]
 
         # Clean up terminal nodes that are no longer reachable
-        self.terminal_nodes = [n for n in self.terminal_nodes if n in reachable]
+        unreachable_terminals = self.terminal_nodes - reachable
+        for node in unreachable_terminals:
+            node.children.clear()  # Break reference cycles
+        self.terminal_nodes -= unreachable_terminals
 
-        for node in reachable:
-            if node is not new_root:
-                if (
-                    hasattr(node, "encoder_features")
-                    and node.encoder_features is not None
-                ):
-                    del node.encoder_features
-                    node.encoder_features = None
-
-        pruned_count = len(keys_to_remove)
+        # Update node count
+        pruned_count = len(keys_to_remove) + len(unreachable_terminals)
         self.node_count = len(self.nodes) + len(self.terminal_nodes)
 
         return pruned_count
@@ -461,6 +478,16 @@ class BaseMCTS:
                 )
 
             # Fully reset transposition table and virtual losses to avoid mixing trees.
+            # First, clean up all existing nodes to break reference cycles
+            for node in self.nodes.values():
+                if node.encoder_features is not None:
+                    del node.encoder_features
+                    node.encoder_features = None
+                node.children.clear()
+                node._child_actions.clear()
+            for node in self.terminal_nodes:
+                node.children.clear()
+
             self.nodes.clear()
             self.terminal_nodes.clear()
             self.virtual_losses.clear()
@@ -475,14 +502,16 @@ class BaseMCTS:
         """
         # Clear encoder features from all nodes (both transposition table and terminal)
         for node in self.nodes.values():
-            if hasattr(node, "encoder_features") and node.encoder_features is not None:
+            if node.encoder_features is not None:
                 del node.encoder_features
                 node.encoder_features = None
-            # Clear children edges to break reference cycles
+            # Clear children edges and action set to break reference cycles
             node.children.clear()
+            node._child_actions.clear()
 
         for node in self.terminal_nodes:
             node.children.clear()
+            node._child_actions.clear()
 
         # Clear all data structures
         self.nodes.clear()

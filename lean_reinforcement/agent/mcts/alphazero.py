@@ -98,6 +98,10 @@ class MCTS_AlphaZero(BaseMCTS):
 
         # Create a child for each promising tactic
         for tactic, prob in tactics_with_probs:
+            # Skip if we already have an edge for this action
+            if node.has_edge_for_action(tactic):
+                continue
+
             try:
                 next_state = self.env.run_tactic_stateless(node.state, tactic)
             except Exception as e:
@@ -111,7 +115,7 @@ class MCTS_AlphaZero(BaseMCTS):
             child_node = self._get_or_create_node(next_state)
 
             edge = Edge(action=tactic, prior=prob, child=child_node)
-            node.children.append(edge)
+            node.add_edge(edge)
 
         node.untried_actions = []
 
@@ -159,11 +163,13 @@ class MCTS_AlphaZero(BaseMCTS):
 
             results.append((node, tactic, prob, next_state))
 
-        # 4. Create children
+        # 4. Create children (using add_edge for deduplication)
         for node, tactic, prob, next_state in results:
+            if node.has_edge_for_action(tactic):
+                continue
             child_node = self._get_or_create_node(next_state)
             edge = Edge(action=tactic, prior=prob, child=child_node)
-            node.children.append(edge)
+            node.add_edge(edge)
 
         for node in nodes_to_generate:
             node.untried_actions = []

@@ -9,6 +9,7 @@ cdef class Edge:
 cdef class Node:
     cdef public object state
     cdef public list children
+    cdef public set _child_actions  # Track actions to prevent duplicate edges
     cdef public int visit_count
     cdef public float max_value
     cdef public bint is_terminal
@@ -17,6 +18,8 @@ cdef class Node:
 
     cpdef float value(self)
     cpdef bint is_fully_expanded(self)
+    cpdef bint add_edge(self, Edge edge)
+    cpdef bint has_edge_for_action(self, str action)
 
 cdef class BaseMCTS:
     cdef public object env
@@ -30,7 +33,7 @@ cdef class BaseMCTS:
     cdef public int node_count
     cdef public dict virtual_losses
     cdef public dict nodes
-    cdef public list terminal_nodes
+    cdef public set terminal_nodes  # Changed from list to set
     cdef public object theorem
     cdef public object theorem_pos
     cdef public Node root

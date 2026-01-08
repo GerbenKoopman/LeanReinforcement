@@ -2,7 +2,8 @@ import gc
 import math
 import time
 import torch
-from typing import List, Optional, Dict, Union
+from collections import deque
+from typing import List, Optional, Dict, Set, Union
 from loguru import logger
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 from lean_reinforcement.utilities.gym import LeanDojoEnv
@@ -22,6 +23,7 @@ cdef class Node:
         # self.parent and self.action are removed for Graph Search
         # self.prior_p is moved to Edge
         self.children = []
+        self._child_actions = set()  # Track actions to prevent duplicate edges
         self.visit_count = 0
         self.max_value = float("-inf")
         self.is_terminal = isinstance(state, (ProofFinished, LeanError, ProofGivenUp))
@@ -35,6 +37,18 @@ cdef class Node:
 
     cpdef bint is_fully_expanded(self):
         return self.untried_actions is not None and len(self.untried_actions) == 0
+
+    cpdef bint add_edge(self, Edge edge):
+        """Add an edge to this node, returning True if added, False if duplicate."""
+        if edge.action in self._child_actions:
+            return False
+        self._child_actions.add(edge.action)
+        self.children.append(edge)
+        return True
+
+    cpdef bint has_edge_for_action(self, str action):
+        """Check if an edge with the given action already exists."""
+        return action in self._child_actions
 
 cdef class BaseMCTS:
 
@@ -60,9 +74,9 @@ cdef class BaseMCTS:
         self.node_count = 0
         self.virtual_losses = {}
         
-        # Transposition Table
+        # Transposition Table: maps state string -> Node for TacticStates
         self.nodes = {}
-        self.terminal_nodes = []
+        self.terminal_nodes = set()
 
         self.theorem = env.theorem
         self.theorem_pos = env.theorem_pos
@@ -89,8 +103,9 @@ cdef class BaseMCTS:
             self.node_count += 1
             return node
 
+        # For terminal nodes, create a new node and add to set
         node = Node(state)
-        self.terminal_nodes.append(node)
+        self.terminal_nodes.add(node)
         self.node_count += 1
         return node
 
@@ -117,15 +132,15 @@ cdef class BaseMCTS:
     cpdef set _get_reachable_nodes(self, Node root):
         """
         Find all nodes reachable from the given root via BFS.
-        Used for pruning unreachable nodes from the transposition table.
+        Uses deque for O(1) popleft instead of O(n) pop(0).
         """
         cdef set reachable = set()
-        cdef list queue = [root]
+        cdef object queue = deque([root])
         cdef Node node
         cdef Edge edge
         
         while queue:
-            node = queue.pop(0)
+            node = queue.popleft()
             if node in reachable:
                 continue
             reachable.add(node)
@@ -146,8 +161,9 @@ cdef class BaseMCTS:
         cdef str key
         cdef Node node
         cdef int pruned_count
+        cdef set unreachable_terminals
         
-        # Find keys to remove
+        # Find keys to remove and clean up unreachable nodes
         for key, node in self.nodes.items():
             if node not in reachable:
                 keys_to_remove.append(key)
@@ -155,8 +171,11 @@ cdef class BaseMCTS:
                 if node.encoder_features is not None:
                     del node.encoder_features
                     node.encoder_features = None
+                # Clear children to break reference cycles
+                node.children = []
+                node._child_actions = set()
         
-        # Remove unreachable nodes
+        # Remove unreachable nodes from transposition table
         for key in keys_to_remove:
             del self.nodes[key]
         
@@ -166,16 +185,14 @@ cdef class BaseMCTS:
             if node not in reachable:
                 del self.virtual_losses[node]
         
-        # Clean up terminal nodes that are no longer reachable
-        self.terminal_nodes = [n for n in self.terminal_nodes if n in reachable]
+        # Clean up terminal nodes that are no longer reachable (using set operations)
+        unreachable_terminals = self.terminal_nodes - reachable
+        for node in unreachable_terminals:
+            node.children = []  # Break reference cycles
+        self.terminal_nodes -= unreachable_terminals
         
-        for node in reachable:
-            if node is not new_root:
-                if node.encoder_features is not None:
-                    del node.encoder_features
-                    node.encoder_features = None
-        
-        pruned_count = len(keys_to_remove)
+        # Update node count
+        pruned_count = len(keys_to_remove) + len(unreachable_terminals)
         self.node_count = len(self.nodes) + len(self.terminal_nodes)
         
         return pruned_count
@@ -399,8 +416,18 @@ cdef class BaseMCTS:
                 )
 
             # Fully reset transposition table and virtual losses to avoid mixing trees.
+            # First, clean up all existing nodes to break reference cycles
+            for node in self.nodes.values():
+                if node.encoder_features is not None:
+                    del node.encoder_features
+                    node.encoder_features = None
+                node.children = []
+                node._child_actions = set()
+            for node in self.terminal_nodes:
+                node.children = []
+
             self.nodes.clear()
-            self.terminal_nodes = []
+            self.terminal_nodes = set()
             self.virtual_losses.clear()
             self.node_count = 0
 
@@ -412,19 +439,21 @@ cdef class BaseMCTS:
         """
         cdef Node node
         
-        # Clear encoder features and children from all nodes
+        # Clear encoder features, children, and action sets from all nodes
         for node in self.nodes.values():
             if node.encoder_features is not None:
                 del node.encoder_features
                 node.encoder_features = None
             node.children = []
+            node._child_actions = set()
 
         for node in self.terminal_nodes:
             node.children = []
+            node._child_actions = set()
 
         # Clear all data structures
         self.nodes.clear()
-        self.terminal_nodes = []
+        self.terminal_nodes = set()
         self.virtual_losses.clear()
         self.node_count = 0
         self.root = None
