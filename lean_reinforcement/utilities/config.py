@@ -99,7 +99,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--num-iterations",
         type=int,
-        default=2000,
+        default=100,
         help="Number of MCTS iterations per step (reduced default for memory efficiency).",
     )
     parser.add_argument(
