@@ -208,3 +208,7 @@ __marimo__/
 
 # Weights and Biases
 wandb/
+
+# Cython
+*.c
+*.html
