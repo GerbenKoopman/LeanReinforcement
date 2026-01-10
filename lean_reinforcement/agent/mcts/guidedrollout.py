@@ -29,6 +29,7 @@ class MCTS_GuidedRollout(BaseMCTS):
         batch_size: int = 8,
         num_tactics_to_expand: int = 8,
         max_rollout_depth: int = 30,
+        max_time: float = 600.0,
         **kwargs,
     ):
         super().__init__(
@@ -39,6 +40,7 @@ class MCTS_GuidedRollout(BaseMCTS):
             batch_size=batch_size,
             num_tactics_to_expand=num_tactics_to_expand,
             max_rollout_depth=max_rollout_depth,
+            max_time=max_time,
         )
 
     def _puct_score(self, node: Node) -> float:

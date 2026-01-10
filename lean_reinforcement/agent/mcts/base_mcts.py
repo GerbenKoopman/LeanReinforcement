@@ -7,6 +7,7 @@ import math
 import torch
 from typing import List, Optional, Dict
 from loguru import logger
+import time
 
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
@@ -67,6 +68,7 @@ class BaseMCTS:
         batch_size: int = 8,
         num_tactics_to_expand: int = 8,
         max_rollout_depth: int = 30,
+        max_time: float = 600.0,
     ):
         self.env = env
         self.transformer = transformer
@@ -75,6 +77,7 @@ class BaseMCTS:
         self.batch_size = batch_size
         self.num_tactics_to_expand = num_tactics_to_expand
         self.max_rollout_depth = max_rollout_depth
+        self.max_time = max_time
         self.node_count = 0
         self.virtual_losses: Dict[Node, int] = {}
 
@@ -119,8 +122,18 @@ class BaseMCTS:
         if batch_size is None:
             batch_size = self.batch_size
 
+        start_time = time.time()
+
         with torch.no_grad():
             for iteration in range(0, num_iterations, batch_size):
+                # Early stopping if solution found
+                if self.root.max_value == 1.0:
+                    break
+
+                # Check time limit
+                if time.time() - start_time > self.max_time:
+                    break
+
                 # Stop if tree is too large
                 if self.node_count >= self.max_tree_nodes:
                     break
@@ -135,6 +148,7 @@ class BaseMCTS:
                     if leaf.is_terminal:
                         if isinstance(leaf.state, ProofFinished):
                             self._backpropagate(leaf, 1.0)
+                            return
                         elif isinstance(leaf.state, (LeanError, ProofGivenUp)):
                             self._backpropagate(leaf, -1.0)
                         continue
@@ -165,6 +179,9 @@ class BaseMCTS:
                     child = expanded_nodes[i]
                     reward = rewards[i]
                     self._backpropagate(child, reward)
+
+                    if reward == 1.0:
+                        return
 
                 # Clear CUDA cache periodically
                 if torch.cuda.is_available() and iteration % 20 == 0 and iteration > 0:
