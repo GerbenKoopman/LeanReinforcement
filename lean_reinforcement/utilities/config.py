@@ -26,6 +26,7 @@ class TrainingConfig:
     # Checkpoint Args
     save_checkpoints: bool
     resume: bool
+    use_test_value_head: bool
     checkpoint_dir: Optional[str]
     use_wandb: bool
 
@@ -59,6 +60,7 @@ class TrainingConfig:
             save_training_data=args.save_training_data,
             save_checkpoints=args.save_checkpoints,
             resume=args.resume,
+            use_test_value_head=args.use_test_value_head,
             checkpoint_dir=args.checkpoint_dir,
             use_wandb=args.use_wandb,
         )
@@ -193,6 +195,12 @@ def get_config() -> TrainingConfig:
         "--resume",
         action="store_true",
         help="Resume training from the latest checkpoint if available.",
+    )
+    parser.add_argument(
+        "--use-test-value-head",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Use the test value head checkpoint instead of the training one.",
     )
     parser.add_argument(
         "--checkpoint-dir",
