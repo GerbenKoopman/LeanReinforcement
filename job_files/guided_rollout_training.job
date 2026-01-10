@@ -2,11 +2,11 @@
 
 #SBATCH --partition=gpu_a100
 #SBATCH --gpus=1
-#SBATCH --job-name=training
+#SBATCH --job-name=guided_rollout_training
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=18
-#SBATCH --time=12:00:00
-#SBATCH --output=logs/training_%A.out
+#SBATCH --time=36:00:00
+#SBATCH --output=logs/guided_rollout_training_%A.out
 
 module purge
 module load 2024
@@ -34,19 +34,18 @@ echo "Starting training run with distributed environment..."
 srun python3 -m lean_reinforcement.training.train \
     --data-type novel_premises \
     --indexed-corpus-path $CORPUS_DIR/indexed_corpus.pkl \
-    --num-epochs 10 \
+    --num-epochs 32 \
     --num-theorems 128 \
     --num-iterations 200 \
     --max-steps 30 \
-    --batch-size 4 \
+    --batch-size 8 \
     --num-tactics-to-expand 16 \
     --num-workers 16 \
     --mcts-type guided_rollout \
-    --train-epochs 1 \
+    --train-epochs 4 \
     --train-value-head \
     --use-final-reward \
     --save-training-data \
     --save-checkpoints \
     --resume \
-    --use-wandb \
-    --use-test-value-head
+    --use-wandb
