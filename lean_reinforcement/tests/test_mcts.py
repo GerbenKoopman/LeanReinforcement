@@ -235,6 +235,12 @@ class TestMCTSAlphaZero(unittest.TestCase):
         next_state_2 = Mock(spec=TacticState)
         next_state_2.pp = "next_state_pp_2"
         self.env.run_tactic_stateless = Mock(side_effect=[next_state_1, next_state_2])
+        # Mock encode_states to return a tensor with proper shape for batch slicing
+        import torch
+
+        self.value_head.encode_states = Mock(
+            return_value=torch.zeros(2, 1472)  # 2 children, 1472 features
+        )
 
         expanded_node = self.mcts._expand(node)
         self.assertIs(expanded_node, node)
