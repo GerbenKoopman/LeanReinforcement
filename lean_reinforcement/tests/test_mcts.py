@@ -49,6 +49,7 @@ class MockLeanDojoEnv(MagicMock):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.current_state = Mock(spec=TacticState)
+        self.current_state.pp = "mock_initial_state"  # Add pp attribute for seen_states
         self.theorem = "mock_theorem"
         self.theorem_pos = "mock_pos"
         self.dataloader = Mock()
@@ -85,13 +86,20 @@ class TestBaseMCTS(unittest.TestCase):
         mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
         root = mcts.root
 
-        # Create children manually
-        child1 = Node(Mock(spec=TacticState), parent=root, action="tactic1")
-        child2 = Node(Mock(spec=TacticState), parent=root, action="tactic2")
+        # Create children manually with pp attributes for seen_states
+        child1_state = Mock(spec=TacticState)
+        child1_state.pp = "child1_state_pp"
+        child1 = Node(child1_state, parent=root, action="tactic1")
+
+        child2_state = Mock(spec=TacticState)
+        child2_state.pp = "child2_state_pp"
+        child2 = Node(child2_state, parent=root, action="tactic2")
         root.children = [child1, child2]
 
         # Add some grandchildren to test node counting
-        grandchild = Node(Mock(spec=TacticState), parent=child1, action="tactic1_1")
+        grandchild_state = Mock(spec=TacticState)
+        grandchild_state.pp = "grandchild_state_pp"
+        grandchild = Node(grandchild_state, parent=child1, action="tactic1_1")
         child1.children = [grandchild]
 
         # Test moving to an existing child
@@ -103,6 +111,7 @@ class TestBaseMCTS(unittest.TestCase):
         # Test moving to a non-existent child (should reset)
         # First, update env.current_state to match what we expect for a reset
         new_state = Mock(spec=TacticState)
+        new_state.pp = "new_mock_state"  # Add pp attribute for seen_states
         self.env.current_state = new_state
 
         mcts.move_root("non_existent_tactic")
@@ -136,7 +145,11 @@ class TestMCTSGuidedRollout(unittest.TestCase):
         state.pp = "state_pp"
         node = Node(state)
         self.transformer.generate_tactics_with_probs.return_value = [("tactic1", 0.5)]
-        self.env.run_tactic_stateless = Mock(return_value=Mock(spec=TacticState))
+        next_state = Mock(spec=TacticState)
+        next_state.pp = (
+            "next_state_pp"  # Different from state.pp to avoid no-op filtering
+        )
+        self.env.run_tactic_stateless = Mock(return_value=next_state)
 
         child = self.mcts._expand(node)
 
@@ -216,9 +229,12 @@ class TestMCTSAlphaZero(unittest.TestCase):
             ("tactic1", 0.6),
             ("tactic2", 0.4),
         ]
-        next_state_mock = Mock(spec=TacticState)
-        next_state_mock.pp = "next_state_pp"
-        self.env.dojo.run_tac.return_value = next_state_mock
+        # Create unique next states to avoid duplicate filtering
+        next_state_1 = Mock(spec=TacticState)
+        next_state_1.pp = "next_state_pp_1"
+        next_state_2 = Mock(spec=TacticState)
+        next_state_2.pp = "next_state_pp_2"
+        self.env.run_tactic_stateless = Mock(side_effect=[next_state_1, next_state_2])
 
         expanded_node = self.mcts._expand(node)
         self.assertIs(expanded_node, node)

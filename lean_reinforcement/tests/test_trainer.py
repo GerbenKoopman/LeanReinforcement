@@ -12,6 +12,7 @@ def mock_config() -> MagicMock:
     config.mcts_type = "alpha_zero"
     config.train_value_head = True
     config.resume = False
+    config.use_test_value_head = False
     config.data_type = "random"
     config.num_workers = 2
     config.batch_size = 4
@@ -20,6 +21,15 @@ def mock_config() -> MagicMock:
     config.save_training_data = False
     config.save_checkpoints = False
     config.train_epochs = 1
+    config.indexed_corpus_path = None
+    config.num_iterations = 10
+    config.max_steps = 20
+    config.num_tactics_to_expand = 8
+    config.max_rollout_depth = 30
+    config.max_time = 600.0
+    config.env_timeout = 60
+    config.use_final_reward = True
+    config.checkpoint_dir = None
     return config
 
 
