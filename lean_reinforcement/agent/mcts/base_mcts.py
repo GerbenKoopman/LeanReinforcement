@@ -5,6 +5,7 @@ simulation, AlphaZero MCTS calls a trained value network for evaluation.
 
 import math
 import torch
+from collections import Counter
 from typing import List, Optional, Dict
 from loguru import logger
 import time
@@ -27,8 +28,6 @@ def _has_excessive_repetition(tactic: str, threshold: int = 5) -> bool:
     parts = tactic.replace("[", "").replace("]", "").split(",")
     if len(parts) < threshold:
         return False
-
-    from collections import Counter
 
     counts = Counter(p.strip() for p in parts if p.strip())
     if not counts:
