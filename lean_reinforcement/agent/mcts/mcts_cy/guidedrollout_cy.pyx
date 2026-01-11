@@ -1,5 +1,6 @@
 from libc.math cimport sqrt
 from lean_reinforcement.agent.mcts.mcts_cy.base_mcts_cy cimport Node, BaseMCTS
+from lean_reinforcement.agent.mcts.base_mcts import MAX_TACTIC_LENGTH, _has_excessive_repetition
 import math
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
@@ -80,11 +81,33 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
         )
 
         for tactic, prob in tactics_with_probs:
+            # Filter 1: Skip excessively long tactics (likely truncated/malformed)
+            if len(tactic) > MAX_TACTIC_LENGTH:
+                continue
+
+            # Filter 2: Skip tactics with excessive repetition
+            if _has_excessive_repetition(tactic):
+                continue
+
             next_state = self.env.run_tactic_stateless(node.state, tactic)
+
+            # Filter 3: Skip no-op tactics (state unchanged)
+            if isinstance(next_state, TacticState):
+                if next_state.pp == state_str:
+                    continue
+
+                # Filter 4: Skip if we've already seen this state
+                if next_state.pp in self.seen_states:
+                    continue
+
             child = Node(next_state, parent=node, action=tactic)
             child.prior_p = prob
             node.children.append(child)
             self.node_count += 1
+
+            # Register new state in seen_states
+            if isinstance(next_state, TacticState):
+                self.seen_states[next_state.pp] = child
 
         node.untried_actions = []
 
@@ -104,6 +127,7 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
         cdef float prob
         cdef object next_state
         cdef Node child
+        cdef str state_str
 
         for node in nodes:
             if isinstance(node.state, TacticState):
@@ -120,18 +144,38 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
         for i in range(len(batch_tactics_with_probs)):
             tactics_probs = batch_tactics_with_probs[i]
             node = nodes_to_generate[i]
+            state_str = node.state.pp
             for tactic, prob in tactics_probs:
-                tasks.append((node, tactic, prob))
+                # Filter 1: Skip excessively long tactics
+                if len(tactic) > MAX_TACTIC_LENGTH:
+                    continue
 
-        for node, tactic, prob in tasks:
+                # Filter 2: Skip tactics with excessive repetition
+                if _has_excessive_repetition(tactic):
+                    continue
+
+                tasks.append((node, tactic, prob, state_str))
+
+        for node, tactic, prob, state_str in tasks:
             next_state = self.env.run_tactic_stateless(node.state, tactic)
-            results.append((node, tactic, prob, next_state))
 
-        for node, tactic, prob, next_state in results:
+            # Filter 3: Skip no-op tactics
+            if isinstance(next_state, TacticState):
+                if next_state.pp == state_str:
+                    continue
+
+                # Filter 4: Skip duplicate states
+                if next_state.pp in self.seen_states:
+                    continue
+
             child = Node(next_state, parent=node, action=tactic)
             child.prior_p = prob
             node.children.append(child)
             self.node_count += 1
+
+            # Register new state in seen_states
+            if isinstance(next_state, TacticState):
+                self.seen_states[next_state.pp] = child
 
         for node in nodes_to_generate:
             node.untried_actions = []
