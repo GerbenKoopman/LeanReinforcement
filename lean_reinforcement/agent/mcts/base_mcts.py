@@ -14,6 +14,29 @@ from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 from lean_reinforcement.utilities.gym import LeanDojoEnv
 from lean_reinforcement.agent.transformer import TransformerProtocol
 
+MAX_TACTIC_LENGTH = 500
+
+
+def _has_excessive_repetition(tactic: str, threshold: int = 5) -> bool:
+    """
+    Detect if a tactic has excessive repetition of the same element.
+    This helps filter out malformed tactics like "foo, foo, foo, foo, foo..."
+    that often cause parse errors when truncated.
+    """
+    # Check for repeated comma-separated patterns
+    parts = tactic.replace("[", "").replace("]", "").split(",")
+    if len(parts) < threshold:
+        return False
+
+    from collections import Counter
+
+    counts = Counter(p.strip() for p in parts if p.strip())
+    if not counts:
+        return False
+
+    most_common_count = counts.most_common(1)[0][1]
+    return most_common_count >= threshold
+
 
 class Node:
     """
@@ -80,6 +103,7 @@ class BaseMCTS:
         self.max_time = max_time
         self.node_count = 0
         self.virtual_losses: Dict[Node, int] = {}
+        self.seen_states: Dict[str, Node] = {}
 
         # Get theorem info from the environment
         self.theorem = env.theorem
@@ -93,6 +117,10 @@ class BaseMCTS:
 
         self.root = Node(state=env.current_state)
         self.node_count = 1
+
+        # Register initial state
+        if isinstance(env.current_state, TacticState):
+            self.seen_states[env.current_state.pp] = self.root
 
     def _get_virtual_loss(self, node: Node) -> int:
         return self.virtual_losses.get(node, 0)
@@ -290,6 +318,8 @@ class BaseMCTS:
             self.root = found_child
             self.root.parent = None
             self.node_count = self._count_nodes(self.root)
+            self.seen_states = {}
+            self._rebuild_seen_states(self.root)
         else:
             # If child not found, reset the tree with the current environment state
             if not isinstance(
@@ -302,6 +332,9 @@ class BaseMCTS:
 
             self.root = Node(state=self.env.current_state)
             self.node_count = 1
+            self.seen_states = {}
+            if isinstance(self.env.current_state, TacticState):
+                self.seen_states[self.env.current_state.pp] = self.root
 
     def _count_nodes(self, node: Node) -> int:
         """Recursively counts the number of nodes in the subtree."""
@@ -309,3 +342,10 @@ class BaseMCTS:
         for child in node.children:
             count += self._count_nodes(child)
         return count
+
+    def _rebuild_seen_states(self, node: Node) -> None:
+        """Recursively rebuild seen_states dictionary from a subtree."""
+        if isinstance(node.state, TacticState):
+            self.seen_states[node.state.pp] = node
+        for child in node.children:
+            self._rebuild_seen_states(child)
