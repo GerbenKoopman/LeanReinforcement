@@ -136,7 +136,11 @@ class TestMCTSGuidedRolloutCy(unittest.TestCase):
         state.pp = "state_pp"
         node = Node(state)
         self.transformer.generate_tactics_with_probs.return_value = [("tactic1", 0.5)]
-        self.env.run_tactic_stateless = Mock(return_value=Mock(spec=TacticState))
+        next_state_mock = Mock(spec=TacticState)
+        next_state_mock.pp = (
+            "next_state_pp"  # Different from state.pp to avoid no-op filter
+        )
+        self.env.run_tactic_stateless = Mock(return_value=next_state_mock)
 
         child = self.mcts._expand(node)
 
@@ -216,11 +220,18 @@ class TestMCTSAlphaZeroCy(unittest.TestCase):
             ("tactic1", 0.6),
             ("tactic2", 0.4),
         ]
-        next_state_mock = Mock(spec=TacticState)
-        next_state_mock.pp = "next_state_pp"
+        # Create different next states for each tactic to avoid duplicate state filtering
+        next_state_mock1 = Mock(spec=TacticState)
+        next_state_mock1.pp = "next_state_pp_1"
+        next_state_mock2 = Mock(spec=TacticState)
+        next_state_mock2.pp = "next_state_pp_2"
 
-        # Mock run_tactic_stateless directly as Cython calls it
-        self.env.run_tactic_stateless = Mock(return_value=next_state_mock)
+        # Mock run_tactic_stateless to return different states for each call
+        self.env.run_tactic_stateless = Mock(
+            side_effect=[next_state_mock1, next_state_mock2]
+        )
+        # Mock encode_states to return a list that can be sliced
+        self.value_head.encode_states.return_value = [Mock(), Mock()]
 
         expanded_node = self.mcts._expand(node)
         self.assertIs(expanded_node, node)
