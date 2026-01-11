@@ -103,6 +103,10 @@ class MCTS_AlphaZero(BaseMCTS):
         )
 
         # Create a child for each promising tactic
+        # Collect children with TacticState for batch encoding
+        children_to_encode: List[Node] = []
+        states_to_encode: List[str] = []
+
         for tactic, prob in tactics_with_probs:
             # Filter 1: Skip excessively long tactics (likely truncated/malformed)
             if len(tactic) > MAX_TACTIC_LENGTH:
@@ -128,13 +132,17 @@ class MCTS_AlphaZero(BaseMCTS):
             node.children.append(child)
             self.node_count += 1
 
-            # Register new state in seen_states
+            # Register new state in seen_states and collect for batch encoding
             if isinstance(next_state, TacticState):
                 self.seen_states[next_state.pp] = child
+                children_to_encode.append(child)
+                states_to_encode.append(next_state.pp)
 
-            # Pre-compute encoder features for children if they're non-terminal TacticStates
-            if isinstance(next_state, TacticState):
-                child.encoder_features = self.value_head.encode_states([next_state.pp])
+        # Batch encode all children's states at once for efficiency
+        if children_to_encode:
+            batch_features = self.value_head.encode_states(states_to_encode)
+            for i, child in enumerate(children_to_encode):
+                child.encoder_features = batch_features[i : i + 1]
 
         node.untried_actions = []
 
@@ -144,17 +152,24 @@ class MCTS_AlphaZero(BaseMCTS):
         # 1. Generate tactics for all nodes
         states = []
         nodes_to_generate = []
+        nodes_needing_features: List[Node] = []
+        states_for_features: List[str] = []
 
         for node in nodes:
             if isinstance(node.state, TacticState):
                 states.append(node.state.pp)
                 nodes_to_generate.append(node)
 
-                # Cache encoder features if missing
+                # Collect nodes needing encoder features for batch encoding
                 if node.encoder_features is None:
-                    # We will compute them in batch later or now?
-                    # Let's compute them now for simplicity or add to a list
-                    pass
+                    nodes_needing_features.append(node)
+                    states_for_features.append(node.state.pp)
+
+        # Batch encode parent nodes' features if any are missing
+        if nodes_needing_features:
+            batch_features = self.value_head.encode_states(states_for_features)
+            for i, node in enumerate(nodes_needing_features):
+                node.encoder_features = batch_features[i : i + 1]
 
         if not states:
             return nodes
@@ -189,7 +204,10 @@ class MCTS_AlphaZero(BaseMCTS):
             results.append((node, tactic, prob, next_state))
 
         # 4. Create children (with state deduplication)
-        new_children_nodes = []
+        # Collect children with TacticState for batch encoding
+        children_to_encode: List[Node] = []
+        states_to_encode: List[str] = []
+
         for node, tactic, prob, next_state in results:
             # Filter 3: Skip no-op tactics (state unchanged)
             if isinstance(next_state, TacticState):
@@ -204,11 +222,18 @@ class MCTS_AlphaZero(BaseMCTS):
             child.prior_p = prob
             node.children.append(child)
             self.node_count += 1
-            new_children_nodes.append(child)
 
-            # Register new state in seen_states
+            # Register new state in seen_states and collect for batch encoding
             if isinstance(next_state, TacticState):
                 self.seen_states[next_state.pp] = child
+                children_to_encode.append(child)
+                states_to_encode.append(next_state.pp)
+
+        # Batch encode all children's states at once for efficiency
+        if children_to_encode:
+            batch_features = self.value_head.encode_states(states_to_encode)
+            for i, child in enumerate(children_to_encode):
+                child.encoder_features = batch_features[i : i + 1]
 
         for node in nodes_to_generate:
             node.untried_actions = []
