@@ -1,9 +1,27 @@
 from libc.math cimport sqrt
 from lean_reinforcement.agent.mcts.mcts_cy.base_mcts_cy cimport Node, BaseMCTS
-from lean_reinforcement.agent.mcts.base_mcts import MAX_TACTIC_LENGTH, _has_excessive_repetition
+from lean_reinforcement.agent.mcts.base_mcts import MAX_TACTIC_LENGTH
+from collections import Counter
 import math
 import torch
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
+
+cdef int REPETITION_THRESHOLD = 5
+
+cdef bint _has_excessive_repetition_cy(str tactic):
+    """Inlined Cython version of _has_excessive_repetition for performance."""
+    cdef list parts
+    cdef int threshold = REPETITION_THRESHOLD
+    
+    parts = tactic.replace("[", "").replace("]", "").split(",")
+    if len(parts) < threshold:
+        return False
+    
+    counts = Counter(p.strip() for p in parts if p.strip())
+    if not counts:
+        return False
+    
+    return counts.most_common(1)[0][1] >= threshold
 
 cdef class MCTS_AlphaZero(BaseMCTS):
     cdef public object value_head
@@ -30,7 +48,6 @@ cdef class MCTS_AlphaZero(BaseMCTS):
             max_rollout_depth=max_rollout_depth,
         )
         self.value_head = value_head
-        self.seen_states = {}
 
     cpdef float _puct_score(self, Node node):
         cdef float q_value
@@ -97,7 +114,7 @@ cdef class MCTS_AlphaZero(BaseMCTS):
                 continue
 
             # Filter 2: Skip tactics with excessive repetition
-            if _has_excessive_repetition(tactic):
+            if _has_excessive_repetition_cy(tactic):
                 continue
 
             next_state = self.env.run_tactic_stateless(node.state, tactic)
@@ -166,7 +183,7 @@ cdef class MCTS_AlphaZero(BaseMCTS):
                     continue
 
                 # Filter 2: Skip tactics with excessive repetition
-                if _has_excessive_repetition(tactic):
+                if _has_excessive_repetition_cy(tactic):
                     continue
 
                 tasks.append((node, tactic, prob))

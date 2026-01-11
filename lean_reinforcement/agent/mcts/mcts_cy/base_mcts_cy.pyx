@@ -47,6 +47,7 @@ cdef class BaseMCTS:
         self.max_rollout_depth = max_rollout_depth
         self.node_count = 0
         self.virtual_losses = {}
+        self.seen_states = {}
 
         self.theorem = env.theorem
         self.theorem_pos = env.theorem_pos
