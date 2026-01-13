@@ -81,6 +81,9 @@ class AgentRunner:
         logger.info(f"Starting proof search for: {self.env.theorem.full_name}")
         self._log_gpu_memory("Initial ")
 
+        # 10-minute timeout for entire proof search
+        PROOF_TIMEOUT = 600  # seconds
+
         training_data = []
         step_num = 0
         mcts_instance = None
@@ -89,6 +92,14 @@ class AgentRunner:
             gc.collect()
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
+
+            # Check proof timeout
+            elapsed = time.time() - start_time
+            if elapsed > PROOF_TIMEOUT:
+                logger.warning(
+                    f"Proof search exceeded {PROOF_TIMEOUT}s timeout after {elapsed:.1f}s. Stopping."
+                )
+                break
 
             try:
                 # Check if the proof is already finished or has failed
