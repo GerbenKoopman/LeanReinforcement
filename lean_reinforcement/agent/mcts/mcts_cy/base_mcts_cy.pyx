@@ -9,8 +9,12 @@ cdef class Node:
 
     def __init__(self, state, Node parent=None, action=None):
         self.state = state
-        self.parent = parent
-        self.action = action
+        # Support multiple parents for DAG structure
+        # Each entry is (parent_node, action_that_led_here)
+        self.parents = []
+        if parent is not None:
+            self.parents.append((parent, action))
+        self.action = action  # Keep for compatibility (first action that created this node)
         self.prior_p = 0.0
         self.children = []
         self.visit_count = 0
@@ -18,6 +22,26 @@ cdef class Node:
         self.is_terminal = isinstance(state, (ProofFinished, LeanError, ProofGivenUp))
         self.untried_actions = None
         self.encoder_features = None
+
+    cpdef void add_parent(self, Node parent, object action=None):
+        """Add an additional parent to this node (for DAG structure)."""
+        # Avoid duplicate parent-action pairs
+        cdef tuple pair
+        for pair in self.parents:
+            if pair[0] is parent and pair[1] == action:
+                return
+        self.parents.append((parent, action))
+
+    cpdef Node get_parent(self):
+        """Backward compatibility: returns first parent or None."""
+        if self.parents:
+            return <Node>self.parents[0][0]
+        return None
+
+    @property
+    def parent(self):
+        """Backward compatibility property."""
+        return self.get_parent()
 
     cpdef float value(self):
         if self.visit_count == 0:
@@ -48,6 +72,8 @@ cdef class BaseMCTS:
         self.max_rollout_depth = max_rollout_depth
         self.node_count = 0
         self.virtual_losses = {}
+        # Seen states dictionary for deduplication (maps state string to Node)
+        self.seen_states = {}
 
         self.theorem = env.theorem
         self.theorem_pos = env.theorem_pos
@@ -60,6 +86,10 @@ cdef class BaseMCTS:
         self.root = Node(state=env.current_state)
         self.node_count = 1
 
+        # Register root state in seen_states
+        if isinstance(env.current_state, TacticState):
+            self.seen_states[env.current_state.pp] = self.root
+
     cpdef int _get_virtual_loss(self, Node node):
         return self.virtual_losses.get(node, 0)
 
@@ -71,6 +101,12 @@ cdef class BaseMCTS:
             self.virtual_losses[node] -= loss
             if self.virtual_losses[node] <= 0:
                 del self.virtual_losses[node]
+
+    cpdef object _get_state_key(self, object state):
+        """Get a hashable key for a state for deduplication purposes."""
+        if isinstance(state, TacticState):
+            return state.pp
+        return None
 
     def _log_gpu_memory(self):
         if torch.cuda.is_available():
@@ -175,12 +211,39 @@ cdef class BaseMCTS:
         return [self._simulate(node) for node in nodes]
 
     cpdef void _backpropagate(self, Node node, float reward):
-        cdef Node current = node
-        while current is not None:
+        """
+        Phase 4: Backpropagation
+        Update visit counts and value sums from the given node
+        all the way back up to the root through ALL parent paths (DAG traversal).
+        Uses BFS with visited set to avoid updating nodes multiple times.
+        """
+        from collections import deque
+        
+        cdef set visited = set()
+        cdef object queue = deque([node])
+        cdef Node current
+        cdef object node_id
+        cdef tuple parent_tuple
+        cdef Node parent_node
+        
+        while queue:
+            current = queue.popleft()
+            node_id = id(current)
+            
+            if node_id in visited:
+                continue
+            visited.add(node_id)
+            
+            # Update this node
             current.visit_count += 1
             if reward > current.max_value:
                 current.max_value = reward
-            current = current.parent
+            
+            # Add all parents to the queue
+            for parent_tuple in current.parents:
+                parent_node = <Node>parent_tuple[0]
+                if id(parent_node) not in visited:
+                    queue.append(parent_node)
 
     def get_best_action(self):
         cdef Node best_child
@@ -210,8 +273,12 @@ cdef class BaseMCTS:
 
         if found_child:
             self.root = found_child
-            self.root.parent = None
+            # Clear all parent references for the new root (it becomes the root)
+            self.root.parents = []
             self.node_count = self._count_nodes(self.root)
+            # Rebuild seen_states for the new subtree
+            self.seen_states = {}
+            self._rebuild_seen_states(self.root)
         else:
             if not isinstance(
                 self.env.current_state,
@@ -223,6 +290,10 @@ cdef class BaseMCTS:
 
             self.root = Node(state=self.env.current_state)
             self.node_count = 1
+            # Reset seen_states with new root
+            self.seen_states = {}
+            if isinstance(self.env.current_state, TacticState):
+                self.seen_states[self.env.current_state.pp] = self.root
 
     cpdef int _count_nodes(self, Node node):
         cdef int count = 1
@@ -230,3 +301,13 @@ cdef class BaseMCTS:
         for child in node.children:
             count += self._count_nodes(child)
         return count
+
+    cpdef void _rebuild_seen_states(self, Node node):
+        """Recursively rebuild seen_states dictionary from a subtree."""
+        cdef object state_key
+        cdef Node child
+        state_key = self._get_state_key(node.state)
+        if state_key is not None:
+            self.seen_states[state_key] = node
+        for child in node.children:
+            self._rebuild_seen_states(child)

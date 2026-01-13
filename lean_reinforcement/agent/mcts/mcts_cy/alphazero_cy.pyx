@@ -74,6 +74,11 @@ cdef class MCTS_AlphaZero(BaseMCTS):
         return best_child
 
     cpdef Node _expand(self, Node node):
+        cdef object state_key
+        cdef object next_state
+        cdef Node child
+        cdef Node existing_node
+
         if not isinstance(node.state, TacticState):
             raise TypeError("Cannot expand a node without a TacticState.")
 
@@ -88,12 +93,25 @@ cdef class MCTS_AlphaZero(BaseMCTS):
 
         for tactic, prob in tactics_with_probs:
             next_state = self.env.run_tactic_stateless(node.state, tactic)
+
+            # Check for duplicate states
+            state_key = self._get_state_key(next_state)
+            if state_key is not None and state_key in self.seen_states:
+                # Reuse existing node - add as child with additional parent edge
+                existing_node = self.seen_states[state_key]
+                existing_node.add_parent(node, tactic)
+                if existing_node not in node.children:
+                    node.children.append(existing_node)
+                continue
+
             child = Node(next_state, parent=node, action=tactic)
             child.prior_p = prob
             node.children.append(child)
             self.node_count += 1
             
+            # Register new state in seen_states and encode features
             if isinstance(next_state, TacticState):
+                self.seen_states[state_key] = child
                 child.encoder_features = self.value_head.encode_states([next_state.pp])
 
         node.untried_actions = []
@@ -112,6 +130,8 @@ cdef class MCTS_AlphaZero(BaseMCTS):
         cdef float prob
         cdef object next_state
         cdef Node child
+        cdef Node existing_node
+        cdef object state_key
 
         for node in nodes:
             if isinstance(node.state, TacticState):
@@ -133,21 +153,32 @@ cdef class MCTS_AlphaZero(BaseMCTS):
 
         for node, tactic, prob in tasks:
             try:
-                # Assuming env has dojo attribute or run_tactic_stateless uses it
-                # In python code: self.env.dojo.run_tac(node.state, tactic)
-                # But BaseMCTS uses self.env.run_tactic_stateless in _expand (in my thought, but python code used dojo directly in _expand_batch)
-                # I'll use self.env.run_tactic_stateless if available, or fallback to dojo
                 next_state = self.env.run_tactic_stateless(node.state, tactic)
             except Exception as e:
                 next_state = LeanError(error=str(e))
             results.append((node, tactic, prob, next_state))
 
+        # Create children (reusing existing nodes for duplicates - DAG structure)
         for node, tactic, prob, next_state in results:
+            # Check for duplicate states
+            state_key = self._get_state_key(next_state)
+            if state_key is not None and state_key in self.seen_states:
+                # Reuse existing node - add as child with additional parent edge
+                existing_node = self.seen_states[state_key]
+                existing_node.add_parent(node, tactic)
+                if existing_node not in node.children:
+                    node.children.append(existing_node)
+                continue
+
             child = Node(next_state, parent=node, action=tactic)
             child.prior_p = prob
             node.children.append(child)
             self.node_count += 1
-            new_children_nodes.append(child)
+
+            # Register new state in seen_states
+            if isinstance(next_state, TacticState):
+                self.seen_states[state_key] = child
+                new_children_nodes.append(child)
 
         for node in nodes_to_generate:
             node.untried_actions = []

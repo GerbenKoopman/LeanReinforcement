@@ -37,7 +37,6 @@ srun python3 -m lean_reinforcement.training.train \
     --num-epochs 32 \
     --num-theorems 128 \
     --num-iterations 200 \
-    --max-steps 30 \
     --batch-size 8 \
     --num-tactics-to-expand 16 \
     --num-workers 16 \

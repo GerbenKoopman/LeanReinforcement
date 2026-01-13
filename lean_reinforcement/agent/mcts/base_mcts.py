@@ -19,6 +19,7 @@ class Node:
     """
     A node in the Monte Carlo Tree Search.
     Holds state, statistics, and child nodes.
+    Supports DAG structure with multiple parents for state deduplication.
     """
 
     def __init__(
@@ -28,8 +29,14 @@ class Node:
         action: Optional[str] = None,
     ):
         self.state = state
-        self.parent = parent
-        self.action = action
+        # Support multiple parents for DAG structure
+        # Each entry is (parent_node, action_that_led_here)
+        self.parents: List[tuple["Node", Optional[str]]] = []
+        if parent is not None:
+            self.parents.append((parent, action))
+        self.action = (
+            action  # Keep for compatibility (first action that created this node)
+        )
         self.prior_p = 0.0
 
         self.children: List["Node"] = []
@@ -40,6 +47,17 @@ class Node:
         self.untried_actions: Optional[List[str]] = None
 
         self.encoder_features: Optional[torch.Tensor] = None
+
+    def add_parent(self, parent: "Node", action: Optional[str] = None) -> None:
+        """Add an additional parent to this node (for DAG structure)."""
+        # Avoid duplicate parent-action pairs
+        if not any(p == parent and a == action for p, a in self.parents):
+            self.parents.append((parent, action))
+
+    @property
+    def parent(self) -> Optional["Node"]:
+        """Backward compatibility: returns first parent or None."""
+        return self.parents[0][0] if self.parents else None
 
     def value(self) -> float:
         """Calculates the value of this node. Using max_value for max-backup."""
@@ -81,6 +99,10 @@ class BaseMCTS:
         self.node_count = 0
         self.virtual_losses: Dict[Node, int] = {}
 
+        # Seen states dictionary for deduplication (maps state string to Node)
+        # This prevents adding duplicate states to the tree, similar to ReProver's approach
+        self.seen_states: Dict[str, Node] = {}
+
         # Get theorem info from the environment
         self.theorem = env.theorem
         self.theorem_pos = env.theorem_pos
@@ -93,6 +115,22 @@ class BaseMCTS:
 
         self.root = Node(state=env.current_state)
         self.node_count = 1
+
+        # Register root state in seen_states
+        if isinstance(env.current_state, TacticState):
+            self.seen_states[env.current_state.pp] = self.root
+
+    def _get_state_key(
+        self, state: TacticState | ProofFinished | LeanError | ProofGivenUp
+    ) -> Optional[str]:
+        """
+        Get a hashable key for a state for deduplication purposes.
+        Returns None for terminal states (errors, proof finished) as these
+        are not deduplicated.
+        """
+        if isinstance(state, TacticState):
+            return str(state.pp)
+        return None
 
     def _get_virtual_loss(self, node: Node) -> int:
         return self.virtual_losses.get(node, 0)
@@ -253,14 +291,30 @@ class BaseMCTS:
         """
         Phase 4: Backpropagation
         Update visit counts and value sums from the given node
-        all the way back up to the root.
+        all the way back up to the root through ALL parent paths (DAG traversal).
+        Uses BFS with visited set to avoid updating nodes multiple times.
         """
-        # Optional because current.parent is later assigned, which can be None
-        current: Optional[Node] = node
-        while current is not None:
+        from collections import deque
+
+        visited: set[int] = set()  # Track visited nodes by id
+        queue: deque[Node] = deque([node])
+
+        while queue:
+            current = queue.popleft()
+            node_id = id(current)
+
+            if node_id in visited:
+                continue
+            visited.add(node_id)
+
+            # Update this node
             current.visit_count += 1
             current.max_value = max(current.max_value, reward)
-            current = current.parent
+
+            # Add all parents to the queue
+            for parent, _ in current.parents:
+                if id(parent) not in visited:
+                    queue.append(parent)
 
     def get_best_action(self) -> Optional[str]:
         """
@@ -300,8 +354,12 @@ class BaseMCTS:
 
         if found_child:
             self.root = found_child
-            self.root.parent = None
+            # Clear all parent references for the new root (it becomes the root)
+            self.root.parents = []
             self.node_count = self._count_nodes(self.root)
+            # Rebuild seen_states for the new subtree
+            self.seen_states = {}
+            self._rebuild_seen_states(self.root)
         else:
             # If child not found, reset the tree with the current environment state
             if not isinstance(
@@ -314,6 +372,10 @@ class BaseMCTS:
 
             self.root = Node(state=self.env.current_state)
             self.node_count = 1
+            # Reset seen_states with new root
+            self.seen_states = {}
+            if isinstance(self.env.current_state, TacticState):
+                self.seen_states[self.env.current_state.pp] = self.root
 
     def _count_nodes(self, node: Node) -> int:
         """Recursively counts the number of nodes in the subtree."""
@@ -321,3 +383,11 @@ class BaseMCTS:
         for child in node.children:
             count += self._count_nodes(child)
         return count
+
+    def _rebuild_seen_states(self, node: Node) -> None:
+        """Recursively rebuild seen_states dictionary from a subtree."""
+        state_key = self._get_state_key(node.state)
+        if state_key is not None:
+            self.seen_states[state_key] = node
+        for child in node.children:
+            self._rebuild_seen_states(child)

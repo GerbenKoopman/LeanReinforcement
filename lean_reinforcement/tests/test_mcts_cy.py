@@ -50,6 +50,7 @@ class MockLeanDojoEnv(MagicMock):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.current_state = Mock(spec=TacticState)
+        self.current_state.pp = "mock_initial_state"  # Add pp attribute for seen_states
         self.theorem = "mock_theorem"
         self.theorem_pos = "mock_pos"
         self.dataloader = Mock()
@@ -86,23 +87,30 @@ class TestBaseMCTSCy(unittest.TestCase):
         mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
         root = mcts.root
 
-        # Create children manually
-        child1 = Node(Mock(spec=TacticState), parent=root, action="tactic1")
-        child2 = Node(Mock(spec=TacticState), parent=root, action="tactic2")
+        # Create children manually with pp attribute for seen_states
+        child1_state = Mock(spec=TacticState)
+        child1_state.pp = "child1_state"
+        child2_state = Mock(spec=TacticState)
+        child2_state.pp = "child2_state"
+        child1 = Node(child1_state, parent=root, action="tactic1")
+        child2 = Node(child2_state, parent=root, action="tactic2")
         root.children = [child1, child2]
 
         # Add some grandchildren to test node counting
-        grandchild = Node(Mock(spec=TacticState), parent=child1, action="tactic1_1")
+        grandchild_state = Mock(spec=TacticState)
+        grandchild_state.pp = "grandchild_state"
+        grandchild = Node(grandchild_state, parent=child1, action="tactic1_1")
         child1.children = [grandchild]
 
         # Test moving to an existing child
         mcts.move_root("tactic1")
         self.assertIs(mcts.root, child1)
-        self.assertIsNone(mcts.root.parent)
+        self.assertEqual(len(mcts.root.parents), 0)  # Root should have no parents
         self.assertEqual(mcts.node_count, 2)  # child1 + grandchild
 
         # Test moving to a non-existent child (should reset)
         new_state = Mock(spec=TacticState)
+        new_state.pp = "new_state"
         self.env.current_state = new_state
 
         mcts.move_root("non_existent_tactic")

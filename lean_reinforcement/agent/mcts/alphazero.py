@@ -82,6 +82,7 @@ class MCTS_AlphaZero(BaseMCTS):
         Expand the leaf node by generating all promising actions from the
         policy head, creating a child for each, and storing their prior
         probabilities. Also caches encoder features for efficiency.
+        Duplicate states are reused (DAG structure) for multi-path backpropagation.
         Then, return the node itself for simulation.
         """
         if not isinstance(node.state, TacticState):
@@ -97,20 +98,33 @@ class MCTS_AlphaZero(BaseMCTS):
             state_str, n=self.num_tactics_to_expand
         )
 
-        # Create a child for each promising tactic
+        # Create a child for each promising tactic (reusing existing nodes for duplicates)
         # Collect children with TacticState for batch encoding
         children_to_encode: List[Node] = []
         states_to_encode: List[str] = []
 
         for tactic, prob in tactics_with_probs:
             next_state = self.env.run_tactic_stateless(node.state, tactic)
+
+            # Check for duplicate states
+            state_key = self._get_state_key(next_state)
+            if state_key is not None and state_key in self.seen_states:
+                # Reuse existing node - add as child with additional parent edge
+                existing_node = self.seen_states[state_key]
+                existing_node.add_parent(node, tactic)
+                if existing_node not in node.children:
+                    node.children.append(existing_node)
+                continue
+
             child = Node(next_state, parent=node, action=tactic)
             child.prior_p = prob
             node.children.append(child)
             self.node_count += 1
 
-            # Collect for batch encoding
+            # Register new state in seen_states and collect for batch encoding
             if isinstance(next_state, TacticState):
+                assert state_key is not None  # Guaranteed by TacticState check
+                self.seen_states[state_key] = child
                 children_to_encode.append(child)
                 states_to_encode.append(next_state.pp)
 
@@ -171,19 +185,31 @@ class MCTS_AlphaZero(BaseMCTS):
                 next_state = LeanError(error=str(e))
             results.append((node, tactic, prob, next_state))
 
-        # Create children
+        # Create children (reusing existing nodes for duplicates - DAG structure)
         # Collect children with TacticState for batch encoding
         children_to_encode: List[Node] = []
         states_to_encode: List[str] = []
 
         for node, tactic, prob, next_state in results:
+            # Check for duplicate states
+            state_key = self._get_state_key(next_state)
+            if state_key is not None and state_key in self.seen_states:
+                # Reuse existing node - add as child with additional parent edge
+                existing_node = self.seen_states[state_key]
+                existing_node.add_parent(node, tactic)
+                if existing_node not in node.children:
+                    node.children.append(existing_node)
+                continue
+
             child = Node(next_state, parent=node, action=tactic)
             child.prior_p = prob
             node.children.append(child)
             self.node_count += 1
 
-            # Collect for batch encoding
+            # Register new state in seen_states and collect for batch encoding
             if isinstance(next_state, TacticState):
+                assert state_key is not None  # Guaranteed by TacticState check
+                self.seen_states[state_key] = child
                 children_to_encode.append(child)
                 states_to_encode.append(next_state.pp)
 

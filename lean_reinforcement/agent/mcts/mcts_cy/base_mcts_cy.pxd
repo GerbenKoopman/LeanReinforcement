@@ -1,6 +1,6 @@
 cdef class Node:
     cdef public object state
-    cdef public Node parent
+    cdef public list parents  # List of (parent_node, action) tuples for DAG structure
     cdef public object action
     cdef public float prior_p
     cdef public list children
@@ -12,6 +12,8 @@ cdef class Node:
 
     cpdef float value(self)
     cpdef bint is_fully_expanded(self)
+    cpdef void add_parent(self, Node parent, object action=*)
+    cpdef Node get_parent(self)
 
 cdef class BaseMCTS:
     cdef public object env
@@ -23,6 +25,7 @@ cdef class BaseMCTS:
     cdef public int max_rollout_depth
     cdef public int node_count
     cdef public dict virtual_losses
+    cdef public dict seen_states
     cdef public object theorem
     cdef public object theorem_pos
     cdef public Node root
@@ -30,6 +33,7 @@ cdef class BaseMCTS:
     cpdef int _get_virtual_loss(self, Node node)
     cpdef void _add_virtual_loss(self, Node node, int loss=*)
     cpdef void _remove_virtual_loss(self, Node node, int loss=*)
+    cpdef object _get_state_key(self, object state)
     cpdef Node _select(self, Node node)
     cpdef Node _get_best_child(self, Node node)
     cpdef Node _expand(self, Node node)
@@ -38,3 +42,4 @@ cdef class BaseMCTS:
     cpdef list _simulate_batch(self, list nodes)
     cpdef void _backpropagate(self, Node node, float reward)
     cpdef int _count_nodes(self, Node node)
+    cpdef void _rebuild_seen_states(self, Node node)
