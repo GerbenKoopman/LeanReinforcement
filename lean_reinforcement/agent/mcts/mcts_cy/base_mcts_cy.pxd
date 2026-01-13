@@ -23,7 +23,6 @@ cdef class BaseMCTS:
     cdef public int max_rollout_depth
     cdef public int node_count
     cdef public dict virtual_losses
-    cdef public dict seen_states
     cdef public object theorem
     cdef public object theorem_pos
     cdef public Node root

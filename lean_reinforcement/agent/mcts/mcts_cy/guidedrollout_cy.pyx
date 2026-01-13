@@ -1,26 +1,7 @@
 from libc.math cimport sqrt
 from lean_reinforcement.agent.mcts.mcts_cy.base_mcts_cy cimport Node, BaseMCTS
-from lean_reinforcement.agent.mcts.base_mcts import MAX_TACTIC_LENGTH
-from collections import Counter
 import math
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
-
-cdef int REPETITION_THRESHOLD = 5
-
-cdef bint _has_excessive_repetition_cy(str tactic):
-    """Inlined Cython version of _has_excessive_repetition for performance."""
-    cdef list parts
-    cdef int threshold = REPETITION_THRESHOLD
-    
-    parts = tactic.replace("[", "").replace("]", "").split(",")
-    if len(parts) < threshold:
-        return False
-    
-    counts = Counter(p.strip() for p in parts if p.strip())
-    if not counts:
-        return False
-    
-    return counts.most_common(1)[0][1] >= threshold
 
 cdef class MCTS_GuidedRollout(BaseMCTS):
 
@@ -99,33 +80,11 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
         )
 
         for tactic, prob in tactics_with_probs:
-            # Filter 1: Skip excessively long tactics (likely truncated/malformed)
-            if len(tactic) > MAX_TACTIC_LENGTH:
-                continue
-
-            # Filter 2: Skip tactics with excessive repetition
-            if _has_excessive_repetition_cy(tactic):
-                continue
-
             next_state = self.env.run_tactic_stateless(node.state, tactic)
-
-            # Filter 3: Skip no-op tactics (state unchanged)
-            if isinstance(next_state, TacticState):
-                if next_state.pp == state_str:
-                    continue
-
-                # Filter 4: Skip if we've already seen this state
-                if next_state.pp in self.seen_states:
-                    continue
-
             child = Node(next_state, parent=node, action=tactic)
             child.prior_p = prob
             node.children.append(child)
             self.node_count += 1
-
-            # Register new state in seen_states
-            if isinstance(next_state, TacticState):
-                self.seen_states[next_state.pp] = child
 
         node.untried_actions = []
 
@@ -145,7 +104,6 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
         cdef float prob
         cdef object next_state
         cdef Node child
-        cdef str state_str
 
         for node in nodes:
             if isinstance(node.state, TacticState):
@@ -162,38 +120,18 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
         for i in range(len(batch_tactics_with_probs)):
             tactics_probs = batch_tactics_with_probs[i]
             node = nodes_to_generate[i]
-            state_str = node.state.pp
             for tactic, prob in tactics_probs:
-                # Filter 1: Skip excessively long tactics
-                if len(tactic) > MAX_TACTIC_LENGTH:
-                    continue
+                tasks.append((node, tactic, prob))
 
-                # Filter 2: Skip tactics with excessive repetition
-                if _has_excessive_repetition_cy(tactic):
-                    continue
-
-                tasks.append((node, tactic, prob, state_str))
-
-        for node, tactic, prob, state_str in tasks:
+        for node, tactic, prob in tasks:
             next_state = self.env.run_tactic_stateless(node.state, tactic)
+            results.append((node, tactic, prob, next_state))
 
-            # Filter 3: Skip no-op tactics
-            if isinstance(next_state, TacticState):
-                if next_state.pp == state_str:
-                    continue
-
-                # Filter 4: Skip duplicate states
-                if next_state.pp in self.seen_states:
-                    continue
-
+        for node, tactic, prob, next_state in results:
             child = Node(next_state, parent=node, action=tactic)
             child.prior_p = prob
             node.children.append(child)
             self.node_count += 1
-
-            # Register new state in seen_states
-            if isinstance(next_state, TacticState):
-                self.seen_states[next_state.pp] = child
 
         for node in nodes_to_generate:
             node.untried_actions = []

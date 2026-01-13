@@ -1,27 +1,8 @@
 from libc.math cimport sqrt
 from lean_reinforcement.agent.mcts.mcts_cy.base_mcts_cy cimport Node, BaseMCTS
-from lean_reinforcement.agent.mcts.base_mcts import MAX_TACTIC_LENGTH
-from collections import Counter
 import math
 import torch
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
-
-cdef int REPETITION_THRESHOLD = 5
-
-cdef bint _has_excessive_repetition_cy(str tactic):
-    """Inlined Cython version of _has_excessive_repetition for performance."""
-    cdef list parts
-    cdef int threshold = REPETITION_THRESHOLD
-    
-    parts = tactic.replace("[", "").replace("]", "").split(",")
-    if len(parts) < threshold:
-        return False
-    
-    counts = Counter(p.strip() for p in parts if p.strip())
-    if not counts:
-        return False
-    
-    return counts.most_common(1)[0][1] >= threshold
 
 cdef class MCTS_AlphaZero(BaseMCTS):
     cdef public object value_head
@@ -105,45 +86,15 @@ cdef class MCTS_AlphaZero(BaseMCTS):
             state_str, n=self.num_tactics_to_expand
         )
 
-        children_to_encode = []
-        states_to_encode = []
-
         for tactic, prob in tactics_with_probs:
-            # Filter 1: Skip excessively long tactics (likely truncated/malformed)
-            if len(tactic) > MAX_TACTIC_LENGTH:
-                continue
-
-            # Filter 2: Skip tactics with excessive repetition
-            if _has_excessive_repetition_cy(tactic):
-                continue
-
             next_state = self.env.run_tactic_stateless(node.state, tactic)
-
-            # Filter 3: Skip no-op tactics (state unchanged)
-            if isinstance(next_state, TacticState):
-                if next_state.pp == state_str:
-                    continue
-
-                # Filter 4: Skip if we've already seen this state
-                if next_state.pp in self.seen_states:
-                    continue
-
             child = Node(next_state, parent=node, action=tactic)
             child.prior_p = prob
             node.children.append(child)
             self.node_count += 1
-
-            # Register new state in seen_states and collect for batch encoding
+            
             if isinstance(next_state, TacticState):
-                self.seen_states[next_state.pp] = child
-                children_to_encode.append(child)
-                states_to_encode.append(next_state.pp)
-
-        # Batch encode all children's states at once for efficiency
-        if children_to_encode:
-            batch_features = self.value_head.encode_states(states_to_encode)
-            for i, child in enumerate(children_to_encode):
-                child.encoder_features = batch_features[i : i + 1]
+                child.encoder_features = self.value_head.encode_states([next_state.pp])
 
         node.untried_actions = []
         return node
@@ -178,54 +129,25 @@ cdef class MCTS_AlphaZero(BaseMCTS):
             tactics_probs = batch_tactics_with_probs[i]
             node = nodes_to_generate[i]
             for tactic, prob in tactics_probs:
-                # Filter 1: Skip excessively long tactics
-                if len(tactic) > MAX_TACTIC_LENGTH:
-                    continue
-
-                # Filter 2: Skip tactics with excessive repetition
-                if _has_excessive_repetition_cy(tactic):
-                    continue
-
                 tasks.append((node, tactic, prob))
 
         for node, tactic, prob in tasks:
             try:
+                # Assuming env has dojo attribute or run_tactic_stateless uses it
+                # In python code: self.env.dojo.run_tac(node.state, tactic)
+                # But BaseMCTS uses self.env.run_tactic_stateless in _expand (in my thought, but python code used dojo directly in _expand_batch)
+                # I'll use self.env.run_tactic_stateless if available, or fallback to dojo
                 next_state = self.env.run_tactic_stateless(node.state, tactic)
             except Exception as e:
                 next_state = LeanError(error=str(e))
             results.append((node, tactic, prob, next_state))
 
-        # Collect children with TacticState for batch encoding
-        cdef list children_to_encode = []
-        cdef list states_to_encode = []
-
         for node, tactic, prob, next_state in results:
-            # Filter 3: Skip no-op tactics (state unchanged)
-            if isinstance(next_state, TacticState):
-                if next_state.pp == node.state.pp:
-                    continue
-
-                # Filter 4: Skip if we've already seen this state
-                if next_state.pp in self.seen_states:
-                    continue
-
             child = Node(next_state, parent=node, action=tactic)
             child.prior_p = prob
             node.children.append(child)
             self.node_count += 1
             new_children_nodes.append(child)
-
-            # Register new state in seen_states and collect for batch encoding
-            if isinstance(next_state, TacticState):
-                self.seen_states[next_state.pp] = child
-                children_to_encode.append(child)
-                states_to_encode.append(next_state.pp)
-
-        # Batch encode all children's states at once for efficiency
-        if children_to_encode:
-            batch_features = self.value_head.encode_states(states_to_encode)
-            for i, child in enumerate(children_to_encode):
-                child.encoder_features = batch_features[i : i + 1]
 
         for node in nodes_to_generate:
             node.untried_actions = []
