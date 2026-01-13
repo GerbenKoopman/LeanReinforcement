@@ -115,12 +115,24 @@ class BaseMCTS:
                 f"GPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved"
             )
 
-    def search(self, num_iterations: int, batch_size: Optional[int] = None) -> None:
+    def search(
+        self,
+        num_iterations: int,
+        batch_size: Optional[int] = None,
+        max_time: Optional[float] = None,
+    ) -> None:
         """
         Run the MCTS search for a given number of iterations with batching.
+
+        Args:
+            num_iterations: Number of MCTS iterations to run.
+            batch_size: Batch size for parallel expansion/simulation.
+            max_time: Maximum time in seconds for this search. If None, uses self.max_time.
         """
         if batch_size is None:
             batch_size = self.batch_size
+        if max_time is None:
+            max_time = self.max_time
 
         start_time = time.time()
 
@@ -131,7 +143,7 @@ class BaseMCTS:
                     break
 
                 # Check time limit
-                if time.time() - start_time > self.max_time:
+                if time.time() - start_time > max_time:
                     break
 
                 # Stop if tree is too large

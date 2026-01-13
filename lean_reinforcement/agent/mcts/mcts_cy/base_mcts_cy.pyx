@@ -1,4 +1,5 @@
 import math
+import time
 import torch
 from typing import List, Optional, Dict
 from loguru import logger
@@ -79,7 +80,7 @@ cdef class BaseMCTS:
                 f"GPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved"
             )
 
-    def search(self, int num_iterations, batch_size=None):
+    def search(self, int num_iterations, batch_size=None, max_time=None):
         cdef int iteration
         cdef int current_batch_size
         cdef list leaves
@@ -89,14 +90,25 @@ cdef class BaseMCTS:
         cdef int i
         cdef float reward
         cdef Node child
+        cdef double start_time
+        cdef double effective_max_time
 
         if batch_size is None:
             batch_size = self.batch_size
+        if max_time is None:
+            effective_max_time = self.max_time
+        else:
+            effective_max_time = max_time
         
         cdef int b_size = batch_size
+        start_time = time.time()
 
         with torch.no_grad():
             for iteration in range(0, num_iterations, b_size):
+                # Check time limit
+                if time.time() - start_time > effective_max_time:
+                    break
+
                 if self.node_count >= self.max_tree_nodes:
                     break
 

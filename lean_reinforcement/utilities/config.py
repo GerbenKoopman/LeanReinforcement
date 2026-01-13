@@ -34,7 +34,7 @@ class TrainingConfig:
     model_name: str = "kaiyuy/leandojo-lean4-tacgen-byt5-small"
     num_tactics_to_expand: int = 8
     max_rollout_depth: int = 30
-    max_time: float = 600.0
+    max_time: float = 60.0
     env_timeout: int = 60
 
     @classmethod
@@ -148,8 +148,8 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--max-time",
         type=float,
-        default=600.0,
-        help="Max time (seconds) for MCTS search.",
+        default=60.0,
+        help="Max time (seconds) per MCTS search step.",
     )
     parser.add_argument(
         "--env-timeout",

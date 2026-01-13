@@ -93,9 +93,10 @@ class AgentRunner:
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
 
-            # Check proof timeout
+            # Check proof timeout and calculate remaining time
             elapsed = time.time() - start_time
-            if elapsed > PROOF_TIMEOUT:
+            remaining_time = PROOF_TIMEOUT - elapsed
+            if remaining_time <= 0:
                 logger.warning(
                     f"Proof search exceeded {PROOF_TIMEOUT}s timeout after {elapsed:.1f}s. Stopping."
                 )
@@ -120,12 +121,13 @@ class AgentRunner:
                     )
 
                 # Run the search to find the best action
+                step_max_time = min(mcts_instance.max_time, remaining_time)
                 logger.info(
-                    f"Step {step_num}: Running MCTS search for {self.num_iterations} iterations..."
+                    f"Step {step_num}: Running MCTS search for {self.num_iterations} iterations (max {step_max_time:.0f}s)..."
                 )
 
                 try:
-                    mcts_instance.search(self.num_iterations)
+                    mcts_instance.search(self.num_iterations, max_time=step_max_time)
                 except Exception as e:
                     logger.error(f"MCTS search failed with error: {e}")
                     break
