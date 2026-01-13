@@ -10,12 +10,7 @@ from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
 from lean_reinforcement.utilities.gym import LeanDojoEnv
 from lean_reinforcement.agent.value_head import ValueHead
-from lean_reinforcement.agent.mcts.base_mcts import (
-    BaseMCTS,
-    Node,
-    MAX_TACTIC_LENGTH,
-    _has_excessive_repetition,
-)
+from lean_reinforcement.agent.mcts.base_mcts import BaseMCTS, Node
 from lean_reinforcement.agent.transformer import TransformerProtocol
 
 
@@ -108,33 +103,14 @@ class MCTS_AlphaZero(BaseMCTS):
         states_to_encode: List[str] = []
 
         for tactic, prob in tactics_with_probs:
-            # Filter 1: Skip excessively long tactics (likely truncated/malformed)
-            if len(tactic) > MAX_TACTIC_LENGTH:
-                continue
-
-            # Filter 2: Skip tactics with excessive repetition
-            if _has_excessive_repetition(tactic):
-                continue
-
             next_state = self.env.run_tactic_stateless(node.state, tactic)
-
-            # Filter 3: Skip no-op tactics (state unchanged)
-            if isinstance(next_state, TacticState):
-                if next_state.pp == state_str:
-                    continue
-
-                # Filter 4: Skip if we've already seen this state
-                if next_state.pp in self.seen_states:
-                    continue
-
             child = Node(next_state, parent=node, action=tactic)
             child.prior_p = prob
             node.children.append(child)
             self.node_count += 1
 
-            # Register new state in seen_states and collect for batch encoding
+            # Collect for batch encoding
             if isinstance(next_state, TacticState):
-                self.seen_states[next_state.pp] = child
                 children_to_encode.append(child)
                 states_to_encode.append(next_state.pp)
 
@@ -179,22 +155,14 @@ class MCTS_AlphaZero(BaseMCTS):
             states, n=self.num_tactics_to_expand
         )
 
-        # 2. Prepare tasks for parallel execution (with pre-filtering)
+        # Prepare tasks
         tasks = []
         for i, tactics_probs in enumerate(batch_tactics_with_probs):
             node = nodes_to_generate[i]
             for tactic, prob in tactics_probs:
-                # Filter 1: Skip excessively long tactics (likely truncated/malformed)
-                if len(tactic) > MAX_TACTIC_LENGTH:
-                    continue
-
-                # Filter 2: Skip tactics with excessive repetition
-                if _has_excessive_repetition(tactic):
-                    continue
-
                 tasks.append((node, tactic, prob))
 
-        # 3. Run tactics sequentially
+        # Run tactics sequentially
         results = []
         for node, tactic, prob in tasks:
             try:
@@ -203,29 +171,19 @@ class MCTS_AlphaZero(BaseMCTS):
                 next_state = LeanError(error=str(e))
             results.append((node, tactic, prob, next_state))
 
-        # 4. Create children (with state deduplication)
+        # Create children
         # Collect children with TacticState for batch encoding
         children_to_encode: List[Node] = []
         states_to_encode: List[str] = []
 
         for node, tactic, prob, next_state in results:
-            # Filter 3: Skip no-op tactics (state unchanged)
-            if isinstance(next_state, TacticState):
-                if next_state.pp == node.state.pp:
-                    continue
-
-                # Filter 4: Skip if we've already seen this state
-                if next_state.pp in self.seen_states:
-                    continue
-
             child = Node(next_state, parent=node, action=tactic)
             child.prior_p = prob
             node.children.append(child)
             self.node_count += 1
 
-            # Register new state in seen_states and collect for batch encoding
+            # Collect for batch encoding
             if isinstance(next_state, TacticState):
-                self.seen_states[next_state.pp] = child
                 children_to_encode.append(child)
                 states_to_encode.append(next_state.pp)
 
