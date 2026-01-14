@@ -64,6 +64,7 @@ def process_theorem(
     mcts_kwargs["batch_size"] = args.batch_size
     mcts_kwargs["num_tactics_to_expand"] = args.num_tactics_to_expand
     mcts_kwargs["max_rollout_depth"] = args.max_rollout_depth
+    mcts_kwargs["max_time"] = args.max_time
 
     runner = AgentRunner(
         env=env,
