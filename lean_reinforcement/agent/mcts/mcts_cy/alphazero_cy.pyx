@@ -141,9 +141,17 @@ cdef class MCTS_AlphaZero(BaseMCTS):
         if not states:
             return nodes
 
+        # Check timeout before expensive model call
+        if self._is_timeout():
+            return nodes
+
         batch_tactics_with_probs = self.transformer.generate_tactics_with_probs_batch(
             states, n=self.num_tactics_to_expand
         )
+
+        # Check timeout after model call
+        if self._is_timeout():
+            return nodes
 
         for i in range(len(batch_tactics_with_probs)):
             tactics_probs = batch_tactics_with_probs[i]
@@ -152,6 +160,9 @@ cdef class MCTS_AlphaZero(BaseMCTS):
                 tasks.append((node, tactic, prob))
 
         for node, tactic, prob in tasks:
+            # Check timeout before each Lean call
+            if self._is_timeout():
+                break
             try:
                 next_state = self.env.run_tactic_stateless(node.state, tactic)
             except Exception as e:
@@ -187,6 +198,11 @@ cdef class MCTS_AlphaZero(BaseMCTS):
 
     cpdef float _simulate(self, Node node):
         cdef float value
+        
+        # Check timeout before evaluation
+        if self._is_timeout():
+            return 0.0  # Neutral reward on timeout
+            
         if node.is_terminal:
             if isinstance(node.state, ProofFinished):
                 return 1.0
@@ -214,6 +230,10 @@ cdef class MCTS_AlphaZero(BaseMCTS):
         cdef Node node
         cdef object batch_features
         cdef list values
+
+        # Check timeout before batch evaluation
+        if self._is_timeout():
+            return results  # Return neutral rewards on timeout
 
         for i in range(len(nodes)):
             node = nodes[i]

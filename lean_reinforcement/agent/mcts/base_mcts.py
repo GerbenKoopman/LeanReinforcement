@@ -99,6 +99,9 @@ class BaseMCTS:
         self.node_count = 0
         self.virtual_losses: Dict[Node, int] = {}
 
+        # Timeout tracking for search operations
+        self._search_deadline: Optional[float] = None
+
         # Seen states dictionary for deduplication (maps state string to Node)
         # This prevents adding duplicate states to the tree, similar to ReProver's approach
         self.seen_states: Dict[str, Node] = {}
@@ -153,6 +156,12 @@ class BaseMCTS:
                 f"GPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved"
             )
 
+    def _is_timeout(self) -> bool:
+        """Check if the search has exceeded its time limit."""
+        if self._search_deadline is None:
+            return False
+        return time.time() > self._search_deadline
+
     def search(
         self,
         num_iterations: int,
@@ -173,6 +182,8 @@ class BaseMCTS:
             max_time = self.max_time
 
         start_time = time.time()
+        # Store deadline as instance var so _expand/_simulate can check it
+        self._search_deadline = start_time + max_time
 
         with torch.no_grad():
             for iteration in range(0, num_iterations, batch_size):
@@ -180,8 +191,9 @@ class BaseMCTS:
                 if self.root.max_value == 1.0:
                     break
 
-                # Check time limit
-                if time.time() - start_time > max_time:
+                # Check time limit (more frequent check)
+                if self._is_timeout():
+                    logger.debug(f"MCTS search timeout after {iteration} iterations")
                     break
 
                 # Stop if tree is too large
@@ -193,6 +205,8 @@ class BaseMCTS:
 
                 # 1. Selection Phase (Batch)
                 for _ in range(current_batch_size):
+                    if self._is_timeout():
+                        break
                     leaf = self._select(self.root)
 
                     if leaf.is_terminal:
@@ -214,11 +228,22 @@ class BaseMCTS:
                     self._add_virtual_loss(leaf)
                     leaves.append(leaf)
 
-                if not leaves:
+                if not leaves or self._is_timeout():
+                    # Clean up virtual losses on early exit
+                    for leaf in leaves:
+                        self._remove_virtual_loss(leaf)
+                    if self._is_timeout():
+                        break
                     continue
 
-                # 2. Expansion Phase
+                # 2. Expansion Phase (with timeout awareness)
                 expanded_nodes = self._expand_batch(leaves)
+
+                # Check timeout after expansion (it can be slow)
+                if self._is_timeout():
+                    for leaf in leaves:
+                        self._remove_virtual_loss(leaf)
+                    break
 
                 # 3. Simulation Phase
                 rewards = self._simulate_batch(expanded_nodes)

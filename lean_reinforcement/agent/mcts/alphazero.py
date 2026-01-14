@@ -155,6 +155,10 @@ class MCTS_AlphaZero(BaseMCTS):
                     nodes_needing_features.append(node)
                     states_for_features.append(node.state.pp)
 
+        # Early timeout check before expensive operations
+        if self._is_timeout():
+            return nodes
+
         # Batch encode parent nodes' features if any are missing
         if nodes_needing_features:
             batch_features = self.value_head.encode_states(states_for_features)
@@ -164,10 +168,18 @@ class MCTS_AlphaZero(BaseMCTS):
         if not states:
             return nodes
 
+        # Early timeout check after encoding
+        if self._is_timeout():
+            return nodes
+
         # Batch generate tactics
         batch_tactics_with_probs = self.transformer.generate_tactics_with_probs_batch(
             states, n=self.num_tactics_to_expand
         )
+
+        # Early timeout check after model call
+        if self._is_timeout():
+            return nodes
 
         # Prepare tasks
         tasks = []
@@ -176,9 +188,11 @@ class MCTS_AlphaZero(BaseMCTS):
             for tactic, prob in tactics_probs:
                 tasks.append((node, tactic, prob))
 
-        # Run tactics sequentially
+        # Run tactics sequentially with timeout checks
         results = []
         for node, tactic, prob in tasks:
+            if self._is_timeout():
+                break
             try:
                 next_state = self.env.dojo.run_tac(node.state, tactic)
             except Exception as e:
@@ -229,6 +243,10 @@ class MCTS_AlphaZero(BaseMCTS):
         Phase 3: Evaluation (using Value Head)
         Uses cached encoder features if available to avoid recomputation.
         """
+        # Check timeout before evaluation
+        if self._is_timeout():
+            return 0.0  # Neutral reward on timeout
+
         if node.is_terminal:
             if isinstance(node.state, ProofFinished):
                 return 1.0
@@ -253,6 +271,10 @@ class MCTS_AlphaZero(BaseMCTS):
         """
         Phase 3: Batch Evaluation
         """
+        # Check timeout before batch evaluation
+        if self._is_timeout():
+            return [0.0] * len(nodes)  # Neutral rewards on timeout
+
         # Separate nodes by terminal status and feature availability
         results = [0.0] * len(nodes)
 

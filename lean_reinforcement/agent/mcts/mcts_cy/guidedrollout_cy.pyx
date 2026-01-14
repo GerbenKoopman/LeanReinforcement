@@ -135,9 +135,17 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
         if not states:
             return nodes
 
+        # Check timeout before expensive model call
+        if self._is_timeout():
+            return nodes
+
         batch_tactics_with_probs = self.transformer.generate_tactics_with_probs_batch(
             states, n=self.num_tactics_to_expand
         )
+
+        # Check timeout after model call
+        if self._is_timeout():
+            return nodes
 
         for i in range(len(batch_tactics_with_probs)):
             tactics_probs = batch_tactics_with_probs[i]
@@ -146,6 +154,9 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
                 tasks.append((node, tactic, prob))
 
         for node, tactic, prob in tasks:
+            # Check timeout before each Lean call
+            if self._is_timeout():
+                break
             next_state = self.env.run_tactic_stateless(node.state, tactic)
             results.append((node, tactic, prob, next_state))
 
@@ -183,6 +194,10 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
         cdef str tactic
         cdef object result
 
+        # Check timeout at start of simulation
+        if self._is_timeout():
+            return 0.0  # Neutral reward on timeout
+
         if node.is_terminal:
             if isinstance(node.state, ProofFinished):
                 return 1.0
@@ -196,8 +211,17 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
         sim_env = self.env
 
         for step_idx in range(self.max_rollout_depth):
+            # Check timeout at each rollout step
+            if self._is_timeout():
+                return 0.0  # Neutral reward on timeout
+                
             state_str = current_state.pp
             tactic = self.transformer.generate_tactics(state_str, n=1)[0]
+            
+            # Check timeout after model call
+            if self._is_timeout():
+                return 0.0
+                
             result = sim_env.run_tactic_stateless(current_state, tactic)
 
             if isinstance(result, ProofFinished):

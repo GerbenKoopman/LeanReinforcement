@@ -135,10 +135,18 @@ class MCTS_GuidedRollout(BaseMCTS):
         if not states:
             return nodes
 
+        # Early timeout check before expensive model call
+        if self._is_timeout():
+            return nodes
+
         # Batch generate tactics with probabilities
         batch_tactics_with_probs = self.transformer.generate_tactics_with_probs_batch(
             states, n=self.num_tactics_to_expand
         )
+
+        # Early timeout check after model call
+        if self._is_timeout():
+            return nodes
 
         # Prepare tasks
         tasks = []
@@ -147,9 +155,12 @@ class MCTS_GuidedRollout(BaseMCTS):
             for tactic, prob in tactics_probs:
                 tasks.append((node, tactic, prob))
 
-        # Run tactics sequentially
+        # Run tactics sequentially with timeout checks
         results = []
         for node, tactic, prob in tasks:
+            # Check timeout periodically during Lean calls
+            if self._is_timeout():
+                break
             next_state = self.env.run_tactic_stateless(node.state, tactic)
             results.append((node, tactic, prob, next_state))
 
@@ -184,6 +195,10 @@ class MCTS_GuidedRollout(BaseMCTS):
         """
         Phase 3: Simulation (Guided Rollout)
         """
+        # Early timeout check
+        if self._is_timeout():
+            return 0.0  # Neutral reward on timeout
+
         if node.is_terminal:
             if isinstance(node.state, ProofFinished):
                 return 1.0
@@ -199,10 +214,18 @@ class MCTS_GuidedRollout(BaseMCTS):
         sim_env = env if env else self.env
 
         for step_idx in range(self.max_rollout_depth):
+            # Check timeout at each rollout step
+            if self._is_timeout():
+                return 0.0  # Neutral reward on timeout
+
             state_str = current_state.pp
 
             # Get a single greedy tactic
             tactic = self.transformer.generate_tactics(state_str, n=1)[0]
+
+            # Check timeout after model call
+            if self._is_timeout():
+                return 0.0
 
             # Run the tactic with timeout handling
             result = sim_env.run_tactic_stateless(current_state, tactic)

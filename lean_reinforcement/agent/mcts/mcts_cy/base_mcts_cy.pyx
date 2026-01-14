@@ -78,6 +78,7 @@ cdef class BaseMCTS:
         self.seen_states = {}
 
         self.theorem = env.theorem
+        self._search_deadline = 0.0  # Will be set in search()
         self.theorem_pos = env.theorem_pos
 
         if not isinstance(
@@ -103,6 +104,12 @@ cdef class BaseMCTS:
             self.virtual_losses[node] -= loss
             if self.virtual_losses[node] <= 0:
                 del self.virtual_losses[node]
+
+    cpdef bint _is_timeout(self):
+        """Check if the search has exceeded its deadline."""
+        if self._search_deadline <= 0:
+            return False
+        return time.time() > self._search_deadline
 
     cpdef object _get_state_key(self, object state):
         """Get a hashable key for a state for deduplication purposes."""
@@ -140,11 +147,12 @@ cdef class BaseMCTS:
         
         cdef int b_size = batch_size
         start_time = time.time()
+        self._search_deadline = start_time + effective_max_time
 
         with torch.no_grad():
             for iteration in range(0, num_iterations, b_size):
                 # Check time limit
-                if time.time() - start_time > effective_max_time:
+                if self._is_timeout():
                     break
 
                 if self.node_count >= self.max_tree_nodes:
@@ -173,10 +181,20 @@ cdef class BaseMCTS:
                     self._add_virtual_loss(leaf)
                     leaves.append(leaf)
 
-                if not leaves:
+                if not leaves or self._is_timeout():
+                    # Clean up virtual losses on timeout
+                    if self._is_timeout():
+                        for leaf in leaves:
+                            self._remove_virtual_loss(leaf)
                     continue
 
                 expanded_nodes = self._expand_batch(leaves)
+                
+                if self._is_timeout():
+                    for leaf in leaves:
+                        self._remove_virtual_loss(leaf)
+                    break
+                    
                 rewards = self._simulate_batch(expanded_nodes)
 
                 for i in range(len(leaves)):

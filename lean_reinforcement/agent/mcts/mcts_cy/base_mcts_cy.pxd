@@ -30,7 +30,9 @@ cdef class BaseMCTS:
     cdef public object theorem
     cdef public object theorem_pos
     cdef public Node root
+    cdef public double _search_deadline
 
+    cpdef bint _is_timeout(self)
     cpdef int _get_virtual_loss(self, Node node)
     cpdef void _add_virtual_loss(self, Node node, int loss=*)
     cpdef void _remove_virtual_loss(self, Node node, int loss=*)

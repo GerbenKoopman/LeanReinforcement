@@ -93,12 +93,20 @@ class AgentRunner:
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
 
-            # Check proof timeout and calculate remaining time
+            # CRITICAL: Check proof timeout BEFORE starting new MCTS search
+            # This prevents hanging when individual proofs take >600s across multiple steps
             elapsed = time.time() - start_time
             remaining_time = PROOF_TIMEOUT - elapsed
             if remaining_time <= 0:
                 logger.warning(
                     f"Proof search exceeded {PROOF_TIMEOUT}s timeout after {elapsed:.1f}s. Stopping."
+                )
+                break
+
+            # Also enforce minimum remaining time (30s) to avoid starting searches that will timeout
+            if remaining_time < 30:
+                logger.warning(
+                    f"Only {remaining_time:.1f}s remaining (< 30s minimum). Stopping to avoid partial search."
                 )
                 break
 
