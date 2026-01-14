@@ -58,7 +58,7 @@ class TestBatchTransformer(unittest.TestCase):
 
         # Verify tokenizer called with padding=True
         self.mock_tokenizer_instance.assert_called_with(
-            states, return_tensors="pt", padding=True, truncation=True, max_length=1024
+            states, return_tensors="pt", padding=True, truncation=True, max_length=2048
         )
 
     def test_generate_tactics_with_probs_batch(self) -> None:
