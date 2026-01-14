@@ -148,13 +148,13 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--max-time",
         type=float,
-        default=100.0,
+        default=300.0,
         help="Max time (seconds) per MCTS search step.",
     )
     parser.add_argument(
         "--env-timeout",
         type=int,
-        default=100,
+        default=300,
         help="Max time (seconds) per tactic.",
     )
 
