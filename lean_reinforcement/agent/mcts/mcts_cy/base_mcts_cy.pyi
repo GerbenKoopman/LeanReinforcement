@@ -33,6 +33,7 @@ class BaseMCTS:
     batch_size: int
     num_tactics_to_expand: int
     max_rollout_depth: int
+    max_time: float
     node_count: int
     virtual_losses: Dict[Node, int]
     seen_states: Dict[str, Node]
@@ -49,6 +50,7 @@ class BaseMCTS:
         batch_size: int = ...,
         num_tactics_to_expand: int = ...,
         max_rollout_depth: int = ...,
+        max_time: float = ...,
     ) -> None: ...
     def _get_virtual_loss(self, node: Node) -> int: ...
     def _add_virtual_loss(self, node: Node, loss: int = ...) -> None: ...

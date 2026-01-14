@@ -23,6 +23,7 @@ cdef class BaseMCTS:
     cdef public int batch_size
     cdef public int num_tactics_to_expand
     cdef public int max_rollout_depth
+    cdef public float max_time
     cdef public int node_count
     cdef public dict virtual_losses
     cdef public dict seen_states

@@ -62,6 +62,7 @@ cdef class BaseMCTS:
         int batch_size=8,
         int num_tactics_to_expand=8,
         int max_rollout_depth=30,
+        float max_time=600.0,
     ):
         self.env = env
         self.transformer = transformer
@@ -70,6 +71,7 @@ cdef class BaseMCTS:
         self.batch_size = batch_size
         self.num_tactics_to_expand = num_tactics_to_expand
         self.max_rollout_depth = max_rollout_depth
+        self.max_time = max_time
         self.node_count = 0
         self.virtual_losses = {}
         # Seen states dictionary for deduplication (maps state string to Node)
