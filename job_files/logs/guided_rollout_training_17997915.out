@@ -1,0 +1,101 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Building Cython extensions...
+running build_ext
+building 'lean_reinforcement.agent.mcts.mcts_cy.base_mcts_cy' extension
+/home/gkoopman/.conda/envs/lean-reinforcement/bin/x86_64-conda-linux-gnu-cc -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/gkoopman/.conda/envs/lean-reinforcement/include -I/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/include -DNDEBUG -D_FORTIFY_SOURCE=2 -O2 -isystem /home/gkoopman/.conda/envs/lean-reinforcement/include -I/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/include -fPIC -I/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/numpy/_core/include -I/home/gkoopman/.conda/envs/lean-reinforcement/include/python3.10 -c lean_reinforcement/agent/mcts/mcts_cy/base_mcts_cy.c -o build/temp.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/base_mcts_cy.o -O3
+/home/gkoopman/.conda/envs/lean-reinforcement/bin/x86_64-conda-linux-gnu-cc -shared -Wl,--allow-shlib-undefined -Wl,-rpath,/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,-rpath-link,/home/gkoopman/.conda/envs/lean-reinforcement/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,--allow-shlib-undefined -Wl,-rpath,/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,-rpath-link,/home/gkoopman/.conda/envs/lean-reinforcement/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,-rpath-link,/home/gkoopman/.conda/envs/lean-reinforcement/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/lib/stubs -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/gkoopman/.conda/envs/lean-reinforcement/include -I/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/include -DNDEBUG -D_FORTIFY_SOURCE=2 -O2 -isystem /home/gkoopman/.conda/envs/lean-reinforcement/include -I/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/include build/temp.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/base_mcts_cy.o -o build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/base_mcts_cy.cpython-310-x86_64-linux-gnu.so
+building 'lean_reinforcement.agent.mcts.mcts_cy.alphazero_cy' extension
+/home/gkoopman/.conda/envs/lean-reinforcement/bin/x86_64-conda-linux-gnu-cc -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/gkoopman/.conda/envs/lean-reinforcement/include -I/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/include -DNDEBUG -D_FORTIFY_SOURCE=2 -O2 -isystem /home/gkoopman/.conda/envs/lean-reinforcement/include -I/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/include -fPIC -I/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/numpy/_core/include -I/home/gkoopman/.conda/envs/lean-reinforcement/include/python3.10 -c lean_reinforcement/agent/mcts/mcts_cy/alphazero_cy.c -o build/temp.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/alphazero_cy.o -O3
+/home/gkoopman/.conda/envs/lean-reinforcement/bin/x86_64-conda-linux-gnu-cc -shared -Wl,--allow-shlib-undefined -Wl,-rpath,/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,-rpath-link,/home/gkoopman/.conda/envs/lean-reinforcement/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,--allow-shlib-undefined -Wl,-rpath,/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,-rpath-link,/home/gkoopman/.conda/envs/lean-reinforcement/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,-rpath-link,/home/gkoopman/.conda/envs/lean-reinforcement/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/lib/stubs -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/gkoopman/.conda/envs/lean-reinforcement/include -I/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/include -DNDEBUG -D_FORTIFY_SOURCE=2 -O2 -isystem /home/gkoopman/.conda/envs/lean-reinforcement/include -I/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/include build/temp.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/alphazero_cy.o -o build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/alphazero_cy.cpython-310-x86_64-linux-gnu.so
+copying build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/base_mcts_cy.cpython-310-x86_64-linux-gnu.so -> lean_reinforcement/agent/mcts/mcts_cy
+copying build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/alphazero_cy.cpython-310-x86_64-linux-gnu.so -> lean_reinforcement/agent/mcts/mcts_cy
+Starting training run with distributed environment...
+wandb: Currently logged in as: gerbennkoopman to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run bcypbhr8
+wandb: Tracking run with wandb version 0.23.1
+wandb: Run data is saved locally in /gpfs/home1/gkoopman/lean_reinforcement/wandb/run-20251231_134345-bcypbhr8
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run honest-star-43
+wandb: ⭐️ View project at https://wandb.ai/gerbennkoopman-university-of-amsterdam/lean-reinforcement
+wandb: 🚀 View run at https://wandb.ai/gerbennkoopman-university-of-amsterdam/lean-reinforcement/runs/bcypbhr8
+2025-12-31 13:43:46.279 | INFO     | lean_reinforcement.training.trainer:_setup_models:57 - Using checkpoint directory: /gpfs/scratch1/shared/lean-reinforcement/checkpoints
+2025-12-31 13:43:48.148 | INFO     | lean_reinforcement.utilities.checkpoint:load_checkpoint:101 - No checkpoint found at /gpfs/scratch1/shared/lean-reinforcement/checkpoints/value_head_guided_rollout_latest.pth, starting from scratch
+2025-12-31 13:43:48.149 | INFO     | lean_reinforcement.training.trainer:_setup_models:78 - Resuming training from epoch 0
+2025-12-31 13:43:48.149 | INFO     | lean_reinforcement.training.trainer:_log_gpu_memory:124 - After model initialization - GPU Memory: 1.12GB allocated, 1.23GB reserved
+2025-12-31 13:43:48.149 | INFO     | lean_reinforcement.training.trainer:_setup_data:88 - Loading data from 'leandojo_benchmark_4/novel_premises'
+2025-12-31 13:43:48.150 | INFO     | lean_reinforcement.training.trainer:_setup_data:93 - Loading indexed corpus from /gpfs/scratch1/shared/lean-reinforcement/indexed_corpus/indexed_corpus.pkl
+2025-12-31 13:44:26.167 | INFO     | lean_dojo.data_extraction.trace:trace:248 - Loading the traced repo from /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/leanprover-community-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4
+2025-12-31 13:44:26.265 | WARNING  | lean_reinforcement.utilities.dataloader:trace_repo:86 - Corrupted LeanDojo cache detected (attempt 1/2): /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/repos/gitpython-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4
+2025-12-31 13:44:26.266 | INFO     | lean_reinforcement.utilities.dataloader:trace_repo:92 - Clearing LeanDojo cache at /home/gkoopman/.cache/lean_dojo
+2025-12-31 13:46:14.093 | INFO     | lean_reinforcement.utilities.dataloader:trace_repo:94 - Retrying trace operation...
+2025-12-31 13:46:14.094 | INFO     | lean_dojo.data_extraction.trace:trace:248 - Loading the traced repo from /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/leanprover-community-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4
+2025-12-31 13:46:14.263 | ERROR    | lean_reinforcement.utilities.dataloader:trace_repo:96 - Failed to trace repository after 2 attempts. Cache may be corrupted at: /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/repos/gitpython-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4
+Traceback (most recent call last):
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/train.py", line 15, in <module>
+    trainer = Trainer(args)
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 53, in __init__
+    self._setup_data()
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 108, in _setup_data
+    self.dataloader.trace_repo()
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/utilities/dataloader.py", line 82, in trace_repo
+    traced_repo = trace(repo)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/trace.py", line 249, in trace
+    traced_repo = TracedRepo.load_from_disk(cached_path, build_deps)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/traced_data.py", line 1186, in load_from_disk
+    repo = LeanGitRepo.from_path(root_dir)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/lean.py", line 596, in from_path
+    return cls(str(path), commit)
+  File "<string>", line 5, in __init__
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/lean.py", line 565, in __post_init__
+    repo = Repo(cache_repo_dir)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/git/repo/base.py", line 289, in __init__
+    raise InvalidGitRepositoryError(epath)
+git.exc.InvalidGitRepositoryError: /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/repos/gitpython-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4
+Traceback (most recent call last):
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/train.py", line 15, in <module>
+    trainer = Trainer(args)
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 53, in __init__
+    self._setup_data()
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 108, in _setup_data
+    self.dataloader.trace_repo()
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/utilities/dataloader.py", line 82, in trace_repo
+    traced_repo = trace(repo)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/trace.py", line 249, in trace
+    traced_repo = TracedRepo.load_from_disk(cached_path, build_deps)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/traced_data.py", line 1186, in load_from_disk
+    repo = LeanGitRepo.from_path(root_dir)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/lean.py", line 596, in from_path
+    return cls(str(path), commit)
+  File "<string>", line 5, in __init__
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/lean.py", line 565, in __post_init__
+    repo = Repo(cache_repo_dir)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/git/repo/base.py", line 289, in __init__
+    raise InvalidGitRepositoryError(epath)
+git.exc.InvalidGitRepositoryError: /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/repos/gitpython-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4
+[1;34mwandb[0m: 
+[1;34mwandb[0m: 🚀 View run [33mhonest-star-43[0m at: [34mhttps://wandb.ai/gerbennkoopman-university-of-amsterdam/lean-reinforcement/runs/bcypbhr8[0m
+[1;34mwandb[0m: Find logs at: [1;35m../../../gpfs/home1/gkoopman/lean_reinforcement/wandb/run-20251231_134345-bcypbhr8/logs[0m
+srun: error: gcn33: task 0: Exited with exit code 1
+srun: Terminating StepId=17997915.0

@@ -1,0 +1,92 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Building Cython extensions...
+running build_ext
+copying build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/base_mcts_cy.cpython-310-x86_64-linux-gnu.so -> lean_reinforcement/agent/mcts/mcts_cy
+Starting training run with distributed environment...
+wandb: Currently logged in as: gerbennkoopman to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run e4b2gtgx
+wandb: Tracking run with wandb version 0.23.1
+wandb: Run data is saved locally in /gpfs/home1/gkoopman/lean_reinforcement/wandb/run-20251231_135244-e4b2gtgx
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run misty-haze-44
+wandb: ⭐️ View project at https://wandb.ai/gerbennkoopman-university-of-amsterdam/lean-reinforcement
+wandb: 🚀 View run at https://wandb.ai/gerbennkoopman-university-of-amsterdam/lean-reinforcement/runs/e4b2gtgx
+2025-12-31 13:52:46.189 | INFO     | lean_reinforcement.training.trainer:_setup_models:57 - Using checkpoint directory: /gpfs/scratch1/shared/lean-reinforcement/checkpoints
+2025-12-31 13:52:49.306 | INFO     | lean_reinforcement.utilities.checkpoint:load_checkpoint:101 - No checkpoint found at /gpfs/scratch1/shared/lean-reinforcement/checkpoints/value_head_guided_rollout_latest.pth, starting from scratch
+2025-12-31 13:52:49.306 | INFO     | lean_reinforcement.training.trainer:_setup_models:78 - Resuming training from epoch 0
+2025-12-31 13:52:49.307 | INFO     | lean_reinforcement.training.trainer:_log_gpu_memory:124 - After model initialization - GPU Memory: 1.12GB allocated, 1.23GB reserved
+2025-12-31 13:52:49.307 | INFO     | lean_reinforcement.training.trainer:_setup_data:88 - Loading data from 'leandojo_benchmark_4/novel_premises'
+2025-12-31 13:52:49.318 | INFO     | lean_reinforcement.training.trainer:_setup_data:93 - Loading indexed corpus from /gpfs/scratch1/shared/lean-reinforcement/indexed_corpus/indexed_corpus.pkl
+2025-12-31 13:53:28.131 | INFO     | lean_dojo.data_extraction.trace:trace:248 - Loading the traced repo from /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/leanprover-community-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4
+2025-12-31 13:53:28.319 | WARNING  | lean_reinforcement.utilities.dataloader:trace_repo:86 - Corrupted LeanDojo cache detected (attempt 1/2): /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/repos/gitpython-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4
+2025-12-31 13:53:28.319 | INFO     | lean_reinforcement.utilities.dataloader:_clear_cache_paths:113 - Clearing LeanDojo cache at /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache
+2025-12-31 13:54:28.032 | INFO     | lean_reinforcement.utilities.dataloader:trace_repo:100 - Retrying trace operation...
+2025-12-31 13:54:28.663 | INFO     | lean_dojo.data_extraction.cache:get:63 - Downloading the traced repo from the remote cache. Set the environment variable `DISABLE_REMOTE_CACHE` if you want to trace the repo locally.
+/gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/leanprover-community-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5.tar.gz: No such file or directory
+Traceback (most recent call last):
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/train.py", line 15, in <module>
+    trainer = Trainer(args)
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 53, in __init__
+    self._setup_data()
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 108, in _setup_data
+    self.dataloader.trace_repo()
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/utilities/dataloader.py", line 82, in trace_repo
+    traced_repo = trace(repo)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/trace.py", line 247, in trace
+    cached_path = get_traced_repo_path(repo, build_deps)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/trace.py", line 208, in get_traced_repo_path
+    path = cache.get(rel_cache_dir)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/cache.py", line 66, in get
+    execute(f"wget {url} -O {dirpath}.tar.gz")
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/utils.py", line 110, in execute
+    res = subprocess.run(cmd, shell=True, capture_output=capture_output, check=True)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/subprocess.py", line 526, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command 'wget https://dl.fbaipublicfiles.com/lean-dojo/leanprover-community-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5.tar.gz -O /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/leanprover-community-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5.tar.gz' returned non-zero exit status 1.
+Traceback (most recent call last):
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/train.py", line 15, in <module>
+    trainer = Trainer(args)
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 53, in __init__
+    self._setup_data()
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 108, in _setup_data
+    self.dataloader.trace_repo()
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/utilities/dataloader.py", line 82, in trace_repo
+    traced_repo = trace(repo)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/trace.py", line 247, in trace
+    cached_path = get_traced_repo_path(repo, build_deps)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/trace.py", line 208, in get_traced_repo_path
+    path = cache.get(rel_cache_dir)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/cache.py", line 66, in get
+    execute(f"wget {url} -O {dirpath}.tar.gz")
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/utils.py", line 110, in execute
+    res = subprocess.run(cmd, shell=True, capture_output=capture_output, check=True)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/subprocess.py", line 526, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command 'wget https://dl.fbaipublicfiles.com/lean-dojo/leanprover-community-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5.tar.gz -O /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/leanprover-community-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5.tar.gz' returned non-zero exit status 1.
+[1;34mwandb[0m: 
+[1;34mwandb[0m: 🚀 View run [33mmisty-haze-44[0m at: [34mhttps://wandb.ai/gerbennkoopman-university-of-amsterdam/lean-reinforcement/runs/e4b2gtgx[0m
+[1;34mwandb[0m: Find logs at: [1;35m../../../gpfs/home1/gkoopman/lean_reinforcement/wandb/run-20251231_135244-e4b2gtgx/logs[0m
+srun: error: gcn19: task 0: Exited with exit code 1
+srun: Terminating StepId=17997956.0

@@ -1,0 +1,88 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Building Cython extensions...
+running build_ext
+copying build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/base_mcts_cy.cpython-310-x86_64-linux-gnu.so -> lean_reinforcement/agent/mcts/mcts_cy
+Starting training run with distributed environment...
+wandb: Currently logged in as: gerbennkoopman to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.23.1
+wandb: Run data is saved locally in /gpfs/home1/gkoopman/lean_reinforcement/wandb/run-20251231_133310-juslprae
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run decent-glitter-42
+wandb: ⭐️ View project at https://wandb.ai/gerbennkoopman-university-of-amsterdam/lean-reinforcement
+wandb: 🚀 View run at https://wandb.ai/gerbennkoopman-university-of-amsterdam/lean-reinforcement/runs/juslprae
+2025-12-31 13:33:12.184 | INFO     | lean_reinforcement.training.trainer:_setup_models:57 - Using checkpoint directory: /gpfs/scratch1/shared/lean-reinforcement/checkpoints
+2025-12-31 13:33:15.477 | INFO     | lean_reinforcement.agent.value_head:load_checkpoint:192 - Checkpoint loaded from /gpfs/scratch1/shared/lean-reinforcement/checkpoints/value_head_test_latest.pth
+2025-12-31 13:33:15.478 | INFO     | lean_reinforcement.training.trainer:_setup_models:78 - Resuming training from epoch 0
+2025-12-31 13:33:15.478 | INFO     | lean_reinforcement.training.trainer:_log_gpu_memory:124 - After model initialization - GPU Memory: 1.12GB allocated, 1.23GB reserved
+2025-12-31 13:33:15.478 | INFO     | lean_reinforcement.training.trainer:_setup_data:88 - Loading data from 'leandojo_benchmark_4/novel_premises'
+2025-12-31 13:33:15.479 | INFO     | lean_reinforcement.training.trainer:_setup_data:93 - Loading indexed corpus from /gpfs/scratch1/shared/lean-reinforcement/indexed_corpus/indexed_corpus.pkl
+2025-12-31 13:33:52.887 | INFO     | lean_dojo.data_extraction.trace:trace:248 - Loading the traced repo from /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/leanprover-community-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4
+Traceback (most recent call last):
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/train.py", line 15, in <module>
+    trainer = Trainer(args)
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 53, in __init__
+    self._setup_data()
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 108, in _setup_data
+    self.dataloader.trace_repo()
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/utilities/dataloader.py", line 75, in trace_repo
+    traced_repo = trace(repo)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/trace.py", line 249, in trace
+    traced_repo = TracedRepo.load_from_disk(cached_path, build_deps)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/traced_data.py", line 1186, in load_from_disk
+    repo = LeanGitRepo.from_path(root_dir)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/lean.py", line 596, in from_path
+    return cls(str(path), commit)
+  File "<string>", line 5, in __init__
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/lean.py", line 565, in __post_init__
+    repo = Repo(cache_repo_dir)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/git/repo/base.py", line 289, in __init__
+    raise InvalidGitRepositoryError(epath)
+git.exc.InvalidGitRepositoryError: /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/repos/gitpython-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4
+Traceback (most recent call last):
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/train.py", line 15, in <module>
+    trainer = Trainer(args)
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 53, in __init__
+    self._setup_data()
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 108, in _setup_data
+    self.dataloader.trace_repo()
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/utilities/dataloader.py", line 75, in trace_repo
+    traced_repo = trace(repo)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/trace.py", line 249, in trace
+    traced_repo = TracedRepo.load_from_disk(cached_path, build_deps)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/traced_data.py", line 1186, in load_from_disk
+    repo = LeanGitRepo.from_path(root_dir)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/lean.py", line 596, in from_path
+    return cls(str(path), commit)
+  File "<string>", line 5, in __init__
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/lean.py", line 565, in __post_init__
+    repo = Repo(cache_repo_dir)
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/git/repo/base.py", line 289, in __init__
+    raise InvalidGitRepositoryError(epath)
+git.exc.InvalidGitRepositoryError: /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/repos/gitpython-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4
+[1;34mwandb[0m: 
+[1;34mwandb[0m: 🚀 View run [33mdecent-glitter-42[0m at: [34mhttps://wandb.ai/gerbennkoopman-university-of-amsterdam/lean-reinforcement/runs/juslprae[0m
+[1;34mwandb[0m: Find logs at: [1;35m../../../gpfs/home1/gkoopman/lean_reinforcement/wandb/run-20251231_133310-juslprae/logs[0m
+srun: error: gcn33: task 0: Exited with exit code 1
+srun: Terminating StepId=17997888.0
