@@ -1,0 +1,202 @@
+_wandb:
+    value:
+        cli_version: 0.23.1
+        e:
+            zrkeaa8xzhdd6er5vm4vehhg7qrbh4ec:
+                args:
+                    - --data-type
+                    - novel_premises
+                    - --indexed-corpus-path
+                    - /gpfs/scratch1/shared/lean-reinforcement/indexed_corpus/indexed_corpus.pkl
+                    - --num-epochs
+                    - "30"
+                    - --num-theorems
+                    - "128"
+                    - --num-iterations
+                    - "1000"
+                    - --max-steps
+                    - "30"
+                    - --batch-size
+                    - "8"
+                    - --num-tactics-to-expand
+                    - "16"
+                    - --num-workers
+                    - "8"
+                    - --mcts-type
+                    - guided_rollout
+                    - --train-epochs
+                    - "1"
+                    - --train-value-head
+                    - --use-final-reward
+                    - --save-training-data
+                    - --save-checkpoints
+                    - --resume
+                    - --use-wandb
+                cpu_count: 72
+                cpu_count_logical: 72
+                cudaVersion: "13.0"
+                disk:
+                    /:
+                        total: "270185512960"
+                        used: "4769689600"
+                email: gerbennkoopman@gmail.com
+                executable: /home/gkoopman/.conda/envs/lean-reinforcement/bin/python3
+                git:
+                    commit: 0ac434a9c7dd302308df0e233bd0e0f562cad058
+                    remote: git@github.com:GerbenKoopman/LeanReinforcement.git
+                gpu: NVIDIA A100-SXM4-40GB
+                gpu_count: 1
+                gpu_nvidia:
+                    - architecture: Ampere
+                      cudaCores: 6912
+                      memoryTotal: "42949672960"
+                      name: NVIDIA A100-SXM4-40GB
+                      uuid: GPU-3d21fcdd-6cf4-55d6-b845-239b05bb24bb
+                host: gcn8.local.snellius.surf.nl
+                memory:
+                    total: "540635000832"
+                os: Linux-5.14.0-427.92.1.el9_4.x86_64-x86_64-with-glibc2.34
+                program: -m lean_reinforcement.training.train
+                python: CPython 3.10.19
+                root: /gpfs/home1/gkoopman/lean_reinforcement
+                slurm:
+                    cluster_name: snellius
+                    conf: /var/spool/slurm/slurmd/conf-cache/slurm.conf
+                    cpu_bind: quiet,mask_cpu:0x000000000FFFFC0000
+                    cpu_bind_list: "0x000000000FFFFC0000"
+                    cpu_bind_type: 'mask_cpu:'
+                    cpu_bind_verbose: quiet
+                    cpus_on_node: "18"
+                    cpus_per_task: "18"
+                    distribution: cyclic
+                    eclibr: "0"
+                    ecplug: "1"
+                    erlast: srun
+                    ersbac: "1"
+                    ersrun: "1"
+                    export_env: ALL
+                    get_user_env: "1"
+                    gpus: "1"
+                    gpus_on_node: "1"
+                    gtids: "0"
+                    job_account: gisr101840
+                    job_cpus_per_node: "18"
+                    job_end_time: "1767408025"
+                    job_gid: "73552"
+                    job_gpus: "1"
+                    job_id: "17998827"
+                    job_name: guided_rollout_training
+                    job_nodelist: gcn8
+                    job_num_nodes: "1"
+                    job_partition: gpu_a100
+                    job_qos: normal
+                    job_start_time: "1767192025"
+                    job_uid: "74091"
+                    job_user: gkoopman
+                    jobid: "17998827"
+                    launch_node_ipaddr: 172.18.62.8
+                    localid: "0"
+                    mpi_type: pmi2
+                    nnodes: "1"
+                    nodeid: "0"
+                    nodelist: gcn8
+                    nprocs: "1"
+                    ntasks: "1"
+                    oom_kill_step: "0"
+                    prio_process: "0"
+                    procid: "0"
+                    script_context: prolog_task
+                    srun_comm_host: 172.18.62.8
+                    srun_comm_port: "36729"
+                    step_gpus: "1"
+                    step_gres: gres/cpu:0
+                    step_id: "0"
+                    step_launcher_port: "36729"
+                    step_nodelist: gcn8
+                    step_num_nodes: "1"
+                    step_num_tasks: "1"
+                    step_resv_ports: 18041-18042
+                    step_tasks_per_node: "1"
+                    stepid: "0"
+                    submit_dir: /gpfs/home1/gkoopman/lean_reinforcement/job_files
+                    submit_host: int5.local.snellius.surf.nl
+                    task_pid: "2821634"
+                    tasks_per_node: "1"
+                    topology_addr: root.ibsw7.gcn8
+                    topology_addr_pattern: switch.switch.node
+                    tres_per_task: cpu=18
+                    umask: "0027"
+                startedAt: "2025-12-31T14:41:00.426493Z"
+                writerId: zrkeaa8xzhdd6er5vm4vehhg7qrbh4ec
+        m: []
+        python_version: 3.10.19
+        t:
+            "1":
+                - 1
+                - 9
+                - 11
+                - 30
+                - 41
+                - 49
+                - 103
+            "2":
+                - 1
+                - 9
+                - 11
+                - 30
+                - 41
+                - 49
+                - 103
+            "3":
+                - 16
+            "4": 3.10.19
+            "5": 0.23.1
+            "6": 4.57.3
+            "12": 0.23.1
+            "13": linux-x86_64
+batch_size:
+    value: 8
+checkpoint_dir:
+    value: null
+data_type:
+    value: novel_premises
+env_timeout:
+    value: 100
+indexed_corpus_path:
+    value: /gpfs/scratch1/shared/lean-reinforcement/indexed_corpus/indexed_corpus.pkl
+max_rollout_depth:
+    value: 30
+max_steps:
+    value: 30
+max_time:
+    value: 1200
+mcts_type:
+    value: guided_rollout
+model_name:
+    value: kaiyuy/leandojo-lean4-tacgen-byt5-small
+num_epochs:
+    value: 30
+num_iterations:
+    value: 1000
+num_tactics_to_expand:
+    value: 16
+num_theorems:
+    value: 128
+num_workers:
+    value: 8
+resume:
+    value: true
+save_checkpoints:
+    value: true
+save_training_data:
+    value: true
+train_epochs:
+    value: 1
+train_value_head:
+    value: true
+use_final_reward:
+    value: true
+use_test_value_head:
+    value: false
+use_wandb:
+    value: true
