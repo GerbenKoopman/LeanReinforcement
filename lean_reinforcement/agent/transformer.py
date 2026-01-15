@@ -41,11 +41,13 @@ class Transformer:
         input_length = tokenized_state.input_ids.shape[1]
         tactics_ids = self.model.generate(
             tokenized_state.input_ids,
-            max_length=input_length + 2048,  # Allow 2048 tokens of output
+            max_length=input_length + 512,
             num_beams=n,
             do_sample=False,
             num_return_sequences=n,
             early_stopping=False,
+            repetition_penalty=1.2,
+            no_repeat_ngram_size=3,
         )
         tactics: List[str] = self.tokenizer.batch_decode(
             tactics_ids, skip_special_tokens=True
@@ -74,13 +76,15 @@ class Transformer:
         input_length = tokenized_state.input_ids.shape[1]
         outputs = self.model.generate(
             tokenized_state.input_ids,
-            max_length=input_length + 2048,  # Allow 2048 tokens of output
+            max_length=input_length + 512,
             num_beams=n,
             do_sample=False,
             num_return_sequences=n,
             early_stopping=False,
             return_dict_in_generate=True,
             output_scores=True,
+            repetition_penalty=1.2,
+            no_repeat_ngram_size=3,
         )
         tactics = self.tokenizer.batch_decode(
             outputs.sequences, skip_special_tokens=True
@@ -121,11 +125,13 @@ class Transformer:
         input_length = tokenized_states.input_ids.shape[1]
         tactics_ids = self.model.generate(
             tokenized_states.input_ids,
-            max_length=input_length + 2048,  # Allow 2048 tokens of output
+            max_length=input_length + 512,
             num_beams=n,
             do_sample=False,
             num_return_sequences=n,
             early_stopping=False,
+            repetition_penalty=1.2,
+            no_repeat_ngram_size=3,
         )
 
         # tactics_ids shape: (batch_size * n, sequence_length)
@@ -166,13 +172,15 @@ class Transformer:
         input_length = tokenized_states.input_ids.shape[1]
         outputs = self.model.generate(
             tokenized_states.input_ids,
-            max_length=input_length + 2048,  # Allow 2048 tokens of output
+            max_length=input_length + 512,
             num_beams=n,
             do_sample=False,
             num_return_sequences=n,
             early_stopping=False,
             return_dict_in_generate=True,
             output_scores=True,
+            repetition_penalty=1.2,
+            no_repeat_ngram_size=3,
         )
 
         all_tactics = self.tokenizer.batch_decode(

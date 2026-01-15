@@ -182,8 +182,8 @@ class TestTransformer(unittest.TestCase):
 
         # Assert - check beam search parameters
         call_kwargs = self.mock_model.generate.call_args[1]
-        # max_length is input_length + 2048 to avoid truncation
-        self.assertGreater(call_kwargs["max_length"], 2048)
+        # max_length is input_length + 512 to avoid truncation
+        self.assertGreater(call_kwargs["max_length"], 512)
         self.assertEqual(call_kwargs["num_beams"], 5)
         self.assertFalse(call_kwargs["do_sample"])
         self.assertEqual(call_kwargs["num_return_sequences"], 5)
