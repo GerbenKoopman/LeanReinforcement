@@ -216,13 +216,23 @@ class AgentRunner:
             except Exception as e:
                 logger.error(f"Error in agent loop: {e}")
                 if mcts_instance:
+                    # Clear the tree before deleting to break circular refs
+                    if hasattr(mcts_instance, "_clear_subtree"):
+                        mcts_instance._clear_subtree(mcts_instance.root, None)
                     del mcts_instance
                     mcts_instance = None
+                gc.collect()
                 break
 
         # Clean up MCTS instance after loop
         if mcts_instance is not None:
+            # Clear the tree before deleting to break circular refs
+            if hasattr(mcts_instance, "_clear_subtree"):
+                mcts_instance._clear_subtree(mcts_instance.root, None)
             del mcts_instance
+
+        # Force garbage collection after MCTS cleanup
+        gc.collect()
 
         # Final status check
         elapsed_time = time.time() - start_time

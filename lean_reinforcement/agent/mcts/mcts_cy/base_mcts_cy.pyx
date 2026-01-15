@@ -283,9 +283,27 @@ cdef class BaseMCTS:
         best_child = max(self.root.children, key=lambda c: c.visit_count)
         return best_child.action
 
+    cpdef void _clear_subtree(self, Node node, Node keep_node):
+        """Recursively clear node references to help garbage collection."""
+        cdef Node child
+        if node is keep_node or node is None:
+            return
+        
+        for child in node.children:
+            if child is not keep_node:
+                self._clear_subtree(child, keep_node)
+        
+        node.children = []
+        node.parents = []
+        node.encoder_features = None
+        node.state = None
+        node.untried_actions = None
+
     def move_root(self, str action):
         cdef Node found_child = None
         cdef Node child
+        cdef Node old_root = self.root
+        
         for child in self.root.children:
             if child.action == action:
                 found_child = child
@@ -295,6 +313,11 @@ cdef class BaseMCTS:
             self.root = found_child
             # Clear all parent references for the new root (it becomes the root)
             self.root.parents = []
+            
+            # CRITICAL: Clear old tree to prevent memory leaks
+            if old_root is not self.root:
+                self._clear_subtree(old_root, self.root)
+            
             self.node_count = self._count_nodes(self.root)
             # Rebuild seen_states for the new subtree
             self.seen_states = {}
@@ -308,6 +331,9 @@ cdef class BaseMCTS:
                     f"Invalid state type for new root: {type(self.env.current_state)}"
                 )
 
+            # Clear old tree before creating new root
+            self._clear_subtree(old_root, None)
+            
             self.root = Node(state=self.env.current_state)
             self.node_count = 1
             # Reset seen_states with new root

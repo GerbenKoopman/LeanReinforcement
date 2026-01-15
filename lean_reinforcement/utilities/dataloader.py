@@ -14,7 +14,7 @@ class LeanDataLoader:
 
     def __init__(
         self,
-        corpus: Corpus,
+        corpus: Optional[Corpus] = None,
         dataset_path: str = "leandojo_benchmark_4",
         data_type: str = "novel_premises",
     ):
@@ -71,6 +71,8 @@ class LeanDataLoader:
 
     def get_premises(self, theorem: Theorem, theorem_pos: Pos) -> List[str]:
         """Retrieve all accessible premises given a theorem."""
+        if self.corpus is None:
+            raise ValueError("Corpus not set. Cannot retrieve premises.")
         return [
             str(p)
             for p in self.corpus.get_accessible_premises(

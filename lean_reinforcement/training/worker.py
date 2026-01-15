@@ -2,7 +2,7 @@
 Worker module for parallel theorem proving.
 """
 
-from typing import Union, Dict, Any, Optional, Type
+from typing import Dict, Any, Optional, Type
 from loguru import logger
 import torch.multiprocessing as mp
 import gc
@@ -10,7 +10,7 @@ import queue
 import os
 
 from lean_dojo import DojoInitError
-from ReProver.common import Corpus, Pos
+from ReProver.common import Pos
 
 from lean_reinforcement.utilities.dataloader import LeanDataLoader
 from lean_reinforcement.utilities.gym import LeanDojoEnv
@@ -108,7 +108,6 @@ def worker_loop(
     response_queue: mp.Queue,
     theorem_queue: mp.Queue,
     result_queue: mp.Queue,
-    corpus_path: Union[str, Corpus],
     args: TrainingConfig,
 ):
     """
@@ -119,10 +118,8 @@ def worker_loop(
 
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
-    if isinstance(corpus_path, str):
-        corpus = Corpus(corpus_path)
-    else:
-        corpus = corpus_path
+    # Workers don't need the Corpus - extract_theorem doesn't use it
+    # This saves ~3.5GB RAM per worker!
 
     transformer_proxy = QueueProxyTransformer(request_queue, response_queue, worker_id)
     value_head_proxy = None
@@ -130,8 +127,10 @@ def worker_loop(
         value_head_proxy = QueueProxyValueHead(request_queue, response_queue, worker_id)
 
     dataloader = LeanDataLoader(
-        corpus, dataset_path="leandojo_benchmark_4", data_type=args.data_type
+        corpus=None, dataset_path="leandojo_benchmark_4", data_type=args.data_type
     )
+
+    theorems_processed = 0
 
     while True:
         try:
@@ -153,3 +152,9 @@ def worker_loop(
 
         # Send result back
         result_queue.put(data)
+
+        # Force garbage collection every 4 theorems to prevent memory accumulation
+        theorems_processed += 1
+        if theorems_processed % 4 == 0:
+            del data
+            gc.collect()

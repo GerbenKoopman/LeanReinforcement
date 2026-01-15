@@ -210,7 +210,6 @@ class Trainer:
                     self.response_queues[i],
                     self.theorem_queue,
                     self.result_queue,
-                    self.corpus,
                     self.config,
                 ),
             )
