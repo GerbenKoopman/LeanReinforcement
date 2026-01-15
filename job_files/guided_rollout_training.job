@@ -37,7 +37,7 @@ srun python3 -m lean_reinforcement.training.train \
     --num-epochs 32 \
     --num-theorems 128 \
     --num-iterations 1000 \
-    --batch-size 64 \
+    --batch-size 256 \
     --num-tactics-to-expand 64 \
     --num-workers 16 \
     --env-timeout 300 \
