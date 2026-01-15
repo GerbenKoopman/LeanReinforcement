@@ -207,7 +207,7 @@ marimo/_lsp/
 __marimo__/
 
 # Weights and Biases
-wandb/
+# wandb/
 
 # Cython
 *.c
