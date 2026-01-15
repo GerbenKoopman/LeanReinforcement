@@ -28,6 +28,7 @@ class AgentRunner:
         mcts_kwargs: Optional[dict] = None,
         num_iterations: int = 100,
         max_steps: int = 100,
+        proof_timeout: float = 600.0,
     ):
         """
         Initialize the agent runner.
@@ -39,12 +40,14 @@ class AgentRunner:
             mcts_kwargs: Additional keyword arguments for initializing the MCTS class.
             num_iterations: The number of MCTS iterations to run at each step.
             max_steps: The maximum number of tactics to apply before giving up.
+            proof_timeout: Maximum time in seconds for entire proof search.
         """
         self.env = env
         self.transformer = transformer
         self.mcts_class = mcts_class
         self.num_iterations = num_iterations
         self.max_steps = max_steps
+        self.proof_timeout = proof_timeout
 
         self.mcts_kwargs = mcts_kwargs if mcts_kwargs is not None else {}
 
@@ -81,8 +84,8 @@ class AgentRunner:
         logger.info(f"Starting proof search for: {self.env.theorem.full_name}")
         self._log_gpu_memory("Initial ")
 
-        # 10-minute timeout for entire proof search
-        PROOF_TIMEOUT = 600  # seconds
+        # Timeout for entire proof search
+        proof_timeout = self.proof_timeout
 
         training_data = []
         step_num = 0
@@ -95,10 +98,10 @@ class AgentRunner:
 
             # Check proof timeout before starting new MCTS search
             elapsed = time.time() - start_time
-            remaining_time = PROOF_TIMEOUT - elapsed
+            remaining_time = proof_timeout - elapsed
             if remaining_time <= 0:
                 logger.warning(
-                    f"Proof search exceeded {PROOF_TIMEOUT}s timeout after {elapsed:.1f}s. Stopping."
+                    f"Proof search exceeded {proof_timeout}s timeout after {elapsed:.1f}s. Stopping."
                 )
                 break
 

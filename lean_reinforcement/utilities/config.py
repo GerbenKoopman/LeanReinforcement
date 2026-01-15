@@ -36,6 +36,7 @@ class TrainingConfig:
     max_rollout_depth: int = 30
     max_time: float = 60.0
     env_timeout: int = 60
+    proof_timeout: float = 600.0
 
     @classmethod
     def from_args(cls, args: argparse.Namespace) -> "TrainingConfig":
@@ -54,6 +55,7 @@ class TrainingConfig:
             max_rollout_depth=args.max_rollout_depth,
             max_time=args.max_time,
             env_timeout=args.env_timeout,
+            proof_timeout=args.proof_timeout,
             train_epochs=args.train_epochs,
             train_value_head=args.train_value_head,
             use_final_reward=args.use_final_reward,
@@ -156,6 +158,12 @@ def get_config() -> TrainingConfig:
         type=int,
         default=300,
         help="Max time (seconds) per tactic.",
+    )
+    parser.add_argument(
+        "--proof-timeout",
+        type=float,
+        default=600.0,
+        help="Max time (seconds) for entire proof search per theorem.",
     )
 
     # --- Training Args ---

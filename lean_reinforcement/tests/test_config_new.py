@@ -20,6 +20,7 @@ class TestTrainingConfig(unittest.TestCase):
             max_rollout_depth=10,
             max_time=600.0,
             env_timeout=60,
+            proof_timeout=600.0,
             train_epochs=2,
             train_value_head=False,
             use_final_reward=True,

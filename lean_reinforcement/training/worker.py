@@ -75,6 +75,7 @@ def process_theorem(
         mcts_kwargs=mcts_kwargs,
         num_iterations=args.num_iterations,
         max_steps=args.max_steps,
+        proof_timeout=args.proof_timeout,
     )
 
     try:
