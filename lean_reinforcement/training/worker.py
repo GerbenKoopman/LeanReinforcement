@@ -118,16 +118,16 @@ def worker_loop(
 
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
-    # Workers don't need the Corpus - extract_theorem doesn't use it
-    # This saves ~3.5GB RAM per worker!
-
     transformer_proxy = QueueProxyTransformer(request_queue, response_queue, worker_id)
     value_head_proxy = None
     if args.mcts_type == "alpha_zero":
         value_head_proxy = QueueProxyValueHead(request_queue, response_queue, worker_id)
 
     dataloader = LeanDataLoader(
-        corpus=None, dataset_path="leandojo_benchmark_4", data_type=args.data_type
+        corpus=None,
+        dataset_path="leandojo_benchmark_4",
+        data_type=args.data_type,
+        load_splits=False,
     )
 
     theorems_processed = 0

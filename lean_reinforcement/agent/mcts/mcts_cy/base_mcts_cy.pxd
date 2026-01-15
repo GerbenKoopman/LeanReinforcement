@@ -46,4 +46,3 @@ cdef class BaseMCTS:
     cpdef void _backpropagate(self, Node node, float reward)
     cpdef int _count_nodes(self, Node node)
     cpdef void _rebuild_seen_states(self, Node node)
-    cpdef void _clear_subtree(self, Node node, Node keep_node)

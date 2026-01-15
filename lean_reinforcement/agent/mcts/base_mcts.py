@@ -102,8 +102,7 @@ class BaseMCTS:
         # Timeout tracking for search operations
         self._search_deadline: Optional[float] = None
 
-        # Seen states dictionary for deduplication (maps state string to Node)
-        # This prevents adding duplicate states to the tree, similar to ReProver's approach
+        # State deduplication: maps state string to Node
         self.seen_states: Dict[str, Node] = {}
 
         # Get theorem info from the environment
@@ -377,18 +376,10 @@ class BaseMCTS:
                 found_child = child
                 break
 
-        old_root = self.root
-
         if found_child:
             self.root = found_child
             # Clear all parent references for the new root (it becomes the root)
             self.root.parents = []
-
-            # CRITICAL: Clear old tree to prevent memory leaks
-            # Break circular references before discarding
-            if old_root != self.root:
-                self._clear_subtree(old_root, keep_node=self.root)
-
             self.node_count = self._count_nodes(self.root)
             # Rebuild seen_states for the new subtree
             self.seen_states = {}
@@ -403,35 +394,12 @@ class BaseMCTS:
                     f"Invalid state type for new root: {type(self.env.current_state)}"
                 )
 
-            # Clear old tree before creating new root
-            self._clear_subtree(old_root, keep_node=None)
-
             self.root = Node(state=self.env.current_state)
             self.node_count = 1
             # Reset seen_states with new root
             self.seen_states = {}
             if isinstance(self.env.current_state, TacticState):
                 self.seen_states[self.env.current_state.pp] = self.root
-
-    def _clear_subtree(self, node: Node, keep_node: Optional[Node]) -> None:
-        """
-        Recursively clear node references to help garbage collection.
-        Breaks circular references in the DAG structure.
-        """
-        if node is keep_node or node is None:
-            return
-
-        # Recursively clear children first
-        for child in node.children:
-            if child is not keep_node:
-                self._clear_subtree(child, keep_node)
-
-        # Clear references to break cycles
-        node.children.clear()
-        node.parents.clear()
-        node.encoder_features = None
-        node.state = None
-        node.untried_actions = None
 
     def _count_nodes(self, node: Node) -> int:
         """Recursively counts the number of nodes in the subtree."""

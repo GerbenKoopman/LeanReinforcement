@@ -56,7 +56,7 @@ class Transformer:
         del tokenized_state
         del tactics_ids
 
-        # CRITICAL: Clear KV-cache to prevent memory leak during beam search
+        # Clear KV-cache after beam search
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
@@ -99,7 +99,7 @@ class Transformer:
         del outputs
         del sequence_scores
 
-        # CRITICAL: Clear KV-cache to prevent memory leak during beam search
+        # Clear KV-cache after beam search
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
@@ -145,7 +145,7 @@ class Transformer:
         for i in range(0, len(tactics), n):
             result.append(tactics[i : i + n])
 
-        # CRITICAL: Clear KV-cache to prevent memory leak during beam search
+        # Clear KV-cache after beam search
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
@@ -206,7 +206,7 @@ class Transformer:
         del outputs
         del sequence_scores
 
-        # CRITICAL: Clear KV-cache to prevent memory leak during beam search
+        # Clear KV-cache after beam search
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 

@@ -93,8 +93,7 @@ class AgentRunner:
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
 
-            # CRITICAL: Check proof timeout BEFORE starting new MCTS search
-            # This prevents hanging when individual proofs take >600s across multiple steps
+            # Check proof timeout before starting new MCTS search
             elapsed = time.time() - start_time
             remaining_time = PROOF_TIMEOUT - elapsed
             if remaining_time <= 0:
@@ -160,8 +159,7 @@ class AgentRunner:
                     mcts_value = root_node.value() if root_node.visit_count > 0 else 0.0
                     visit_count = root_node.visit_count
 
-                    # Calculate visit-count-based policy target (for future policy head training)
-                    # This represents the improved policy from MCTS search
+                    # Calculate visit-count-based policy target for policy head training
                     visit_distribution = {}
                     if root_node.children:
                         total_visits = sum(
@@ -216,23 +214,13 @@ class AgentRunner:
             except Exception as e:
                 logger.error(f"Error in agent loop: {e}")
                 if mcts_instance:
-                    # Clear the tree before deleting to break circular refs
-                    if hasattr(mcts_instance, "_clear_subtree"):
-                        mcts_instance._clear_subtree(mcts_instance.root, None)
                     del mcts_instance
                     mcts_instance = None
-                gc.collect()
                 break
 
         # Clean up MCTS instance after loop
         if mcts_instance is not None:
-            # Clear the tree before deleting to break circular refs
-            if hasattr(mcts_instance, "_clear_subtree"):
-                mcts_instance._clear_subtree(mcts_instance.root, None)
             del mcts_instance
-
-        # Force garbage collection after MCTS cleanup
-        gc.collect()
 
         # Final status check
         elapsed_time = time.time() - start_time

@@ -17,14 +17,20 @@ class LeanDataLoader:
         corpus: Optional[Corpus] = None,
         dataset_path: str = "leandojo_benchmark_4",
         data_type: str = "novel_premises",
+        load_splits: bool = True,
     ):
         self.corpus = corpus
         self.dataset_path = dataset_path
         self.data_type = data_type
 
-        self.train_data = self._load_split("train")
-        self.test_data = self._load_split("test")
-        self.val_data = self._load_split("val")
+        if load_splits:
+            self.train_data = self._load_split("train")
+            self.test_data = self._load_split("test")
+            self.val_data = self._load_split("val")
+        else:
+            self.train_data = []
+            self.test_data = []
+            self.val_data = []
 
     def _load_split(self, split: str) -> List[dict]:
         """
