@@ -40,6 +40,7 @@ srun python3 -m lean_reinforcement.training.train \
     --batch-size 64 \
     --num-tactics-to-expand 16 \
     --num-workers 16 \
+    --env-timeout 300 \
     --mcts-type guided_rollout \
     --train-epochs 4 \
     --train-value-head \
