@@ -44,11 +44,13 @@ def process_theorem(
         logger.error(
             f"Failed to initialize environment for theorem {theorem.full_name}: {e}"
         )
+        gc.collect()  # Clean up any partially created objects
         return {}
     except Exception as e:
         logger.error(
             f"Unexpected error initializing environment for theorem {theorem.full_name}: {e}"
         )
+        gc.collect()  # Clean up any partially created objects
         return {}
 
     mcts_class: Type[BaseMCTS]

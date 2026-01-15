@@ -190,6 +190,7 @@ class MCTS_AlphaZero(BaseMCTS):
 
         # Run tactics sequentially with timeout checks
         results = []
+        assert self.env.dojo is not None, "Dojo not initialized"
         for node, tactic, prob in tasks:
             if self._is_timeout():
                 break
