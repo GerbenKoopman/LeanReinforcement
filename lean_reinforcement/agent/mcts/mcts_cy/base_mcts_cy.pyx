@@ -292,6 +292,7 @@ cdef class BaseMCTS:
     def move_root(self, str action):
         cdef Node found_child = None
         cdef Node child
+        cdef Node old_root
         
         for child in self.root.children:
             if child.action == action:
@@ -299,9 +300,18 @@ cdef class BaseMCTS:
                 break
 
         if found_child:
+            old_root = self.root
             self.root = found_child
             # Clear all parent references for the new root (it becomes the root)
             self.root.parents = []
+            
+            # Break cycles in old tree to help GC
+            # Remove the new root from old root's children to break cycle
+            if found_child in old_root.children:
+                old_root.children.remove(found_child)
+            # Clear old root's parents to break upward cycles
+            old_root.parents = []
+            
             self.node_count = self._count_nodes(self.root)
             # Rebuild seen_states for the new subtree
             self.seen_states = {}
