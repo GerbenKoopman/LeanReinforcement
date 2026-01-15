@@ -104,7 +104,9 @@ class Trainer:
             dataset_path="leandojo_benchmark_4",
             data_type=self.config.data_type,
         )
-        self.dataloader.trace_repo()
+        # Note: trace_repo() is not called here - the traced repo is already cached
+        # and calling it can fail due to GitHub API rate limits. The actual tracing
+        # happens in LeanDojoEnv when needed.
 
     def _setup_multiprocessing(self) -> None:
         mp.set_start_method("spawn", force=True)
