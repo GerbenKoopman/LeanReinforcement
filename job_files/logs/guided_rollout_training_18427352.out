@@ -1,0 +1,700 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Building Cython extensions...
+running build_ext
+copying build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/base_mcts_cy.cpython-310-x86_64-linux-gnu.so -> lean_reinforcement/agent/mcts/mcts_cy
+copying build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/alphazero_cy.cpython-310-x86_64-linux-gnu.so -> lean_reinforcement/agent/mcts/mcts_cy
+copying build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/guidedrollout_cy.cpython-310-x86_64-linux-gnu.so -> lean_reinforcement/agent/mcts/mcts_cy
+copying build/lib.linux-x86_64-cpython-310/ReProver/common_cy.cpython-310-x86_64-linux-gnu.so -> ReProver
+Starting training run with distributed environment...
+wandb: Currently logged in as: gerbennkoopman to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run niagybp5
+wandb: Tracking run with wandb version 0.23.1
+wandb: Run data is saved locally in /gpfs/home1/gkoopman/lean_reinforcement/wandb/run-20260116_172304-niagybp5
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run ruby-valley-85
+wandb: ⭐️ View project at https://wandb.ai/gerbennkoopman-university-of-amsterdam/lean-reinforcement
+wandb: 🚀 View run at https://wandb.ai/gerbennkoopman-university-of-amsterdam/lean-reinforcement/runs/niagybp5
+2026-01-16 17:23:06.491 | INFO     | lean_reinforcement.training.trainer:_setup_models:56 - Using checkpoint directory: /gpfs/scratch1/shared/lean-reinforcement/checkpoints
+2026-01-16 17:23:09.838 | INFO     | lean_reinforcement.agent.value_head:load_checkpoint:192 - Checkpoint loaded from /gpfs/scratch1/shared/lean-reinforcement/checkpoints/value_head_guided_rollout_latest.pth
+2026-01-16 17:23:09.839 | INFO     | lean_reinforcement.training.trainer:_setup_models:77 - Resuming training from epoch 2
+2026-01-16 17:23:09.839 | INFO     | lean_reinforcement.training.trainer:_log_gpu_memory:122 - After model initialization - GPU Memory: 1.12GB allocated, 1.23GB reserved
+2026-01-16 17:23:09.839 | INFO     | lean_reinforcement.training.trainer:_setup_data:87 - Loading data from 'leandojo_benchmark_4/novel_premises'
+2026-01-16 17:23:09.840 | INFO     | lean_reinforcement.training.trainer:_setup_data:92 - Loading indexed corpus from /gpfs/scratch1/shared/lean-reinforcement/indexed_corpus/indexed_corpus.pkl
+2026-01-16 17:24:08.643 | INFO     | lean_reinforcement.training.trainer:_start_workers:201 - Starting 16 workers
+2026-01-16 17:24:08.670 | INFO     | lean_reinforcement.training.trainer:_run_epoch:151 - Starting Epoch 3/1
+2026-01-16 17:24:08.734 | INFO     | lean_reinforcement.training.trainer:_run_epoch:162 - Processing 128 theorems with 16 workers.
+2026-01-16 17:26:01.152 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: inf_eq_inf_iff_left
+2026-01-16 17:26:01.397 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: sdiff_lt
+2026-01-16 17:26:01.423 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:26:01.680 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:26:20.413 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Set.preimage_singleton_true
+2026-01-16 17:26:20.711 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:26:37.677 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Mathlib.Meta.NormNum.isInt_add
+2026-01-16 17:26:37.957 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:26:38.133 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: List.mem_iff_nthLe
+2026-01-16 17:26:38.450 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:26:38.546 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Order.radical_nongenerating
+2026-01-16 17:26:38.820 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:26:54.548 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Finset.sup_eq_sSup_image
+2026-01-16 17:26:54.843 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:26:59.000 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Finset.support_prod_subset
+2026-01-16 17:26:59.283 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:26:59.322 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Finset.sumLexLift_inr_inl
+2026-01-16 17:26:59.608 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:27:00.920 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Finset.disjoint_Ioi_Iio
+2026-01-16 17:27:01.201 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:27:02.381 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Set.mul_iInter_subset
+2026-01-16 17:27:02.650 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:27:04.533 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: exact disjoint_sdiff_right hx hy
+2026-01-16 17:27:04.600 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="unknown identifier 'disjoint_sdiff_right'")
+2026-01-16 17:27:04.600 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 63.20s.
+2026-01-16 17:27:04.600 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="unknown identifier 'disjoint_sdiff_right'")
+2026-01-16 17:27:04.732 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:27:07.551 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: OrderDual.lt_toDual
+2026-01-16 17:27:07.850 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:27:51.246 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Submodule.ne_bot_iff
+2026-01-16 17:27:51.516 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:28:11.311 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: LinearMap.BilinForm.coe_add
+2026-01-16 17:28:11.588 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:28:22.854 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Finsupp.mapRange.linearEquiv_toLinearMap
+2026-01-16 17:28:23.126 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:28:56.403 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp [sumLexLift]
+2026-01-16 17:28:56.467 | SUCCESS  | lean_reinforcement.agent.runner:run:239 - Proof finished in 1 steps and 117.14s.
+2026-01-16 17:28:56.599 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:29:25.044 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rw [lt_toDual_iff]
+2026-01-16 17:29:25.136 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.65034\nα : Type u_1\nβ : Type u_2\nγ : Type u_3\ninst✝ : LT α\na : αᵒᵈ\nb : α\n⊢ a < OrderDual.toDual b ↔ b < OrderDual.ofDual a")
+2026-01-16 17:29:25.137 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 137.59s.
+2026-01-16 17:29:25.137 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.65034\nα : Type u_1\nβ : Type u_2\nγ : Type u_3\ninst✝ : LT α\na : αᵒᵈ\nb : α\n⊢ a < OrderDual.toDual b ↔ b < OrderDual.ofDual a")
+2026-01-16 17:29:25.269 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:29:25.399 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: exact mul_subset_iInter₂ s t
+2026-01-16 17:29:25.465 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="unknown identifier 'mul_subset_iInter₂'")
+2026-01-16 17:29:25.465 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 143.08s.
+2026-01-16 17:29:25.466 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="unknown identifier 'mul_subset_iInter₂'")
+2026-01-16 17:29:25.599 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:29:39.972 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rw [disjoint_comm]
+2026-01-16 17:29:40.307 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:29:40.312 | WARNING  | lean_reinforcement.agent.runner:run:193 - MCTS search returned no action. Stopping.
+2026-01-16 17:29:40.312 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 2 steps and 159.39s.
+2026-01-16 17:29:40.446 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:30:26.392 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: SimplexCategory.δ_comp_σ_of_gt
+2026-01-16 17:30:26.681 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:30:53.772 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp only [le_antisymm_iff, eq_comm]
+2026-01-16 17:30:54.145 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:31:18.751 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp [Finset.sup_eq_iSup]
+2026-01-16 17:31:19.102 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:31:24.935 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rw [δ_comp_σ_succ]
+2026-01-16 17:31:25.051 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  SimplexCategory.δ ?m.83964.succ ≫ SimplexCategory.σ ?m.83964\nn : ℕ\ni : Fin (n + 2)\nj : Fin (n + 1)\nH : j.castSucc < i\n⊢ SimplexCategory.δ i.succ ≫ SimplexCategory.σ j.castSucc = SimplexCategory.σ j ≫ SimplexCategory.δ i")
+2026-01-16 17:31:25.051 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 58.66s.
+2026-01-16 17:31:25.051 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  SimplexCategory.δ ?m.83964.succ ≫ SimplexCategory.σ ?m.83964\nn : ℕ\ni : Fin (n + 2)\nj : Fin (n + 1)\nH : j.castSucc < i\n⊢ SimplexCategory.δ i.succ ≫ SimplexCategory.σ j.castSucc = SimplexCategory.σ j ≫ SimplexCategory.δ i")
+2026-01-16 17:31:25.184 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:31:33.385 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Fin.insertNth_apply_succAbove
+2026-01-16 17:31:33.693 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:31:36.857 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: CategoryTheory.Limits.MonoCoprod.mono_map'_of_injective
+2026-01-16 17:31:37.128 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:31:38.816 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Equiv.Perm.subtypePerm_ofSubtype
+2026-01-16 17:31:39.109 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:31:44.956 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: ext
+2026-01-16 17:31:45.278 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:31:45.279 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 2: Applying best tactic: simp
+2026-01-16 17:31:45.346 | SUCCESS  | lean_reinforcement.agent.runner:run:239 - Proof finished in 2 steps and 324.93s.
+2026-01-16 17:31:45.479 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:32:21.395 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: CategoryTheory.IsKernelPair.cancel_right
+2026-01-16 17:32:21.678 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:32:50.357 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 2: Applying best tactic: simp [Finset.sup_eq_iSup]
+2026-01-16 17:32:50.426 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='simp made no progress')
+2026-01-16 17:32:50.426 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 2 steps and 355.88s.
+2026-01-16 17:32:50.426 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='simp made no progress')
+2026-01-16 17:32:50.558 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:32:50.644 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 2: Applying best tactic: simp only [le_refl, inf_comm]
+2026-01-16 17:32:50.710 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='simp made no progress')
+2026-01-16 17:32:50.711 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 2 steps and 409.56s.
+2026-01-16 17:32:50.711 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='simp made no progress')
+2026-01-16 17:32:50.844 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:32:51.307 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp [insertNth_succAbove]
+2026-01-16 17:32:51.371 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='simp made no progress')
+2026-01-16 17:32:51.371 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 77.99s.
+2026-01-16 17:32:51.371 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='simp made no progress')
+2026-01-16 17:32:51.504 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:32:55.434 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: infer_instance
+2026-01-16 17:32:55.517 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="failed to synthesize\n  Mono (Sigma.map' ι fun j => 𝟙 ((X ∘ ι) j))\nuse `set_option diagnostics true` to get diagnostic information")
+2026-01-16 17:32:55.517 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 78.66s.
+2026-01-16 17:32:55.517 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="failed to synthesize\n  Mono (Sigma.map' ι fun j => 𝟙 ((X ∘ ι) j))\nuse `set_option diagnostics true` to get diagnostic information")
+2026-01-16 17:32:55.650 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:33:07.009 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rw [subtypePerm_apply]
+2026-01-16 17:33:07.116 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  (?f.subtypePerm ?h) ?x\nα : Type u\nβ : Type v\np : α → Prop\nf✝ : Equiv.Perm α\ninst✝ : DecidablePred p\na : α\nf : Equiv.Perm (Subtype p)\n⊢ (Equiv.Perm.ofSubtype f).subtypePerm ⋯ = f")
+2026-01-16 17:33:07.116 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 88.30s.
+2026-01-16 17:33:07.116 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  (?f.subtypePerm ?h) ?x\nα : Type u\nβ : Type v\np : α → Prop\nf✝ : Equiv.Perm α\ninst✝ : DecidablePred p\na : α\nf : Equiv.Perm (Subtype p)\n⊢ (Equiv.Perm.ofSubtype f).subtypePerm ⋯ = f")
+2026-01-16 17:33:07.248 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:33:17.336 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: bddBelow_upperClosure
+2026-01-16 17:33:17.675 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:33:18.538 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: ext
+2026-01-16 17:33:18.976 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:33:38.324 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: SimpleGraph.neighborFinset_def
+2026-01-16 17:33:38.591 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:33:43.037 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rw [IsKernelPair, Category.assoc, comm] at big_k
+2026-01-16 17:33:43.161 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  (?f ≫ ?g) ≫ ?h\nC : Type u\ninst✝ : CategoryTheory.Category.{v, u} C\nR X Y Z : C\nf : X ⟶ Y\na b : R ⟶ X\nf₁ : X ⟶ Y\nf₂ : Y ⟶ Z\ncomm : a ≫ f₁ = b ≫ f₁\nbig_k : CategoryTheory.IsPullback a b (f₁ ≫ f₂) (f₁ ≫ f₂)\n⊢ CategoryTheory.IsKernelPair f₁ a b")
+2026-01-16 17:33:43.161 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 81.77s.
+2026-01-16 17:33:43.161 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  (?f ≫ ?g) ≫ ?h\nC : Type u\ninst✝ : CategoryTheory.Category.{v, u} C\nR X Y Z : C\nf : X ⟶ Y\na b : R ⟶ X\nf₁ : X ⟶ Y\nf₂ : Y ⟶ Z\ncomm : a ≫ f₁ = b ≫ f₁\nbig_k : CategoryTheory.IsPullback a b (f₁ ≫ f₂) (f₁ ≫ f₂)\n⊢ CategoryTheory.IsKernelPair f₁ a b")
+2026-01-16 17:33:43.292 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:33:51.634 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Set.Icc_ssubset_Icc_left
+2026-01-16 17:33:51.923 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:34:16.883 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: HasProd.zero_mul
+2026-01-16 17:34:17.169 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:34:17.230 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Dilation.ratio_ne_zero
+2026-01-16 17:34:17.507 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:34:26.766 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Seminorm.coe_bot
+2026-01-16 17:34:27.063 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:34:29.069 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: MeasureTheory.AEEqFun.coeFn_pow
+2026-01-16 17:34:29.337 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:34:46.491 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp [neighborFinset]
+2026-01-16 17:34:46.554 | SUCCESS  | lean_reinforcement.agent.runner:run:239 - Proof finished in 1 steps and 68.23s.
+2026-01-16 17:34:46.687 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:34:48.642 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 2: Applying best tactic: simp_rw [dotProduct_add]
+2026-01-16 17:34:48.727 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='simp made no progress')
+2026-01-16 17:34:48.727 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 2 steps and 397.42s.
+2026-01-16 17:34:48.727 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='simp made no progress')
+2026-01-16 17:34:48.859 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:34:52.324 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: CategoryTheory.Functor.map_zero
+2026-01-16 17:34:52.593 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:34:53.876 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: FractionalIdeal.zero_le
+2026-01-16 17:34:54.145 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:35:00.863 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp only [BddBelow, mem_upperClosure_iff]
+2026-01-16 17:35:00.930 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="unknown identifier 'mem_upperClosure_iff'")
+2026-01-16 17:35:00.930 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 103.59s.
+2026-01-16 17:35:00.931 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="unknown identifier 'mem_upperClosure_iff'")
+2026-01-16 17:35:01.063 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:35:09.078 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rw [← coe_ssubset]
+2026-01-16 17:35:09.174 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.24006\nα : Type u_1\nβ : Type u_2\ninst✝ : Preorder α\na a₁ a₂ b b₁ b₂ c x : α\nhI : a₂ ≤ b₂\nha : a₂ < a₁\nhb : b₁ ≤ b₂\n⊢ Set.Icc a₁ b₁ ⊂ Set.Icc a₂ b₂")
+2026-01-16 17:35:09.174 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 77.54s.
+2026-01-16 17:35:09.174 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.24006\nα : Type u_1\nβ : Type u_2\ninst✝ : Preorder α\na a₁ a₂ b b₁ b₂ c x : α\nhI : a₂ ≤ b₂\nha : a₂ < a₁\nhb : b₁ ≤ b₂\n⊢ Set.Icc a₁ b₁ ⊂ Set.Icc a₂ b₂")
+2026-01-16 17:35:09.306 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:35:12.634 | INFO     | lean_reinforcement.training.trainer:_collect_data:315 - Completed 16/128 proofs
+2026-01-16 17:35:26.071 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: GaussianInt.toComplex_sub
+2026-01-16 17:35:26.336 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:35:28.603 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simpa only [zero_mul] using h.hasProd
+2026-01-16 17:35:28.778 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="invalid field 'hasProd', the environment does not contain 'HasProd.hasProd'\n  h\nhas type\n  HasProd (fun n => f (n + 1)) m\ninvalid field 'hasProd', the environment does not contain 'Filter.Tendsto.hasProd'\n  h\nhas type\n  Tendsto (fun s => ∏ b ∈ s, (fun n => f (n + 1)) b) atTop (𝓝 m)\ninvalid field 'hasProd', the environment does not contain 'LE.le.hasProd'\n  h\nhas type\n  Filter.map (fun s => ∏ b ∈ s, (fun n => f (n + 1)) b) atTop ≤ 𝓝 m\ninvalid field notation, type is not of the form (C ...) where C is a constant\n  h\nhas type\n  ∀ ⦃U : Set M⦄, U ∈ 𝓝 m → U ∈ Filter.map (fun s => ∏ b ∈ s, (fun n => f (n + 1)) b) atTop")
+2026-01-16 17:35:28.778 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 71.90s.
+2026-01-16 17:35:28.778 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="invalid field 'hasProd', the environment does not contain 'HasProd.hasProd'\n  h\nhas type\n  HasProd (fun n => f (n + 1)) m\ninvalid field 'hasProd', the environment does not contain 'Filter.Tendsto.hasProd'\n  h\nhas type\n  Tendsto (fun s => ∏ b ∈ s, (fun n => f (n + 1)) b) atTop (𝓝 m)\ninvalid field 'hasProd', the environment does not contain 'LE.le.hasProd'\n  h\nhas type\n  Filter.map (fun s => ∏ b ∈ s, (fun n => f (n + 1)) b) atTop ≤ 𝓝 m\ninvalid field notation, type is not of the form (C ...) where C is a constant\n  h\nhas type\n  ∀ ⦃U : Set M⦄, U ∈ 𝓝 m → U ∈ Filter.map (fun s => ∏ b ∈ s, (fun n => f (n + 1)) b) atTop")
+2026-01-16 17:35:28.911 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:36:14.953 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: refine EventuallyEq.trans?_ (Lp.coeFn_pow _ _).symm
+2026-01-16 17:36:15.044 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='invalid field notation, type is not of the form (C ...) where C is a constant\n  EventuallyEq\nhas type\n  Filter ?m.126738 → (?m.126738 → ?m.126739) → (?m.126738 → ?m.126739) → Prop')
+2026-01-16 17:36:15.044 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 105.98s.
+2026-01-16 17:36:15.044 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='invalid field notation, type is not of the form (C ...) where C is a constant\n  EventuallyEq\nhas type\n  Filter ?m.126738 → (?m.126738 → ?m.126739) → (?m.126738 → ?m.126739) → Prop')
+2026-01-16 17:36:15.176 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:36:15.816 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp [PreservesZeroMorphisms.iff]
+2026-01-16 17:36:15.884 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='simp made no progress')
+2026-01-16 17:36:15.884 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 83.56s.
+2026-01-16 17:36:15.884 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='simp made no progress')
+2026-01-16 17:36:16.018 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:36:16.688 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: apply FractionalIdeal.zero_le
+2026-01-16 17:36:16.763 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="kernel type check failed: (kernel) declaration has free variables '[anonymous]'")
+2026-01-16 17:36:16.763 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 82.89s.
+2026-01-16 17:36:16.763 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="kernel type check failed: (kernel) declaration has free variables '[anonymous]'")
+2026-01-16 17:36:16.898 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:36:19.869 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: intros f a' b' c
+2026-01-16 17:36:20.210 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:36:20.321 | ERROR    | lean_reinforcement.utilities.gym:reset:49 - Error during environment reset: Cannot interact with theorems with the `where` keyword.
+2026-01-16 17:36:20.322 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:36:20.322 | ERROR    | lean_reinforcement.training.worker:process_theorem:44 - Failed to initialize environment for theorem smoothManifoldWithCorners_of_contDiffOn: Cannot interact with theorems with the `where` keyword.
+2026-01-16 17:36:32.148 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rw [ENNReal.coe_eq_zero]
+2026-01-16 17:36:32.353 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  ↑?m.264724 = 0\nR : Type u_1\nR' : Type u_2\n𝕜 : Type u_3\n𝕜₂ : Type u_4\n𝕜₃ : Type u_5\n𝕝 : Type u_6\nE : Type u_7\nE₂ : Type u_8\nE₃ : Type u_9\nF : Type u_10\nG : Type u_11\nι : Type u_12\ninst✝¹⁸ : SeminormedRing 𝕜\ninst✝¹⁷ : SeminormedRing 𝕜₂\ninst✝¹⁶ : SeminormedRing 𝕜₃\nσ₁₂ : 𝕜 →+* 𝕜₂\ninst✝¹⁵ : RingHomIsometric σ₁₂\nσ₂₃ : 𝕜₂ →+* 𝕜₃\ninst✝¹⁴ : RingHomIsometric σ₂₃\nσ₁₃ : 𝕜 →+* 𝕜₃\ninst✝¹³ : RingHomIsometric σ₁₃\ninst✝¹² : AddCommGroup E\ninst✝¹¹ : AddCommGroup E₂\ninst✝¹⁰ : AddCommGroup E₃\ninst✝⁹ : AddCommGroup F\ninst✝⁸ : AddCommGroup G\ninst✝⁷ : Module 𝕜 E\ninst✝⁶ : Module 𝕜₂ E₂\ninst✝⁵ : Module 𝕜₃ E₃\ninst✝⁴ : Module 𝕜 F\ninst✝³ : Module 𝕜 G\ninst✝² : SMul R ℝ\ninst✝¹ : SMul R ℝ≥0\ninst✝ : IsScalarTower R ℝ≥0 ℝ\n⊢ ⇑⊥ = 0")
+2026-01-16 17:36:32.353 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 125.59s.
+2026-01-16 17:36:32.354 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  ↑?m.264724 = 0\nR : Type u_1\nR' : Type u_2\n𝕜 : Type u_3\n𝕜₂ : Type u_4\n𝕜₃ : Type u_5\n𝕝 : Type u_6\nE : Type u_7\nE₂ : Type u_8\nE₃ : Type u_9\nF : Type u_10\nG : Type u_11\nι : Type u_12\ninst✝¹⁸ : SeminormedRing 𝕜\ninst✝¹⁷ : SeminormedRing 𝕜₂\ninst✝¹⁶ : SeminormedRing 𝕜₃\nσ₁₂ : 𝕜 →+* 𝕜₂\ninst✝¹⁵ : RingHomIsometric σ₁₂\nσ₂₃ : 𝕜₂ →+* 𝕜₃\ninst✝¹⁴ : RingHomIsometric σ₂₃\nσ₁₃ : 𝕜 →+* 𝕜₃\ninst✝¹³ : RingHomIsometric σ₁₃\ninst✝¹² : AddCommGroup E\ninst✝¹¹ : AddCommGroup E₂\ninst✝¹⁰ : AddCommGroup E₃\ninst✝⁹ : AddCommGroup F\ninst✝⁸ : AddCommGroup G\ninst✝⁷ : Module 𝕜 E\ninst✝⁶ : Module 𝕜₂ E₂\ninst✝⁵ : Module 𝕜₃ E₃\ninst✝⁴ : Module 𝕜 F\ninst✝³ : Module 𝕜 G\ninst✝² : SMul R ℝ\ninst✝¹ : SMul R ℝ≥0\ninst✝ : IsScalarTower R ℝ≥0 ℝ\n⊢ ⇑⊥ = 0")
+2026-01-16 17:36:32.487 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:36:40.924 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rcases l with ⟨n, hn⟩
+2026-01-16 17:36:40.924 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rw [eq_top_iff]
+2026-01-16 17:36:41.266 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 597s)...
+2026-01-16 17:36:41.289 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 597s)...
+2026-01-16 17:36:45.727 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp only [support_subset_iff]
+2026-01-16 17:36:46.077 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:36:57.281 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: ext
+2026-01-16 17:36:57.712 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:36:57.713 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 2: Applying best tactic: simp [linearEquiv_apply]
+2026-01-16 17:36:57.859 | SUCCESS  | lean_reinforcement.agent.runner:run:239 - Proof finished in 2 steps and 515.01s.
+2026-01-16 17:36:57.992 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:37:13.416 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 2: Applying best tactic: simp (config := { false }) only [isInt_iff, add_zero]
+2026-01-16 17:37:13.490 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="cannot evaluate code because 'sorryAx' uses 'sorry' and/or contains errors")
+2026-01-16 17:37:13.490 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 2 steps and 635.81s.
+2026-01-16 17:37:13.490 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="cannot evaluate code because 'sorryAx' uses 'sorry' and/or contains errors")
+2026-01-16 17:37:13.623 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:37:15.490 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp [toComplex_def]
+2026-01-16 17:37:15.795 | SUCCESS  | lean_reinforcement.agent.runner:run:239 - Proof finished in 1 steps and 109.72s.
+2026-01-16 17:37:15.928 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:37:21.872 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: PSet.mem_image
+2026-01-16 17:37:22.168 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:37:23.409 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: FreeGroup.Red.Step.diamond_aux
+2026-01-16 17:37:23.681 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:37:24.286 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Function.Injective.right_inv_of_invOfMemRange
+2026-01-16 17:37:24.561 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:37:48.100 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: MeasureTheory.indicatorConstLp_disjoint_union
+2026-01-16 17:37:48.377 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:38:01.904 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Bimod.TensorBimod.one_act_left'
+2026-01-16 17:38:02.172 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:38:02.697 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp only [ne_eq, Submodule.eq_bot_iff, exists_prop]
+2026-01-16 17:38:03.046 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 588s)...
+2026-01-16 17:38:08.572 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: IsPurelyInseparable.trans
+2026-01-16 17:38:08.844 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:38:18.899 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp [mem_image]
+2026-01-16 17:38:19.011 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='simp made no progress')
+2026-01-16 17:38:19.011 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 57.14s.
+2026-01-16 17:38:19.011 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='simp made no progress')
+2026-01-16 17:38:19.144 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:38:41.811 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: mem_ball_symmetry
+2026-01-16 17:38:42.083 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:38:49.689 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp [hf.invOfMemRange_apply]
+2026-01-16 17:38:49.755 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='simp made no progress')
+2026-01-16 17:38:49.755 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 85.47s.
+2026-01-16 17:38:49.755 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='simp made no progress')
+2026-01-16 17:38:49.888 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:39:15.539 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: mem_nhdsWithin_Ici_iff_exists_mem_Ioc_Ico_subset
+2026-01-16 17:39:15.827 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:39:20.455 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: DoubleQuot.coe_quotQuotMkₐ
+2026-01-16 17:39:20.726 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:39:30.248 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 2: Applying best tactic: simp_rw [mem_iInter₂]
+2026-01-16 17:39:30.319 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='simp made no progress')
+2026-01-16 17:39:30.319 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 2 steps and 751.32s.
+2026-01-16 17:39:30.319 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='simp made no progress')
+2026-01-16 17:39:30.452 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:39:56.386 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Filter.exists_seq_antitone_tendsto_atTop_atBot
+2026-01-16 17:39:56.660 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:39:58.968 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Subring.mem_closure_iff
+2026-01-16 17:39:59.243 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:40:03.746 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: exact indicatorConstLp_coeFn.symm
+2026-01-16 17:40:03.827 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='typeclass instance problem is stuck, it is often due to metavariables\n  NormedAddCommGroup ?m.491686')
+2026-01-16 17:40:03.827 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 135.73s.
+2026-01-16 17:40:03.827 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='typeclass instance problem is stuck, it is often due to metavariables\n  NormedAddCommGroup ?m.491686')
+2026-01-16 17:40:03.959 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:40:10.337 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Finset.mem_Ico
+2026-01-16 17:40:10.642 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:40:24.491 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rw [mem_ball_symmetry hV]
+2026-01-16 17:40:24.566 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="kernel type check failed: (kernel) declaration has free variables '[anonymous]'")
+2026-01-16 17:40:24.567 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 102.76s.
+2026-01-16 17:40:24.567 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="kernel type check failed: (kernel) declaration has free variables '[anonymous]'")
+2026-01-16 17:40:24.699 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:40:29.843 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Subgroup.op_sSup
+2026-01-16 17:40:30.116 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:40:39.207 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rw [mem_nhdsWithin_Ici_iff_exists_Ioc_subset]
+2026-01-16 17:40:39.316 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.211606\nα : Type u_1\nβ : Type u_2\nγ : Type u_3\ninst✝² : TopologicalSpace α\ninst✝¹ : LinearOrder α\ninst✝ : OrderTopology α\na u' : α\ns : Set α\nhu' : a < u'\n⊢ s ∈ 𝓝[≥] a ↔ ∃ u ∈ Set.Ioc a u', Set.Ico a u ⊆ s")
+2026-01-16 17:40:39.316 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 83.78s.
+2026-01-16 17:40:39.316 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.211606\nα : Type u_1\nβ : Type u_2\nγ : Type u_3\ninst✝² : TopologicalSpace α\ninst✝¹ : LinearOrder α\ninst✝ : OrderTopology α\na u' : α\ns : Set α\nhu' : a < u'\n⊢ s ∈ 𝓝[≥] a ↔ ∃ u ∈ Set.Ioc a u', Set.Ico a u ⊆ s")
+2026-01-16 17:40:39.452 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:40:40.178 | INFO     | lean_reinforcement.training.trainer:_collect_data:315 - Completed 32/128 proofs
+2026-01-16 17:40:56.919 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rw [← Quotient.algebraMap_injective]
+2026-01-16 17:40:57.020 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.303761\nR : Type u\nA : Type u_1\ninst✝² : CommSemiring R\ninst✝¹ : CommRing A\ninst✝ : Algebra R A\nI J : Ideal A\n⊢ ⇑(DoubleQuot.quotQuotMkₐ R I J) = ⇑(DoubleQuot.quotQuotMk I J)")
+2026-01-16 17:40:57.020 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 96.56s.
+2026-01-16 17:40:57.020 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.303761\nR : Type u\nA : Type u_1\ninst✝² : CommSemiring R\ninst✝¹ : CommRing A\ninst✝ : Algebra R A\nI J : Ideal A\n⊢ ⇑(DoubleQuot.quotQuotMkₐ R I J) = ⇑(DoubleQuot.quotQuotMk I J)")
+2026-01-16 17:40:57.153 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:40:58.453 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: AffineBasis.affineIndependent_of_toMatrix_right_inv
+2026-01-16 17:40:58.720 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:41:01.770 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: LinearMap.fst_surjective
+2026-01-16 17:41:02.041 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:41:06.763 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Basis.linearEquiv_dual_iff_finiteDimensional
+2026-01-16 17:41:07.046 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:41:14.702 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: haveI : Nonempty α := ⟨atBot⟩
+2026-01-16 17:41:14.802 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='application type mismatch\n  Nonempty.intro atBot\nargument\n  atBot\nhas type\n  Filter ?m.398171 : Type ?u.398170\nbut is expected to have type\n  α : Type u_6')
+2026-01-16 17:41:14.802 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 78.42s.
+2026-01-16 17:41:14.802 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='application type mismatch\n  Nonempty.intro atBot\nargument\n  atBot\nhas type\n  Filter ?m.398171 : Type ?u.398170\nbut is expected to have type\n  α : Type u_6')
+2026-01-16 17:41:14.935 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:41:20.521 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: maximals_Ioc
+2026-01-16 17:41:20.793 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:41:52.446 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: ProbabilityTheory.measurable_exponentialPDFReal
+2026-01-16 17:41:52.760 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:42:56.507 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rw [isPurelyInseparable_iff_pow_mem F E K] at h1 h2 ⊢
+2026-01-16 17:42:56.641 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.201492\nF : Type u\nE : Type v\ninst✝⁶ : Field F\ninst✝⁵ : Field E\ninst✝⁴ : Algebra F E\nK : Type w\ninst✝³ : Field K\ninst✝² : Algebra F K\ninst✝¹ : Algebra E K\ninst✝ : IsScalarTower F E K\nh1 : IsPurelyInseparable F E\nh2 : IsPurelyInseparable E K\n⊢ IsPurelyInseparable F K")
+2026-01-16 17:42:56.641 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 288.07s.
+2026-01-16 17:42:56.641 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.201492\nF : Type u\nE : Type v\ninst✝⁶ : Field F\ninst✝⁵ : Field E\ninst✝⁴ : Algebra F E\nK : Type w\ninst✝³ : Field K\ninst✝² : Algebra F K\ninst✝¹ : Algebra E K\ninst✝ : IsScalarTower F E K\nh1 : IsPurelyInseparable F E\nh2 : IsPurelyInseparable E K\n⊢ IsPurelyInseparable F K")
+2026-01-16 17:42:56.774 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:42:57.463 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rw [AddSubgroup.mem_closure_iff]
+2026-01-16 17:42:57.565 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.164245\nR : Type u\nS : Type v\nT : Type w\ninst✝² : Ring R\ninst✝¹ : Ring S\ninst✝ : Ring T\ns : Set R\nx : R\n⊢ x ∈ Subring.closure s ↔ x ∈ AddSubgroup.closure ↑(Submonoid.closure s)")
+2026-01-16 17:42:57.565 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 178.60s.
+2026-01-16 17:42:57.565 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.164245\nR : Type u\nS : Type v\nT : Type w\ninst✝² : Ring R\ninst✝¹ : Ring S\ninst✝ : Ring T\ns : Set R\nx : R\n⊢ x ∈ Subring.closure s ↔ x ∈ AddSubgroup.closure ↑(Submonoid.closure s)")
+2026-01-16 17:42:57.697 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:43:26.280 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Submonoid.LocalizationMap.ofMulEquivOfDom_id
+2026-01-16 17:43:26.558 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:43:45.125 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: MeasureTheory.condexpL1_zero
+2026-01-16 17:43:45.401 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:43:45.492 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp
+2026-01-16 17:43:45.823 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:43:52.869 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: exact maximals_Ioc_eq_singleton a b hab
+2026-01-16 17:43:52.936 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="unknown identifier 'maximals_Ioc_eq_singleton'")
+2026-01-16 17:43:52.936 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 152.42s.
+2026-01-16 17:43:52.936 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="unknown identifier 'maximals_Ioc_eq_singleton'")
+2026-01-16 17:43:53.069 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:43:57.079 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: exact measurable_exponentialPDFReal r
+2026-01-16 17:43:57.152 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="kernel type check failed: (kernel) declaration has free variables '[anonymous]'")
+2026-01-16 17:43:57.152 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 124.71s.
+2026-01-16 17:43:57.152 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="kernel type check failed: (kernel) declaration has free variables '[anonymous]'")
+2026-01-16 17:43:57.285 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:43:58.644 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: LinearEquiv.coe_mk
+2026-01-16 17:43:58.934 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:44:01.707 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: MeasureTheory.upperCrossingTime_lt_succ
+2026-01-16 17:44:01.993 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:44:04.824 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: ENNReal.toReal_lt_of_lt_ofReal
+2026-01-16 17:44:05.096 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:44:47.519 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 2: Applying best tactic: exact ratio_ne_zero f
+2026-01-16 17:44:47.592 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="kernel type check failed: (kernel) declaration has free variables '[anonymous]'")
+2026-01-16 17:44:47.593 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 2 steps and 630.36s.
+2026-01-16 17:44:47.593 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="kernel type check failed: (kernel) declaration has free variables '[anonymous]'")
+2026-01-16 17:44:47.725 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:44:52.319 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: QuotientMap.id
+2026-01-16 17:44:52.646 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:45:14.419 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp [condexpL1]
+2026-01-16 17:45:14.547 | SUCCESS  | lean_reinforcement.agent.runner:run:239 - Proof finished in 1 steps and 89.42s.
+2026-01-16 17:45:14.682 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:45:17.478 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rw [← LinearMap.range_top_iff_surjective]
+2026-01-16 17:45:17.650 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.132628\nR : Type u\nK : Type u'\nM : Type v\nV : Type v'\nM₂ : Type w\nV₂ : Type w'\nM₃ : Type y\nV₃ : Type y'\nM₄ : Type z\nι : Type x\nM₅ : Type u_1\nM₆ : Type u_2\nS : Type u_3\ninst✝¹³ : Semiring R\ninst✝¹² : Semiring S\ninst✝¹¹ : AddCommMonoid M\ninst✝¹⁰ : AddCommMonoid M₂\ninst✝⁹ : AddCommMonoid M₃\ninst✝⁸ : AddCommMonoid M₄\ninst✝⁷ : AddCommMonoid M₅\ninst✝⁶ : AddCommMonoid M₆\ninst✝⁵ : Module R M\ninst✝⁴ : Module R M₂\ninst✝³ : Module R M₃\ninst✝² : Module R M₄\ninst✝¹ : Module R M₅\ninst✝ : Module R M₆\nf : M →ₗ[R] M₂\n⊢ Function.Surjective ⇑(LinearMap.fst R M M₂)")
+2026-01-16 17:45:17.651 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 255.88s.
+2026-01-16 17:45:17.651 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.132628\nR : Type u\nK : Type u'\nM : Type v\nV : Type v'\nM₂ : Type w\nV₂ : Type w'\nM₃ : Type y\nV₃ : Type y'\nM₄ : Type z\nι : Type x\nM₅ : Type u_1\nM₆ : Type u_2\nS : Type u_3\ninst✝¹³ : Semiring R\ninst✝¹² : Semiring S\ninst✝¹¹ : AddCommMonoid M\ninst✝¹⁰ : AddCommMonoid M₂\ninst✝⁹ : AddCommMonoid M₃\ninst✝⁸ : AddCommMonoid M₄\ninst✝⁷ : AddCommMonoid M₅\ninst✝⁶ : AddCommMonoid M₆\ninst✝⁵ : Module R M\ninst✝⁴ : Module R M₂\ninst✝³ : Module R M₃\ninst✝² : Module R M₄\ninst✝¹ : Module R M₅\ninst✝ : Module R M₆\nf : M →ₗ[R] M₂\n⊢ Function.Surjective ⇑(LinearMap.fst R M M₂)")
+2026-01-16 17:45:17.797 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:45:20.561 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Polynomial.isNilpotent_iterate_newtonMap_sub_of_isNilpotent
+2026-01-16 17:45:20.853 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:45:33.408 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: ite_eq_mem_stdSimplex
+2026-01-16 17:45:33.682 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:45:49.557 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: exact quotientMap_id
+2026-01-16 17:45:49.623 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="unknown identifier 'quotientMap_id'")
+2026-01-16 17:45:49.623 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 57.30s.
+2026-01-16 17:45:49.623 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="unknown identifier 'quotientMap_id'")
+2026-01-16 17:45:49.755 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:46:09.303 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: lift a to ℝ≥0 using h
+2026-01-16 17:46:09.381 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='type mismatch\n  h\nhas type\n  a < ENNReal.ofReal b : Prop\nbut is expected to have type\n  a ≠ ⊤ : Prop')
+2026-01-16 17:46:09.382 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 124.56s.
+2026-01-16 17:46:09.382 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='type mismatch\n  h\nhas type\n  a < ENNReal.ofReal b : Prop\nbut is expected to have type\n  a ≠ ⊤ : Prop')
+2026-01-16 17:46:09.515 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:46:21.813 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rw [newtonMap_apply, iterate_succ']
+2026-01-16 17:46:21.927 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  ?P.newtonMap ?x\nR : Type u_1\nS : Type u_2\ninst✝² : CommRing R\ninst✝¹ : CommRing S\ninst✝ : Algebra R S\nP : R[X]\nx : S\nh : IsNilpotent ((Polynomial.aeval x) P)\nn : ℕ\n⊢ IsNilpotent (P.newtonMap^[n] x - x)")
+2026-01-16 17:46:21.927 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 61.37s.
+2026-01-16 17:46:21.927 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  ?P.newtonMap ?x\nR : Type u_1\nS : Type u_2\ninst✝² : CommRing R\ninst✝¹ : CommRing S\ninst✝ : Algebra R S\nP : R[X]\nx : S\nh : IsNilpotent ((Polynomial.aeval x) P)\nn : ℕ\n⊢ IsNilpotent (P.newtonMap^[n] x - x)")
+2026-01-16 17:46:22.061 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:46:25.231 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: HahnSeries.C_one
+2026-01-16 17:46:25.502 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:46:29.113 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: ONote.lt_def
+2026-01-16 17:46:29.397 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:46:33.807 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rw [Function.RightInverse.eq_iff] at left_inv
+2026-01-16 17:46:34.082 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.53999\nR : Type u_1\nR₁ : Type u_2\nR₂ : Type u_3\nR₃ : Type u_4\nk : Type u_5\nK : Type u_6\nS : Type u_7\nM : Type u_8\nM₁ : Type u_9\nM₂ : Type u_10\nM₃ : Type u_11\nN₁ : Type u_12\nN₂ : Type u_13\nN₃ : Type u_14\nN₄ : Type u_15\nι : Type u_16\nM₄ : Type u_17\ninst✝⁸ : Semiring R\ninst✝⁷ : Semiring S\ninst✝⁶ : AddCommMonoid M\ninst✝⁵ : AddCommMonoid M₁\ninst✝⁴ : AddCommMonoid M₂\ninst✝³ : Module R M\ninst✝² : Module S M₂\nσ : R →+* S\nσ' : S →+* R\ninst✝¹ : RingHomInvPair σ σ'\ninst✝ : RingHomInvPair σ' σ\nto_fun : M → M₂\ninv_fun : M₂ → M\nmap_add : ∀ (x y : M), to_fun (x + y) = to_fun x + to_fun y\nmap_smul :\n  ∀ (m : R) (x : M),\n    { toFun := to_fun, map_add' := map_add }.toFun (m • x) = σ m • { toFun := to_fun, map_add' := map_add }.toFun x\nleft_inv : Function.LeftInverse inv_fun { toFun := to_fun, map_add' := map_add, map_smul' := map_smul }.toFun\nright_inv : Function.RightInverse inv_fun { toFun := to_fun, map_add' := map_add, map_smul' := map_smul }.toFun\n⊢ ⇑{ toFun := to_fun, map_add' := map_add, map_smul' := map_smul, invFun := inv_fun, left_inv := left_inv,\n        right_inv := right_inv } =\n    to_fun")
+2026-01-16 17:46:34.083 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 155.44s.
+2026-01-16 17:46:34.083 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.53999\nR : Type u_1\nR₁ : Type u_2\nR₂ : Type u_3\nR₃ : Type u_4\nk : Type u_5\nK : Type u_6\nS : Type u_7\nM : Type u_8\nM₁ : Type u_9\nM₂ : Type u_10\nM₃ : Type u_11\nN₁ : Type u_12\nN₂ : Type u_13\nN₃ : Type u_14\nN₄ : Type u_15\nι : Type u_16\nM₄ : Type u_17\ninst✝⁸ : Semiring R\ninst✝⁷ : Semiring S\ninst✝⁶ : AddCommMonoid M\ninst✝⁵ : AddCommMonoid M₁\ninst✝⁴ : AddCommMonoid M₂\ninst✝³ : Module R M\ninst✝² : Module S M₂\nσ : R →+* S\nσ' : S →+* R\ninst✝¹ : RingHomInvPair σ σ'\ninst✝ : RingHomInvPair σ' σ\nto_fun : M → M₂\ninv_fun : M₂ → M\nmap_add : ∀ (x y : M), to_fun (x + y) = to_fun x + to_fun y\nmap_smul :\n  ∀ (m : R) (x : M),\n    { toFun := to_fun, map_add' := map_add }.toFun (m • x) = σ m • { toFun := to_fun, map_add' := map_add }.toFun x\nleft_inv : Function.LeftInverse inv_fun { toFun := to_fun, map_add' := map_add, map_smul' := map_smul }.toFun\nright_inv : Function.RightInverse inv_fun { toFun := to_fun, map_add' := map_add, map_smul' := map_smul }.toFun\n⊢ ⇑{ toFun := to_fun, map_add' := map_add, map_smul' := map_smul, invFun := inv_fun, left_inv := left_inv,\n        right_inv := right_inv } =\n    to_fun")
+2026-01-16 17:46:34.215 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:46:42.532 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: NNReal.nndist_eq
+2026-01-16 17:46:42.797 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:46:46.117 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 2: Applying best tactic: exact top_le_iff.mpr h
+2026-01-16 17:46:46.213 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='application type mismatch\n  top_le_iff.mpr h\nargument\n  h\nhas type\n  a ⊔ radical α = ⊤ : Prop\nbut is expected to have type\n  a = ⊤ : Prop')
+2026-01-16 17:46:46.213 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 2 steps and 1207.67s.
+2026-01-16 17:46:46.213 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='application type mismatch\n  top_le_iff.mpr h\nargument\n  h\nhas type\n  a ⊔ radical α = ⊤ : Prop\nbut is expected to have type\n  a = ⊤ : Prop')
+2026-01-16 17:46:46.346 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:46:46.486 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 2: Applying best tactic: swap
+2026-01-16 17:46:46.902 | WARNING  | lean_reinforcement.agent.runner:run:103 - Proof search exceeded 1200.0s timeout after 1208.8s. Stopping.
+2026-01-16 17:46:46.902 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 3 steps and 1208.77s.
+2026-01-16 17:46:47.035 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:46:54.739 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: PartENat.withTopEquiv_symm_coe
+2026-01-16 17:46:54.910 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Primrec.of_equiv
+2026-01-16 17:46:55.019 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:46:55.195 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:47:01.358 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simpa only [ite_eq_right_iff, Finset.mem_univ, if_true] using ⟨i, rfl⟩
+2026-01-16 17:47:01.466 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='application type mismatch\n  And.intro i\nargument\n  i\nhas type\n  ι : Type u_5\nbut is expected to have type\n  ∀ (x : ι), 0 ≤ (fun x => if i = x then 1 else 0) x : Prop')
+2026-01-16 17:47:01.466 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 88.06s.
+2026-01-16 17:47:01.466 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='application type mismatch\n  And.intro i\nargument\n  i\nhas type\n  ι : Type u_5\nbut is expected to have type\n  ∀ (x : ι), 0 ≤ (fun x => if i = x then 1 else 0) x : Prop')
+2026-01-16 17:47:01.599 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:47:07.385 | INFO     | lean_reinforcement.training.trainer:_collect_data:315 - Completed 48/128 proofs
+2026-01-16 17:47:08.707 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: MulHom.comp_assoc
+2026-01-16 17:47:08.996 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:47:11.640 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: WeierstrassCurve.baseChange_ψ₂
+2026-01-16 17:47:11.929 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:48:10.664 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp [withTopEquiv_symm_apply]
+2026-01-16 17:48:10.732 | SUCCESS  | lean_reinforcement.agent.runner:run:239 - Proof finished in 1 steps and 75.99s.
+2026-01-16 17:48:10.735 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: intros
+2026-01-16 17:48:10.866 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:48:11.106 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 552s)...
+2026-01-16 17:48:16.262 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: exact Primrec.of_equiv e.symm
+2026-01-16 17:48:16.310 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: dsimp [actLeft]
+2026-01-16 17:48:16.334 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='function expected at\n  of_equiv\nterm has type\n  Primrec ⇑?m.106811')
+2026-01-16 17:48:16.334 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 81.42s.
+2026-01-16 17:48:16.334 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='function expected at\n  of_equiv\nterm has type\n  Primrec ⇑?m.106811')
+2026-01-16 17:48:16.467 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:48:16.785 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 585s)...
+2026-01-16 17:48:17.094 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 2: Applying best tactic: push_neg
+2026-01-16 17:48:17.472 | WARNING  | lean_reinforcement.agent.runner:run:103 - Proof search exceeded 1200.0s timeout after 1226.2s. Stopping.
+2026-01-16 17:48:17.472 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 3 steps and 1226.23s.
+2026-01-16 17:48:17.604 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:48:25.610 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Set.biUnion_of_singleton
+2026-01-16 17:48:25.894 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:48:37.585 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: CategoryTheory.Bicategory.LeftLift.whisker_lift
+2026-01-16 17:48:37.857 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:48:49.039 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: dist_midpoint_midpoint_le
+2026-01-16 17:48:49.316 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:49:14.552 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 2: Applying best tactic: intros
+2026-01-16 17:49:14.895 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 3: Running MCTS search for 200 iterations (max 489s)...
+2026-01-16 17:49:14.901 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 3: Applying best tactic: simp [Step.append_left_comm]
+2026-01-16 17:49:14.975 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='simp made no progress')
+2026-01-16 17:49:14.975 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 3 steps and 711.57s.
+2026-01-16 17:49:14.975 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='simp made no progress')
+2026-01-16 17:49:15.108 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:49:46.334 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp
+2026-01-16 17:49:46.403 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='simp made no progress')
+2026-01-16 17:49:46.403 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 80.79s.
+2026-01-16 17:49:46.403 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='simp made no progress')
+2026-01-16 17:49:46.538 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:49:52.303 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp [Bicategory.whisker_ext_iff]
+2026-01-16 17:49:52.368 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='simp made no progress')
+2026-01-16 17:49:52.368 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 74.78s.
+2026-01-16 17:49:52.368 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='simp made no progress')
+2026-01-16 17:49:52.501 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:49:53.297 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp only [baseChange, Polynomial.map_ψ₂]
+2026-01-16 17:49:53.368 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="unknown constant 'Polynomial.map_ψ₂'")
+2026-01-16 17:49:53.368 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 161.73s.
+2026-01-16 17:49:53.368 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="unknown constant 'Polynomial.map_ψ₂'")
+2026-01-16 17:49:53.503 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:50:00.123 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp [Ico, ← Finset.mem_def]
+2026-01-16 17:50:00.460 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:50:05.114 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: HahnSeries.SummableFamily.hsum_smul
+2026-01-16 17:50:05.385 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:50:12.713 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: MeasureTheory.Measure.restrict_eq_self_of_ae_mem
+2026-01-16 17:50:12.986 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:50:15.423 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: FreeAbelianGroup.map_id
+2026-01-16 17:50:15.691 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:50:32.242 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: apply le_antisymm
+2026-01-16 17:50:32.579 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 597s)...
+2026-01-16 17:51:00.400 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: cases nonempty_fintype ι'
+2026-01-16 17:51:00.771 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 598s)...
+2026-01-16 17:51:14.435 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: constructor
+2026-01-16 17:51:14.909 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 592s)...
+2026-01-16 17:51:45.711 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 2: Applying best tactic: simp [LocallyFiniteOrder.finsetIco]
+2026-01-16 17:51:45.777 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='simp made no progress')
+2026-01-16 17:51:45.777 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 2 steps and 695.44s.
+2026-01-16 17:51:45.777 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='simp made no progress')
+2026-01-16 17:51:45.911 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:51:46.838 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rw [midpoint_comm]
+2026-01-16 17:51:47.239 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:51:57.976 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 2: Applying best tactic: exacts [le_rfl, sSup_preimage_unop_le]
+2026-01-16 17:51:58.053 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='typeclass instance problem is stuck, it is often due to metavariables\n  Preorder ?m.896939')
+2026-01-16 17:51:58.053 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 2 steps and 688.21s.
+2026-01-16 17:51:58.053 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='typeclass instance problem is stuck, it is often due to metavariables\n  Preorder ?m.896939')
+2026-01-16 17:51:58.185 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:52:13.561 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp [Measure.restrict_eq_self_of_ae_mem hs]
+2026-01-16 17:52:13.635 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="kernel type check failed: (kernel) declaration has free variables '[anonymous]'")
+2026-01-16 17:52:13.635 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 120.92s.
+2026-01-16 17:52:13.635 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="kernel type check failed: (kernel) declaration has free variables '[anonymous]'")
+2026-01-16 17:52:13.767 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:52:15.440 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp only [hsum, SummableFamily.hahnSeries_smul]
+2026-01-16 17:52:15.520 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="unknown constant 'HahnSeries.SummableFamily.hahnSeries_smul'")
+2026-01-16 17:52:15.520 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 130.41s.
+2026-01-16 17:52:15.520 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="unknown constant 'HahnSeries.SummableFamily.hahnSeries_smul'")
+2026-01-16 17:52:15.653 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:52:16.366 | WARNING  | lean_reinforcement.agent.runner:run:193 - MCTS search returned no action. Stopping.
+2026-01-16 17:52:16.366 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 2 steps and 207.33s.
+2026-01-16 17:52:16.499 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:52:47.490 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 2: Applying best tactic: on_goal 1 => infer_instance
+2026-01-16 17:52:47.574 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='failed to synthesize\n  Nonempty (V ≃ₗ[K] Dual K V) → FiniteDimensional K V\nuse `set_option diagnostics true` to get diagnostic information')
+2026-01-16 17:52:47.574 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 2 steps and 700.81s.
+2026-01-16 17:52:47.574 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='failed to synthesize\n  Nonempty (V ≃ₗ[K] Dual K V) → FiniteDimensional K V\nuse `set_option diagnostics true` to get diagnostic information')
+2026-01-16 17:52:47.706 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:53:05.228 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rw [upperCrossingTime_succ_eq]
+2026-01-16 17:53:05.656 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:53:24.194 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: ext
+2026-01-16 17:53:24.541 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:53:24.541 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 2: Applying best tactic: rfl
+2026-01-16 17:53:24.614 | SUCCESS  | lean_reinforcement.agent.runner:run:239 - Proof finished in 2 steps and 598.33s.
+2026-01-16 17:53:24.746 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:53:36.587 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: induction x <;> simp [ONote.repr]
+2026-01-16 17:53:36.974 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:53:40.905 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: CategoryTheory.Limits.cospanExt_inv_app_left
+2026-01-16 17:53:41.185 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:53:54.765 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Turing.PartrecToTM2.tr_clear
+2026-01-16 17:53:55.038 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:54:43.496 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: hasDerivAt_circleMap
+2026-01-16 17:54:43.777 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:54:45.846 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Polynomial.roots_prod
+2026-01-16 17:54:46.130 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:54:46.403 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 2: Applying best tactic: on_goal 1 => simp [*]
+2026-01-16 17:54:46.477 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='simp made no progress')
+2026-01-16 17:54:46.477 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 2 steps and 497.36s.
+2026-01-16 17:54:46.477 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='simp made no progress')
+2026-01-16 17:54:46.594 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: LocallyLipschitz.const_max
+2026-01-16 17:54:46.610 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:54:46.886 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:54:51.041 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: ext
+2026-01-16 17:54:51.388 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:54:54.507 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp only [C, zero_add]
+2026-01-16 17:54:54.849 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:54:54.849 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 2: Applying best tactic: simp
+2026-01-16 17:54:54.930 | SUCCESS  | lean_reinforcement.agent.runner:run:239 - Proof finished in 2 steps and 509.70s.
+2026-01-16 17:54:55.062 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:55:00.886 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Matrix.cramer_row_self
+2026-01-16 17:55:01.174 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:55:02.308 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: CompactlySupportedContinuousMap.coe_toContinuousMap
+2026-01-16 17:55:02.581 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:55:17.501 | INFO     | lean_reinforcement.training.trainer:_collect_data:315 - Completed 64/128 proofs
+2026-01-16 17:55:18.638 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 2: Applying best tactic: rw [upperCrossingTime_succ_eq]
+2026-01-16 17:55:18.789 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  MeasureTheory.upperCrossingTime ?m.446972 ?m.446973 ?m.446974 ?m.446975 (?m.446976 + 1) ?ω\nΩ : Type u_1\nι : Type u_2\nm0 : MeasurableSpace Ω\nμ : MeasureTheory.Measure Ω\na b : ℝ\nf : ℕ → Ω → ℝ\nN n m : ℕ\nω : Ω\nhab : a < b\nhn : MeasureTheory.upperCrossingTime a b f N (n + 1) ω ≠ N\n⊢ MeasureTheory.upperCrossingTime a b f N n ω <\n    MeasureTheory.hitting f (Set.Ici b) (MeasureTheory.lowerCrossingTime a b f N n ω) N ω")
+2026-01-16 17:55:18.790 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 2 steps and 677.08s.
+2026-01-16 17:55:18.790 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  MeasureTheory.upperCrossingTime ?m.446972 ?m.446973 ?m.446974 ?m.446975 (?m.446976 + 1) ?ω\nΩ : Type u_1\nι : Type u_2\nm0 : MeasurableSpace Ω\nμ : MeasureTheory.Measure Ω\na b : ℝ\nf : ℕ → Ω → ℝ\nN n m : ℕ\nω : Ω\nhab : a < b\nhn : MeasureTheory.upperCrossingTime a b f N (n + 1) ω ≠ N\n⊢ MeasureTheory.upperCrossingTime a b f N n ω <\n    MeasureTheory.hitting f (Set.Ici b) (MeasureTheory.lowerCrossingTime a b f N n ω) N ω")
+2026-01-16 17:55:18.922 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:55:39.361 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: dsimp [cospanExt]
+2026-01-16 17:55:39.430 | SUCCESS  | lean_reinforcement.agent.runner:run:239 - Proof finished in 1 steps and 118.53s.
+2026-01-16 17:55:39.562 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:55:53.478 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Function.isEmpty
+2026-01-16 17:55:53.751 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:56:16.791 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: by_cases h : pop' k (branch (fun s => s.elim true p) q)
+2026-01-16 17:56:16.949 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="application type mismatch\n  branch (fun s => ?m.501218 s) q\nargument\n  q\nhas type\n  Λ' : Type\nbut is expected to have type\n  TM2.Stmt ?m.501210 ?m.501211 ?m.501212 : Type (max (max (max ?u.501208 ?u.501207) ?u.501206) ?u.501205)\ninvalid field notation, type is not of the form (C ...) where C is a constant\n  s\nhas type\n  ?m.501212")
+2026-01-16 17:56:16.949 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 142.18s.
+2026-01-16 17:56:16.949 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="application type mismatch\n  branch (fun s => ?m.501218 s) q\nargument\n  q\nhas type\n  Λ' : Type\nbut is expected to have type\n  TM2.Stmt ?m.501210 ?m.501211 ?m.501212 : Type (max (max (max ?u.501208 ?u.501207) ?u.501206) ?u.501205)\ninvalid field notation, type is not of the form (C ...) where C is a constant\n  s\nhas type\n  ?m.501212")
+2026-01-16 17:56:17.083 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:56:18.499 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: refine Finset.induction_on s (by simp)?_
+2026-01-16 17:56:18.564 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='<stdin>:1:38: expected end of input')
+2026-01-16 17:56:18.565 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 92.72s.
+2026-01-16 17:56:18.565 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='<stdin>:1:38: expected end of input')
+2026-01-16 17:56:18.698 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:56:21.629 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: fderiv_continuousMultilinear_apply_const_apply
+2026-01-16 17:56:21.899 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:56:24.996 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: AddLECancellable.lt_of_tsub_lt_tsub_left_of_le
+2026-01-16 17:56:25.268 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:56:30.443 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simpa using hf.max_locallyLipschitz
+2026-01-16 17:56:30.561 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="invalid field 'max_locallyLipschitz', the environment does not contain 'LocallyLipschitz.max_locallyLipschitz'\n  hf\nhas type\n  LocallyLipschitz f\ninvalid field notation, type is not of the form (C ...) where C is a constant\n  hf\nhas type\n  ∀ (x : α), ∃ K, ∃ t ∈ 𝓝 x, LipschitzOnWith K f t")
+2026-01-16 17:56:30.561 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 103.97s.
+2026-01-16 17:56:30.561 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="invalid field 'max_locallyLipschitz', the environment does not contain 'LocallyLipschitz.max_locallyLipschitz'\n  hf\nhas type\n  LocallyLipschitz f\ninvalid field notation, type is not of the form (C ...) where C is a constant\n  hf\nhas type\n  ∀ (x : α), ∃ K, ∃ t ∈ 𝓝 x, LipschitzOnWith K f t")
+2026-01-16 17:56:30.693 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:56:50.704 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 2: Applying best tactic: simp [Function.comp_apply]
+2026-01-16 17:56:50.777 | SUCCESS  | lean_reinforcement.agent.runner:run:239 - Proof finished in 2 steps and 582.07s.
+2026-01-16 17:56:50.909 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:56:51.766 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp only [toContinuousMap_apply]
+2026-01-16 17:56:51.830 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='simp made no progress')
+2026-01-16 17:56:51.830 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 109.52s.
+2026-01-16 17:56:51.830 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='simp made no progress')
+2026-01-16 17:56:51.961 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:56:54.792 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rcases eq_or_ne a b with (rfl | hab)
+2026-01-16 17:56:55.146 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 587s)...
+2026-01-16 17:57:10.700 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Nat.coprime_add_self_left
+2026-01-16 17:57:10.976 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:57:26.980 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: infer_instance
+2026-01-16 17:57:27.055 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='failed to synthesize\n  IsEmpty α\nuse `set_option diagnostics true` to get diagnostic information')
+2026-01-16 17:57:27.055 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 93.58s.
+2026-01-16 17:57:27.056 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='failed to synthesize\n  IsEmpty α\nuse `set_option diagnostics true` to get diagnostic information')
+2026-01-16 17:57:27.189 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:57:33.721 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 2: Applying best tactic: dsimp [PreservesCoequalizer.iso]
+2026-01-16 17:57:34.278 | WARNING  | lean_reinforcement.agent.runner:run:110 - Only 27.6s remaining (< 30s minimum). Stopping to avoid partial search.
+2026-01-16 17:57:34.279 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 3 steps and 1172.37s.
+2026-01-16 17:57:34.412 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:57:34.691 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp [cramer_apply, h]
+2026-01-16 17:57:34.810 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='simp made no progress')
+2026-01-16 17:57:34.810 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 153.92s.
+2026-01-16 17:57:34.810 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='simp made no progress')
+2026-01-16 17:57:34.943 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:57:58.256 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Subgroup.mk_eq_one
+2026-01-16 17:57:58.548 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:57:59.673 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: transitive_le
+2026-01-16 17:57:59.972 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:58:30.242 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp only [fderiv, ContinuousMultilinearMap.id_apply]
+2026-01-16 17:58:30.368 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="unknown constant 'ContinuousMultilinearMap.id_apply'")
+2026-01-16 17:58:30.368 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 128.74s.
+2026-01-16 17:58:30.368 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="unknown constant 'ContinuousMultilinearMap.id_apply'")
+2026-01-16 17:58:30.501 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:58:51.739 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: SetTheory.PGame.isOption_neg
+2026-01-16 17:58:51.886 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Multiset.coe_mk
+2026-01-16 17:58:52.031 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:58:52.179 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:58:52.829 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: SignType.mul_assoc
+2026-01-16 17:58:53.111 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:59:02.657 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: ContinuousOn.mono_rng
+2026-01-16 17:59:02.929 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:59:05.117 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: exact transitive_le
+2026-01-16 17:59:05.190 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="kernel type check failed: (kernel) declaration has free variables '[anonymous]'")
+2026-01-16 17:59:05.190 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 65.52s.
+2026-01-16 17:59:05.190 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="kernel type check failed: (kernel) declaration has free variables '[anonymous]'")
+2026-01-16 17:59:05.322 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 17:59:09.415 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: MulOpposite.unop_bijective
+2026-01-16 17:59:09.685 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 17:59:10.353 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: MeasureTheory.addContent_biUnion_le
+2026-01-16 17:59:10.632 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 18:00:11.294 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp [mkToType]
+2026-01-16 18:00:11.356 | SUCCESS  | lean_reinforcement.agent.runner:run:239 - Proof finished in 1 steps and 79.47s.
+2026-01-16 18:00:11.488 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 18:00:15.750 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: ext
+2026-01-16 18:00:16.076 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 599s)...
+2026-01-16 18:00:20.366 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: apply SignType.ext
+2026-01-16 18:00:20.431 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="unknown constant 'SignType.ext'")
+2026-01-16 18:00:20.431 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 87.60s.
+2026-01-16 18:00:20.431 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="unknown constant 'SignType.ext'")
+2026-01-16 18:00:20.564 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 18:00:23.098 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: LinearMap.mkContinuousOfExistsBound_coe
+2026-01-16 18:00:23.369 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 18:00:34.765 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp only [IsOption, and_congr_right_iff]
+2026-01-16 18:00:34.829 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='simp made no progress')
+2026-01-16 18:00:34.829 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 103.09s.
+2026-01-16 18:00:34.829 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='simp made no progress')
+2026-01-16 18:00:34.962 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 18:00:59.291 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rw [continuousOn_def] at h₂ ⊢
+2026-01-16 18:00:59.433 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.174575\nα✝ : Type u_1\nβ✝ : Type u_2\nγ : Type u_3\nδ : Type u_4\ninst✝⁴ : TopologicalSpace α✝\nι : Type u_5\nπ : ι → Type u_6\ninst✝³ : (i : ι) → TopologicalSpace (π i)\ninst✝² : TopologicalSpace β✝\ninst✝¹ : TopologicalSpace γ\ninst✝ : TopologicalSpace δ\nα : Type u_7\nβ : Type u_8\nt₁ : TopologicalSpace α\nt₂ t₃ : TopologicalSpace β\nh₁ : t₂ ≤ t₃\ns : Set α\nf : α → β\nh₂ : ContinuousOn f s\n⊢ ContinuousOn f s")
+2026-01-16 18:00:59.434 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 116.78s.
+2026-01-16 18:00:59.434 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.174575\nα✝ : Type u_1\nβ✝ : Type u_2\nγ : Type u_3\nδ : Type u_4\ninst✝⁴ : TopologicalSpace α✝\nι : Type u_5\nπ : ι → Type u_6\ninst✝³ : (i : ι) → TopologicalSpace (π i)\ninst✝² : TopologicalSpace β✝\ninst✝¹ : TopologicalSpace γ\ninst✝ : TopologicalSpace δ\nα : Type u_7\nβ : Type u_8\nt₁ : TopologicalSpace α\nt₂ t₃ : TopologicalSpace β\nh₁ : t₂ ≤ t₃\ns : Set α\nf : α → β\nh₂ : ContinuousOn f s\n⊢ ContinuousOn f s")
+2026-01-16 18:00:59.567 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 18:01:00.102 | INFO     | lean_reinforcement.training.trainer:_collect_data:315 - Completed 80/128 proofs
+2026-01-16 18:01:00.659 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simpa only [Finset.sum_iUnion] using m.mono_left hs
+2026-01-16 18:01:00.671 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 2: Applying best tactic: cases nonempty_fintype ι'
+2026-01-16 18:01:00.749 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="unknown constant 'Finset.sum_iUnion'\ninvalid field 'mono_left', the environment does not contain 'MeasureTheory.AddContent.mono_left'\n  m\nhas type\n  AddContent C")
+2026-01-16 18:01:00.750 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 110.40s.
+2026-01-16 18:01:00.750 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="unknown constant 'Finset.sum_iUnion'\ninvalid field 'mono_left', the environment does not contain 'MeasureTheory.AddContent.mono_left'\n  m\nhas type\n  AddContent C")
+2026-01-16 18:01:00.882 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 18:01:01.106 | WARNING  | lean_reinforcement.agent.runner:run:103 - Proof search exceeded 1200.0s timeout after 1202.7s. Stopping.
+2026-01-16 18:01:01.106 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 3 steps and 1202.65s.
+2026-01-16 18:01:01.239 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 18:01:06.414 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Polynomial.splits_of_degree_eq_one
+2026-01-16 18:01:06.685 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 18:01:35.210 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: refine ⟨fun h =>?_, Coprime.gcd_add_left⟩
+2026-01-16 18:01:35.278 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="unknown constant 'Nat.Coprime.gcd_add_left'")
+2026-01-16 18:01:35.278 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 264.58s.
+2026-01-16 18:01:35.278 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="unknown constant 'Nat.Coprime.gcd_add_left'")
+2026-01-16 18:01:35.411 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 18:01:40.540 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rw [mkContinuousOfExistsBound]
+2026-01-16 18:01:40.613 | SUCCESS  | lean_reinforcement.agent.runner:run:239 - Proof finished in 1 steps and 77.52s.
+2026-01-16 18:01:40.747 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 18:01:46.849 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Function.iterate_cancel
+2026-01-16 18:01:47.119 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 18:02:06.652 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: exact splits_of_degree_eq_one hf
+2026-01-16 18:02:06.726 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="kernel type check failed: (kernel) declaration has free variables '[anonymous]'")
+2026-01-16 18:02:06.726 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 60.31s.
+2026-01-16 18:02:06.727 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="kernel type check failed: (kernel) declaration has free variables '[anonymous]'")
+2026-01-16 18:02:06.860 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 18:02:10.917 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Nat.bit0_inj
+2026-01-16 18:02:11.184 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 18:02:25.387 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: SignType.pos_eq_one
+2026-01-16 18:02:25.652 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 18:02:30.176 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: sInf_sup_sInf
+2026-01-16 18:02:30.447 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 18:02:43.047 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simpa [Nat.sub_eq_zero_iff_le] using ha
+2026-01-16 18:02:43.130 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='type mismatch\n  h✝\nhas type\n  f^[m] a = f^[n] a : Prop\nbut is expected to have type\n  f^[m - n] a = a : Prop')
+2026-01-16 18:02:43.130 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 56.28s.
+2026-01-16 18:02:43.131 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='type mismatch\n  h✝\nhas type\n  f^[m] a = f^[n] a : Prop\nbut is expected to have type\n  f^[m - n] a = a : Prop')
+2026-01-16 18:02:43.264 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 18:03:11.739 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Matrix.scalar_commute
+2026-01-16 18:03:12.023 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 18:03:17.143 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp [pos]
+2026-01-16 18:03:17.207 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='simp made no progress')
+2026-01-16 18:03:17.207 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 51.82s.
+2026-01-16 18:03:17.207 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='simp made no progress')
+2026-01-16 18:03:17.340 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 18:03:29.169 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rw [Subtype.ext_iff]
+2026-01-16 18:03:29.565 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 18:03:29.566 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 2: Applying best tactic: simp
+2026-01-16 18:03:29.634 | SUCCESS  | lean_reinforcement.agent.runner:run:239 - Proof finished in 2 steps and 331.38s.
+2026-01-16 18:03:29.768 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 18:03:32.033 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: apply Nat.strongInductionOn m
+2026-01-16 18:03:32.096 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error="unknown identifier 'm'")
+2026-01-16 18:03:32.097 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 81.18s.
+2026-01-16 18:03:32.097 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error="unknown identifier 'm'")
+2026-01-16 18:03:32.230 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+[2026-01-16T18:03:37.192] error: *** STEP 18427352.0 ON gcn21 CANCELLED AT 2026-01-16T18:03:37 DUE to SIGNAL Terminated ***
+[2026-01-16T18:03:37.193] error: *** JOB 18427352 ON gcn21 CANCELLED AT 2026-01-16T18:03:37 DUE to SIGNAL Terminated ***
