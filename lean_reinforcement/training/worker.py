@@ -90,7 +90,15 @@ def process_theorem(
         return {"metrics": metrics, "data": theorem_training_data}
     except Exception as e:
         logger.error(f"Error during proof search for theorem {theorem.full_name}: {e}")
-        return {}
+        # Return partial metrics if possible - at minimum we want to track that this failed
+        return {
+            "metrics": {
+                "proof_search/success": False,
+                "proof_search/steps": 0,
+                "proof_search/time": 0.0,
+            },
+            "data": [],
+        }
     finally:
         if env:
             try:

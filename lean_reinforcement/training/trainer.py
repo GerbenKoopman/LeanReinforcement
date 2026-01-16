@@ -280,7 +280,27 @@ class Trainer:
                             wandb.log(res["metrics"])
 
                         if "data" in res:
-                            training_data_buffer.extend(res["data"])
+                            data = res["data"]
+                            training_data_buffer.extend(data)
+
+                            # Track positive and negative samples
+                            if data and self.config.use_wandb:
+                                positive_count = sum(
+                                    1
+                                    for item in data
+                                    if item.get("value_target", 0) > 0
+                                )
+                                negative_count = sum(
+                                    1
+                                    for item in data
+                                    if item.get("value_target", 0) < 0
+                                )
+                                wandb.log(
+                                    {
+                                        "training_data/positive_samples": positive_count,
+                                        "training_data/negative_samples": negative_count,
+                                    }
+                                )
                         elif isinstance(res, list):
                             training_data_buffer.extend(res)
 
