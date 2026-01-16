@@ -1,0 +1,86 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Building Cython extensions...
+running build_ext
+copying build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/base_mcts_cy.cpython-310-x86_64-linux-gnu.so -> lean_reinforcement/agent/mcts/mcts_cy
+copying build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/alphazero_cy.cpython-310-x86_64-linux-gnu.so -> lean_reinforcement/agent/mcts/mcts_cy
+copying build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/guidedrollout_cy.cpython-310-x86_64-linux-gnu.so -> lean_reinforcement/agent/mcts/mcts_cy
+copying build/lib.linux-x86_64-cpython-310/ReProver/common_cy.cpython-310-x86_64-linux-gnu.so -> ReProver
+Starting training run with distributed environment...
+wandb: Currently logged in as: gerbennkoopman to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run m3xqe17u
+wandb: Tracking run with wandb version 0.23.1
+wandb: Run data is saved locally in /gpfs/home1/gkoopman/lean_reinforcement/wandb/run-20260115_212429-m3xqe17u
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run genial-snowflake-81
+wandb: ⭐️ View project at https://wandb.ai/gerbennkoopman-university-of-amsterdam/lean-reinforcement
+wandb: 🚀 View run at https://wandb.ai/gerbennkoopman-university-of-amsterdam/lean-reinforcement/runs/m3xqe17u
+2026-01-15 21:24:31.370 | INFO     | lean_reinforcement.training.trainer:_setup_models:56 - Using checkpoint directory: /gpfs/scratch1/shared/lean-reinforcement/checkpoints
+2026-01-15 21:24:35.198 | INFO     | lean_reinforcement.agent.value_head:load_checkpoint:192 - Checkpoint loaded from /gpfs/scratch1/shared/lean-reinforcement/checkpoints/value_head_guided_rollout_latest.pth
+2026-01-15 21:24:35.200 | INFO     | lean_reinforcement.training.trainer:_setup_models:77 - Resuming training from epoch 2
+2026-01-15 21:24:35.200 | INFO     | lean_reinforcement.training.trainer:_log_gpu_memory:122 - After model initialization - GPU Memory: 1.12GB allocated, 1.23GB reserved
+2026-01-15 21:24:35.200 | INFO     | lean_reinforcement.training.trainer:_setup_data:87 - Loading data from 'leandojo_benchmark_4/novel_premises'
+2026-01-15 21:24:35.201 | INFO     | lean_reinforcement.training.trainer:_setup_data:92 - Loading indexed corpus from /gpfs/scratch1/shared/lean-reinforcement/indexed_corpus/indexed_corpus.pkl
+2026-01-15 21:25:16.935 | INFO     | lean_reinforcement.training.trainer:_start_workers:201 - Starting 16 workers
+2026-01-15 21:25:16.965 | INFO     | lean_reinforcement.training.trainer:_run_epoch:151 - Starting Epoch 3/1
+2026-01-15 21:25:17.029 | INFO     | lean_reinforcement.training.trainer:_run_epoch:162 - Processing 128 theorems with 16 workers.
+2026-01-15 21:25:48.988 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Rat.intCast_add
+2026-01-15 21:25:49.255 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 1000 iterations (max 600s)...
+2026-01-15 21:27:16.601 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: IsSimpleOrder.bot_ne_top
+2026-01-15 21:27:16.873 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 1000 iterations (max 600s)...
+2026-01-15 21:27:42.965 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Set.Finite.partiallyWellOrderedOn
+2026-01-15 21:27:43.253 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 1000 iterations (max 600s)...
+2026-01-15 21:27:46.041 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Surreal.nat_toGame
+2026-01-15 21:27:46.326 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 1000 iterations (max 600s)...
+2026-01-15 21:28:01.466 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: UniformEmbedding.embedding
+2026-01-15 21:28:01.748 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 1000 iterations (max 600s)...
+2026-01-15 21:28:04.549 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Matrix.dotProduct_block
+2026-01-15 21:28:04.664 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: nnnorm_toMul
+2026-01-15 21:28:04.842 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 1000 iterations (max 600s)...
+2026-01-15 21:28:04.946 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 1000 iterations (max 600s)...
+2026-01-15 21:28:07.724 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: IsometryEquiv.symm_comp_self
+2026-01-15 21:28:07.999 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 1000 iterations (max 600s)...
+2026-01-15 21:28:56.773 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: MeasureTheory.lintegral_zero_fun
+2026-01-15 21:28:57.075 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 1000 iterations (max 600s)...
+2026-01-15 21:28:57.456 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: ENNReal.mul_sSup
+2026-01-15 21:28:57.760 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 1000 iterations (max 600s)...
+2026-01-15 21:30:18.404 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Quaternion.inner_def
+2026-01-15 21:30:18.684 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 1000 iterations (max 600s)...
+2026-01-15 21:30:19.046 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: MeasureTheory.FiniteMeasure.coeFn_smul
+2026-01-15 21:30:19.317 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 1000 iterations (max 600s)...
+2026-01-15 21:30:22.618 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: quadraticChar_dichotomy
+2026-01-15 21:30:22.891 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 1000 iterations (max 600s)...
+2026-01-15 21:30:35.248 | ERROR    | lean_reinforcement.utilities.gym:reset:49 - Error during environment reset: Timeout during initialization
+2026-01-15 21:30:35.280 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-15 21:30:35.280 | ERROR    | lean_reinforcement.training.worker:process_theorem:44 - Failed to initialize environment for theorem ProbabilityTheory.condCDF_ae_eq: Timeout during initialization
+2026-01-15 21:30:35.790 | ERROR    | lean_reinforcement.utilities.gym:reset:49 - Error during environment reset: Timeout during initialization
+2026-01-15 21:30:35.822 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-15 21:30:35.822 | ERROR    | lean_reinforcement.training.worker:process_theorem:44 - Failed to initialize environment for theorem AlgebraicGeometry.isBasis_affine_open: Timeout during initialization
+2026-01-15 21:30:36.118 | ERROR    | lean_reinforcement.utilities.gym:reset:49 - Error during environment reset: Timeout during initialization
+2026-01-15 21:30:36.149 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-15 21:30:36.149 | ERROR    | lean_reinforcement.training.worker:process_theorem:44 - Failed to initialize environment for theorem CategoryTheory.ShortComplex.Exact.mono_g': Timeout during initialization
+2026-01-15 21:31:03.956 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Relation.comp_iff
+2026-01-15 21:31:04.345 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 1000 iterations (max 600s)...
+2026-01-15 21:35:20.222 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: RCLike.conjCLE_apply
+2026-01-15 21:35:20.679 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 1000 iterations (max 600s)...
+2026-01-15 21:35:37.031 | ERROR    | lean_reinforcement.utilities.gym:reset:49 - Error during environment reset: Timeout during initialization
+2026-01-15 21:35:37.062 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-15 21:35:37.062 | ERROR    | lean_reinforcement.training.worker:process_theorem:44 - Failed to initialize environment for theorem IsHilbertSum.mk: Timeout during initialization
+2026-01-15 21:35:49.288 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: rcases Int.eq_nat_or_neg a with h | h
+2026-01-15 21:35:49.656 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 2: Running MCTS search for 1000 iterations (max 599s)...
+[2026-01-15T21:36:19.017] error: *** STEP 18394006.0 ON gcn26 CANCELLED AT 2026-01-15T21:36:19 DUE to SIGNAL Terminated ***
+[2026-01-15T21:36:19.018] error: *** JOB 18394006 ON gcn26 CANCELLED AT 2026-01-15T21:36:19 DUE to SIGNAL Terminated ***
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
