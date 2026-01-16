@@ -1,0 +1,81 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Building Cython extensions...
+running build_ext
+copying build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/base_mcts_cy.cpython-310-x86_64-linux-gnu.so -> lean_reinforcement/agent/mcts/mcts_cy
+copying build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/alphazero_cy.cpython-310-x86_64-linux-gnu.so -> lean_reinforcement/agent/mcts/mcts_cy
+copying build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/guidedrollout_cy.cpython-310-x86_64-linux-gnu.so -> lean_reinforcement/agent/mcts/mcts_cy
+copying build/lib.linux-x86_64-cpython-310/ReProver/common_cy.cpython-310-x86_64-linux-gnu.so -> ReProver
+Starting training run with distributed environment...
+wandb: Currently logged in as: gerbennkoopman to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run ee4upp92
+wandb: Tracking run with wandb version 0.23.1
+wandb: Run data is saved locally in /gpfs/home1/gkoopman/lean_reinforcement/wandb/run-20260116_155922-ee4upp92
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run dry-universe-83
+wandb: ⭐️ View project at https://wandb.ai/gerbennkoopman-university-of-amsterdam/lean-reinforcement
+wandb: 🚀 View run at https://wandb.ai/gerbennkoopman-university-of-amsterdam/lean-reinforcement/runs/ee4upp92
+2026-01-16 15:59:24.325 | INFO     | lean_reinforcement.training.trainer:_setup_models:56 - Using checkpoint directory: /gpfs/scratch1/shared/lean-reinforcement/checkpoints
+2026-01-16 15:59:29.403 | INFO     | lean_reinforcement.agent.value_head:load_checkpoint:192 - Checkpoint loaded from /gpfs/scratch1/shared/lean-reinforcement/checkpoints/value_head_guided_rollout_latest.pth
+2026-01-16 15:59:29.404 | INFO     | lean_reinforcement.training.trainer:_setup_models:77 - Resuming training from epoch 2
+2026-01-16 15:59:29.404 | INFO     | lean_reinforcement.training.trainer:_log_gpu_memory:122 - After model initialization - GPU Memory: 1.12GB allocated, 1.23GB reserved
+2026-01-16 15:59:29.404 | INFO     | lean_reinforcement.training.trainer:_setup_data:87 - Loading data from 'leandojo_benchmark_4/novel_premises'
+2026-01-16 15:59:29.405 | INFO     | lean_reinforcement.training.trainer:_setup_data:92 - Loading indexed corpus from /gpfs/scratch1/shared/lean-reinforcement/indexed_corpus/indexed_corpus.pkl
+2026-01-16 16:00:10.178 | INFO     | lean_reinforcement.training.trainer:_start_workers:201 - Starting 16 workers
+2026-01-16 16:00:10.212 | INFO     | lean_reinforcement.training.trainer:_run_epoch:151 - Starting Epoch 3/1
+2026-01-16 16:00:10.275 | INFO     | lean_reinforcement.training.trainer:_run_epoch:162 - Processing 128 theorems with 16 workers.
+2026-01-16 16:01:58.499 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: sdiff_right_comm
+2026-01-16 16:01:58.762 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 16:03:20.508 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: List.Lex.cons_iff
+2026-01-16 16:03:20.776 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 16:03:22.078 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Quiver.Hom.unop_op
+2026-01-16 16:03:22.363 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 16:03:26.382 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: CategoryTheory.End.mul_def
+2026-01-16 16:03:26.646 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 16:03:30.096 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: DistribMulActionHom.coe_toLinearMap
+2026-01-16 16:03:30.387 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 16:03:42.551 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Fin.cons_self_tail
+2026-01-16 16:03:42.829 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 16:03:46.399 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Vector.inductionOn_cons
+2026-01-16 16:03:46.666 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 16:04:30.661 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: SetTheory.PGame.birthday_moveLeft_lt
+2026-01-16 16:04:30.932 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 16:04:58.269 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: frontier_prod_univ_eq
+2026-01-16 16:04:58.566 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 16:05:08.858 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Finsupp.mapRange.addEquiv_symm
+2026-01-16 16:05:09.165 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 16:05:56.297 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: convex_Ioi
+2026-01-16 16:05:56.560 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 16:06:44.509 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Cubic.degree_of_a_eq_zero
+2026-01-16 16:06:44.785 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 16:06:48.080 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Associates.reducible_not_mem_factorSet
+2026-01-16 16:06:48.376 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 16:06:54.169 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: ContinuousMapZero.comp_apply
+2026-01-16 16:06:54.440 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 16:09:15.536 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: MeasureTheory.Lp.snorm_exponent_top_lim_le_liminf_snorm_exponent_top
+2026-01-16 16:09:15.849 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 16:10:04.867 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: MeasureTheory.SimpleFunc.setToSimpleFunc_mono_left'
+2026-01-16 16:10:05.181 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+2026-01-16 16:11:58.888 | INFO     | lean_reinforcement.agent.runner:run:197 - Step 1: Applying best tactic: simp_rw [sdiff_eq, sup_comm]
+2026-01-16 16:11:58.955 | WARNING  | lean_reinforcement.agent.runner:run:206 - Tactic resulted in error: LeanError(error='simp made no progress')
+2026-01-16 16:11:58.955 | ERROR    | lean_reinforcement.agent.runner:run:243 - Proof failed after 1 steps and 600.46s.
+2026-01-16 16:11:58.955 | WARNING  | lean_reinforcement.agent.runner:run:247 - Final state: LeanError(error='simp made no progress')
+2026-01-16 16:11:59.088 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-16 16:13:59.872 | INFO     | lean_reinforcement.agent.runner:run:84 - Starting proof search for: Finset.fold_map
+2026-01-16 16:14:00.136 | INFO     | lean_reinforcement.agent.runner:run:135 - Step 1: Running MCTS search for 200 iterations (max 600s)...
+[2026-01-16T16:35:48.786] error: *** JOB 18423846 ON gcn61 CANCELLED AT 2026-01-16T16:35:48 DUE to SIGNAL Terminated ***
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+[2026-01-16T16:35:48.788] error: *** STEP 18423846.0 ON gcn61 CANCELLED AT 2026-01-16T16:35:48 DUE to SIGNAL Terminated ***
