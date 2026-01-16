@@ -36,11 +36,12 @@ srun python3 -m lean_reinforcement.training.train \
     --indexed-corpus-path $CORPUS_DIR/indexed_corpus.pkl \
     --num-epochs 1 \
     --num-theorems 128 \
-    --num-iterations 1000 \
+    --num-iterations 200 \
     --batch-size 256 \
     --num-tactics-to-expand 64 \
     --num-workers 16 \
-    --env-timeout 300 \
+    --env-timeout 600 \
+    --max-time 120 \
     --proof-timeout 1200 \
     --mcts-type guided_rollout \
     --train-epochs 4 \
