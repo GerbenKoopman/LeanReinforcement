@@ -262,19 +262,56 @@ class Trainer:
         inference_server: InferenceServer,
         epoch: int,
     ) -> List[Dict[str, Any]]:
-        completed_theorems = 0
+        """
+        Collect proof attempts from workers.
+
+        Primary approach: Count-based - wait until we receive results for all
+        theorems (success, failure, or worker crash).
+
+        Safety net: Time limit (2 hours max) in case something unexpected happens.
+        """
+        total_theorems = len(theorems_to_process)
+        results_received = 0
         training_data_buffer: List[Dict[str, Any]] = []
 
         temp_data_file = self.checkpoint_dir / f"temp_data_epoch_{epoch + 1}.jsonl"
         if os.path.exists(temp_data_file):
             os.remove(temp_data_file)
 
-        while completed_theorems < len(theorems_to_process):
+        epoch_start_time = time.time()
+
+        # Safety net: 2 hour max per epoch (should never hit this)
+        max_epoch_time = 2 * 3600
+
+        # Track which workers have died and account for their in-flight theorems
+        dead_worker_pids: set = set()
+
+        logger.info(
+            f"Collecting results for {total_theorems} theorems "
+            f"(safety timeout: {max_epoch_time/3600:.1f}h)"
+        )
+
+        while results_received < total_theorems:
+            elapsed = time.time() - epoch_start_time
+
+            # Safety net timeout
+            if elapsed > max_epoch_time:
+                logger.warning(
+                    f"Safety timeout reached ({elapsed/3600:.1f}h). "
+                    f"Collected {results_received}/{total_theorems} results. "
+                    f"Proceeding with training."
+                )
+                break
+
+            # Process inference requests (keeps GPU busy)
             processed_batch = inference_server.process_requests()
 
+            # Collect results from workers
             try:
                 while True:
                     res = self.result_queue.get_nowait()
+                    results_received += 1
+
                     if res:
                         if "metrics" in res and self.config.use_wandb:
                             wandb.log(res["metrics"])
@@ -304,16 +341,19 @@ class Trainer:
                         elif isinstance(res, list):
                             training_data_buffer.extend(res)
 
+                        # Periodically save to disk to avoid memory issues
                         if len(training_data_buffer) > 100:
                             with open(temp_data_file, "a") as f:
                                 for item in training_data_buffer:
                                     f.write(json.dumps(item) + "\n")
                             training_data_buffer = []
 
-                    completed_theorems += 1
-                    if completed_theorems % self.config.num_workers == 0:
+                    # Progress logging
+                    if results_received % self.config.num_workers == 0:
+                        pct = 100 * results_received / total_theorems
                         logger.info(
-                            f"Completed {completed_theorems}/{len(theorems_to_process)} proofs"
+                            f"Progress: {results_received}/{total_theorems} "
+                            f"({pct:.0f}%) in {elapsed/60:.1f} min"
                         )
             except queue.Empty:
                 pass
@@ -321,17 +361,33 @@ class Trainer:
             if not processed_batch:
                 time.sleep(0.01)
 
-            dead_workers = [p for p in self.workers if not p.is_alive()]
-            if dead_workers:
-                logger.error(
-                    f"Found {len(dead_workers)} dead worker(s). Stopping training."
+            # Check for dead workers - count their in-flight theorems as lost
+            for p in self.workers:
+                if not p.is_alive() and p.pid not in dead_worker_pids:
+                    dead_worker_pids.add(p.pid)
+                    logger.warning(
+                        f"Worker {p.pid} died (exit code: {p.exitcode}). "
+                        f"Counting its in-flight theorem as lost."
+                    )
+                    # Count this worker's in-flight theorem as "received" (lost)
+                    results_received += 1
+
+            # If all workers are dead, we're done (can't get more results)
+            alive_workers = [p for p in self.workers if p.is_alive()]
+            if not alive_workers and results_received < total_theorems:
+                remaining = total_theorems - results_received
+                logger.warning(
+                    f"All workers died. {remaining} theorems unprocessed. "
+                    f"Proceeding with {results_received} results."
                 )
-                for p in dead_workers:
-                    logger.error(f"Worker exit code: {p.exitcode}")
-                for p in self.workers:
-                    if p.is_alive():
-                        p.terminate()
-                raise RuntimeError("One or more worker processes died unexpectedly.")
+                break
+
+        # Final stats
+        elapsed = time.time() - epoch_start_time
+        logger.info(
+            f"Data collection complete: {results_received}/{total_theorems} "
+            f"results in {elapsed/60:.1f} min"
+        )
 
         # Load back temp data
         if os.path.exists(temp_data_file):

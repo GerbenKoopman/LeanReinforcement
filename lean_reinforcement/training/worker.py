@@ -17,7 +17,11 @@ from lean_reinforcement.utilities.gym import LeanDojoEnv
 from lean_reinforcement.utilities.config import TrainingConfig
 from lean_reinforcement.agent.runner import AgentRunner
 from lean_reinforcement.agent.mcts import BaseMCTS, MCTS_GuidedRollout, MCTS_AlphaZero
-from lean_reinforcement.agent.proxies import QueueProxyTransformer, QueueProxyValueHead
+from lean_reinforcement.agent.proxies import (
+    QueueProxyTransformer,
+    QueueProxyValueHead,
+    InferenceTimeoutError,
+)
 
 
 def process_theorem(
@@ -88,6 +92,19 @@ def process_theorem(
             f"Collected {len(theorem_training_data)} training samples for theorem: {theorem.full_name}"
         )
         return {"metrics": metrics, "data": theorem_training_data}
+    except InferenceTimeoutError as e:
+        logger.error(
+            f"Inference timeout during proof search for theorem {theorem.full_name}: {e}"
+        )
+        return {
+            "metrics": {
+                "proof_search/success": False,
+                "proof_search/steps": 0,
+                "proof_search/time": 0.0,
+                "proof_search/inference_timeout": True,
+            },
+            "data": [],
+        }
     except Exception as e:
         logger.error(f"Error during proof search for theorem {theorem.full_name}: {e}")
         # Return partial metrics if possible - at minimum we want to track that this failed
