@@ -39,16 +39,8 @@ export CUDA_VISIBLE_DEVICES=0
 # Environment Setup
 # ==============================================================================
 
-# Try to activate conda environment
-if command -v mamba &> /dev/null; then
-    eval "$(mamba shell hook --shell bash)"
-    mamba activate lean-reinforcement 2>/dev/null || true
-elif command -v conda &> /dev/null; then
-    eval "$(conda shell.bash hook)"
-    conda activate lean-reinforcement 2>/dev/null || true
-fi
 
-# Load environment variables
+# Load environment variables if present
 if [[ -f .env ]]; then
     set -a
     source .env
@@ -57,6 +49,22 @@ fi
 
 # Ensure output directories exist
 mkdir -p logs hyperparam_results
+
+# Determine how to run Python
+# If CONDA_DEFAULT_ENV is set, we're already in a conda env
+if [[ -n "${CONDA_DEFAULT_ENV:-}" ]]; then
+    # Use Python from current environment
+    PYTHON_CMD="python"
+else
+    # Try to use mamba/conda run
+    if command -v mamba &> /dev/null; then
+        PYTHON_CMD="mamba run -n lean-reinforcement python"
+    elif command -v conda &> /dev/null; then
+        PYTHON_CMD="conda run -n lean-reinforcement python"
+    else
+        PYTHON_CMD="python3"
+    fi
+fi
 
 # ==============================================================================
 # Functions
@@ -71,6 +79,7 @@ print_header() {
     echo " Theorems per trial: ${NUM_THEOREMS}"
     echo " GPU: ${CUDA_VISIBLE_DEVICES:-auto}"
     echo " WandB: ${USE_WANDB}"
+    echo " Python: $(python3 --version 2>&1)"
     echo "============================================================"
     echo ""
 }
@@ -78,12 +87,24 @@ print_header() {
 run_benchmark() {
     print_header
     echo "Running quick benchmark..."
+    echo "(This may take 30-60 seconds to load models...)"
+    echo ""
     
-    python3 -m lean_reinforcement.training.hyperparam_search \
+    ${PYTHON_CMD} -m lean_reinforcement.training.hyperparam_search \
         --mode benchmark \
         --hardware "${HARDWARE}" \
         --num-theorems "${NUM_THEOREMS}" \
-        ${USE_WANDB:+--use-wandb}
+        ${USE_WANDB:+--use-wandb} || {
+        EXIT_CODE=$?
+        echo ""
+        echo "ERROR: Benchmark failed with exit code ${EXIT_CODE}"
+        echo ""
+        echo "Troubleshooting steps:"
+        echo "  1. Verify the module is installed: python3 -m lean_reinforcement.training.hyperparam_search --help"
+        echo "  2. Check dependencies: pip list | grep -E 'lean|loguru'"
+        echo "  3. Check Python: python3 --version"
+        exit ${EXIT_CODE}
+    }
 }
 
 run_grid_search() {
@@ -91,7 +112,7 @@ run_grid_search() {
     echo "Running grid search..."
     echo "This may take several hours. Results will be saved to hyperparam_results/"
     
-    python3 -m lean_reinforcement.training.hyperparam_search \
+    ${PYTHON_CMD} -m lean_reinforcement.training.hyperparam_search \
         --mode grid \
         --hardware "${HARDWARE}" \
         --num-theorems "${NUM_THEOREMS}" \
@@ -102,7 +123,7 @@ run_binary_search() {
     print_header
     echo "Running binary search for parameter: ${BINARY_PARAM}"
     
-    python3 -m lean_reinforcement.training.hyperparam_search \
+    ${PYTHON_CMD} -m lean_reinforcement.training.hyperparam_search \
         --mode binary \
         --hardware "${HARDWARE}" \
         --num-theorems "${NUM_THEOREMS}" \
@@ -114,7 +135,7 @@ run_full_training() {
     print_header
     echo "Running full training with laptop-optimized settings..."
     
-    python3 -m lean_reinforcement.training.train \
+    ${PYTHON_CMD} -m lean_reinforcement.training.train \
         --data-type novel_premises \
         --model-name "kaiyuy/leandojo-lean4-tacgen-byt5-small" \
         --num-epochs 5 \
