@@ -1,0 +1,201 @@
+# Hyperparameter Configuration Profiles
+# =====================================
+#
+# This file contains hardware-specific hyperparameter configurations for
+# theorem proving optimization. Each profile is tuned for specific hardware
+# constraints and can be used as a starting point for hyperparameter search.
+#
+# Usage:
+#   python -m lean_reinforcement.training.train --config configs/laptop.yaml
+#   python -m lean_reinforcement.training.train --config configs/hpc.yaml
+
+# ==============================================================================
+# LAPTOP PROFILE
+# ==============================================================================
+# Hardware: Intel Core i9, RTX 4060 (8GB VRAM), 32GB RAM
+# Constraints: Limited VRAM, thermal throttling, memory pressure
+# Strategy: "Resource-constrained efficiency"
+
+laptop:
+  # Core parameters (most impactful on throughput)
+  num_workers: 10          # Keep below physical core count to avoid thrashing
+  batch_size: 16           # Saturates RTX 4060 without OOM
+  num_tactics_to_expand: 12  # Reduced from 32 to limit Lean process memory
+  num_iterations: 100      # Minimum viable for MCTS to be effective
+
+  # Timeout parameters (all in seconds)
+  # Hierarchy: env_timeout < max_time < proof_timeout
+  max_time: 300.0          # 5 min per MCTS step
+  max_steps: 40            # Allow moderately deep proofs (not a timeout)
+  proof_timeout: 1200.0    # 20 min per theorem
+  env_timeout: 180         # 3 min per tactic execution
+
+  # Search depth
+  max_rollout_depth: 30    # Sufficient for most proofs
+  mcts_type: guided_rollout  # More stable than alpha_zero for benchmarks
+
+  # Training settings (for full runs)
+  num_epochs: 5
+  num_theorems: 50
+  train_epochs: 1
+  train_value_head: false  # Disable for pure benchmark
+  use_final_reward: true
+  
+  # Benchmark settings
+  save_training_data: false
+  save_checkpoints: false
+  use_wandb: true
+
+# ==============================================================================
+# HPC PROFILE (Snellius A100 nodes)
+# ==============================================================================
+# Hardware: AMD EPYC 7H12 (64 cores), NVIDIA A100 (80GB VRAM), 512GB RAM
+# Constraints: Job time limits, scheduler queues
+# Strategy: "Maximize throughput with deep search"
+
+hpc:
+  # Core parameters (scaled up for A100)
+  num_workers: 32          # Utilize full node capacity
+  batch_size: 32           # Larger batches for A100 efficiency
+  num_tactics_to_expand: 32  # Full expansion for quality
+  num_iterations: 400      # Deep search for better solutions
+
+  # Timeout parameters (all in seconds)
+  # Hierarchy: env_timeout < max_time < proof_timeout
+  max_time: 300.0          # 5 min per MCTS step
+  max_steps: 50            # Allow longer proof sequences (not a timeout)
+  proof_timeout: 1200.0    # 20 min per theorem
+  env_timeout: 180         # 3 min per tactic (same as laptop)
+
+  # Search depth
+  max_rollout_depth: 50    # Deeper rollouts with more compute
+  mcts_type: alpha_zero    # Better with trained value head
+
+  # Training settings
+  num_epochs: 10
+  num_theorems: 200
+  train_epochs: 2
+  train_value_head: true
+  use_final_reward: true
+  
+  # Production settings
+  save_training_data: true
+  save_checkpoints: true
+  use_wandb: true
+
+# ==============================================================================
+# QUICK BENCHMARK PROFILE (for rapid testing)
+# ==============================================================================
+# Use this for quick sanity checks and hyperparameter search
+
+benchmark:
+  num_workers: 8
+  batch_size: 16
+  num_tactics_to_expand: 8
+  num_iterations: 50
+  
+  # Timeout parameters (all in seconds)
+  max_time: 120.0          # 2 min per MCTS step
+  max_steps: 20
+  proof_timeout: 300.0     # 5 min per theorem
+  env_timeout: 60          # 1 min per tactic
+  
+  max_rollout_depth: 20
+  mcts_type: guided_rollout
+  
+  num_epochs: 1
+  num_theorems: 10
+  train_epochs: 1
+  train_value_head: false
+  use_final_reward: true
+  
+  save_training_data: false
+  save_checkpoints: false
+  use_wandb: false
+
+# ==============================================================================
+# SEARCH SPACES FOR GRID SEARCH
+# ==============================================================================
+# These define the ranges to explore during hyperparameter optimization
+
+search_spaces:
+  laptop:
+    num_workers: [6, 8, 10, 12]
+    batch_size: [8, 16, 24]
+    num_tactics_to_expand: [8, 12, 16]
+    num_iterations: [50, 100, 150]
+  
+  hpc:
+    num_workers: [16, 24, 32, 48]
+    batch_size: [16, 32, 48]
+    num_tactics_to_expand: [16, 24, 32]
+    num_iterations: [200, 300, 400]
+  
+  # Focused search for specific bottlenecks
+  memory_constrained:
+    num_workers: [4, 6, 8, 10]
+    batch_size: [4, 8, 12, 16]
+    num_tactics_to_expand: [4, 8, 12]
+  
+  throughput_focused:
+    num_iterations: [25, 50, 75, 100, 125, 150]
+    max_steps: [20, 30, 40, 50]
+    max_time: [120.0, 240.0, 360.0, 480.0, 600.0]
+
+# ==============================================================================
+# BINARY SEARCH PARAMETER RANGES
+# ==============================================================================
+# Optimal ranges for binary search of individual parameters
+
+binary_search_ranges:
+  num_workers:
+    laptop: [4, 16]
+    hpc: [8, 64]
+  
+  batch_size:
+    laptop: [4, 32]
+    hpc: [8, 64]
+  
+  num_iterations:
+    laptop: [25, 200]
+    hpc: [100, 600]
+  
+  num_tactics_to_expand:
+    laptop: [4, 24]
+    hpc: [8, 48]
+  
+  max_time:
+    laptop: [60.0, 900.0]
+    hpc: [60.0, 600.0]
+
+# ==============================================================================
+# PARAMETER IMPACT ANALYSIS
+# ==============================================================================
+# Notes on which parameters have the most impact on different metrics
+
+parameter_impact:
+  # Parameters with high impact on throughput (proofs/second)
+  throughput_sensitive:
+    - num_workers       # Linear scaling up to CPU saturation
+    - num_iterations    # More search = better proofs but slower
+    - max_time          # Directly limits per-theorem time
+    - max_steps         # Caps proof depth
+  
+  # Parameters with high impact on success rate
+  quality_sensitive:
+    - num_iterations    # More iterations = better move selection
+    - num_tactics_to_expand  # More options to explore
+    - max_rollout_depth # Deeper simulation = better value estimates
+    - mcts_type         # alpha_zero generally better with value head
+  
+  # Parameters with high impact on memory
+  memory_sensitive:
+    - num_workers       # Each worker consumes ~1-2GB
+    - batch_size        # GPU memory usage
+    - num_tactics_to_expand  # Lean process count
+  
+  # Parameters with high impact on stability
+  stability_sensitive:
+    - env_timeout       # Too short = premature failures
+    - proof_timeout     # Too short = incomplete attempts
+    - inference_timeout # Too short = GPU queue timeouts
