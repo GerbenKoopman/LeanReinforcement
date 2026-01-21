@@ -140,6 +140,57 @@ class TestTimeConfigurationPropagation(unittest.TestCase):
 
         self.assertEqual(config.env_timeout, 120)
 
+    def test_config_inference_timeout_default(self):
+        """Test that TrainingConfig has correct inference_timeout default."""
+        config = TrainingConfig(
+            data_type="random",
+            num_epochs=1,
+            num_theorems=1,
+            num_iterations=10,
+            max_steps=5,
+            batch_size=4,
+            num_workers=1,
+            mcts_type="guided_rollout",
+            indexed_corpus_path=None,
+            train_epochs=1,
+            train_value_head=False,
+            use_final_reward=False,
+            save_training_data=False,
+            save_checkpoints=False,
+            resume=False,
+            use_test_value_head=False,
+            checkpoint_dir=None,
+            use_wandb=False,
+        )
+
+        self.assertEqual(config.inference_timeout, 600.0)
+
+    def test_config_inference_timeout_custom_value(self):
+        """Test that TrainingConfig can be set with custom inference_timeout."""
+        config = TrainingConfig(
+            data_type="random",
+            num_epochs=1,
+            num_theorems=1,
+            num_iterations=10,
+            max_steps=5,
+            batch_size=4,
+            num_workers=1,
+            mcts_type="guided_rollout",
+            indexed_corpus_path=None,
+            train_epochs=1,
+            train_value_head=False,
+            use_final_reward=False,
+            save_training_data=False,
+            save_checkpoints=False,
+            resume=False,
+            use_test_value_head=False,
+            checkpoint_dir=None,
+            use_wandb=False,
+            inference_timeout=1200.0,
+        )
+
+        self.assertEqual(config.inference_timeout, 1200.0)
+
 
 class TestMCTSTimeInitialization(unittest.TestCase):
     """Test that MCTS receives correct time parameters."""

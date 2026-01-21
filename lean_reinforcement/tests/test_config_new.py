@@ -30,6 +30,7 @@ class TestTrainingConfig(unittest.TestCase):
             use_test_value_head=False,
             checkpoint_dir="/tmp/ckpt",
             use_wandb=False,
+            inference_timeout=600.0,
         )
 
         config = TrainingConfig.from_args(args)

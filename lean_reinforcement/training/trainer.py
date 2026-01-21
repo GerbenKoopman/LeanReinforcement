@@ -147,6 +147,9 @@ class Trainer:
             self._cleanup_workers()
 
     def _run_epoch(self, epoch: int, inference_server: InferenceServer):
+        # Drain any leftover theorems from previous epochs before starting
+        self._drain_theorem_queue()
+
         self._start_workers()
         logger.info(f"Starting Epoch {epoch + 1}/{self.config.num_epochs}")
 
@@ -235,8 +238,28 @@ class Trainer:
                 p.terminate()
                 p.join()
 
+    def _drain_theorem_queue(self) -> None:
+        """Drain theorem queue to ensure clean state before new epoch."""
+        drained = 0
+        try:
+            while not self.theorem_queue.empty():
+                self.theorem_queue.get_nowait()
+                drained += 1
+        except Exception:
+            pass
+        if drained > 0:
+            logger.warning(f"Drained {drained} leftover theorems from queue")
+
     def _drain_queues(self) -> None:
         logger.info("Draining queues...")
+
+        # Drain theorem queue (important: prevents leftover theorems from previous epochs)
+        try:
+            while not self.theorem_queue.empty():
+                self.theorem_queue.get_nowait()
+        except Exception:
+            pass
+
         try:
             while not self.request_queue.empty():
                 self.request_queue.get_nowait()
@@ -265,30 +288,43 @@ class Trainer:
         """
         Collect proof attempts from workers.
 
-        Primary approach: Count-based - wait until we receive results for all
-        theorems (success, failure, or worker crash).
+        Primary approach: Count actual results from the queue until we have
+        results for all theorems.
 
-        Safety net: Time limit (2 hours max) in case something unexpected happens.
+        Exit conditions:
+        1. Received results for all theorems
+        2. All workers dead + no new results for 60 seconds (queue drained)
+        3. Safety timeout (4 hours)
+        4. Stall timeout (no progress for too long)
         """
         total_theorems = len(theorems_to_process)
         results_received = 0
         training_data_buffer: List[Dict[str, Any]] = []
+        logged_dead_workers: set = set()  # Track workers we've already logged as dead
 
         temp_data_file = self.checkpoint_dir / f"temp_data_epoch_{epoch + 1}.jsonl"
         if os.path.exists(temp_data_file):
             os.remove(temp_data_file)
 
         epoch_start_time = time.time()
+        last_result_time = time.time()
 
-        # Safety net: 2 hour max per epoch (should never hit this)
-        max_epoch_time = 2 * 3600
+        # Safety net: 4 hour max per epoch
+        max_epoch_time = 4 * 3600
 
-        # Track which workers have died and account for their in-flight theorems
-        dead_worker_pids: set = set()
+        # How long to wait for more results after all workers die
+        drain_timeout = 60  # seconds
+
+        # Stall timeout: if no progress for this long, assume workers are stuck
+        # This should be longer than the longest expected single theorem time
+        # proof_timeout (default 1200s) + some buffer for slow inference
+        stall_timeout = (
+            self.config.proof_timeout * 1.5
+        )  # 30 minutes with default settings
 
         logger.info(
             f"Collecting results for {total_theorems} theorems "
-            f"(safety timeout: {max_epoch_time/3600:.1f}h)"
+            f"(safety timeout: {max_epoch_time/3600:.1f}h, stall timeout: {stall_timeout/60:.0f}m)"
         )
 
         while results_received < total_theorems:
@@ -307,10 +343,13 @@ class Trainer:
             processed_batch = inference_server.process_requests()
 
             # Collect results from workers
+            got_result = False
             try:
                 while True:
                     res = self.result_queue.get_nowait()
                     results_received += 1
+                    got_result = True
+                    last_result_time = time.time()
 
                     if res:
                         if "metrics" in res and self.config.use_wandb:
@@ -358,29 +397,42 @@ class Trainer:
             except queue.Empty:
                 pass
 
-            if not processed_batch:
+            if not processed_batch and not got_result:
                 time.sleep(0.01)
 
-            # Check for dead workers - count their in-flight theorems as lost
-            for p in self.workers:
-                if not p.is_alive() and p.pid not in dead_worker_pids:
-                    dead_worker_pids.add(p.pid)
+            # Check worker status
+            alive_workers = [p for p in self.workers if p.is_alive()]
+            dead_workers = [p for p in self.workers if not p.is_alive()]
+
+            # Log dead workers (once per worker)
+            for p in dead_workers:
+                if p.pid not in logged_dead_workers:
+                    logged_dead_workers.add(p.pid)
                     logger.warning(
                         f"Worker {p.pid} died (exit code: {p.exitcode}). "
-                        f"Counting its in-flight theorem as lost."
+                        f"{len(alive_workers)} workers still alive."
                     )
-                    # Count this worker's in-flight theorem as "received" (lost)
-                    results_received += 1
 
-            # If all workers are dead, we're done (can't get more results)
-            alive_workers = [p for p in self.workers if p.is_alive()]
-            if not alive_workers and results_received < total_theorems:
-                remaining = total_theorems - results_received
+            # Check for stall - no progress for too long even with alive workers
+            time_since_last_result = time.time() - last_result_time
+            if time_since_last_result > stall_timeout:
                 logger.warning(
-                    f"All workers died. {remaining} theorems unprocessed. "
-                    f"Proceeding with {results_received} results."
+                    f"No progress for {time_since_last_result/60:.1f} minutes "
+                    f"(stall timeout: {stall_timeout/60:.0f}m). "
+                    f"Collected {results_received}/{total_theorems} results. "
+                    f"Proceeding with training."
                 )
                 break
+
+            # If all workers are dead, wait a bit for queue to drain, then exit
+            if not alive_workers:
+                if time_since_last_result > drain_timeout:
+                    logger.warning(
+                        f"All workers dead and no results for {drain_timeout}s. "
+                        f"Collected {results_received}/{total_theorems} results. "
+                        f"Proceeding with training."
+                    )
+                    break
 
         # Final stats
         elapsed = time.time() - epoch_start_time

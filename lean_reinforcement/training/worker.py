@@ -144,10 +144,20 @@ def worker_loop(
 
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
-    transformer_proxy = QueueProxyTransformer(request_queue, response_queue, worker_id)
+    transformer_proxy = QueueProxyTransformer(
+        request_queue,
+        response_queue,
+        worker_id,
+        timeout=args.inference_timeout,
+    )
     value_head_proxy = None
     if args.mcts_type == "alpha_zero":
-        value_head_proxy = QueueProxyValueHead(request_queue, response_queue, worker_id)
+        value_head_proxy = QueueProxyValueHead(
+            request_queue,
+            response_queue,
+            worker_id,
+            timeout=args.inference_timeout,
+        )
 
     dataloader = LeanDataLoader(
         corpus=None,

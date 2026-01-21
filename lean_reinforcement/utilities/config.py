@@ -30,6 +30,9 @@ class TrainingConfig:
     checkpoint_dir: Optional[str]
     use_wandb: bool
 
+    # Inference / IPC Args
+    inference_timeout: float = 600.0
+
     # Model Args
     model_name: str = "kaiyuy/leandojo-lean4-tacgen-byt5-small"
     num_tactics_to_expand: int = 8
@@ -65,6 +68,7 @@ class TrainingConfig:
             use_test_value_head=args.use_test_value_head,
             checkpoint_dir=args.checkpoint_dir,
             use_wandb=args.use_wandb,
+            inference_timeout=args.inference_timeout,
         )
 
 
@@ -164,6 +168,14 @@ def get_config() -> TrainingConfig:
         type=float,
         default=600.0,
         help="Max time (seconds) for entire proof search per theorem.",
+    )
+
+    # --- Inference / IPC Args ---
+    parser.add_argument(
+        "--inference-timeout",
+        type=float,
+        default=600.0,
+        help="Max time (seconds) to wait for remote inference responses (transformer/value head).",
     )
 
     # --- Training Args ---
