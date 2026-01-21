@@ -26,8 +26,8 @@ def mock_config() -> MagicMock:
     config.max_steps = 20
     config.num_tactics_to_expand = 8
     config.max_rollout_depth = 30
-    config.max_time = 600.0
-    config.env_timeout = 60
+    config.max_time = 300.0
+    config.env_timeout = 180
     config.use_final_reward = True
     config.checkpoint_dir = None
     return config

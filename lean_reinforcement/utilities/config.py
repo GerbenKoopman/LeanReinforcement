@@ -37,9 +37,13 @@ class TrainingConfig:
     model_name: str = "kaiyuy/leandojo-lean4-tacgen-byt5-small"
     num_tactics_to_expand: int = 8
     max_rollout_depth: int = 30
-    max_time: float = 60.0
-    env_timeout: int = 60
-    proof_timeout: float = 600.0
+
+    # Timeout parameters (all in seconds)
+    # Note: These form a hierarchy - each level should be larger than the one below
+    # env_timeout < max_time < proof_timeout
+    max_time: float = 300.0  # Max time per MCTS search step
+    env_timeout: int = 180  # Max time per tactic execution
+    proof_timeout: float = 1200.0  # Max time for entire proof search
 
     @classmethod
     def from_args(cls, args: argparse.Namespace) -> "TrainingConfig":
@@ -155,19 +159,19 @@ def get_config() -> TrainingConfig:
         "--max-time",
         type=float,
         default=300.0,
-        help="Max time (seconds) per MCTS search step.",
+        help="Max time (seconds) per MCTS search step. Should be > env-timeout.",
     )
     parser.add_argument(
         "--env-timeout",
         type=int,
-        default=300,
-        help="Max time (seconds) per tactic.",
+        default=180,
+        help="Max time (seconds) per single tactic execution. Should be < max-time.",
     )
     parser.add_argument(
         "--proof-timeout",
         type=float,
-        default=600.0,
-        help="Max time (seconds) for entire proof search per theorem.",
+        default=1200.0,
+        help="Max time (seconds) for entire proof search per theorem. Should be > max-time.",
     )
 
     # --- Inference / IPC Args ---
@@ -175,7 +179,7 @@ def get_config() -> TrainingConfig:
         "--inference-timeout",
         type=float,
         default=600.0,
-        help="Max time (seconds) to wait for remote inference responses (transformer/value head).",
+        help="Max time (seconds) to wait for inference server responses. Independent of proof timeouts.",
     )
 
     # --- Training Args ---

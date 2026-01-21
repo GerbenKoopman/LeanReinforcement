@@ -14,6 +14,7 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
         int batch_size=8,
         int num_tactics_to_expand=8,
         int max_rollout_depth=30,
+        max_time: float = 300.0,
         **kwargs,
     ):
         super().__init__(

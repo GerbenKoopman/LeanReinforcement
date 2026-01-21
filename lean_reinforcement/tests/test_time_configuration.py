@@ -61,7 +61,7 @@ class TestTimeConfigurationPropagation(unittest.TestCase):
             use_wandb=False,
         )
 
-        self.assertEqual(config.max_time, 60.0)
+        self.assertEqual(config.max_time, 300.0)
 
     def test_config_max_time_custom_value(self):
         """Test that TrainingConfig can be set with custom max_time."""
@@ -112,7 +112,7 @@ class TestTimeConfigurationPropagation(unittest.TestCase):
             use_wandb=False,
         )
 
-        self.assertEqual(config.env_timeout, 60)
+        self.assertEqual(config.env_timeout, 180)
 
     def test_config_env_timeout_custom_value(self):
         """Test that TrainingConfig can be set with custom env_timeout."""
@@ -212,7 +212,7 @@ class TestMCTSTimeInitialization(unittest.TestCase):
         """Test that MCTS has correct default max_time."""
         mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
 
-        self.assertEqual(mcts.max_time, 600.0)
+        self.assertEqual(mcts.max_time, 300.0)
 
     def test_mcts_kwargs_with_extra_parameters(self):
         """Test that MCTS handles extra kwargs correctly."""
@@ -288,7 +288,7 @@ class TestAgentRunnerTimeHandling(unittest.TestCase):
             env=runner.env, transformer=runner.transformer, **runner.mcts_kwargs
         )
 
-        self.assertEqual(mcts.max_time, 600.0)  # default
+        self.assertEqual(mcts.max_time, 300.0)  # default
 
 
 class TestTimeParameterValidation(unittest.TestCase):

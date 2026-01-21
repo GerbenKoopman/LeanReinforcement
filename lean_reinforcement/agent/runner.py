@@ -28,7 +28,7 @@ class AgentRunner:
         mcts_kwargs: Optional[dict] = None,
         num_iterations: int = 100,
         max_steps: int = 100,
-        proof_timeout: float = 600.0,
+        proof_timeout: float = 1200.0,
     ):
         """
         Initialize the agent runner.

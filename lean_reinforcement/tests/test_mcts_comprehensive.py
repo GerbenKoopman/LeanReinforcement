@@ -170,7 +170,7 @@ class TestTimeHandling(unittest.TestCase):
         """Test that max_time has correct default value."""
         mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
 
-        self.assertEqual(mcts.max_time, 600.0)
+        self.assertEqual(mcts.max_time, 300.0)
 
     def test_search_respects_max_time_parameter(self):
         """Test that search method respects max_time parameter through verification."""

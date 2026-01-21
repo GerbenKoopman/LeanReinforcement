@@ -86,7 +86,7 @@ class BaseMCTS:
         batch_size: int = 8,
         num_tactics_to_expand: int = 8,
         max_rollout_depth: int = 30,
-        max_time: float = 600.0,
+        max_time: float = 300.0,  # Max time per MCTS search step (seconds)
     ):
         self.env = env
         self.transformer = transformer
