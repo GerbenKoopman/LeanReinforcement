@@ -1,0 +1,72 @@
+{
+  "os":  "Linux-6.14.0-37-generic-x86_64-with-glibc2.39",
+  "python":  "CPython 3.10.19",
+  "startedAt":  "2026-01-20T19:09:26.511315Z",
+  "args":  [
+    "--data-type",
+    "novel_premises",
+    "--indexed-corpus-path",
+    "/indexed_corpus.pkl",
+    "--num-epochs",
+    "128",
+    "--num-theorems",
+    "128",
+    "--num-iterations",
+    "200",
+    "--batch-size",
+    "32",
+    "--num-tactics-to-expand",
+    "16",
+    "--num-workers",
+    "16",
+    "--env-timeout",
+    "600",
+    "--max-time",
+    "120",
+    "--proof-timeout",
+    "1200",
+    "--mcts-type",
+    "guided_rollout",
+    "--train-epochs",
+    "4",
+    "--train-value-head",
+    "--use-final-reward",
+    "--save-training-data",
+    "--save-checkpoints",
+    "--resume",
+    "--use-wandb"
+  ],
+  "program":  "-m lean_reinforcement.training.train",
+  "git":  {
+    "remote":  "git@github.com:GerbenKoopman/LeanReinforcement.git",
+    "commit":  "d5ec9c78601cd7076171061a30b3c2f382b94e59"
+  },
+  "email":  "gerbennkoopman@gmail.com",
+  "root":  "/home/gerben-koopman/projects/study/lean_related/lean_reinforcement",
+  "host":  "Laptop-studie-linux",
+  "executable":  "/home/gerben-koopman/conda/envs/lean-reinforcement/bin/python3",
+  "cpu_count":  16,
+  "cpu_count_logical":  22,
+  "gpu":  "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "gpu_count":  1,
+  "disk":  {
+    "/":  {
+      "total":  "262486331392",
+      "used":  "244524343296"
+    }
+  },
+  "memory":  {
+    "total":  "33237979136"
+  },
+  "gpu_nvidia":  [
+    {
+      "name":  "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "memoryTotal":  "8585740288",
+      "cudaCores":  3072,
+      "architecture":  "Ada",
+      "uuid":  "GPU-f3fa68b1-e965-9828-36c0-091f9369015a"
+    }
+  ],
+  "cudaVersion":  "13.0",
+  "writerId":  "aatc1ubqhfevc8bgh6e7n8isfimmw2aj"
+}
