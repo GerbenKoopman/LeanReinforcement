@@ -25,9 +25,13 @@ from typing import Dict, List, Any, Optional, Tuple
 from loguru import logger
 
 # Try to import wandb but make it optional
-import wandb
+try:
+    import wandb
 
-WANDB_AVAILABLE = True
+    WANDB_AVAILABLE = True
+except ImportError:
+    WANDB_AVAILABLE = False
+    wandb = None  # type: ignore[assignment]
 
 
 @dataclass
@@ -57,7 +61,7 @@ class HyperparameterConfig:
 
     # Training parameters (for full training runs)
     num_epochs: int = 1
-    num_theorems: int = 10
+    num_theorems: int = 50
     train_epochs: int = 1
     train_value_head: bool = False
     use_final_reward: bool = True
@@ -169,7 +173,7 @@ LAPTOP_SEARCH_SPACE = {
     "num_workers": [6, 8, 10, 12],
     "batch_size": [8, 16, 24],
     "num_tactics_to_expand": [8, 12, 16],
-    "num_iterations": [50, 100, 150],
+    "num_iterations": [200, 300, 400],
 }
 
 HPC_SEARCH_SPACE = {
@@ -226,7 +230,7 @@ class HyperparameterSearcher:
     def _run_single_trial(
         self,
         config: HyperparameterConfig,
-        num_theorems: int = 10,
+        num_theorems: int = 50,
         timeout_per_theorem: float = 600.0,
     ) -> TrialResult:
         """
@@ -304,7 +308,7 @@ class HyperparameterSearcher:
     def grid_search(
         self,
         search_space: Optional[Dict[str, List[Any]]] = None,
-        num_theorems: int = 10,
+        num_theorems: int = 50,
         max_trials: Optional[int] = None,
     ) -> List[TrialResult]:
         """
@@ -336,15 +340,21 @@ class HyperparameterSearcher:
 
         logger.info(f"Running grid search with {len(all_combinations)} trials")
 
-        if self.use_wandb:
-            wandb.init(
-                project=self.wandb_project,
-                config={
-                    "search_type": "grid",
-                    "hardware_profile": self.hardware_profile,
-                    "search_space": search_space,
-                },
-            )
+        if self.use_wandb and WANDB_AVAILABLE and wandb is not None:
+            try:
+                wandb.init(
+                    project=self.wandb_project,
+                    config={
+                        "search_type": "grid",
+                        "hardware_profile": self.hardware_profile,
+                        "search_space": search_space,
+                    },
+                )
+            except Exception as e:
+                logger.warning(
+                    f"Failed to initialize WandB: {e}. Continuing without WandB logging."
+                )
+                self.use_wandb = False
 
         results = []
         for i, values in enumerate(all_combinations):
@@ -359,7 +369,7 @@ class HyperparameterSearcher:
             results.append(result)
 
             # Log to wandb
-            if self.use_wandb:
+            if self.use_wandb and wandb is not None:
                 wandb.log(
                     {
                         "trial": i + 1,
@@ -380,7 +390,7 @@ class HyperparameterSearcher:
         results.sort(key=lambda r: r.score, reverse=True)
         self._save_results(results, "grid_search_final.json")
 
-        if self.use_wandb:
+        if self.use_wandb and wandb is not None:
             wandb.finish()
 
         return results
@@ -390,7 +400,7 @@ class HyperparameterSearcher:
         param_name: str,
         min_val: float,
         max_val: float,
-        num_theorems: int = 10,
+        num_theorems: int = 50,
         tolerance: float = 0.1,
         max_iterations: int = 10,
     ) -> Tuple[float, TrialResult]:
@@ -419,16 +429,22 @@ class HyperparameterSearcher:
         """
         logger.info(f"Binary search for {param_name} in range [{min_val}, {max_val}]")
 
-        if self.use_wandb:
-            wandb.init(
-                project=self.wandb_project,
-                config={
-                    "search_type": "binary",
-                    "param_name": param_name,
-                    "min_val": min_val,
-                    "max_val": max_val,
-                },
-            )
+        if self.use_wandb and WANDB_AVAILABLE and wandb is not None:
+            try:
+                wandb.init(
+                    project=self.wandb_project,
+                    config={
+                        "search_type": "binary",
+                        "param_name": param_name,
+                        "min_val": min_val,
+                        "max_val": max_val,
+                    },
+                )
+            except Exception as e:
+                logger.warning(
+                    f"Failed to initialize WandB: {e}. Continuing without WandB logging."
+                )
+                self.use_wandb = False
 
         low, high = min_val, max_val
         best_val = (low + high) / 2
@@ -453,7 +469,7 @@ class HyperparameterSearcher:
                 f"score={result.score:.4f}, best={best_val:.2f}"
             )
 
-            if self.use_wandb:
+            if self.use_wandb and wandb is not None:
                 wandb.log(
                     {
                         "iteration": iteration + 1,
@@ -496,7 +512,7 @@ class HyperparameterSearcher:
             else:
                 low = mid
 
-        if self.use_wandb:
+        if self.use_wandb and wandb is not None:
             wandb.finish()
 
         if best_result is None:
@@ -645,21 +661,22 @@ def run_laptop_benchmark():
     return result
 
 
-def run_grid_search(hardware_profile: str = "laptop", num_theorems: int = 5):
+def run_grid_search(hardware_profile: str = "laptop", num_theorems: int = 50):
     """Run full grid search."""
     searcher = HyperparameterSearcher(hardware_profile=hardware_profile)
 
-    # Reduced search space for faster iteration
-    reduced_space = {
-        "num_workers": [8, 10, 12],
-        "batch_size": [8, 16],
-        "num_tactics_to_expand": [8, 12],
-    }
+    # # Reduced search space for faster iteration
+    # reduced_space = {
+    #     "num_workers": [8, 10, 12],
+    #     "batch_size": [8, 16],
+    #     "num_tactics_to_expand": [8, 12],
+    #     "num_iterations": [200, 300],
+    # }
 
     results = searcher.grid_search(
-        search_space=reduced_space,
+        search_space=LAPTOP_SEARCH_SPACE,
         num_theorems=num_theorems,
-        max_trials=12,
+        max_trials=100,
     )
 
     searcher.print_summary(results)
@@ -689,7 +706,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--num-theorems",
         type=int,
-        default=5,
+        default=50,
         help="Number of theorems per trial",
     )
     parser.add_argument(

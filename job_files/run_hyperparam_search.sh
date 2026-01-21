@@ -167,7 +167,7 @@ show_help() {
     echo "  help         Show this help message"
     echo ""
     echo "Environment variables:"
-    echo "  NUM_THEOREMS     Number of theorems per trial (default: 5)"
+    echo "  NUM_THEOREMS     Number of theorems per trial (default: 25)"
     echo "  BINARY_PARAM     Parameter for binary search (default: num_workers)"
     echo "  USE_WANDB        Set to 'true' to enable WandB logging"
     echo "  CUDA_VISIBLE_DEVICES  GPU to use (default: 0)"
@@ -187,7 +187,7 @@ show_help() {
 COMMAND="${1:-help}"
 
 # Override defaults from environment
-NUM_THEOREMS="${NUM_THEOREMS:-5}"
+NUM_THEOREMS="${NUM_THEOREMS:-25}"
 BINARY_PARAM="${BINARY_PARAM:-num_workers}"
 USE_WANDB="${USE_WANDB:-false}"
 
