@@ -402,16 +402,49 @@ class Trainer:
 
             # Check worker status
             alive_workers = [p for p in self.workers if p.is_alive()]
-            dead_workers = [p for p in self.workers if not p.is_alive()]
+            dead_workers = [
+                (i, p) for i, p in enumerate(self.workers) if not p.is_alive()
+            ]
 
-            # Log dead workers (once per worker)
-            for p in dead_workers:
+            # Log dead workers and restart crashed ones (once per worker)
+            for i, p in dead_workers:
                 if p.pid not in logged_dead_workers:
                     logged_dead_workers.add(p.pid)
-                    logger.warning(
-                        f"Worker {p.pid} died (exit code: {p.exitcode}). "
-                        f"{len(alive_workers)} workers still alive."
-                    )
+
+                    # Check if worker crashed (non-zero exit code)
+                    if p.exitcode not in (0, None):
+                        logger.warning(
+                            f"Worker {i} (PID: {p.pid}) crashed (exit code: {p.exitcode}). "
+                            f"Restarting worker and skipping current theorem."
+                        )
+
+                        # Mark the lost theorem as "completed" (failed)
+                        results_received += 1
+
+                        # Terminate the old process object to be safe
+                        p.join(timeout=1)
+
+                        # Start a new worker with the same ID
+                        new_worker = mp.Process(
+                            target=worker_loop,
+                            args=(
+                                i,
+                                self.request_queue,
+                                self.response_queues[i],
+                                self.theorem_queue,
+                                self.result_queue,
+                                self.config,
+                            ),
+                        )
+                        new_worker.start()
+                        self.workers[i] = new_worker
+                        logger.info(f"Worker {i} restarted successfully.")
+                    else:
+                        # Graceful exit (exit code 0)
+                        logger.info(
+                            f"Worker {i} (PID: {p.pid}) exited gracefully. "
+                            f"{len([w for w in self.workers if w.is_alive()])} workers still alive."
+                        )
 
             # Check for stall - no progress for too long even with alive workers
             time_since_last_result = time.time() - last_result_time
