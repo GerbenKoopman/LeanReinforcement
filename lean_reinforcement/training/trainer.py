@@ -123,7 +123,12 @@ class Trainer:
                 f"{prefix}GPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved"
             )
 
-    def train(self) -> None:
+    def train(self) -> List[Dict[str, Any]]:
+        """
+        Runs the training loop.
+        Returns a list of metrics for each epoch.
+        """
+        all_metrics = []
         try:
             inference_server = InferenceServer(
                 self.transformer,
@@ -136,17 +141,23 @@ class Trainer:
             for epoch in range(
                 self.start_epoch, self.start_epoch + self.config.num_epochs
             ):
-                self._run_epoch(epoch, inference_server)
+                metrics = self._run_epoch(epoch, inference_server)
+                all_metrics.extend(metrics)
+
+            return all_metrics
 
         except KeyboardInterrupt:
             logger.info("Training interrupted by user.")
+            return all_metrics
         except Exception as e:
             logger.error(f"Training crashed: {e}")
             raise e
         finally:
             self._cleanup_workers()
 
-    def _run_epoch(self, epoch: int, inference_server: InferenceServer):
+    def _run_epoch(
+        self, epoch: int, inference_server: InferenceServer
+    ) -> List[Dict[str, Any]]:
         # Drain any leftover theorems from previous epochs before starting
         self._drain_theorem_queue()
 
@@ -166,7 +177,7 @@ class Trainer:
             f"Processing {len(theorems_to_process)} theorems with {self.config.num_workers} workers."
         )
 
-        training_data_buffer = self._collect_data(
+        training_data_buffer, epoch_metrics = self._collect_data(
             theorems_to_process, inference_server, epoch
         )
 
@@ -178,7 +189,7 @@ class Trainer:
 
         if not training_data_buffer:
             logger.warning("No data collected in this epoch. Skipping training.")
-            return
+            return epoch_metrics
 
         self._analyze_and_save_data(training_data_buffer, epoch)
 
@@ -199,6 +210,8 @@ class Trainer:
                 prefix=prefix,
             )
             logger.info(f"Checkpoint saved for epoch {epoch + 1}")
+
+        return epoch_metrics
 
     def _start_workers(self) -> None:
         logger.info(f"Starting {self.config.num_workers} workers")
@@ -284,12 +297,14 @@ class Trainer:
         theorems_to_process: List[Any],
         inference_server: InferenceServer,
         epoch: int,
-    ) -> List[Dict[str, Any]]:
+    ) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
         """
         Collect proof attempts from workers.
 
         Primary approach: Count actual results from the queue until we have
         results for all theorems.
+
+        Returns: (training_data_buffer, epoch_metrics)
 
         Exit conditions:
         1. Received results for all theorems
@@ -300,6 +315,7 @@ class Trainer:
         total_theorems = len(theorems_to_process)
         results_received = 0
         training_data_buffer: List[Dict[str, Any]] = []
+        collected_metrics: List[Dict[str, Any]] = []
         logged_dead_workers: set = set()  # Track workers we've already logged as dead
 
         temp_data_file = self.checkpoint_dir / f"temp_data_epoch_{epoch + 1}.jsonl"
@@ -352,8 +368,11 @@ class Trainer:
                     last_result_time = time.time()
 
                     if res:
-                        if "metrics" in res and self.config.use_wandb:
-                            wandb.log(res["metrics"])
+                        if "metrics" in res:
+                            # Always collect metrics
+                            collected_metrics.append(res["metrics"])
+                            if self.config.use_wandb:
+                                wandb.log(res["metrics"])
 
                         if "data" in res:
                             data = res["data"]
@@ -488,7 +507,7 @@ class Trainer:
                     training_data_buffer.append(json.loads(line))
             os.remove(temp_data_file)
 
-        return training_data_buffer
+        return training_data_buffer, collected_metrics
 
     def _analyze_and_save_data(
         self, training_data_buffer: List[Dict[str, Any]], epoch: int

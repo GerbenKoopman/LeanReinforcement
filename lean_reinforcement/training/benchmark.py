@@ -333,7 +333,7 @@ class ProofBenchmark:
     def compare_profiles(
         self,
         profiles: Optional[List[str]] = None,
-        num_theorems: int = 5,
+        num_theorems: int = 50,
     ) -> Dict[str, BenchmarkResult]:
         """
         Compare multiple hardware profiles.
