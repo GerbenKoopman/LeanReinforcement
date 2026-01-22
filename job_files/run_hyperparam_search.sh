@@ -24,7 +24,7 @@ cd "${REPO_ROOT}"
 HARDWARE="laptop"
 
 # Default number of theorems per trial
-NUM_THEOREMS=5
+NUM_THEOREMS=50
 
 # Default parameter for binary search
 BINARY_PARAM="num_workers"
@@ -131,6 +131,28 @@ run_binary_search() {
         ${USE_WANDB:+--use-wandb}
 }
 
+run_coordinate_descent() {
+    print_header
+    echo "Running coordinate descent search (binary search per dimension)..."
+    echo "This is the most efficient search method for finding optimal hyperparameters."
+    echo "Metric: proofs per hour"
+    echo "Results will be saved to hyperparam_results/"
+    echo ""
+    echo "Parameters to optimize (in dependency order):"
+    echo "  1. num_workers, batch_size (resource parameters)"
+    echo "  2. num_tactics_to_expand, num_iterations (search behavior)"
+    echo "  3. env_timeout, max_time, proof_timeout (timeouts)"
+    echo "  4. max_steps, max_rollout_depth (search depth)"
+    echo ""
+    
+    ${PYTHON_CMD} -m lean_reinforcement.training.hyperparam_search \
+        --mode coordinate \
+        --hardware "${HARDWARE}" \
+        --num-theorems "${NUM_THEOREMS}" \
+        --num-rounds "${NUM_ROUNDS}" \
+        ${USE_WANDB:+--use-wandb}
+}
+
 run_full_training() {
     print_header
     echo "Running full training with laptop-optimized settings..."
@@ -161,20 +183,24 @@ show_help() {
     echo ""
     echo "Commands:"
     echo "  benchmark    Run quick benchmark with default settings (3-5 theorems)"
-    echo "  grid         Run grid search over key parameters"
+    echo "  grid         Run grid search over key parameters (slow, exhaustive)"
     echo "  binary       Run binary search for single parameter"
+    echo "  coordinate   Run coordinate descent (RECOMMENDED - efficient, tests all params)"
     echo "  train        Run full training with optimized settings"
     echo "  help         Show this help message"
     echo ""
     echo "Environment variables:"
     echo "  NUM_THEOREMS     Number of theorems per trial (default: 25)"
+    echo "  NUM_ROUNDS       Number of rounds for coordinate descent (default: 2)"
     echo "  BINARY_PARAM     Parameter for binary search (default: num_workers)"
     echo "  USE_WANDB        Set to 'true' to enable WandB logging"
     echo "  CUDA_VISIBLE_DEVICES  GPU to use (default: 0)"
     echo ""
     echo "Examples:"
     echo "  $0 benchmark"
-    echo "  NUM_THEOREMS=10 $0 grid"
+    echo "  $0 coordinate                    # Recommended: efficient search"
+    echo "  NUM_THEOREMS=10 $0 coordinate    # Quick coordinate descent"
+    echo "  NUM_THEOREMS=10 $0 grid          # Grid search (slower)"
     echo "  BINARY_PARAM=batch_size $0 binary"
     echo "  USE_WANDB=true $0 train"
 }
@@ -188,6 +214,7 @@ COMMAND="${1:-help}"
 
 # Override defaults from environment
 NUM_THEOREMS="${NUM_THEOREMS:-25}"
+NUM_ROUNDS="${NUM_ROUNDS:-2}"
 BINARY_PARAM="${BINARY_PARAM:-num_workers}"
 USE_WANDB="${USE_WANDB:-false}"
 
@@ -200,6 +227,9 @@ case "${COMMAND}" in
         ;;
     binary)
         run_binary_search
+        ;;
+    coordinate)
+        run_coordinate_descent
         ;;
     train)
         run_full_training
