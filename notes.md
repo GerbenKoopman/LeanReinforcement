@@ -1,5 +1,23 @@
 # Notes
 
+============================================================
+2026-01-23 17:37:09.978 | INFO     | __main__:coordinate_descent_search:921 - COORDINATE DESCENT COMPLETE
+2026-01-23 17:37:09.978 | INFO     | __main__:coordinate_descent_search:922 - ============================================================
+2026-01-23 17:37:09.978 | INFO     | __main__:coordinate_descent_search:923 - Total trials: 125
+2026-01-23 17:37:09.978 | INFO     | __main__:coordinate_descent_search:924 - Best score: 57.5 proofs/hour
+2026-01-23 17:37:09.978 | INFO     | __main__:coordinate_descent_search:925 - Optimal configuration:
+2026-01-23 17:37:09.978 | INFO     | __main__:coordinate_descent_search:927 -   num_workers: 10
+2026-01-23 17:37:09.978 | INFO     | __main__:coordinate_descent_search:927 -   batch_size: 14
+2026-01-23 17:37:09.978 | INFO     | __main__:coordinate_descent_search:927 -   num_tactics_to_expand: 21
+2026-01-23 17:37:09.978 | INFO     | __main__:coordinate_descent_search:927 -   num_iterations: 262
+2026-01-23 17:37:09.978 | INFO     | __main__:coordinate_descent_search:927 -   env_timeout: 99
+2026-01-23 17:37:09.978 | INFO     | __main__:coordinate_descent_search:927 -   max_time: 116.65631459994952
+2026-01-23 17:37:09.978 | INFO     | __main__:coordinate_descent_search:927 -   proof_timeout: 260.06211240030285
+2026-01-23 17:37:09.978 | INFO     | __main__:coordinate_descent_search:927 -   max_steps: 41
+2026-01-23 17:37:09.978 | INFO     | __main__:coordinate_descent_search:927 -   max_rollout_depth: 35
+2026-01-23 17:37:09.992 | INFO     | __main__:_save_results:1046 - Results saved to hyperparam_results/coordinate_descent_final.json
+2026-01-23 17:37:09.992 | INFO     | __main__:_save_config:1019 - Config saved to hyperparam_results/optimal_config.json
+
 ================================================================================
 HYPERPARAMETER SEARCH SUMMARY
 ================================================================================
