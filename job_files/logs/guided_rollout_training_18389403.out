@@ -1,0 +1,189 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Building Cython extensions...
+running build_ext
+copying build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/base_mcts_cy.cpython-310-x86_64-linux-gnu.so -> lean_reinforcement/agent/mcts/mcts_cy
+copying build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/alphazero_cy.cpython-310-x86_64-linux-gnu.so -> lean_reinforcement/agent/mcts/mcts_cy
+copying build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/guidedrollout_cy.cpython-310-x86_64-linux-gnu.so -> lean_reinforcement/agent/mcts/mcts_cy
+copying build/lib.linux-x86_64-cpython-310/ReProver/common_cy.cpython-310-x86_64-linux-gnu.so -> ReProver
+Starting training run with distributed environment...
+wandb: Currently logged in as: gerbennkoopman to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.23.1
+wandb: Run data is saved locally in /gpfs/home1/gkoopman/lean_reinforcement/wandb/run-20260115_191005-ohnv70za
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run comfy-durian-77
+wandb: ⭐️ View project at https://wandb.ai/gerbennkoopman-university-of-amsterdam/lean-reinforcement
+wandb: 🚀 View run at https://wandb.ai/gerbennkoopman-university-of-amsterdam/lean-reinforcement/runs/ohnv70za
+2026-01-15 19:10:06.878 | INFO     | lean_reinforcement.training.trainer:_setup_models:56 - Using checkpoint directory: /gpfs/scratch1/shared/lean-reinforcement/checkpoints
+2026-01-15 19:10:14.433 | INFO     | lean_reinforcement.agent.value_head:load_checkpoint:192 - Checkpoint loaded from /gpfs/scratch1/shared/lean-reinforcement/checkpoints/value_head_guided_rollout_latest.pth
+2026-01-15 19:10:14.434 | INFO     | lean_reinforcement.training.trainer:_setup_models:77 - Resuming training from epoch 1
+2026-01-15 19:10:14.435 | INFO     | lean_reinforcement.training.trainer:_log_gpu_memory:125 - After model initialization - GPU Memory: 1.12GB allocated, 1.23GB reserved
+2026-01-15 19:10:14.435 | INFO     | lean_reinforcement.training.trainer:_setup_data:87 - Loading data from 'leandojo_benchmark_4/novel_premises'
+2026-01-15 19:10:14.435 | INFO     | lean_reinforcement.training.trainer:_setup_data:92 - Loading indexed corpus from /gpfs/scratch1/shared/lean-reinforcement/indexed_corpus/indexed_corpus.pkl
+2026-01-15 19:10:53.270 | INFO     | lean_reinforcement.training.trainer:_start_workers:204 - Starting 16 workers
+2026-01-15 19:10:53.305 | INFO     | lean_reinforcement.training.trainer:_run_epoch:154 - Starting Epoch 2/128
+2026-01-15 19:10:53.369 | INFO     | lean_reinforcement.training.trainer:_run_epoch:165 - Processing 32 theorems with 16 workers.
+2026-01-15 19:12:26.805 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: List.rdropWhile_concat_pos
+2026-01-15 19:12:28.026 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 599s)...
+2026-01-15 19:12:32.164 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: RingHom.id_apply
+2026-01-15 19:12:33.346 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 599s)...
+2026-01-15 19:12:52.664 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: mem_conjugatesOf_self
+2026-01-15 19:12:53.926 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 599s)...
+2026-01-15 19:13:08.480 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simp [rdropWhile, h]
+2026-01-15 19:13:09.662 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 2: Running MCTS search for 200 iterations (max 557s)...
+2026-01-15 19:13:13.584 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simp [mem_conjugatesOf_iff]
+2026-01-15 19:13:13.648 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error='simp made no progress')
+2026-01-15 19:13:14.800 | ERROR    | lean_reinforcement.agent.runner:run:252 - Proof failed after 1 steps and 22.14s.
+2026-01-15 19:13:14.801 | WARNING  | lean_reinforcement.agent.runner:run:256 - Final state: LeanError(error='simp made no progress')
+2026-01-15 19:13:14.934 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-15 19:13:18.504 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 2: Applying best tactic: simp [dropWhile, h]
+2026-01-15 19:13:19.330 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simp only [id, add_right_eq_self]
+2026-01-15 19:13:19.691 | SUCCESS  | lean_reinforcement.agent.runner:run:248 - Proof finished in 2 steps and 52.89s.
+2026-01-15 19:13:19.825 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-15 19:13:20.563 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 2: Running MCTS search for 200 iterations (max 552s)...
+2026-01-15 19:13:20.565 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 2: Applying best tactic: rfl
+2026-01-15 19:13:21.713 | SUCCESS  | lean_reinforcement.agent.runner:run:248 - Proof finished in 2 steps and 49.55s.
+2026-01-15 19:13:21.845 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-15 19:13:38.244 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Antitone.image_Icc_subset
+2026-01-15 19:13:39.016 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Set.disjoint_left
+2026-01-15 19:13:39.443 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 599s)...
+2026-01-15 19:13:40.276 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 599s)...
+2026-01-15 19:13:43.141 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Monotone.isChain_range
+2026-01-15 19:13:43.560 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: isLowerSet_iInter
+2026-01-15 19:13:44.244 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: CovBy.Ico_eq
+2026-01-15 19:13:44.403 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 599s)...
+2026-01-15 19:13:44.851 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 599s)...
+2026-01-15 19:13:45.473 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 599s)...
+2026-01-15 19:13:45.528 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Order.pred_eq_iSup
+2026-01-15 19:13:46.753 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 599s)...
+2026-01-15 19:13:49.525 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: WithTop.coe_sInf
+2026-01-15 19:13:49.762 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: isPiSystem_piiUnionInter
+2026-01-15 19:13:50.796 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 599s)...
+2026-01-15 19:13:51.051 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 599s)...
+2026-01-15 19:13:58.870 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: nhdsSet_prod_le
+2026-01-15 19:13:59.081 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: exact isChain_range_of_monotone hf
+2026-01-15 19:13:59.148 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="unknown identifier 'isChain_range_of_monotone'")
+2026-01-15 19:13:59.280 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: exact isLowerSet_iInter hf
+2026-01-15 19:13:59.356 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="kernel type check failed: (kernel) declaration has free variables '[anonymous]'")
+2026-01-15 19:14:00.153 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 599s)...
+2026-01-15 19:14:00.322 | ERROR    | lean_reinforcement.agent.runner:run:252 - Proof failed after 1 steps and 17.18s.
+2026-01-15 19:14:00.322 | WARNING  | lean_reinforcement.agent.runner:run:256 - Final state: LeanError(error="unknown identifier 'isChain_range_of_monotone'")
+2026-01-15 19:14:00.456 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-15 19:14:00.571 | ERROR    | lean_reinforcement.agent.runner:run:252 - Proof failed after 1 steps and 17.01s.
+2026-01-15 19:14:00.571 | WARNING  | lean_reinforcement.agent.runner:run:256 - Final state: LeanError(error="kernel type check failed: (kernel) declaration has free variables '[anonymous]'")
+2026-01-15 19:14:00.704 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-15 19:14:03.039 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: SetTheory.Game.bddAbove_of_small
+2026-01-15 19:14:04.251 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 599s)...
+2026-01-15 19:14:17.523 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simp only [isPiSystem_piiUnionInter_iff] at hpi ⊢
+2026-01-15 19:14:17.586 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error='simp made no progress')
+2026-01-15 19:14:18.740 | ERROR    | lean_reinforcement.agent.runner:run:252 - Proof failed after 1 steps and 28.98s.
+2026-01-15 19:14:18.741 | WARNING  | lean_reinforcement.agent.runner:run:256 - Final state: LeanError(error='simp made no progress')
+2026-01-15 19:14:18.875 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-15 19:14:26.254 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: lift s to Finset α using h's
+2026-01-15 19:14:26.314 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: rw [nhdsSet_prod_eq]
+2026-01-15 19:14:26.340 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error='failed to synthesize\n  CanLift (Set α) (sorryAx (Sort ?u.138270) true) ?m.138271 ?m.138272\nuse `set_option diagnostics true` to get diagnostic information')
+2026-01-15 19:14:26.432 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.193153\nX✝ : Type u\nY✝ : Type v\nZ : Type u_1\nW : Type u_2\nε : Type u_3\nζ : Type u_4\nX : Type u_5\nY : Type u_6\ninst✝¹ : TopologicalSpace X\ninst✝ : TopologicalSpace Y\nf : Filter X\ns✝ : Set X\nt✝ : Set Y\nx : X\ns : Set X\nt : Set Y\n⊢ 𝓝ˢ (s ×ˢ t) ≤ 𝓝ˢ s ×ˢ 𝓝ˢ t")
+2026-01-15 19:14:27.565 | ERROR    | lean_reinforcement.agent.runner:run:252 - Proof failed after 1 steps and 38.04s.
+2026-01-15 19:14:27.566 | WARNING  | lean_reinforcement.agent.runner:run:256 - Final state: LeanError(error='failed to synthesize\n  CanLift (Set α) (sorryAx (Sort ?u.138270) true) ?m.138271 ?m.138272\nuse `set_option diagnostics true` to get diagnostic information')
+2026-01-15 19:14:27.645 | ERROR    | lean_reinforcement.agent.runner:run:252 - Proof failed after 1 steps and 28.77s.
+2026-01-15 19:14:27.645 | WARNING  | lean_reinforcement.agent.runner:run:256 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.193153\nX✝ : Type u\nY✝ : Type v\nZ : Type u_1\nW : Type u_2\nε : Type u_3\nζ : Type u_4\nX : Type u_5\nY : Type u_6\ninst✝¹ : TopologicalSpace X\ninst✝ : TopologicalSpace Y\nf : Filter X\ns✝ : Set X\nt✝ : Set Y\nx : X\ns : Set X\nt : Set Y\n⊢ 𝓝ˢ (s ×ˢ t) ≤ 𝓝ˢ s ×ˢ 𝓝ˢ t")
+2026-01-15 19:14:27.700 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-15 19:14:27.778 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-15 19:14:33.168 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simp [← Ici_inter_Iio, h]
+2026-01-15 19:14:33.250 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simpa using bddAbove_range_of_small (Subtype.val : s → Game.{u})
+2026-01-15 19:14:34.414 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 2: Running MCTS search for 200 iterations (max 550s)...
+2026-01-15 19:14:34.457 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: rw [image_subset_iff]
+2026-01-15 19:14:34.497 | SUCCESS  | lean_reinforcement.agent.runner:run:248 - Proof finished in 1 steps and 31.46s.
+2026-01-15 19:14:34.632 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-15 19:14:35.734 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 2: Running MCTS search for 200 iterations (max 543s)...
+2026-01-15 19:14:36.228 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simp only [disjoint_iff_inf_le, subset_def]
+2026-01-15 19:14:37.467 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 2: Running MCTS search for 200 iterations (max 542s)...
+2026-01-15 19:14:37.468 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 2: Applying best tactic: simp [disjoint_iff_inf_le]
+2026-01-15 19:14:38.153 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Rat.mul_den_eq_num
+2026-01-15 19:14:38.715 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 3: Running MCTS search for 200 iterations (max 540s)...
+2026-01-15 19:14:38.717 | WARNING  | lean_reinforcement.agent.runner:run:192 - MCTS search returned no action. Stopping.
+2026-01-15 19:14:39.450 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 599s)...
+2026-01-15 19:14:39.827 | ERROR    | lean_reinforcement.agent.runner:run:252 - Proof failed after 3 steps and 60.81s.
+2026-01-15 19:14:39.960 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-15 19:14:48.947 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: apply le_antisymm
+2026-01-15 19:14:50.144 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 2: Running MCTS search for 200 iterations (max 535s)...
+2026-01-15 19:14:57.837 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 2: Applying best tactic: simpa only [← Ici_inter_Iic] using preimage_mono h
+2026-01-15 19:14:57.962 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="type mismatch\n  h✝\nhas type\n  (fun x => x) ⁻¹' {a_1 | a_1 ∈ Set.Ici a ∧ a_1 ∈ Set.Iic b} ⊆ (fun x => x) ⁻¹' ?m.125251 : Prop\nbut is expected to have type\n  Set.Ici a ∩ Set.Iic b ⊆ f ⁻¹' (Set.Ici (f b) ∩ Set.Iic (f a)) : Prop")
+2026-01-15 19:14:59.114 | ERROR    | lean_reinforcement.agent.runner:run:252 - Proof failed after 2 steps and 80.87s.
+2026-01-15 19:14:59.114 | WARNING  | lean_reinforcement.agent.runner:run:256 - Final state: LeanError(error="type mismatch\n  h✝\nhas type\n  (fun x => x) ⁻¹' {a_1 | a_1 ∈ Set.Ici a ∧ a_1 ∈ Set.Iic b} ⊆ (fun x => x) ⁻¹' ?m.125251 : Prop\nbut is expected to have type\n  Set.Ici a ∩ Set.Iic b ⊆ f ⁻¹' (Set.Ici (f b) ∩ Set.Iic (f a)) : Prop")
+2026-01-15 19:14:59.248 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-15 19:15:04.036 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 2: Applying best tactic: simp [← Ici_inter_Iio.symm, h]
+2026-01-15 19:15:21.349 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 2: Applying best tactic: apply le_trans
+2026-01-15 19:15:22.600 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 3: Running MCTS search for 200 iterations (max 503s)...
+2026-01-15 19:15:27.665 | WARNING  | lean_reinforcement.agent.runner:run:192 - MCTS search returned no action. Stopping.
+2026-01-15 19:16:01.892 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 3: Applying best tactic: apply le_trans
+2026-01-15 19:16:03.199 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 4: Running MCTS search for 200 iterations (max 462s)...
+2026-01-15 19:16:06.449 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Nat.bit1_div_bit0
+2026-01-15 19:16:07.638 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 599s)...
+2026-01-15 19:16:19.215 | ERROR    | lean_reinforcement.utilities.gym:reset:49 - Error during environment reset: Timeout during initialization
+2026-01-15 19:16:19.249 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-15 19:16:19.249 | ERROR    | lean_reinforcement.training.worker:process_theorem:44 - Failed to initialize environment for theorem RingHom.FinitePresentation.of_surjective: Timeout during initialization
+2026-01-15 19:16:19.277 | ERROR    | lean_reinforcement.utilities.gym:reset:49 - Error during environment reset: Timeout during initialization
+2026-01-15 19:16:19.309 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-15 19:16:19.309 | ERROR    | lean_reinforcement.training.worker:process_theorem:44 - Failed to initialize environment for theorem Sbtw.angle₃₂₁_eq_pi: Timeout during initialization
+2026-01-15 19:16:20.910 | ERROR    | lean_reinforcement.utilities.gym:reset:49 - Error during environment reset: Timeout during initialization
+2026-01-15 19:16:20.948 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-15 19:16:20.948 | ERROR    | lean_reinforcement.training.worker:process_theorem:44 - Failed to initialize environment for theorem MeasureTheory.Measure.ext_iff_of_sUnion_eq_univ: Timeout during initialization
+2026-01-15 19:16:21.130 | ERROR    | lean_reinforcement.utilities.gym:reset:49 - Error during environment reset: Timeout during initialization
+2026-01-15 19:16:21.164 | INFO     | lean_reinforcement.utilities.gym:close:108 - Environment closed.
+2026-01-15 19:16:21.165 | ERROR    | lean_reinforcement.training.worker:process_theorem:44 - Failed to initialize environment for theorem map_extChartAt_symm_nhdsWithin_range: Timeout during initialization
+2026-01-15 19:16:23.435 | ERROR    | lean_reinforcement.training.trainer:_collect_data:309 - Found 1 dead worker(s). Stopping training.
+2026-01-15 19:16:23.436 | ERROR    | lean_reinforcement.training.trainer:_collect_data:313 - Worker exit code: -9
+2026-01-15 19:16:23.438 | ERROR    | lean_reinforcement.training.trainer:train:147 - Training crashed: One or more worker processes died unexpectedly.
+2026-01-15 19:16:23.439 | INFO     | lean_reinforcement.training.trainer:_cleanup_workers:235 - Shutting down workers...
+Traceback (most recent call last):
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/train.py", line 16, in <module>
+    trainer.train()
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 148, in train
+    raise e
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 142, in train
+    self._run_epoch(epoch, inference_server)
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 169, in _run_epoch
+    training_data_buffer = self._collect_data(
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 317, in _collect_data
+    raise RuntimeError("One or more worker processes died unexpectedly.")
+RuntimeError: One or more worker processes died unexpectedly.
+Traceback (most recent call last):
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/train.py", line 16, in <module>
+    trainer.train()
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 148, in train
+    raise e
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 142, in train
+    self._run_epoch(epoch, inference_server)
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 169, in _run_epoch
+    training_data_buffer = self._collect_data(
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 317, in _collect_data
+    raise RuntimeError("One or more worker processes died unexpectedly.")
+RuntimeError: One or more worker processes died unexpectedly.
+[1;34mwandb[0m: 
+[1;34mwandb[0m: 🚀 View run [33mcomfy-durian-77[0m at: [34mhttps://wandb.ai/gerbennkoopman-university-of-amsterdam/lean-reinforcement/runs/ohnv70za[0m
+[1;34mwandb[0m: Find logs at: [1;35m../../../gpfs/home1/gkoopman/lean_reinforcement/wandb/run-20260115_191005-ohnv70za/logs[0m
+[2026-01-15T19:16:48.001] error: Detected 1 oom_kill event in StepId=18389403.0. Some of the step tasks have been OOM Killed.
+srun: error: gcn36: task 0: Out Of Memory
+srun: Terminating StepId=18389403.0

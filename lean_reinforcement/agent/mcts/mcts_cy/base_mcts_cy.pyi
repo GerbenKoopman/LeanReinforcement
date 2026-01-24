@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Any, Tuple, Union
+from typing import List, Optional, Dict, Any, Tuple
 import torch
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 from lean_reinforcement.utilities.gym import LeanDojoEnv
@@ -12,19 +12,28 @@ class Edge:
     def __init__(self, action: str, prior: float, child: Node) -> None: ...
 
 class Node:
-    state: Union[TacticState, ProofFinished, LeanError, ProofGivenUp]
-    children: List[Edge]
+    state: Any
+    parents: List[
+        Tuple[Node, Optional[str]]
+    ]  # DAG structure: list of (parent, action) tuples
+    action: Optional[str]
+    prior_p: float
+    children: List[Node]
     visit_count: int
     max_value: float
     is_terminal: bool
     untried_actions: Optional[List[str]]
     encoder_features: Optional[torch.Tensor]
 
+    @property
+    def parent(self) -> Optional[Node]: ...  # Backward compatibility property
     def __init__(
         self, state: Union[TacticState, ProofFinished, LeanError, ProofGivenUp]
     ) -> None: ...
     def value(self) -> float: ...
     def is_fully_expanded(self) -> bool: ...
+    def add_parent(self, parent: Node, action: Optional[str] = ...) -> None: ...
+    def get_parent(self) -> Optional[Node]: ...
 
 class BaseMCTS:
     env: LeanDojoEnv
@@ -37,7 +46,7 @@ class BaseMCTS:
     max_time: float
     node_count: int
     virtual_losses: Dict[Node, int]
-    nodes: Dict[str, Node]
+    seen_states: Dict[str, Node]
     theorem: Any
     theorem_pos: Any
     root: Node
@@ -57,6 +66,7 @@ class BaseMCTS:
     def _get_virtual_loss(self, node: Node) -> int: ...
     def _add_virtual_loss(self, node: Node, loss: int = ...) -> None: ...
     def _remove_virtual_loss(self, node: Node, loss: int = ...) -> None: ...
+    def _get_state_key(self, state: Any) -> Optional[str]: ...
     def _log_gpu_memory(self) -> None: ...
     def _get_reachable_nodes(self, root: Node) -> set: ...
     def _prune_unreachable_nodes(self, new_root: Node) -> int: ...
@@ -73,3 +83,4 @@ class BaseMCTS:
     def get_best_action(self) -> Optional[str]: ...
     def move_root(self, action: str) -> None: ...
     def _count_nodes(self, node: Node) -> int: ...
+    def _rebuild_seen_states(self, node: Node) -> None: ...

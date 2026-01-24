@@ -29,6 +29,7 @@ class AgentRunner:
         mcts_kwargs: Optional[Union[Dict[str, Any], MCTSOptions]] = None,
         num_iterations: int = 100,
         max_steps: int = 100,
+        proof_timeout: float = 1200.0,
     ):
         """
         Initialize the agent runner.
@@ -40,12 +41,14 @@ class AgentRunner:
             mcts_kwargs: Additional keyword arguments for initializing the MCTS class.
             num_iterations: The number of MCTS iterations to run at each step.
             max_steps: The maximum number of tactics to apply before giving up.
+            proof_timeout: Maximum time in seconds for entire proof search.
         """
         self.env = env
         self.transformer = transformer
         self.mcts_class = mcts_class
         self.num_iterations = num_iterations
         self.max_steps = max_steps
+        self.proof_timeout = proof_timeout
 
         self.mcts_kwargs: Dict[str, Any] = (
             dict(mcts_kwargs) if mcts_kwargs is not None else {}
@@ -84,7 +87,10 @@ class AgentRunner:
         logger.info(f"Starting proof search for: {self.env.theorem.full_name}")
         self._log_gpu_memory("Initial ")
 
-        training_data: List[TrainingDataPoint] = []
+        # Timeout for entire proof search
+        proof_timeout = self.proof_timeout
+
+        training_data = []
         step_num = 0
         mcts_instance = None
 
@@ -92,6 +98,22 @@ class AgentRunner:
             gc.collect()
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
+
+            # Check proof timeout before starting new MCTS search
+            elapsed = time.time() - start_time
+            remaining_time = proof_timeout - elapsed
+            if remaining_time <= 0:
+                logger.warning(
+                    f"Proof search exceeded {proof_timeout}s timeout after {elapsed:.1f}s. Stopping."
+                )
+                break
+
+            # Also enforce minimum remaining time (30s) to avoid starting searches that will timeout
+            if remaining_time < 30:
+                logger.warning(
+                    f"Only {remaining_time:.1f}s remaining (< 30s minimum). Stopping to avoid partial search."
+                )
+                break
 
             try:
                 # Check if the proof is already finished or has failed
@@ -112,12 +134,13 @@ class AgentRunner:
                     )
 
                 # Run the search to find the best action
+                step_max_time = min(mcts_instance.max_time, remaining_time)
                 logger.info(
-                    f"Step {step_num}: Running MCTS search for {self.num_iterations} iterations..."
+                    f"Step {step_num}: Running MCTS search for {self.num_iterations} iterations (max {step_max_time:.0f}s)..."
                 )
 
                 try:
-                    mcts_instance.search(self.num_iterations)
+                    mcts_instance.search(self.num_iterations, max_time=step_max_time)
                 except Exception as e:
                     logger.error(f"MCTS search failed with error: {e}")
                     break
@@ -146,8 +169,7 @@ class AgentRunner:
                     mcts_value = root_node.value() if root_node.visit_count > 0 else 0.0
                     visit_count = root_node.visit_count
 
-                    # Calculate visit-count-based policy target (for future policy head training)
-                    # This represents the improved policy from MCTS search
+                    # Calculate visit-count-based policy target for policy head training
                     visit_distribution = {}
                     if root_node.children:
                         total_visits = sum(

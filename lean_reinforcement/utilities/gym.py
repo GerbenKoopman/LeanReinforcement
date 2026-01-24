@@ -27,14 +27,22 @@ class LeanDojoEnv:
         super().__init__()
         self.theorem = theorem
         self.theorem_pos = theorem_pos
+        self.dojo = None
+        self.initial_state = None
+        self.current_state = None
 
-        self.dojo = Dojo(theorem, timeout=timeout)
-
-        self.reset()
-        self.current_state = self.initial_state
+        try:
+            self.dojo = Dojo(theorem, timeout=timeout)
+            self.reset()
+            self.current_state = self.initial_state
+        except Exception:
+            # Ensure cleanup if initialization fails
+            self.close()
+            raise
 
     def reset(self) -> None:
         try:
+            assert self.dojo is not None, "Dojo not initialized"
             _, self.initial_state = self.dojo.__enter__()
             assert isinstance(self.initial_state, TacticState)
         except DojoInitError as e:
@@ -75,6 +83,7 @@ class LeanDojoEnv:
         Run a tactic on a given state without modifying the environment's current state.
         Handles timeouts and exceptions.
         """
+        assert self.dojo is not None, "Dojo not initialized"
         try:
             next_state = self.dojo.run_tac(state, action)
         except DojoTacticTimeoutError:
@@ -94,10 +103,13 @@ class LeanDojoEnv:
                 self.dojo.__exit__(None, None, None)
             except Exception as e:
                 logger.debug(f"Warning: Error during Dojo close: {e}")
-
-        self.dojo: Dojo = None  # type: ignore
-        logger.info("Environment closed.")
+            finally:
+                self.dojo = None
+                logger.info("Environment closed.")
 
     def __del__(self) -> None:
         """Ensure cleanup when object is garbage collected."""
-        self.close()
+        try:
+            self.close()
+        except Exception:
+            pass  # Suppress errors during garbage collection

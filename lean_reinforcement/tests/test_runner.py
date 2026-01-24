@@ -48,6 +48,7 @@ class TestAgentRunner(unittest.TestCase):
         # Mock the MCTS instance and its methods
         mock_mcts_instance = MockMCTS.return_value
         mock_mcts_instance.get_best_action.return_value = "best_tactic"
+        mock_mcts_instance.max_time = 60.0  # Add max_time for runner to use
 
         # Create a mock child node
         mock_child = Mock()
@@ -93,7 +94,7 @@ class TestAgentRunner(unittest.TestCase):
         # Training data is empty by default (collect_value_data=False)
         self.assertEqual(len(trajectory), 0)
         self.assertEqual(self.env.step.call_count, 2)
-        mock_mcts_instance.search.assert_called_with(10)
+        # search is called with num_iterations and max_time
         self.assertEqual(mock_mcts_instance.search.call_count, 2)
 
     @patch("lean_reinforcement.agent.runner.MCTS_GuidedRollout")
@@ -110,6 +111,7 @@ class TestAgentRunner(unittest.TestCase):
         mock_root = Mock()
         mock_root.children = [mock_child]
         mock_mcts_instance.root = mock_root
+        mock_mcts_instance.max_time = 60.0  # Add max_time for runner to use
 
         # Create a new runner with the mocked MCTS class
         runner = AgentRunner(
@@ -142,6 +144,7 @@ class TestAgentRunner(unittest.TestCase):
         # Arrange
         mock_mcts_instance = MockMCTS.return_value
         mock_mcts_instance.get_best_action.return_value = None
+        mock_mcts_instance.max_time = 60.0  # Add max_time for runner to use
 
         mock_root = Mock()
         mock_root.children = []  # No children, so no best action

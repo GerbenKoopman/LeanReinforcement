@@ -41,7 +41,46 @@ class InferenceServer:
         self.request_queue = request_queue
         self.response_queues = response_queues
         self.batch_size = batch_size
-        self.max_safe_batch_size = float("inf")
+        # Start with a conservative max_safe_batch_size to prevent OOM
+        self.max_safe_batch_size = min(batch_size, 4)
+        self._batch_count = 0
+
+    def _proactive_memory_cleanup(self):
+        """Proactively clean up GPU memory before processing a batch."""
+        self._batch_count += 1
+        # Clean up every 5 batches to prevent memory fragmentation
+        if self._batch_count % 5 == 0:
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+
+    def _check_gpu_memory(self) -> bool:
+        """Check if GPU memory usage is too high and clean up if needed.
+        Returns True if memory is safe, False if critically low."""
+        if not torch.cuda.is_available():
+            return True
+
+        allocated = torch.cuda.memory_allocated()
+        torch.cuda.memory_reserved()
+        total = torch.cuda.get_device_properties(0).total_memory
+
+        # If using more than 80% of total memory, force cleanup
+        if allocated > 0.8 * total:
+            logger.warning(
+                f"GPU memory high ({allocated / 1e9:.1f}GB / {total / 1e9:.1f}GB). "
+                "Forcing cleanup..."
+            )
+            gc.collect()
+            torch.cuda.empty_cache()
+
+            # Reduce batch size more aggressively
+            if self.max_safe_batch_size > 1:
+                self.max_safe_batch_size = max(1, self.max_safe_batch_size // 2)
+                logger.warning(
+                    f"Reducing max_safe_batch_size to {self.max_safe_batch_size}"
+                )
+            return False
+        return True
 
     def process_requests(self) -> bool:
         """
@@ -67,6 +106,9 @@ class InferenceServer:
 
         if not batch_requests:
             return False
+
+        # Proactive memory cleanup before processing
+        self._proactive_memory_cleanup()
 
         self._process_batch(batch_requests)
         return True
@@ -139,6 +181,9 @@ class InferenceServer:
                 self._execute_batch(current_type, current_batch, current_indices)
 
     def _run_transformer_batch(self, method, states, n, **kwargs):
+        # Preemptive memory check
+        self._check_gpu_memory()
+
         if len(states) > self.max_safe_batch_size:
             mid = len(states) // 2
             left = self._run_transformer_batch(method, states[:mid], n, **kwargs)

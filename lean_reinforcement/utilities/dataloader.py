@@ -20,17 +20,23 @@ class LeanDataLoader:
 
     def __init__(
         self,
-        corpus: Corpus,
+        corpus: Optional[Corpus] = None,
         dataset_path: str = "leandojo_benchmark_4",
         data_type: str = "novel_premises",
+        load_splits: bool = True,
     ):
         self.corpus = corpus
         self.dataset_path = dataset_path
         self.data_type = data_type
 
-        self.train_data = self._load_split("train")
-        self.test_data = self._load_split("test")
-        self.val_data = self._load_split("val")
+        if load_splits:
+            self.train_data = self._load_split("train")
+            self.test_data = self._load_split("test")
+            self.val_data = self._load_split("val")
+        else:
+            self.train_data = []
+            self.test_data = []
+            self.val_data = []
 
     def _load_split(self, split: str) -> List[TheoremData]:
         """
@@ -115,6 +121,8 @@ class LeanDataLoader:
 
     def get_premises(self, theorem: Theorem, theorem_pos: Pos) -> List[str]:
         """Retrieve all accessible premises given a theorem."""
+        if self.corpus is None:
+            raise ValueError("Corpus not set. Cannot retrieve premises.")
         return [
             str(p)
             for p in self.corpus.get_accessible_premises(

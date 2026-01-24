@@ -20,7 +20,7 @@ cdef class MCTS_AlphaZero(BaseMCTS):
         int batch_size=8,
         int num_tactics_to_expand=8,
         int max_rollout_depth=30,
-        float max_time=1200.0,
+        max_time: float = 300.0,
         **kwargs,
     ):
         super().__init__(
@@ -75,7 +75,12 @@ cdef class MCTS_AlphaZero(BaseMCTS):
         
         return best_edge
 
-    cpdef tuple _expand(self, Node node):
+    cpdef Node _expand(self, Node node):
+        cdef object state_key
+        cdef object next_state
+        cdef Node child
+        cdef Node existing_node
+
         if not isinstance(node.state, TacticState):
             return node, None
 
@@ -89,22 +94,27 @@ cdef class MCTS_AlphaZero(BaseMCTS):
         )
 
         for tactic, prob in tactics_with_probs:
-            # Skip if we already have an edge for this action
-            if node.has_edge_for_action(tactic):
+            next_state = self.env.run_tactic_stateless(node.state, tactic)
+
+            # Check for duplicate states
+            state_key = self._get_state_key(next_state)
+            if state_key is not None and state_key in self.seen_states:
+                # Reuse existing node - add as child with additional parent edge
+                existing_node = self.seen_states[state_key]
+                existing_node.add_parent(node, tactic)
+                if existing_node not in node.children:
+                    node.children.append(existing_node)
                 continue
 
-            try:
-                next_state = self.env.run_tactic_stateless(node.state, tactic)
-            except Exception as e:
-                next_state = LeanError(error=str(e))
+            child = Node(next_state, parent=node, action=tactic)
+            child.prior_p = prob
+            node.children.append(child)
+            self.node_count += 1
             
-            if isinstance(next_state, (LeanError, ProofGivenUp)):
-                continue
-
-            child_node = self._get_or_create_node(next_state)
-            edge = Edge(action=tactic, prior=prob, child=child_node)
-            node.add_edge(edge)
-            
+            # Register new state in seen_states and encode features
+            if isinstance(next_state, TacticState):
+                self.seen_states[state_key] = child
+                child.encoder_features = self.value_head.encode_states([next_state.pp])
 
         node.untried_actions = []
         return node, None
@@ -120,8 +130,9 @@ cdef class MCTS_AlphaZero(BaseMCTS):
         cdef object tactic
         cdef float prob
         cdef object next_state
-        cdef Node child_node
-        cdef Edge edge
+        cdef Node child
+        cdef Node existing_node
+        cdef object state_key
 
         for node in nodes:
             if isinstance(node.state, TacticState):
@@ -131,9 +142,17 @@ cdef class MCTS_AlphaZero(BaseMCTS):
         if not states:
             return [(node, None) for node in nodes]
 
+        # Check timeout before expensive model call
+        if self._is_timeout():
+            return nodes
+
         batch_tactics_with_probs = self.transformer.generate_tactics_with_probs_batch(
             states, n=self.num_tactics_to_expand
         )
+
+        # Check timeout after model call
+        if self._is_timeout():
+            return nodes
 
         for i in range(len(batch_tactics_with_probs)):
             tactics_probs = batch_tactics_with_probs[i]
@@ -142,6 +161,9 @@ cdef class MCTS_AlphaZero(BaseMCTS):
                 tasks.append((node, tactic, prob))
 
         for node, tactic, prob in tasks:
+            # Check timeout before each Lean call
+            if self._is_timeout():
+                break
             try:
                 next_state = self.env.run_tactic_stateless(node.state, tactic)
             except Exception as e:
@@ -152,13 +174,27 @@ cdef class MCTS_AlphaZero(BaseMCTS):
 
             results.append((node, tactic, prob, next_state))
 
+        # Create children (reusing existing nodes for duplicates - DAG structure)
         for node, tactic, prob, next_state in results:
-            # Skip if we already have an edge for this action
-            if node.has_edge_for_action(tactic):
+            # Check for duplicate states
+            state_key = self._get_state_key(next_state)
+            if state_key is not None and state_key in self.seen_states:
+                # Reuse existing node - add as child with additional parent edge
+                existing_node = self.seen_states[state_key]
+                existing_node.add_parent(node, tactic)
+                if existing_node not in node.children:
+                    node.children.append(existing_node)
                 continue
-            child_node = self._get_or_create_node(next_state)
-            edge = Edge(action=tactic, prior=prob, child=child_node)
-            node.add_edge(edge)
+
+            child = Node(next_state, parent=node, action=tactic)
+            child.prior_p = prob
+            node.children.append(child)
+            self.node_count += 1
+
+            # Register new state in seen_states
+            if isinstance(next_state, TacticState):
+                self.seen_states[state_key] = child
+                new_children_nodes.append(child)
 
         for node in nodes_to_generate:
             node.untried_actions = []
@@ -167,6 +203,11 @@ cdef class MCTS_AlphaZero(BaseMCTS):
 
     cpdef float _simulate(self, Node node):
         cdef float value
+        
+        # Check timeout before evaluation
+        if self._is_timeout():
+            return 0.0  # Neutral reward on timeout
+            
         if node.is_terminal:
             if isinstance(node.state, ProofFinished):
                 return 1.0
@@ -194,6 +235,10 @@ cdef class MCTS_AlphaZero(BaseMCTS):
         cdef Node node
         cdef object batch_features
         cdef list values
+
+        # Check timeout before batch evaluation
+        if self._is_timeout():
+            return results  # Return neutral rewards on timeout
 
         for i in range(len(nodes)):
             node = nodes[i]

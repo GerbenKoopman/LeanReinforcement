@@ -73,16 +73,20 @@ class Transformer:
     @torch.no_grad()
     def generate_tactics(self, state: str, n: int = 1) -> List[str]:
         tokenized_state = self.tokenizer(
-            state, return_tensors="pt", truncation=True, max_length=1024
+            state, return_tensors="pt", truncation=True, max_length=2048
         ).to(self.device)
 
+        # max_length is TOTAL (input + output), so add to input length
+        input_length = tokenized_state.input_ids.shape[1]
         tactics_ids = self.model.generate(
             tokenized_state.input_ids,
-            max_length=1024,
+            max_length=input_length + 512,
             num_beams=n,
             do_sample=False,
             num_return_sequences=n,
             early_stopping=False,
+            repetition_penalty=1.2,
+            no_repeat_ngram_size=3,
         )
         tactics: List[str] = self.tokenizer.batch_decode(
             tactics_ids, skip_special_tokens=True
@@ -90,6 +94,10 @@ class Transformer:
 
         del tokenized_state
         del tactics_ids
+
+        # Clear KV-cache after beam search
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
         assert isinstance(
             tactics, list
@@ -101,18 +109,21 @@ class Transformer:
         self, state: str, n: int = 1
     ) -> List[tuple[str, float]]:
         tokenized_state = self.tokenizer(
-            state, return_tensors="pt", truncation=True, max_length=1024
+            state, return_tensors="pt", truncation=True, max_length=2048
         ).to(self.device)
 
+        input_length = tokenized_state.input_ids.shape[1]
         outputs = self.model.generate(
             tokenized_state.input_ids,
-            max_length=1024,
+            max_length=input_length + 512,
             num_beams=n,
             do_sample=False,
             num_return_sequences=n,
             early_stopping=False,
             return_dict_in_generate=True,
             output_scores=True,
+            repetition_penalty=1.2,
+            no_repeat_ngram_size=3,
         )
         tactics = self.tokenizer.batch_decode(
             outputs.sequences, skip_special_tokens=True
@@ -126,6 +137,10 @@ class Transformer:
         del tokenized_state
         del outputs
         del sequence_scores
+
+        # Clear KV-cache after beam search
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
         return result
 
@@ -143,16 +158,19 @@ class Transformer:
             return_tensors="pt",
             padding=True,
             truncation=True,
-            max_length=1024,
+            max_length=2048,
         ).to(self.device)
 
+        input_length = tokenized_states.input_ids.shape[1]
         tactics_ids = self.model.generate(
             tokenized_states.input_ids,
-            max_length=1024,
+            max_length=input_length + 512,
             num_beams=n,
             do_sample=False,
             num_return_sequences=n,
             early_stopping=False,
+            repetition_penalty=1.2,
+            no_repeat_ngram_size=3,
         )
 
         # tactics_ids shape: (batch_size * n, sequence_length)
@@ -165,6 +183,10 @@ class Transformer:
         result = []
         for i in range(0, len(tactics), n):
             result.append(tactics[i : i + n])
+
+        # Clear KV-cache after beam search
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
         return result
 
@@ -183,18 +205,21 @@ class Transformer:
             return_tensors="pt",
             padding=True,
             truncation=True,
-            max_length=1024,
+            max_length=2048,
         ).to(self.device)
 
+        input_length = tokenized_states.input_ids.shape[1]
         outputs = self.model.generate(
             tokenized_states.input_ids,
-            max_length=1024,
+            max_length=input_length + 512,
             num_beams=n,
             do_sample=False,
             num_return_sequences=n,
             early_stopping=False,
             return_dict_in_generate=True,
             output_scores=True,
+            repetition_penalty=1.2,
+            no_repeat_ngram_size=3,
         )
 
         all_tactics = self.tokenizer.batch_decode(
@@ -219,5 +244,9 @@ class Transformer:
         del tokenized_states
         del outputs
         del sequence_scores
+
+        # Clear KV-cache after beam search
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
         return results

@@ -29,7 +29,7 @@ class MCTS_GuidedRollout(BaseMCTS):
         batch_size: int = 8,
         num_tactics_to_expand: int = 8,
         max_rollout_depth: int = 30,
-        max_time: float = 300.0,
+        max_time: float = 300.0,  # Max time per MCTS search step (seconds)
         **kwargs,
     ):
         super().__init__(
@@ -76,7 +76,8 @@ class MCTS_GuidedRollout(BaseMCTS):
         Phase 2: Expansion
         Expand the leaf node by generating all promising actions from the
         policy head, creating a child for each, and storing their prior
-        probabilities.
+        probabilities. Duplicate states are reused (DAG structure) to enable
+        multi-path backpropagation.
         """
         if not isinstance(node.state, TacticState):
             raise TypeError("Cannot expand a node without a TacticState.")
@@ -88,7 +89,7 @@ class MCTS_GuidedRollout(BaseMCTS):
             state_str, n=self.num_tactics_to_expand
         )
 
-        # Create a child for each promising tactic
+        # Create a child for each promising tactic (reusing existing nodes for duplicates)
         for tactic, prob in tactics_with_probs:
             # Skip if we already have an edge for this action
             if node.has_edge_for_action(tactic):
@@ -96,22 +97,33 @@ class MCTS_GuidedRollout(BaseMCTS):
 
             next_state = self.env.run_tactic_stateless(node.state, tactic)
 
-            # Prune Error States
-            if isinstance(next_state, (LeanError, ProofGivenUp)):
+            # Check for duplicate states
+            state_key = self._get_state_key(next_state)
+            if state_key is not None and state_key in self.seen_states:
+                # Reuse existing node - add as child with additional parent edge
+                existing_node = self.seen_states[state_key]
+                existing_node.add_parent(node, tactic)
+                if existing_node not in node.children:
+                    node.children.append(existing_node)
                 continue
 
-            # Check Transposition Table
-            child_node = self._get_or_create_node(next_state)
+            child = Node(next_state, parent=node, action=tactic)
+            child.prior_p = prob  # Store the Prior
+            node.children.append(child)
+            self.node_count += 1
 
-            edge = Edge(action=tactic, prior=prob, child=child_node)
-            node.add_edge(edge)
+            # Register new state in seen_states
+            if state_key is not None:
+                self.seen_states[state_key] = child
 
         node.untried_actions = []
 
+        # Return the best child based on PUCT score to start simulation from
         if node.children:
-            best_edge = self._get_best_edge(node)
-            return node, best_edge
-        return node, None
+            return self._get_best_child(node)
+        else:
+            # All tactics were filtered out; return the node itself
+            return node
 
     def _expand_batch(self, nodes: List[Node]) -> List[tuple[Node, Optional[Edge]]]:
         # 1. Generate tactics for all nodes
@@ -126,21 +138,32 @@ class MCTS_GuidedRollout(BaseMCTS):
         if not states:
             return [(node, None) for node in nodes]
 
+        # Early timeout check before expensive model call
+        if self._is_timeout():
+            return nodes
+
         # Batch generate tactics with probabilities
         batch_tactics_with_probs = self.transformer.generate_tactics_with_probs_batch(
             states, n=self.num_tactics_to_expand
         )
 
-        # 2. Prepare tasks for parallel execution
+        # Early timeout check after model call
+        if self._is_timeout():
+            return nodes
+
+        # Prepare tasks
         tasks = []
         for i, tactics_probs in enumerate(batch_tactics_with_probs):
             node = nodes_to_generate[i]
             for tactic, prob in tactics_probs:
                 tasks.append((node, tactic, prob))
 
-        # 3. Run tactics sequentially
+        # Run tactics sequentially with timeout checks
         results = []
         for node, tactic, prob in tasks:
+            # Check timeout periodically during Lean calls
+            if self._is_timeout():
+                break
             next_state = self.env.run_tactic_stateless(node.state, tactic)
 
             # Prune Error States
@@ -149,13 +172,26 @@ class MCTS_GuidedRollout(BaseMCTS):
 
             results.append((node, tactic, prob, next_state))
 
-        # 4. Create children (using add_edge for deduplication)
+        # Create children (reusing existing nodes for duplicates - DAG structure)
         for node, tactic, prob, next_state in results:
-            if node.has_edge_for_action(tactic):
+            # Check for duplicate states
+            state_key = self._get_state_key(next_state)
+            if state_key is not None and state_key in self.seen_states:
+                # Reuse existing node - add as child with additional parent edge
+                existing_node = self.seen_states[state_key]
+                existing_node.add_parent(node, tactic)
+                if existing_node not in node.children:
+                    node.children.append(existing_node)
                 continue
-            child_node = self._get_or_create_node(next_state)
-            edge = Edge(action=tactic, prior=prob, child=child_node)
-            node.add_edge(edge)
+
+            child = Node(next_state, parent=node, action=tactic)
+            child.prior_p = prob
+            node.children.append(child)
+            self.node_count += 1
+
+            # Register new state in seen_states
+            if state_key is not None:
+                self.seen_states[state_key] = child
 
         for node in nodes_to_generate:
             node.untried_actions = []
@@ -174,6 +210,10 @@ class MCTS_GuidedRollout(BaseMCTS):
         """
         Phase 3: Simulation (Guided Rollout)
         """
+        # Early timeout check
+        if self._is_timeout():
+            return 0.0  # Neutral reward on timeout
+
         if node.is_terminal:
             if isinstance(node.state, ProofFinished):
                 return 1.0
@@ -189,10 +229,18 @@ class MCTS_GuidedRollout(BaseMCTS):
         sim_env = env if env else self.env
 
         for step_idx in range(self.max_rollout_depth):
+            # Check timeout at each rollout step
+            if self._is_timeout():
+                return 0.0  # Neutral reward on timeout
+
             state_str = current_state.pp
 
             # Get a single greedy tactic
             tactic = self.transformer.generate_tactics(state_str, n=1)[0]
+
+            # Check timeout after model call
+            if self._is_timeout():
+                return 0.0
 
             # Run the tactic with timeout handling
             result = sim_env.run_tactic_stateless(current_state, tactic)

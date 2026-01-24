@@ -30,10 +30,8 @@ class TrainingConfig:
     checkpoint_dir: Optional[str]
     use_wandb: bool
 
-    # Worker memory management
-    max_theorems_per_worker: int = (
-        8  # Restart workers after this many theorems to prevent memory leaks
-    )
+    # Inference / IPC Args
+    inference_timeout: float = 600.0
 
     # Model Args
     model_name: str = "kaiyuy/leandojo-lean4-tacgen-byt5-small"
@@ -41,6 +39,13 @@ class TrainingConfig:
     max_rollout_depth: int = 30
     max_time: float = 300.0
     env_timeout: int = 100
+
+    # Timeout parameters (all in seconds)
+    # Note: These form a hierarchy - each level should be larger than the one below
+    # env_timeout < max_time < proof_timeout
+    max_time: float = 300.0  # Max time per MCTS search step
+    env_timeout: int = 180  # Max time per tactic execution
+    proof_timeout: float = 1200.0  # Max time for entire proof search
 
     @classmethod
     def from_args(cls, args: argparse.Namespace) -> "TrainingConfig":
@@ -59,6 +64,7 @@ class TrainingConfig:
             max_rollout_depth=args.max_rollout_depth,
             max_time=args.max_time,
             env_timeout=args.env_timeout,
+            proof_timeout=args.proof_timeout,
             train_epochs=args.train_epochs,
             train_value_head=args.train_value_head,
             use_final_reward=args.use_final_reward,
@@ -68,7 +74,7 @@ class TrainingConfig:
             use_test_value_head=args.use_test_value_head,
             checkpoint_dir=args.checkpoint_dir,
             use_wandb=args.use_wandb,
-            max_theorems_per_worker=args.max_theorems_per_worker,
+            inference_timeout=args.inference_timeout,
         )
 
 
@@ -99,13 +105,13 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--num-iterations",
         type=int,
-        default=100,
+        default=200,
         help="Number of MCTS iterations per step (reduced default for memory efficiency).",
     )
     parser.add_argument(
         "--max-steps",
         type=int,
-        default=30,
+        default=10,
         help="Max steps per proof (reduced default for memory efficiency).",
     )
     parser.add_argument(
@@ -168,6 +174,32 @@ def get_config() -> TrainingConfig:
         type=int,
         default=8,
         help="Restart workers after processing this many theorems to prevent memory leaks.",
+    )
+    parser.add_argument(
+        "--max-time",
+        type=float,
+        default=300.0,
+        help="Max time (seconds) per MCTS search step. Should be > env-timeout.",
+    )
+    parser.add_argument(
+        "--env-timeout",
+        type=int,
+        default=180,
+        help="Max time (seconds) per single tactic execution. Should be < max-time.",
+    )
+    parser.add_argument(
+        "--proof-timeout",
+        type=float,
+        default=1200.0,
+        help="Max time (seconds) for entire proof search per theorem. Should be > max-time.",
+    )
+
+    # --- Inference / IPC Args ---
+    parser.add_argument(
+        "--inference-timeout",
+        type=float,
+        default=600.0,
+        help="Max time (seconds) to wait for inference server responses. Independent of proof timeouts.",
     )
 
     # --- Training Args ---

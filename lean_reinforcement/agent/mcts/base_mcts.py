@@ -10,6 +10,7 @@ import torch
 from collections import deque
 from typing import List, Optional, Dict, Set
 from loguru import logger
+import time
 
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
@@ -32,8 +33,9 @@ class Edge:
 
 class Node:
     """
-    A node in the Monte Carlo Search Graph.
-    Holds state, statistics, and outgoing edges.
+    A node in the Monte Carlo Tree Search.
+    Holds state, statistics, and child nodes.
+    Supports DAG structure with multiple parents for state deduplication.
     """
 
     def __init__(
@@ -41,8 +43,15 @@ class Node:
         state: TacticState | ProofFinished | LeanError | ProofGivenUp,
     ):
         self.state = state
-        # self.parent and self.action are removed for Graph Search
-        # self.prior_p is moved to Edge
+        # Support multiple parents for DAG structure
+        # Each entry is (parent_node, action_that_led_here)
+        self.parents: List[tuple["Node", Optional[str]]] = []
+        if parent is not None:
+            self.parents.append((parent, action))
+        self.action = (
+            action  # Keep for compatibility (first action that created this node)
+        )
+        self.prior_p = 0.0
 
         self.children: List[Edge] = []
         self._child_actions: Set[str] = (
@@ -56,20 +65,16 @@ class Node:
 
         self.encoder_features: Optional[torch.Tensor] = None
 
-    def add_edge(self, edge: Edge) -> bool:
-        """
-        Add an edge to this node, returning True if added, False if duplicate.
-        Prevents duplicate edges with the same action.
-        """
-        if edge.action in self._child_actions:
-            return False
-        self._child_actions.add(edge.action)
-        self.children.append(edge)
-        return True
+    def add_parent(self, parent: "Node", action: Optional[str] = None) -> None:
+        """Add an additional parent to this node (for DAG structure)."""
+        # Avoid duplicate parent-action pairs
+        if not any(p == parent and a == action for p, a in self.parents):
+            self.parents.append((parent, action))
 
-    def has_edge_for_action(self, action: str) -> bool:
-        """Check if an edge with the given action already exists."""
-        return action in self._child_actions
+    @property
+    def parent(self) -> Optional["Node"]:
+        """Backward compatibility: returns first parent or None."""
+        return self.parents[0][0] if self.parents else None
 
     def value(self) -> float:
         """Calculates the value of this node. Using max_value for max-backup."""
@@ -98,7 +103,7 @@ class BaseMCTS:
         batch_size: int = 8,
         num_tactics_to_expand: int = 8,
         max_rollout_depth: int = 30,
-        max_time: float = 300.0,
+        max_time: float = 300.0,  # Max time per MCTS search step (seconds)
     ):
         self.env = env
         self.transformer = transformer
@@ -111,11 +116,11 @@ class BaseMCTS:
         self.node_count = 0
         self.virtual_losses: Dict[Node, int] = {}
 
-        # Transposition Table: maps state string -> Node for TacticStates
-        self.nodes: Dict[str, Node] = {}
-        # Terminal nodes are tracked separately (they have no string key)
-        # We use a set to prevent duplicates
-        self.terminal_nodes: Set[Node] = set()
+        # Timeout tracking for search operations
+        self._search_deadline: Optional[float] = None
+
+        # State deduplication: maps state string to Node
+        self.seen_states: Dict[str, Node] = {}
 
         # Get theorem info from the environment
         self.theorem = env.theorem
@@ -152,6 +157,22 @@ class BaseMCTS:
         self.node_count += 1
         return node
 
+        # Register root state in seen_states
+        if isinstance(env.current_state, TacticState):
+            self.seen_states[env.current_state.pp] = self.root
+
+    def _get_state_key(
+        self, state: TacticState | ProofFinished | LeanError | ProofGivenUp
+    ) -> Optional[str]:
+        """
+        Get a hashable key for a state for deduplication purposes.
+        Returns None for terminal states (errors, proof finished) as these
+        are not deduplicated.
+        """
+        if isinstance(state, TacticState):
+            return str(state.pp)
+        return None
+
     def _get_virtual_loss(self, node: Node) -> int:
         return self.virtual_losses.get(node, 0)
 
@@ -173,72 +194,25 @@ class BaseMCTS:
                 f"GPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved"
             )
 
-    def _get_reachable_nodes(self, root: Node) -> Set[Node]:
-        """
-        Find all nodes reachable from the given root via BFS.
-        Used for pruning unreachable nodes from the transposition table.
-        Uses deque for O(1) popleft instead of O(n) pop(0).
-        """
-        reachable: Set[Node] = set()
-        queue = deque([root])
+    def _is_timeout(self) -> bool:
+        """Check if the search has exceeded its time limit."""
+        if self._search_deadline is None:
+            return False
+        return time.time() > self._search_deadline
 
-        while queue:
-            node = queue.popleft()
-            if node in reachable:
-                continue
-            reachable.add(node)
-
-            for edge in node.children:
-                if edge.child not in reachable:
-                    queue.append(edge.child)
-
-        return reachable
-
-    def _prune_unreachable_nodes(self, new_root: Node) -> int:
-        """
-        Remove nodes from the transposition table that are not reachable from new_root.
-        Returns the number of nodes pruned.
-        """
-        reachable = self._get_reachable_nodes(new_root)
-
-        # Find keys to remove and clean up unreachable nodes
-        keys_to_remove = []
-        for key, node in self.nodes.items():
-            if node not in reachable:
-                keys_to_remove.append(key)
-                # Clear any cached tensors on unreachable nodes
-                if node.encoder_features is not None:
-                    del node.encoder_features
-                    node.encoder_features = None
-                # Clear children to break reference cycles
-                node.children.clear()
-                node._child_actions.clear()
-
-        # Remove unreachable nodes from transposition table
-        for key in keys_to_remove:
-            del self.nodes[key]
-
-        # Clean up virtual losses for unreachable nodes
-        nodes_with_vl = list(self.virtual_losses.keys())
-        for node in nodes_with_vl:
-            if node not in reachable:
-                del self.virtual_losses[node]
-
-        # Clean up terminal nodes that are no longer reachable
-        unreachable_terminals = self.terminal_nodes - reachable
-        for node in unreachable_terminals:
-            node.children.clear()  # Break reference cycles
-        self.terminal_nodes -= unreachable_terminals
-
-        # Update node count
-        pruned_count = len(keys_to_remove) + len(unreachable_terminals)
-        self.node_count = len(self.nodes) + len(self.terminal_nodes)
-
-        return pruned_count
-
-    def search(self, num_iterations: int, batch_size: Optional[int] = None) -> None:
+    def search(
+        self,
+        num_iterations: int,
+        batch_size: Optional[int] = None,
+        max_time: Optional[float] = None,
+    ) -> None:
         """
         Run the MCTS search for a given number of iterations with batching.
+
+        Args:
+            num_iterations: Number of MCTS iterations to run.
+            batch_size: Batch size for parallel expansion/simulation.
+            max_time: Maximum time in seconds for this search. If None, uses self.max_time.
         """
         if self.root is None:
             raise RuntimeError(
@@ -247,6 +221,12 @@ class BaseMCTS:
 
         if batch_size is None:
             batch_size = self.batch_size
+        if max_time is None:
+            max_time = self.max_time
+
+        start_time = time.time()
+        # Store deadline as instance var so _expand/_simulate can check it
+        self._search_deadline = start_time + max_time
 
         start_time = time.time()
         gc_interval = 50  # Run garbage collection every 50 iterations
@@ -254,30 +234,13 @@ class BaseMCTS:
 
         with torch.no_grad():
             for iteration in range(0, num_iterations, batch_size):
-                # Periodic garbage collection to prevent memory buildup
-                if iteration > 0 and iteration % gc_interval == 0:
-                    gc.collect()
-
-                if iteration > 0 and iteration % prune_interval == 0:
-                    pruned = self._prune_unreachable_nodes(self.root)
-                    if pruned > 0:
-                        logger.debug(
-                            f"Iteration {iteration}: Pruned {pruned} unreachable nodes"
-                        )
-
-                if len(self.nodes) > self.max_tree_nodes:
-                    pruned = self._prune_unreachable_nodes(self.root)
-                    logger.warning(
-                        f"Transposition table exceeded max ({self.max_tree_nodes}), "
-                        f"pruned {pruned} nodes"
-                    )
-
                 # Early stopping if solution found
                 if self.root.max_value == 1.0:
                     break
 
-                # Check time limit
-                if time.time() - start_time > self.max_time:
+                # Check time limit (more frequent check)
+                if self._is_timeout():
+                    logger.debug(f"MCTS search timeout after {iteration} iterations")
                     break
 
                 # Stop if tree is too large
@@ -290,11 +253,13 @@ class BaseMCTS:
 
                 # 1. Selection Phase (Batch)
                 for _ in range(current_batch_size):
-                    leaf, path = self._select(self.root)
+                    if self._is_timeout():
+                        break
+                    leaf = self._select(self.root)
 
                     if leaf.is_terminal:
                         if isinstance(leaf.state, ProofFinished):
-                            self._backpropagate(path, 1.0)
+                            self._backpropagate(leaf, 1.0)
                             return
                         elif isinstance(leaf.state, (LeanError, ProofGivenUp)):
                             self._backpropagate(path, -1.0)
@@ -312,11 +277,22 @@ class BaseMCTS:
                     leaves.append(leaf)
                     paths.append(path)
 
-                if not leaves:
+                if not leaves or self._is_timeout():
+                    # Clean up virtual losses on early exit
+                    for leaf in leaves:
+                        self._remove_virtual_loss(leaf)
+                    if self._is_timeout():
+                        break
                     continue
 
-                # 2. Expansion Phase
-                expanded_results = self._expand_batch(leaves)
+                # 2. Expansion Phase (with timeout awareness)
+                expanded_nodes = self._expand_batch(leaves)
+
+                # Check timeout after expansion (it can be slow)
+                if self._is_timeout():
+                    for leaf in leaves:
+                        self._remove_virtual_loss(leaf)
+                    break
 
                 # 3. Simulation Phase
                 nodes_to_simulate = [res[0] for res in expanded_results]
@@ -327,16 +303,9 @@ class BaseMCTS:
                     self._remove_virtual_loss(leaf)
                     reward = rewards[i]
 
-                    path = paths[i]
-                    node_to_sim, edge_to_sim = expanded_results[i]
-                    if edge_to_sim is not None:
-                        path.append((node_to_sim, edge_to_sim))
-
-                    self._backpropagate(path, reward)
                     if reward == 1.0:
                         return
 
-                # Clear CUDA cache periodically
                 # Clear CUDA cache periodically
                 if torch.cuda.is_available() and iteration % 20 == 0 and iteration > 0:
                     torch.cuda.empty_cache()
@@ -400,13 +369,31 @@ class BaseMCTS:
     def _backpropagate(self, path: List[tuple[Node, Optional[Edge]]], reward: float):
         """
         Phase 4: Backpropagation
-        Update visit counts and value maximums along the path.
+        Update visit counts and value sums from the given node
+        all the way back up to the root through ALL parent paths (DAG traversal).
+        Uses BFS with visited set to avoid updating nodes multiple times.
         """
-        for node, edge in reversed(path):
-            node.visit_count += 1
-            node.max_value = max(node.max_value, reward)
-            if edge:
-                edge.visit_count += 1
+        from collections import deque
+
+        visited: set[int] = set()  # Track visited nodes by id
+        queue: deque[Node] = deque([node])
+
+        while queue:
+            current = queue.popleft()
+            node_id = id(current)
+
+            if node_id in visited:
+                continue
+            visited.add(node_id)
+
+            # Update this node
+            current.visit_count += 1
+            current.max_value = max(current.max_value, reward)
+
+            # Add all parents to the queue
+            for parent, _ in current.parents:
+                if id(parent) not in visited:
+                    queue.append(parent)
 
     def get_best_action(self) -> Optional[str]:
         """
@@ -459,14 +446,23 @@ class BaseMCTS:
                 found_edge = edge
                 break
 
-        if found_edge:
-            self.root = found_edge.child
-            # Prune nodes that are no longer reachable from the new root
-            pruned = self._prune_unreachable_nodes(self.root)
-            if pruned > 0:
-                logger.debug(
-                    f"Pruned {pruned} unreachable nodes from transposition table"
-                )
+        if found_child:
+            old_root = self.root
+            self.root = found_child
+            # Clear all parent references for the new root (it becomes the root)
+            self.root.parents = []
+
+            # Break cycles in old tree to help GC
+            # Remove the new root from old root's children to break cycle
+            if found_child in old_root.children:
+                old_root.children.remove(found_child)
+            # Clear old root's parents to break upward cycles
+            old_root.parents = []
+
+            self.node_count = self._count_nodes(self.root)
+            # Rebuild seen_states for the new subtree
+            self.seen_states = {}
+            self._rebuild_seen_states(self.root)
         else:
             # If child not found, reset the tree with the current environment state
             if not isinstance(
@@ -477,51 +473,24 @@ class BaseMCTS:
                     f"Invalid state type for new root: {type(self.env.current_state)}"
                 )
 
-            # Fully reset transposition table and virtual losses to avoid mixing trees.
-            # First, clean up all existing nodes to break reference cycles
-            for node in self.nodes.values():
-                if node.encoder_features is not None:
-                    del node.encoder_features
-                    node.encoder_features = None
-                node.children.clear()
-                node._child_actions.clear()
-            for node in self.terminal_nodes:
-                node.children.clear()
+            self.root = Node(state=self.env.current_state)
+            self.node_count = 1
+            # Reset seen_states with new root
+            self.seen_states = {}
+            if isinstance(self.env.current_state, TacticState):
+                self.seen_states[self.env.current_state.pp] = self.root
 
-            self.nodes.clear()
-            self.terminal_nodes.clear()
-            self.virtual_losses.clear()
-            self.node_count = 0
+    def _count_nodes(self, node: Node) -> int:
+        """Recursively counts the number of nodes in the subtree."""
+        count = 1
+        for child in node.children:
+            count += self._count_nodes(child)
+        return count
 
-            self.root = self._get_or_create_node(self.env.current_state)
-
-    def cleanup(self) -> None:
-        """
-        Explicitly clean up all MCTS resources to prevent memory leaks.
-        Should be called when the MCTS instance is no longer needed.
-        """
-        # Clear encoder features from all nodes (both transposition table and terminal)
-        for node in self.nodes.values():
-            if node.encoder_features is not None:
-                del node.encoder_features
-                node.encoder_features = None
-            # Clear children edges and action set to break reference cycles
-            node.children.clear()
-            node._child_actions.clear()
-
-        for node in self.terminal_nodes:
-            node.children.clear()
-            node._child_actions.clear()
-
-        # Clear all data structures
-        self.nodes.clear()
-        self.terminal_nodes.clear()
-        self.virtual_losses.clear()
-        self.node_count = 0
-        self.root = None  # type: ignore
-
-        # Force garbage collection
-        gc.collect()
-
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+    def _rebuild_seen_states(self, node: Node) -> None:
+        """Recursively rebuild seen_states dictionary from a subtree."""
+        state_key = self._get_state_key(node.state)
+        if state_key is not None:
+            self.seen_states[state_key] = node
+        for child in node.children:
+            self._rebuild_seen_states(child)

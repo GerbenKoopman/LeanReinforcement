@@ -22,16 +22,18 @@ class TestTrainingConfig(unittest.TestCase):
             num_tactics_to_expand=4,
             max_rollout_depth=10,
             max_time=300.0,
-            env_timeout=100,
+            env_timeout=180,
+            proof_timeout=1200.0,
             train_epochs=2,
             train_value_head=False,
             use_final_reward=True,
             save_training_data=False,
             save_checkpoints=False,
+            resume=True,
             use_test_value_head=False,
             checkpoint_dir="/tmp/ckpt",
             use_wandb=False,
-            max_theorems_per_worker=8,
+            inference_timeout=600.0,
         )
 
         config = TrainingConfig.from_args(args)

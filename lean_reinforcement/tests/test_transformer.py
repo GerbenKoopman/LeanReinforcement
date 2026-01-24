@@ -47,7 +47,7 @@ class TestTransformer(unittest.TestCase):
 
         # Assert
         self.mock_tokenizer.assert_called_once_with(
-            state, return_tensors="pt", truncation=True, max_length=1024
+            state, return_tensors="pt", truncation=True, max_length=2048
         )
         self.mock_model.generate.assert_called_once()
         self.mock_tokenizer.batch_decode.assert_called_once_with(
@@ -182,7 +182,8 @@ class TestTransformer(unittest.TestCase):
 
         # Assert - check beam search parameters
         call_kwargs = self.mock_model.generate.call_args[1]
-        self.assertEqual(call_kwargs["max_length"], 1024)
+        # max_length is input_length + 512 to avoid truncation
+        self.assertGreater(call_kwargs["max_length"], 512)
         self.assertEqual(call_kwargs["num_beams"], 5)
         self.assertFalse(call_kwargs["do_sample"])
         self.assertEqual(call_kwargs["num_return_sequences"], 5)

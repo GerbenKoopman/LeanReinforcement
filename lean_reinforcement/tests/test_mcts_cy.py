@@ -48,7 +48,7 @@ class MockLeanDojoEnv(MagicMock):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.current_state = Mock(spec=TacticState)
-        self.current_state.pp = "mock_state_pp"
+        self.current_state.pp = "mock_initial_state"  # Add pp attribute for seen_states
         self.theorem = "mock_theorem"
         self.theorem_pos = "mock_pos"
         self.dataloader = Mock()
@@ -98,38 +98,31 @@ class TestBaseMCTSCy(unittest.TestCase):
         mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
         root = mcts.root
 
-        # Create children manually
-        child1 = Node(Mock(spec=TacticState))
-        child2 = Node(Mock(spec=TacticState))
-
-        edge1 = Edge(action="tactic1", prior=0.5, child=child1)
-        edge2 = Edge(action="tactic2", prior=0.5, child=child2)
-
-        root.children = [edge1, edge2]
+        # Create children manually with pp attribute for seen_states
+        child1_state = Mock(spec=TacticState)
+        child1_state.pp = "child1_state"
+        child2_state = Mock(spec=TacticState)
+        child2_state.pp = "child2_state"
+        child1 = Node(child1_state, parent=root, action="tactic1")
+        child2 = Node(child2_state, parent=root, action="tactic2")
+        root.children = [child1, child2]
 
         # Add some grandchildren to test node counting
-        grandchild = Node(Mock(spec=TacticState))
-        edge_gc = Edge(action="tactic1_1", prior=0.5, child=grandchild)
-        child1.children = [edge_gc]
-
-        # Register nodes in transposition table for counting
-        mcts.nodes["root"] = root
-        mcts.nodes["child1"] = child1
-        mcts.nodes["child2"] = child2
-        mcts.nodes["grandchild"] = grandchild
-        mcts.node_count = 4
+        grandchild_state = Mock(spec=TacticState)
+        grandchild_state.pp = "grandchild_state"
+        grandchild = Node(grandchild_state, parent=child1, action="tactic1_1")
+        child1.children = [grandchild]
 
         # Test moving to an existing child
         mcts.move_root("tactic1")
         self.assertIs(mcts.root, child1)
-        # After move_root, unreachable nodes (root, child2) are pruned
-        # Only child1 and grandchild remain reachable
-        self.assertEqual(mcts.node_count, 2)
+        self.assertEqual(len(mcts.root.parents), 0)  # Root should have no parents
+        self.assertEqual(mcts.node_count, 2)  # child1 + grandchild
 
         # Test moving to a non-existent child (should reset)
         # First, update env.current_state to match what we expect for a reset
         new_state = Mock(spec=TacticState)
-        new_state.pp = "new_state_pp"
+        new_state.pp = "new_state"
         self.env.current_state = new_state
 
         mcts.move_root("non_existent_tactic")
@@ -166,9 +159,11 @@ class TestMCTSGuidedRolloutCy(unittest.TestCase):
         state.pp = "state_pp"
         node = Node(state)
         self.transformer.generate_tactics_with_probs.return_value = [("tactic1", 0.5)]
-        mock_next_state = Mock(spec=TacticState)
-        mock_next_state.pp = "next_state_pp"
-        self.env.run_tactic_stateless = Mock(return_value=mock_next_state)
+        next_state_mock = Mock(spec=TacticState)
+        next_state_mock.pp = (
+            "next_state_pp"  # Different from state.pp to avoid no-op filter
+        )
+        self.env.run_tactic_stateless = Mock(return_value=next_state_mock)
 
         node_res, edge_res = self.mcts._expand(node)
 
@@ -257,11 +252,18 @@ class TestMCTSAlphaZeroCy(unittest.TestCase):
             ("tactic1", 0.6),
             ("tactic2", 0.4),
         ]
-        next_state_mock = Mock(spec=TacticState)
-        next_state_mock.pp = "next_state_pp"
+        # Create different next states for each tactic to avoid duplicate state filtering
+        next_state_mock1 = Mock(spec=TacticState)
+        next_state_mock1.pp = "next_state_pp_1"
+        next_state_mock2 = Mock(spec=TacticState)
+        next_state_mock2.pp = "next_state_pp_2"
 
-        # Mock run_tactic_stateless directly as Cython calls it
-        self.env.run_tactic_stateless = Mock(return_value=next_state_mock)
+        # Mock run_tactic_stateless to return different states for each call
+        self.env.run_tactic_stateless = Mock(
+            side_effect=[next_state_mock1, next_state_mock2]
+        )
+        # Mock encode_states to return a list that can be sliced
+        self.value_head.encode_states.return_value = [Mock(), Mock()]
 
         expanded_node, best_edge = self.mcts._expand(node)
         self.assertIs(expanded_node, node)

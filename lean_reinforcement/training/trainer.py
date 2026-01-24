@@ -107,7 +107,6 @@ class Trainer:
             dataset_path="leandojo_benchmark_4",
             data_type=self.config.data_type,
         )
-        self.dataloader.trace_repo()
 
     def _setup_multiprocessing(self) -> None:
         mp.set_start_method("spawn", force=True)
@@ -127,7 +126,12 @@ class Trainer:
                 f"{prefix}GPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved"
             )
 
-    def train(self) -> None:
+    def train(self) -> List[Dict[str, Any]]:
+        """
+        Runs the training loop.
+        Returns a list of metrics for each epoch.
+        """
+        all_metrics = []
         try:
             inference_server = InferenceServer(
                 self.transformer,
@@ -140,17 +144,26 @@ class Trainer:
             for epoch in range(
                 self.start_epoch, self.start_epoch + self.config.num_epochs
             ):
-                self._run_epoch(epoch, inference_server)
+                metrics = self._run_epoch(epoch, inference_server)
+                all_metrics.extend(metrics)
+
+            return all_metrics
 
         except KeyboardInterrupt:
             logger.info("Training interrupted by user.")
+            return all_metrics
         except Exception as e:
             logger.error(f"Training crashed: {e}")
             raise e
         finally:
             self._cleanup_workers()
 
-    def _run_epoch(self, epoch: int, inference_server: InferenceServer):
+    def _run_epoch(
+        self, epoch: int, inference_server: InferenceServer
+    ) -> List[Dict[str, Any]]:
+        # Drain any leftover theorems from previous epochs before starting
+        self._drain_theorem_queue()
+
         self._start_workers()
         logger.info(f"Starting Epoch {epoch + 1}/{self.config.num_epochs}")
 
@@ -167,7 +180,7 @@ class Trainer:
             f"Processing {len(theorems_to_process)} theorems with {self.config.num_workers} workers."
         )
 
-        training_data_buffer = self._collect_data(
+        training_data_buffer, epoch_metrics = self._collect_data(
             theorems_to_process, inference_server, epoch
         )
 
@@ -179,7 +192,7 @@ class Trainer:
 
         if not training_data_buffer:
             logger.warning("No data collected in this epoch. Skipping training.")
-            return
+            return epoch_metrics
 
         self._analyze_and_save_data(training_data_buffer, epoch)
 
@@ -201,6 +214,8 @@ class Trainer:
             )
             logger.info(f"Checkpoint saved for epoch {epoch + 1}")
 
+        return epoch_metrics
+
     def _start_workers(self) -> None:
         logger.info(f"Starting {self.config.num_workers} workers")
         self.workers = []
@@ -213,7 +228,6 @@ class Trainer:
                     self.response_queues[i],
                     self.theorem_queue,
                     self.result_queue,
-                    self.corpus,
                     self.config,
                 ),
             )
@@ -267,8 +281,28 @@ class Trainer:
                 p.terminate()
                 p.join()
 
+    def _drain_theorem_queue(self) -> None:
+        """Drain theorem queue to ensure clean state before new epoch."""
+        drained = 0
+        try:
+            while not self.theorem_queue.empty():
+                self.theorem_queue.get_nowait()
+                drained += 1
+        except Exception:
+            pass
+        if drained > 0:
+            logger.warning(f"Drained {drained} leftover theorems from queue")
+
     def _drain_queues(self) -> None:
         logger.info("Draining queues...")
+
+        # Drain theorem queue (important: prevents leftover theorems from previous epochs)
+        try:
+            while not self.theorem_queue.empty():
+                self.theorem_queue.get_nowait()
+        except Exception:
+            pass
+
         try:
             while not self.request_queue.empty():
                 self.request_queue.get_nowait()
@@ -293,74 +327,209 @@ class Trainer:
         theorems_to_process: List[TheoremData],
         inference_server: InferenceServer,
         epoch: int,
-    ) -> List[TrainingDataPoint]:
-        completed_theorems = 0
-        training_data_buffer: List[TrainingDataPoint] = []
+    ) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+        """
+        Collect proof attempts from workers.
+
+        Primary approach: Count actual results from the queue until we have
+        results for all theorems.
+
+        Returns: (training_data_buffer, epoch_metrics)
+
+        Exit conditions:
+        1. Received results for all theorems
+        2. All workers dead + no new results for 60 seconds (queue drained)
+        3. Safety timeout (4 hours)
+        4. Stall timeout (no progress for too long)
+        """
+        total_theorems = len(theorems_to_process)
+        results_received = 0
+        training_data_buffer: List[Dict[str, Any]] = []
+        collected_metrics: List[Dict[str, Any]] = []
+        logged_dead_workers: set = set()  # Track workers we've already logged as dead
 
         temp_data_file = self.checkpoint_dir / f"temp_data_epoch_{epoch + 1}.jsonl"
+
+        # Ensure checkpoint directory exists before writing temporary files
+        try:
+            self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
+        except Exception:
+            # Fallback: try creating parent directory path via os.makedirs
+            os.makedirs(str(self.checkpoint_dir), exist_ok=True)
+
         if os.path.exists(temp_data_file):
             os.remove(temp_data_file)
 
-        while completed_theorems < len(theorems_to_process):
+        epoch_start_time = time.time()
+        last_result_time = time.time()
+
+        # Safety net: 4 hour max per epoch
+        max_epoch_time = 4 * 3600
+
+        # How long to wait for more results after all workers die
+        drain_timeout = 60  # seconds
+
+        # Stall timeout: if no progress for this long, assume workers are stuck
+        # This should be longer than the longest expected single theorem time
+        # proof_timeout (default 1200s) + some buffer for slow inference
+        stall_timeout = (
+            self.config.proof_timeout * 1.5
+        )  # 30 minutes with default settings
+
+        logger.info(
+            f"Collecting results for {total_theorems} theorems "
+            f"(safety timeout: {max_epoch_time/3600:.1f}h, stall timeout: {stall_timeout/60:.0f}m)"
+        )
+
+        while results_received < total_theorems:
+            elapsed = time.time() - epoch_start_time
+
+            # Safety net timeout
+            if elapsed > max_epoch_time:
+                logger.warning(
+                    f"Safety timeout reached ({elapsed/3600:.1f}h). "
+                    f"Collected {results_received}/{total_theorems} results. "
+                    f"Proceeding with training."
+                )
+                break
+
+            # Process inference requests (keeps GPU busy)
             processed_batch = inference_server.process_requests()
 
+            # Collect results from workers
+            got_result = False
             try:
                 while True:
                     res = self.result_queue.get_nowait()
-                    if res:
-                        # Handle worker recycle request
-                        if "recycle_worker" in res:
-                            worker_id = res["recycle_worker"]
-                            logger.info(f"Recycling worker {worker_id} to free memory")
-                            self._recycle_worker(worker_id)
-                            continue  # Don't count as completed theorem
+                    results_received += 1
+                    got_result = True
+                    last_result_time = time.time()
 
-                        if "metrics" in res and self.config.use_wandb:
-                            wandb.log(res["metrics"])
+                    if res:
+                        if "metrics" in res:
+                            # Always collect metrics
+                            collected_metrics.append(res["metrics"])
+                            if self.config.use_wandb:
+                                wandb.log(res["metrics"])
 
                         if "data" in res:
-                            training_data_buffer.extend(res["data"])
+                            data = res["data"]
+                            training_data_buffer.extend(data)
+
+                            # Track positive and negative samples
+                            if data and self.config.use_wandb:
+                                positive_count = sum(
+                                    1
+                                    for item in data
+                                    if item.get("value_target", 0) > 0
+                                )
+                                negative_count = sum(
+                                    1
+                                    for item in data
+                                    if item.get("value_target", 0) < 0
+                                )
+                                wandb.log(
+                                    {
+                                        "training_data/positive_samples": positive_count,
+                                        "training_data/negative_samples": negative_count,
+                                    }
+                                )
                         elif isinstance(res, list):
                             training_data_buffer.extend(res)
 
+                        # Periodically save to disk to avoid memory issues
                         if len(training_data_buffer) > 100:
                             with open(temp_data_file, "a") as f:
                                 for item in training_data_buffer:
                                     f.write(json.dumps(item) + "\n")
                             training_data_buffer = []
 
-                        # Only count actual theorem completions (not recycle requests)
-                        completed_theorems += 1
-                        if completed_theorems % self.config.num_workers == 0:
-                            logger.info(
-                                f"Completed {completed_theorems}/{len(theorems_to_process)} proofs"
-                            )
+                    # Progress logging
+                    if results_received % self.config.num_workers == 0:
+                        pct = 100 * results_received / total_theorems
+                        logger.info(
+                            f"Progress: {results_received}/{total_theorems} "
+                            f"({pct:.0f}%) in {elapsed/60:.1f} min"
+                        )
             except queue.Empty:
                 pass
 
-            if not processed_batch:
+            if not processed_batch and not got_result:
                 time.sleep(0.01)
 
+            # Check worker status
+            alive_workers = [p for p in self.workers if p.is_alive()]
             dead_workers = [
                 (i, p) for i, p in enumerate(self.workers) if not p.is_alive()
             ]
-            if dead_workers:
-                # Check if it's a graceful exit (recycling) vs crash
-                crashed = [
-                    (i, p) for i, p in dead_workers if p.exitcode not in (0, None)
-                ]
-                if crashed:
-                    logger.error(
-                        f"Found {len(crashed)} crashed worker(s). Stopping training."
+
+            # Log dead workers and restart crashed ones (once per worker)
+            for i, p in dead_workers:
+                if p.pid not in logged_dead_workers:
+                    logged_dead_workers.add(p.pid)
+
+                    # Check if worker crashed (non-zero exit code)
+                    if p.exitcode not in (0, None):
+                        logger.warning(
+                            f"Worker {i} (PID: {p.pid}) crashed (exit code: {p.exitcode}). "
+                            f"Restarting worker and skipping current theorem."
+                        )
+
+                        # Mark the lost theorem as "completed" (failed)
+                        results_received += 1
+
+                        # Terminate the old process object to be safe
+                        p.join(timeout=1)
+
+                        # Start a new worker with the same ID
+                        new_worker = mp.Process(
+                            target=worker_loop,
+                            args=(
+                                i,
+                                self.request_queue,
+                                self.response_queues[i],
+                                self.theorem_queue,
+                                self.result_queue,
+                                self.config,
+                            ),
+                        )
+                        new_worker.start()
+                        self.workers[i] = new_worker
+                        logger.info(f"Worker {i} restarted successfully.")
+                    else:
+                        # Graceful exit (exit code 0)
+                        logger.info(
+                            f"Worker {i} (PID: {p.pid}) exited gracefully. "
+                            f"{len([w for w in self.workers if w.is_alive()])} workers still alive."
+                        )
+
+            # Check for stall - no progress for too long even with alive workers
+            time_since_last_result = time.time() - last_result_time
+            if time_since_last_result > stall_timeout:
+                logger.warning(
+                    f"No progress for {time_since_last_result/60:.1f} minutes "
+                    f"(stall timeout: {stall_timeout/60:.0f}m). "
+                    f"Collected {results_received}/{total_theorems} results. "
+                    f"Proceeding with training."
+                )
+                break
+
+            # If all workers are dead, wait a bit for queue to drain, then exit
+            if not alive_workers:
+                if time_since_last_result > drain_timeout:
+                    logger.warning(
+                        f"All workers dead and no results for {drain_timeout}s. "
+                        f"Collected {results_received}/{total_theorems} results. "
+                        f"Proceeding with training."
                     )
-                    for i, p in crashed:
-                        logger.error(f"Worker {i} exit code: {p.exitcode}")
-                    for p in self.workers:
-                        if p.is_alive():
-                            p.terminate()
-                    raise RuntimeError(
-                        "One or more worker processes died unexpectedly."
-                    )
+                    break
+
+        # Final stats
+        elapsed = time.time() - epoch_start_time
+        logger.info(
+            f"Data collection complete: {results_received}/{total_theorems} "
+            f"results in {elapsed/60:.1f} min"
+        )
 
         # Load back temp data
         if os.path.exists(temp_data_file):
@@ -376,7 +545,7 @@ class Trainer:
                     training_data_buffer.append(json.loads(line))
             os.remove(temp_data_file)
 
-        return training_data_buffer
+        return training_data_buffer, collected_metrics
 
     def _analyze_and_save_data(
         self, training_data_buffer: List[TrainingDataPoint], epoch: int

@@ -1,0 +1,800 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Building Cython extensions...
+Compiling lean_reinforcement/agent/mcts/mcts_cy/base_mcts_cy.pyx because it changed.
+Compiling lean_reinforcement/agent/mcts/mcts_cy/alphazero_cy.pyx because it changed.
+Compiling lean_reinforcement/agent/mcts/mcts_cy/guidedrollout_cy.pyx because it changed.
+[1/3] Cythonizing lean_reinforcement/agent/mcts/mcts_cy/alphazero_cy.pyx
+[2/3] Cythonizing lean_reinforcement/agent/mcts/mcts_cy/base_mcts_cy.pyx
+[3/3] Cythonizing lean_reinforcement/agent/mcts/mcts_cy/guidedrollout_cy.pyx
+running build_ext
+building 'lean_reinforcement.agent.mcts.mcts_cy.base_mcts_cy' extension
+/home/gkoopman/.conda/envs/lean-reinforcement/bin/x86_64-conda-linux-gnu-cc -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/gkoopman/.conda/envs/lean-reinforcement/include -I/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/include -DNDEBUG -D_FORTIFY_SOURCE=2 -O2 -isystem /home/gkoopman/.conda/envs/lean-reinforcement/include -I/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/include -fPIC -I/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/numpy/_core/include -I/home/gkoopman/.conda/envs/lean-reinforcement/include/python3.10 -c lean_reinforcement/agent/mcts/mcts_cy/base_mcts_cy.c -o build/temp.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/base_mcts_cy.o -O3
+/home/gkoopman/.conda/envs/lean-reinforcement/bin/x86_64-conda-linux-gnu-cc -shared -Wl,--allow-shlib-undefined -Wl,-rpath,/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,-rpath-link,/home/gkoopman/.conda/envs/lean-reinforcement/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,--allow-shlib-undefined -Wl,-rpath,/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,-rpath-link,/home/gkoopman/.conda/envs/lean-reinforcement/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,-rpath-link,/home/gkoopman/.conda/envs/lean-reinforcement/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/lib/stubs -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/gkoopman/.conda/envs/lean-reinforcement/include -I/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/include -DNDEBUG -D_FORTIFY_SOURCE=2 -O2 -isystem /home/gkoopman/.conda/envs/lean-reinforcement/include -I/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/include build/temp.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/base_mcts_cy.o -o build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/base_mcts_cy.cpython-310-x86_64-linux-gnu.so
+building 'lean_reinforcement.agent.mcts.mcts_cy.alphazero_cy' extension
+/home/gkoopman/.conda/envs/lean-reinforcement/bin/x86_64-conda-linux-gnu-cc -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/gkoopman/.conda/envs/lean-reinforcement/include -I/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/include -DNDEBUG -D_FORTIFY_SOURCE=2 -O2 -isystem /home/gkoopman/.conda/envs/lean-reinforcement/include -I/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/include -fPIC -I/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/numpy/_core/include -I/home/gkoopman/.conda/envs/lean-reinforcement/include/python3.10 -c lean_reinforcement/agent/mcts/mcts_cy/alphazero_cy.c -o build/temp.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/alphazero_cy.o -O3
+/home/gkoopman/.conda/envs/lean-reinforcement/bin/x86_64-conda-linux-gnu-cc -shared -Wl,--allow-shlib-undefined -Wl,-rpath,/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,-rpath-link,/home/gkoopman/.conda/envs/lean-reinforcement/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,--allow-shlib-undefined -Wl,-rpath,/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,-rpath-link,/home/gkoopman/.conda/envs/lean-reinforcement/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,-rpath-link,/home/gkoopman/.conda/envs/lean-reinforcement/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/lib/stubs -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/gkoopman/.conda/envs/lean-reinforcement/include -I/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/include -DNDEBUG -D_FORTIFY_SOURCE=2 -O2 -isystem /home/gkoopman/.conda/envs/lean-reinforcement/include -I/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/include build/temp.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/alphazero_cy.o -o build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/alphazero_cy.cpython-310-x86_64-linux-gnu.so
+building 'lean_reinforcement.agent.mcts.mcts_cy.guidedrollout_cy' extension
+/home/gkoopman/.conda/envs/lean-reinforcement/bin/x86_64-conda-linux-gnu-cc -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/gkoopman/.conda/envs/lean-reinforcement/include -I/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/include -DNDEBUG -D_FORTIFY_SOURCE=2 -O2 -isystem /home/gkoopman/.conda/envs/lean-reinforcement/include -I/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/include -fPIC -I/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/numpy/_core/include -I/home/gkoopman/.conda/envs/lean-reinforcement/include/python3.10 -c lean_reinforcement/agent/mcts/mcts_cy/guidedrollout_cy.c -o build/temp.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/guidedrollout_cy.o -O3
+/home/gkoopman/.conda/envs/lean-reinforcement/bin/x86_64-conda-linux-gnu-cc -shared -Wl,--allow-shlib-undefined -Wl,-rpath,/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,-rpath-link,/home/gkoopman/.conda/envs/lean-reinforcement/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,--allow-shlib-undefined -Wl,-rpath,/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,-rpath-link,/home/gkoopman/.conda/envs/lean-reinforcement/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/gkoopman/.conda/envs/lean-reinforcement/lib -Wl,-rpath-link,/home/gkoopman/.conda/envs/lean-reinforcement/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/lib -L/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/lib/stubs -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/gkoopman/.conda/envs/lean-reinforcement/include -I/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/include -DNDEBUG -D_FORTIFY_SOURCE=2 -O2 -isystem /home/gkoopman/.conda/envs/lean-reinforcement/include -I/home/gkoopman/.conda/envs/lean-reinforcement/targets/x86_64-linux/include build/temp.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/guidedrollout_cy.o -o build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/guidedrollout_cy.cpython-310-x86_64-linux-gnu.so
+copying build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/base_mcts_cy.cpython-310-x86_64-linux-gnu.so -> lean_reinforcement/agent/mcts/mcts_cy
+copying build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/alphazero_cy.cpython-310-x86_64-linux-gnu.so -> lean_reinforcement/agent/mcts/mcts_cy
+copying build/lib.linux-x86_64-cpython-310/lean_reinforcement/agent/mcts/mcts_cy/guidedrollout_cy.cpython-310-x86_64-linux-gnu.so -> lean_reinforcement/agent/mcts/mcts_cy
+copying build/lib.linux-x86_64-cpython-310/ReProver/common_cy.cpython-310-x86_64-linux-gnu.so -> ReProver
+Starting training run with distributed environment...
+wandb: Currently logged in as: gerbennkoopman to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run skqyl96k
+wandb: Tracking run with wandb version 0.23.1
+wandb: Run data is saved locally in /gpfs/home1/gkoopman/lean_reinforcement/wandb/run-20260114_184047-skqyl96k
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run celestial-tree-72
+wandb: ⭐️ View project at https://wandb.ai/gerbennkoopman-university-of-amsterdam/lean-reinforcement
+wandb: 🚀 View run at https://wandb.ai/gerbennkoopman-university-of-amsterdam/lean-reinforcement/runs/skqyl96k
+2026-01-14 18:40:50.641 | INFO     | lean_reinforcement.training.trainer:_setup_models:56 - Using checkpoint directory: /gpfs/scratch1/shared/lean-reinforcement/checkpoints
+2026-01-14 18:40:53.722 | INFO     | lean_reinforcement.utilities.checkpoint:load_checkpoint:101 - No checkpoint found at /gpfs/scratch1/shared/lean-reinforcement/checkpoints/value_head_guided_rollout_latest.pth, starting from scratch
+2026-01-14 18:40:53.723 | INFO     | lean_reinforcement.training.trainer:_setup_models:77 - Resuming training from epoch 0
+2026-01-14 18:40:53.723 | INFO     | lean_reinforcement.training.trainer:_log_gpu_memory:123 - After model initialization - GPU Memory: 1.12GB allocated, 1.23GB reserved
+2026-01-14 18:40:53.723 | INFO     | lean_reinforcement.training.trainer:_setup_data:87 - Loading data from 'leandojo_benchmark_4/novel_premises'
+2026-01-14 18:40:53.839 | INFO     | lean_reinforcement.training.trainer:_setup_data:92 - Loading indexed corpus from /gpfs/scratch1/shared/lean-reinforcement/indexed_corpus/indexed_corpus.pkl
+2026-01-14 18:41:33.395 | INFO     | lean_dojo.data_extraction.trace:trace:248 - Loading the traced repo from /gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache/leanprover-community-mathlib4-29dcec074de168ac2bf835a77ef68bbe069194c5/mathlib4
+2026-01-14 18:41:52,023	INFO worker.py:2003 -- Started a local Ray instance. View the dashboard at [1m[32m127.0.0.1:8265 [39m[22m
+/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/ray/_private/worker.py:2051: FutureWarning: Tip: In future versions of Ray, Ray will no longer override accelerator visible devices env var if num_gpus=0 or num_gpus=None (default). To enable this behavior and turn off this error message, set RAY_ACCEL_ENV_VAR_OVERRIDE_ON_ZERO=0
+  warnings.warn(
+  0%|          | 0/5674 [00:00<?, ?it/s]  0%|          | 1/5674 [00:01<2:48:39,  1.78s/it]  0%|          | 8/5674 [00:01<16:39,  5.67it/s]    0%|          | 12/5674 [00:02<11:21,  8.31it/s]  0%|          | 16/5674 [00:02<08:04, 11.68it/s]  0%|          | 21/5674 [00:02<05:38, 16.69it/s]  0%|          | 25/5674 [00:07<40:48,  2.31it/s]  1%|          | 30/5674 [00:07<27:05,  3.47it/s]  1%|          | 35/5674 [00:07<18:30,  5.08it/s]  1%|          | 39/5674 [00:07<14:19,  6.56it/s]  1%|          | 43/5674 [00:07<11:08,  8.42it/s]  1%|          | 47/5674 [00:07<08:35, 10.92it/s]  1%|          | 51/5674 [00:13<43:49,  2.14it/s]  1%|          | 54/5674 [00:13<34:14,  2.74it/s]  1%|          | 58/5674 [00:13<24:27,  3.83it/s]  1%|          | 62/5674 [00:13<17:57,  5.21it/s]  1%|          | 67/5674 [00:13<12:28,  7.49it/s]  1%|▏         | 72/5674 [00:14<08:56, 10.45it/s]  1%|▏         | 76/5674 [00:19<43:43,  2.13it/s]  1%|▏         | 79/5674 [00:19<34:40,  2.69it/s]  1%|▏         | 82/5674 [00:20<26:56,  3.46it/s]  2%|▏         | 89/5674 [00:20<15:31,  6.00it/s]  2%|▏         | 93/5674 [00:20<12:37,  7.36it/s]  2%|▏         | 96/5674 [00:20<10:48,  8.60it/s]  2%|▏         | 99/5674 [00:20<09:14, 10.05it/s]  2%|▏         | 102/5674 [00:20<07:47, 11.93it/s]  2%|▏         | 106/5674 [00:27<54:42,  1.70it/s]  2%|▏         | 112/5674 [00:27<32:41,  2.83it/s]  2%|▏         | 116/5674 [00:27<24:23,  3.80it/s]  2%|▏         | 119/5674 [00:27<20:45,  4.46it/s]  2%|▏         | 125/5674 [00:27<13:21,  6.93it/s]  2%|▏         | 131/5674 [00:28<09:10, 10.07it/s]  2%|▏         | 135/5674 [00:28<07:58, 11.56it/s]  2%|▏         | 139/5674 [00:28<06:55, 13.32it/s]  3%|▎         | 144/5674 [00:36<50:02,  1.84it/s]  3%|▎         | 148/5674 [00:36<37:16,  2.47it/s]  3%|▎         | 151/5674 [00:36<29:53,  3.08it/s]  3%|▎         | 154/5674 [00:36<23:44,  3.88it/s]  3%|▎         | 159/5674 [00:36<15:43,  5.85it/s]  3%|▎         | 163/5674 [00:36<11:53,  7.73it/s]  3%|▎         | 167/5674 [00:36<09:17,  9.88it/s]  3%|▎         | 172/5674 [00:37<07:13, 12.69it/s]  3%|▎         | 176/5674 [00:37<05:57, 15.39it/s]  3%|▎         | 180/5674 [00:37<06:17, 14.54it/s]  3%|▎         | 187/5674 [00:37<04:14, 21.55it/s]  3%|▎         | 193/5674 [00:45<45:43,  2.00it/s]  3%|▎         | 198/5674 [00:45<33:12,  2.75it/s]  4%|▎         | 202/5674 [00:46<25:37,  3.56it/s]  4%|▎         | 206/5674 [00:46<20:20,  4.48it/s]  4%|▍         | 214/5674 [00:46<12:36,  7.22it/s]  4%|▍         | 224/5674 [00:46<07:33, 12.00it/s]  4%|▍         | 229/5674 [00:46<06:15, 14.51it/s]  4%|▍         | 239/5674 [00:46<04:06, 22.04it/s]  4%|▍         | 246/5674 [00:47<03:37, 24.91it/s]  4%|▍         | 254/5674 [00:47<02:51, 31.67it/s]  5%|▍         | 261/5674 [00:47<03:14, 27.84it/s]  5%|▍         | 266/5674 [00:47<03:00, 30.02it/s]  5%|▍         | 271/5674 [00:47<02:46, 32.47it/s]  5%|▍         | 276/5674 [00:57<46:57,  1.92it/s]  5%|▍         | 280/5674 [00:57<36:45,  2.45it/s]  5%|▌         | 284/5674 [00:57<28:24,  3.16it/s]  5%|▌         | 288/5674 [00:57<22:13,  4.04it/s]  5%|▌         | 298/5674 [00:57<12:07,  7.39it/s]  5%|▌         | 303/5674 [00:58<09:56,  9.00it/s]  5%|▌         | 307/5674 [00:58<08:15, 10.84it/s]  6%|▌         | 313/5674 [00:58<06:04, 14.71it/s]  6%|▌         | 318/5674 [00:58<04:57, 18.00it/s]  6%|▌         | 326/5674 [00:58<03:29, 25.57it/s]  6%|▌         | 334/5674 [00:58<02:42, 32.95it/s]  6%|▌         | 342/5674 [00:58<02:16, 38.94it/s]  6%|▌         | 350/5674 [00:59<02:06, 41.99it/s]  6%|▋         | 357/5674 [00:59<01:52, 47.30it/s]  6%|▋         | 363/5674 [00:59<01:50, 47.87it/s]  7%|▋         | 372/5674 [00:59<01:36, 54.73it/s]  7%|▋         | 381/5674 [00:59<01:29, 59.22it/s]  7%|▋         | 391/5674 [00:59<01:18, 67.64it/s]  7%|▋         | 391/5674 [01:11<01:18, 67.64it/s]  7%|▋         | 394/5674 [01:11<45:03,  1.95it/s]  7%|▋         | 413/5674 [01:11<20:50,  4.21it/s]  8%|▊         | 429/5674 [01:11<12:49,  6.82it/s]  8%|▊         | 443/5674 [01:11<08:46,  9.94it/s]  8%|▊         | 457/5674 [01:11<06:12, 14.00it/s]  8%|▊         | 469/5674 [01:11<04:46, 18.19it/s]  8%|▊         | 480/5674 [01:11<03:52, 22.38it/s]  9%|▊         | 490/5674 [01:12<03:24, 25.35it/s]  9%|▉         | 498/5674 [01:12<03:13, 26.80it/s]  9%|▉         | 505/5674 [01:12<02:56, 29.27it/s]  9%|▉         | 511/5674 [01:12<02:52, 29.99it/s]  9%|▉         | 517/5674 [01:12<02:43, 31.48it/s]  9%|▉         | 522/5674 [01:13<02:38, 32.47it/s]  9%|▉         | 527/5674 [01:13<02:25, 35.37it/s]  9%|▉         | 536/5674 [01:13<01:53, 45.41it/s] 10%|▉         | 542/5674 [01:13<01:52, 45.60it/s] 10%|▉         | 551/5674 [01:13<01:33, 54.69it/s] 10%|▉         | 558/5674 [01:13<01:28, 57.94it/s] 10%|▉         | 565/5674 [01:13<01:25, 59.72it/s] 10%|█         | 572/5674 [01:13<01:31, 56.03it/s] 10%|█         | 578/5674 [01:13<01:44, 48.69it/s] 10%|█         | 578/5674 [01:27<01:44, 48.69it/s] 10%|█         | 583/5674 [01:27<55:55,  1.52it/s] 10%|█         | 590/5674 [01:27<38:11,  2.22it/s] 11%|█         | 596/5674 [01:27<27:49,  3.04it/s] 11%|█         | 602/5674 [01:27<20:22,  4.15it/s] 11%|█         | 609/5674 [01:27<14:09,  5.97it/s] 11%|█         | 615/5674 [01:28<10:34,  7.97it/s] 11%|█         | 621/5674 [01:28<08:01, 10.50it/s] 11%|█         | 627/5674 [01:28<06:10, 13.61it/s] 11%|█         | 637/5674 [01:28<03:59, 21.05it/s] 11%|█▏        | 645/5674 [01:28<03:03, 27.39it/s] 11%|█▏        | 652/5674 [01:28<02:43, 30.77it/s] 12%|█▏        | 659/5674 [01:28<02:21, 35.45it/s] 12%|█▏        | 665/5674 [01:29<03:09, 26.45it/s] 12%|█▏        | 670/5674 [01:29<02:52, 29.05it/s] 12%|█▏        | 680/5674 [01:29<02:04, 40.18it/s] 12%|█▏        | 687/5674 [01:29<01:52, 44.17it/s] 12%|█▏        | 693/5674 [01:29<01:49, 45.57it/s] 12%|█▏        | 700/5674 [01:29<01:46, 46.88it/s] 12%|█▏        | 706/5674 [01:29<01:41, 48.82it/s] 13%|█▎        | 712/5674 [01:29<01:37, 50.91it/s] 13%|█▎        | 718/5674 [01:30<01:58, 41.79it/s] 13%|█▎        | 724/5674 [01:30<01:53, 43.64it/s] 13%|█▎        | 729/5674 [01:30<01:50, 44.55it/s] 13%|█▎        | 735/5674 [01:30<01:49, 45.26it/s] 13%|█▎        | 741/5674 [01:30<01:52, 43.86it/s] 13%|█▎        | 748/5674 [01:30<01:38, 50.01it/s] 13%|█▎        | 754/5674 [01:30<01:49, 44.81it/s] 13%|█▎        | 760/5674 [01:31<01:46, 46.06it/s] 13%|█▎        | 760/5674 [01:46<01:46, 46.06it/s] 13%|█▎        | 765/5674 [01:46<1:07:32,  1.21it/s] 14%|█▎        | 768/5674 [01:46<55:55,  1.46it/s]   14%|█▎        | 774/5674 [01:46<37:14,  2.19it/s] 14%|█▎        | 779/5674 [01:47<27:11,  3.00it/s] 14%|█▍        | 784/5674 [01:47<20:00,  4.07it/s] 14%|█▍        | 789/5674 [01:47<14:36,  5.57it/s] 14%|█▍        | 794/5674 [01:47<10:53,  7.47it/s] 14%|█▍        | 799/5674 [01:47<08:50,  9.18it/s] 14%|█▍        | 805/5674 [01:47<06:25, 12.62it/s] 14%|█▍        | 813/5674 [01:47<04:22, 18.53it/s] 14%|█▍        | 820/5674 [01:48<03:36, 22.47it/s] 15%|█▍        | 826/5674 [01:48<03:11, 25.28it/s] 15%|█▍        | 831/5674 [01:48<02:49, 28.53it/s] 15%|█▍        | 836/5674 [01:48<02:43, 29.60it/s] 15%|█▍        | 843/5674 [01:48<02:15, 35.78it/s] 15%|█▍        | 848/5674 [01:48<02:05, 38.34it/s] 15%|█▌        | 854/5674 [01:48<01:53, 42.63it/s] 15%|█▌        | 859/5674 [01:49<01:55, 41.73it/s] 15%|█▌        | 864/5674 [01:49<01:58, 40.51it/s] 15%|█▌        | 869/5674 [01:49<02:07, 37.61it/s] 15%|█▌        | 875/5674 [01:49<01:52, 42.83it/s] 16%|█▌        | 880/5674 [01:49<02:21, 33.94it/s] 16%|█▌        | 884/5674 [01:49<02:20, 34.18it/s] 16%|█▌        | 890/5674 [01:49<02:05, 38.25it/s] 16%|█▌        | 896/5674 [01:50<02:05, 38.08it/s] 16%|█▌        | 901/5674 [01:50<02:11, 36.35it/s] 16%|█▌        | 905/5674 [01:50<02:14, 35.41it/s] 16%|█▌        | 915/5674 [01:50<01:34, 50.45it/s] 16%|█▌        | 921/5674 [01:50<01:32, 51.29it/s] 16%|█▋        | 928/5674 [01:50<01:42, 46.34it/s] 16%|█▋        | 928/5674 [02:09<01:42, 46.34it/s] 16%|█▋        | 933/5674 [02:09<1:16:02,  1.04it/s] 17%|█▋        | 938/5674 [02:09<56:36,  1.39it/s]   17%|█▋        | 943/5674 [02:10<42:22,  1.86it/s] 17%|█▋        | 949/5674 [02:10<29:23,  2.68it/s] 17%|█▋        | 958/5674 [02:10<17:50,  4.40it/s] 17%|█▋        | 964/5674 [02:10<13:21,  5.88it/s] 17%|█▋        | 970/5674 [02:10<10:07,  7.74it/s] 17%|█▋        | 976/5674 [02:10<07:36, 10.29it/s] 17%|█▋        | 981/5674 [02:10<06:07, 12.76it/s] 17%|█▋        | 987/5674 [02:11<04:42, 16.57it/s] 17%|█▋        | 992/5674 [02:11<04:06, 19.02it/s] 18%|█▊        | 997/5674 [02:11<03:29, 22.37it/s] 18%|█▊        | 1002/5674 [02:11<03:07, 24.94it/s] 18%|█▊        | 1007/5674 [02:11<03:00, 25.92it/s] 18%|█▊        | 1012/5674 [02:11<02:35, 29.91it/s] 18%|█▊        | 1017/5674 [02:11<02:35, 29.86it/s] 18%|█▊        | 1024/5674 [02:12<02:15, 34.21it/s] 18%|█▊        | 1032/5674 [02:12<02:15, 34.27it/s] 18%|█▊        | 1036/5674 [02:12<02:43, 28.31it/s] 18%|█▊        | 1042/5674 [02:12<02:18, 33.56it/s] 18%|█▊        | 1049/5674 [02:12<01:59, 38.80it/s] 19%|█▊        | 1056/5674 [02:12<01:43, 44.83it/s] 19%|█▊        | 1062/5674 [02:13<01:47, 43.06it/s] 19%|█▉        | 1069/5674 [02:13<01:34, 48.78it/s] 19%|█▉        | 1077/5674 [02:13<01:35, 48.29it/s] 19%|█▉        | 1085/5674 [02:13<01:38, 46.82it/s] 19%|█▉        | 1090/5674 [02:13<01:40, 45.71it/s] 19%|█▉        | 1096/5674 [02:13<01:35, 47.86it/s] 19%|█▉        | 1101/5674 [02:13<01:36, 47.29it/s] 19%|█▉        | 1106/5674 [02:13<01:40, 45.60it/s] 20%|█▉        | 1112/5674 [02:14<01:37, 46.91it/s] 20%|█▉        | 1117/5674 [02:14<01:50, 41.35it/s] 20%|█▉        | 1127/5674 [02:14<01:23, 54.52it/s] 20%|█▉        | 1134/5674 [02:14<01:25, 53.27it/s] 20%|██        | 1144/5674 [02:14<01:09, 64.85it/s] 20%|██        | 1152/5674 [02:14<01:05, 68.72it/s] 21%|██        | 1165/5674 [02:14<00:54, 82.30it/s] 21%|██        | 1165/5674 [02:37<00:54, 82.30it/s] 21%|██        | 1182/5674 [02:37<43:51,  1.71it/s] 21%|██        | 1194/5674 [02:37<30:35,  2.44it/s] 21%|██▏       | 1206/5674 [02:37<21:27,  3.47it/s] 21%|██▏       | 1219/5674 [02:37<14:46,  5.03it/s] 22%|██▏       | 1240/5674 [02:37<08:40,  8.53it/s] 22%|██▏       | 1259/5674 [02:37<05:42, 12.89it/s] 22%|██▏       | 1276/5674 [02:38<04:04, 17.96it/s] 23%|██▎       | 1290/5674 [02:38<03:07, 23.34it/s] 23%|██▎       | 1304/5674 [02:38<02:26, 29.87it/s] 23%|██▎       | 1317/5674 [02:38<01:55, 37.65it/s] 23%|██▎       | 1330/5674 [02:38<01:33, 46.24it/s] 24%|██▎       | 1343/5674 [02:38<01:19, 54.68it/s] 24%|██▍       | 1355/5674 [02:38<01:11, 60.75it/s] 24%|██▍       | 1366/5674 [02:38<01:09, 61.89it/s] 24%|██▍       | 1376/5674 [02:40<02:58, 24.13it/s] 24%|██▍       | 1384/5674 [02:40<02:32, 28.14it/s] 25%|██▍       | 1391/5674 [02:40<02:20, 30.46it/s] 25%|██▍       | 1398/5674 [02:40<02:17, 31.01it/s] 25%|██▍       | 1404/5674 [02:40<02:11, 32.57it/s] 25%|██▍       | 1409/5674 [02:40<02:05, 33.90it/s] 25%|██▍       | 1414/5674 [02:41<02:00, 35.39it/s] 25%|██▌       | 1421/5674 [02:41<01:42, 41.38it/s] 25%|██▌       | 1427/5674 [02:41<01:46, 39.88it/s] 25%|██▌       | 1432/5674 [02:41<01:41, 41.60it/s] 25%|██▌       | 1437/5674 [02:41<01:48, 39.18it/s] 25%|██▌       | 1442/5674 [02:41<01:55, 36.73it/s] 26%|██▌       | 1447/5674 [02:41<01:57, 35.99it/s] 26%|██▌       | 1457/5674 [02:42<01:35, 44.25it/s] 26%|██▌       | 1465/5674 [02:42<01:21, 51.54it/s] 26%|██▌       | 1471/5674 [02:42<01:26, 48.49it/s] 26%|██▌       | 1477/5674 [02:42<01:37, 42.86it/s] 26%|██▌       | 1484/5674 [02:42<01:35, 44.06it/s] 26%|██▌       | 1489/5674 [02:42<01:52, 37.35it/s] 26%|██▋       | 1498/5674 [02:42<01:26, 48.00it/s] 27%|██▋       | 1504/5674 [02:43<01:26, 48.47it/s] 27%|██▋       | 1510/5674 [02:43<01:32, 44.86it/s] 27%|██▋       | 1515/5674 [02:43<01:47, 38.61it/s] 27%|██▋       | 1520/5674 [02:43<01:55, 35.94it/s] 27%|██▋       | 1524/5674 [02:43<02:07, 32.57it/s] 27%|██▋       | 1528/5674 [02:43<02:04, 33.25it/s] 27%|██▋       | 1532/5674 [02:43<02:09, 32.09it/s] 27%|██▋       | 1536/5674 [02:44<02:04, 33.12it/s] 27%|██▋       | 1546/5674 [02:44<01:51, 37.14it/s] 27%|██▋       | 1554/5674 [02:44<01:33, 44.23it/s] 27%|██▋       | 1554/5674 [03:12<01:33, 44.23it/s] 27%|██▋       | 1556/5674 [03:12<1:51:50,  1.63s/it] 27%|██▋       | 1558/5674 [03:12<1:36:44,  1.41s/it] 28%|██▊       | 1564/5674 [03:12<1:00:56,  1.12it/s] 28%|██▊       | 1569/5674 [03:13<43:27,  1.57it/s]   28%|██▊       | 1574/5674 [03:13<30:39,  2.23it/s] 28%|██▊       | 1578/5674 [03:13<23:12,  2.94it/s] 28%|██▊       | 1583/5674 [03:13<16:24,  4.16it/s] 28%|██▊       | 1587/5674 [03:13<12:45,  5.34it/s] 28%|██▊       | 1593/5674 [03:13<08:33,  7.95it/s] 28%|██▊       | 1597/5674 [03:14<06:53,  9.85it/s] 28%|██▊       | 1601/5674 [03:14<05:31, 12.28it/s] 28%|██▊       | 1606/5674 [03:14<04:38, 14.62it/s] 28%|██▊       | 1613/5674 [03:14<03:17, 20.54it/s] 29%|██▊       | 1619/5674 [03:14<02:39, 25.47it/s] 29%|██▊       | 1624/5674 [03:14<02:24, 27.94it/s] 29%|██▊       | 1629/5674 [03:14<02:10, 31.07it/s] 29%|██▉       | 1634/5674 [03:15<02:27, 27.46it/s] 29%|██▉       | 1638/5674 [03:15<02:26, 27.62it/s] 29%|██▉       | 1643/5674 [03:15<02:06, 31.82it/s] 29%|██▉       | 1647/5674 [03:15<02:20, 28.68it/s] 29%|██▉       | 1651/5674 [03:15<02:15, 29.80it/s] 29%|██▉       | 1657/5674 [03:15<01:55, 34.85it/s] 29%|██▉       | 1663/5674 [03:15<01:42, 39.13it/s] 29%|██▉       | 1668/5674 [03:16<01:51, 36.03it/s] 30%|██▉       | 1674/5674 [03:16<01:37, 41.09it/s] 30%|██▉       | 1679/5674 [03:16<01:36, 41.36it/s] 30%|██▉       | 1685/5674 [03:16<01:27, 45.78it/s] 30%|██▉       | 1690/5674 [03:16<01:25, 46.59it/s] 30%|██▉       | 1695/5674 [03:16<01:31, 43.31it/s] 30%|██▉       | 1701/5674 [03:16<01:24, 46.91it/s] 30%|███       | 1712/5674 [03:16<01:04, 61.79it/s] 30%|███       | 1719/5674 [03:17<01:30, 43.80it/s] 30%|███       | 1725/5674 [03:17<01:41, 39.09it/s] 30%|███       | 1730/5674 [03:17<01:44, 37.84it/s] 31%|███       | 1737/5674 [03:17<01:29, 44.20it/s] 31%|███       | 1742/5674 [03:17<01:42, 38.42it/s] 31%|███       | 1747/5674 [03:17<01:58, 33.21it/s] 31%|███       | 1760/5674 [03:18<01:14, 52.48it/s] 31%|███       | 1767/5674 [03:18<01:10, 55.31it/s] 31%|███▏      | 1776/5674 [03:18<01:02, 62.82it/s] 31%|███▏      | 1786/5674 [03:18<00:57, 68.21it/s] 32%|███▏      | 1795/5674 [03:18<00:55, 69.99it/s] 32%|███▏      | 1805/5674 [03:18<00:52, 74.08it/s] 32%|███▏      | 1815/5674 [03:18<00:49, 78.72it/s] 32%|███▏      | 1824/5674 [03:18<00:58, 65.31it/s] 32%|███▏      | 1833/5674 [03:18<00:55, 69.54it/s] 32%|███▏      | 1842/5674 [03:19<00:53, 71.29it/s] 33%|███▎      | 1850/5674 [03:19<00:53, 72.09it/s] 33%|███▎      | 1858/5674 [03:19<00:53, 71.89it/s] 33%|███▎      | 1869/5674 [03:19<00:48, 78.36it/s] 33%|███▎      | 1877/5674 [03:19<00:50, 74.65it/s] 33%|███▎      | 1888/5674 [03:19<00:45, 83.53it/s] 33%|███▎      | 1897/5674 [03:19<00:45, 83.14it/s] 33%|███▎      | 1897/5674 [03:54<00:45, 83.14it/s] 34%|███▎      | 1905/5674 [03:54<1:13:22,  1.17s/it] 34%|███▎      | 1910/5674 [03:54<59:22,  1.06it/s]   34%|███▍      | 1920/5674 [03:54<38:27,  1.63it/s] 34%|███▍      | 1928/5674 [03:54<27:35,  2.26it/s] 34%|███▍      | 1936/5674 [03:54<19:51,  3.14it/s] 34%|███▍      | 1946/5674 [03:55<13:14,  4.69it/s] 34%|███▍      | 1956/5674 [03:55<09:04,  6.82it/s] 35%|███▍      | 1965/5674 [03:55<06:34,  9.40it/s] 35%|███▍      | 1978/5674 [03:55<04:15, 14.49it/s] 35%|███▌      | 1988/5674 [03:55<03:20, 18.35it/s] 35%|███▌      | 1997/5674 [03:55<02:37, 23.33it/s] 35%|███▌      | 2006/5674 [03:55<02:20, 26.15it/s] 35%|███▌      | 2013/5674 [03:56<02:04, 29.49it/s] 36%|███▌      | 2020/5674 [03:56<01:53, 32.17it/s] 36%|███▌      | 2027/5674 [03:56<01:44, 34.87it/s] 36%|███▌      | 2035/5674 [03:56<01:26, 41.97it/s] 36%|███▌      | 2042/5674 [03:56<01:17, 46.76it/s] 36%|███▌      | 2049/5674 [03:56<01:12, 49.90it/s] 36%|███▋      | 2058/5674 [03:56<01:02, 58.30it/s] 36%|███▋      | 2066/5674 [03:56<00:57, 63.10it/s] 37%|███▋      | 2074/5674 [03:57<01:02, 57.60it/s] 37%|███▋      | 2081/5674 [03:57<01:04, 55.59it/s] 37%|███▋      | 2088/5674 [03:57<01:15, 47.81it/s] 37%|███▋      | 2094/5674 [03:57<01:17, 46.26it/s] 37%|███▋      | 2101/5674 [03:57<01:19, 44.93it/s] 37%|███▋      | 2106/5674 [03:57<01:25, 41.56it/s] 37%|███▋      | 2117/5674 [03:57<01:05, 54.22it/s] 37%|███▋      | 2127/5674 [03:58<00:56, 62.46it/s] 38%|███▊      | 2134/5674 [03:58<01:04, 55.03it/s] 38%|███▊      | 2142/5674 [03:58<00:58, 60.16it/s] 38%|███▊      | 2150/5674 [03:58<00:54, 64.78it/s] 38%|███▊      | 2162/5674 [03:58<00:44, 78.24it/s] 38%|███▊      | 2171/5674 [03:58<01:11, 48.67it/s] 38%|███▊      | 2178/5674 [03:59<01:07, 51.68it/s] 39%|███▊      | 2185/5674 [03:59<01:06, 52.29it/s] 39%|███▊      | 2192/5674 [03:59<01:05, 53.05it/s] 39%|███▉      | 2200/5674 [03:59<01:00, 57.87it/s] 39%|███▉      | 2207/5674 [03:59<01:02, 55.46it/s] 39%|███▉      | 2213/5674 [03:59<01:17, 44.88it/s] 39%|███▉      | 2219/5674 [03:59<01:14, 46.42it/s] 39%|███▉      | 2225/5674 [04:00<01:20, 42.95it/s] 39%|███▉      | 2232/5674 [04:00<01:13, 46.89it/s] 39%|███▉      | 2240/5674 [04:00<01:03, 53.83it/s] 40%|███▉      | 2246/5674 [04:00<01:38, 34.97it/s] 40%|███▉      | 2251/5674 [04:00<01:42, 33.47it/s] 40%|███▉      | 2259/5674 [04:00<01:40, 33.99it/s] 40%|███▉      | 2263/5674 [04:01<01:53, 30.17it/s] 40%|████      | 2270/5674 [04:01<01:48, 31.32it/s] 40%|████      | 2279/5674 [04:01<01:22, 41.07it/s] 40%|████      | 2286/5674 [04:01<01:12, 46.67it/s] 40%|████      | 2292/5674 [04:01<01:38, 34.34it/s] 41%|████      | 2301/5674 [04:02<01:19, 42.49it/s] 41%|████      | 2311/5674 [04:02<01:05, 51.30it/s] 41%|████      | 2323/5674 [04:02<00:51, 65.12it/s] 41%|████      | 2331/5674 [04:02<01:12, 46.15it/s] 41%|████      | 2338/5674 [04:02<01:09, 47.71it/s] 41%|████▏     | 2344/5674 [04:02<01:08, 48.60it/s] 41%|████▏     | 2350/5674 [04:02<01:17, 42.62it/s] 42%|████▏     | 2356/5674 [04:03<01:12, 45.59it/s] 42%|████▏     | 2362/5674 [04:03<01:08, 48.10it/s] 42%|████▏     | 2368/5674 [04:03<01:09, 47.45it/s] 42%|████▏     | 2376/5674 [04:03<01:03, 51.61it/s] 42%|████▏     | 2376/5674 [04:44<01:03, 51.61it/s] 42%|████▏     | 2380/5674 [04:44<1:53:08,  2.06s/it] 42%|████▏     | 2383/5674 [04:44<1:33:36,  1.71s/it] 42%|████▏     | 2389/5674 [04:44<1:02:30,  1.14s/it] 42%|████▏     | 2396/5674 [04:44<40:20,  1.35it/s]   42%|████▏     | 2402/5674 [04:44<28:24,  1.92it/s] 42%|████▏     | 2407/5674 [04:45<21:15,  2.56it/s] 43%|████▎     | 2415/5674 [04:45<13:26,  4.04it/s] 43%|████▎     | 2421/5674 [04:45<10:01,  5.41it/s] 43%|████▎     | 2429/5674 [04:45<06:41,  8.08it/s] 43%|████▎     | 2441/5674 [04:45<04:19, 12.47it/s] 43%|████▎     | 2451/5674 [04:45<03:02, 17.66it/s] 43%|████▎     | 2458/5674 [04:46<02:37, 20.46it/s] 43%|████▎     | 2466/5674 [04:46<02:03, 25.96it/s] 44%|████▎     | 2475/5674 [04:46<01:36, 33.30it/s] 44%|████▍     | 2484/5674 [04:46<01:25, 37.20it/s] 44%|████▍     | 2491/5674 [04:46<01:26, 36.77it/s] 44%|████▍     | 2497/5674 [04:46<01:22, 38.42it/s] 44%|████▍     | 2503/5674 [04:46<01:18, 40.63it/s] 44%|████▍     | 2509/5674 [04:47<01:11, 44.36it/s] 44%|████▍     | 2515/5674 [04:47<01:15, 42.02it/s] 44%|████▍     | 2520/5674 [04:47<01:17, 40.95it/s] 45%|████▍     | 2525/5674 [04:47<01:14, 42.06it/s] 45%|████▍     | 2532/5674 [04:47<01:08, 45.73it/s] 45%|████▍     | 2537/5674 [04:47<01:08, 45.65it/s] 45%|████▍     | 2542/5674 [04:47<01:08, 45.44it/s] 45%|████▍     | 2547/5674 [04:47<01:08, 45.83it/s] 45%|████▌     | 2554/5674 [04:48<01:02, 49.90it/s] 45%|████▌     | 2560/5674 [04:48<01:09, 44.94it/s] 45%|████▌     | 2566/5674 [04:48<01:06, 46.80it/s] 45%|████▌     | 2571/5674 [04:48<01:06, 46.98it/s] 45%|████▌     | 2576/5674 [04:48<01:09, 44.83it/s] 45%|████▌     | 2581/5674 [04:48<01:26, 35.89it/s] 46%|████▌     | 2585/5674 [04:48<01:33, 33.02it/s] 46%|████▌     | 2590/5674 [04:49<01:29, 34.59it/s] 46%|████▌     | 2596/5674 [04:49<01:19, 38.89it/s] 46%|████▌     | 2601/5674 [04:49<01:19, 38.53it/s] 46%|████▌     | 2605/5674 [04:49<01:21, 37.47it/s] 46%|████▌     | 2612/5674 [04:49<01:09, 44.16it/s] 46%|████▌     | 2618/5674 [04:49<01:07, 45.11it/s] 46%|████▌     | 2623/5674 [04:49<01:10, 43.33it/s] 46%|████▋     | 2628/5674 [04:49<01:12, 41.83it/s] 46%|████▋     | 2634/5674 [04:49<01:06, 45.77it/s] 47%|████▋     | 2639/5674 [04:50<01:08, 44.57it/s] 47%|████▋     | 2644/5674 [04:50<01:06, 45.59it/s] 47%|████▋     | 2651/5674 [04:50<01:02, 48.66it/s] 47%|████▋     | 2656/5674 [04:50<01:12, 41.57it/s] 47%|████▋     | 2663/5674 [04:50<01:02, 48.42it/s] 47%|████▋     | 2669/5674 [04:50<01:09, 43.02it/s] 47%|████▋     | 2674/5674 [04:51<01:28, 34.02it/s] 47%|████▋     | 2681/5674 [04:51<01:17, 38.62it/s] 47%|████▋     | 2687/5674 [04:51<01:13, 40.62it/s] 47%|████▋     | 2695/5674 [04:51<01:00, 49.10it/s] 48%|████▊     | 2701/5674 [04:51<01:09, 42.78it/s] 48%|████▊     | 2708/5674 [04:51<01:01, 48.00it/s] 48%|████▊     | 2720/5674 [04:51<00:47, 61.57it/s] 48%|████▊     | 2727/5674 [04:52<01:04, 45.97it/s] 48%|████▊     | 2733/5674 [04:52<01:05, 44.73it/s] 48%|████▊     | 2739/5674 [04:52<01:07, 43.20it/s] 48%|████▊     | 2744/5674 [04:52<01:11, 40.82it/s] 48%|████▊     | 2750/5674 [04:52<01:07, 43.53it/s] 49%|████▊     | 2755/5674 [04:52<01:20, 36.22it/s] 49%|████▊     | 2760/5674 [04:52<01:15, 38.37it/s] 49%|████▊     | 2766/5674 [04:53<01:09, 41.60it/s] 49%|████▉     | 2771/5674 [04:53<01:13, 39.41it/s] 49%|████▉     | 2778/5674 [04:53<01:09, 41.67it/s] 49%|████▉     | 2787/5674 [04:53<00:55, 51.77it/s] 49%|████▉     | 2797/5674 [04:53<00:46, 62.27it/s] 49%|████▉     | 2804/5674 [04:53<00:51, 55.67it/s] 50%|████▉     | 2810/5674 [04:53<01:00, 47.69it/s] 50%|████▉     | 2816/5674 [04:54<01:12, 39.27it/s] 50%|████▉     | 2821/5674 [04:54<01:09, 41.02it/s] 50%|████▉     | 2829/5674 [04:54<01:02, 45.35it/s] 50%|█████     | 2837/5674 [04:54<00:54, 51.82it/s] 50%|█████     | 2844/5674 [04:54<00:55, 50.82it/s] 50%|█████     | 2852/5674 [04:54<00:52, 53.60it/s] 50%|█████     | 2862/5674 [04:54<00:45, 62.16it/s] 51%|█████     | 2869/5674 [04:55<00:47, 58.79it/s] 51%|█████     | 2877/5674 [04:55<00:44, 63.39it/s] 51%|█████     | 2884/5674 [04:55<00:45, 61.04it/s] 51%|█████     | 2891/5674 [04:55<00:44, 63.10it/s] 51%|█████     | 2899/5674 [04:55<00:43, 64.40it/s] 51%|█████     | 2899/5674 [05:46<00:43, 64.40it/s] 51%|█████     | 2906/5674 [05:46<1:35:19,  2.07s/it] 51%|█████     | 2907/5674 [05:46<1:30:23,  1.96s/it] 51%|█████▏    | 2912/5674 [05:46<1:05:27,  1.42s/it] 51%|█████▏    | 2917/5674 [05:46<46:58,  1.02s/it]   51%|█████▏    | 2922/5674 [05:46<33:50,  1.36it/s] 52%|█████▏    | 2928/5674 [05:47<22:52,  2.00it/s] 52%|█████▏    | 2932/5674 [05:47<17:40,  2.59it/s] 52%|█████▏    | 2938/5674 [05:47<11:54,  3.83it/s] 52%|█████▏    | 2944/5674 [05:47<08:16,  5.49it/s] 52%|█████▏    | 2950/5674 [05:47<05:52,  7.72it/s] 52%|█████▏    | 2956/5674 [05:47<04:16, 10.59it/s] 52%|█████▏    | 2962/5674 [05:47<03:23, 13.34it/s] 52%|█████▏    | 2968/5674 [05:47<02:40, 16.81it/s] 52%|█████▏    | 2973/5674 [05:48<02:16, 19.80it/s] 53%|█████▎    | 2979/5674 [05:48<02:01, 22.23it/s] 53%|█████▎    | 2983/5674 [05:48<01:51, 24.12it/s] 53%|█████▎    | 2989/5674 [05:48<01:31, 29.23it/s] 53%|█████▎    | 2994/5674 [05:48<01:35, 28.15it/s] 53%|█████▎    | 2998/5674 [05:48<01:31, 29.14it/s] 53%|█████▎    | 3007/5674 [05:48<01:06, 40.32it/s] 53%|█████▎    | 3017/5674 [05:49<00:50, 52.42it/s] 53%|█████▎    | 3024/5674 [05:49<00:56, 47.00it/s] 53%|█████▎    | 3032/5674 [05:49<00:49, 52.99it/s] 54%|█████▎    | 3038/5674 [05:49<00:52, 50.48it/s] 54%|█████▎    | 3044/5674 [05:49<00:53, 48.80it/s] 54%|█████▍    | 3050/5674 [05:49<01:02, 41.94it/s] 54%|█████▍    | 3056/5674 [05:49<00:58, 44.56it/s] 54%|█████▍    | 3061/5674 [05:50<00:58, 44.95it/s] 54%|█████▍    | 3066/5674 [05:50<00:57, 45.23it/s] 54%|█████▍    | 3071/5674 [05:50<00:58, 44.20it/s] 54%|█████▍    | 3077/5674 [05:50<00:54, 47.40it/s] 54%|█████▍    | 3082/5674 [05:50<00:58, 44.41it/s] 54%|█████▍    | 3087/5674 [05:50<00:57, 44.96it/s] 54%|█████▍    | 3092/5674 [05:50<01:19, 32.59it/s] 55%|█████▍    | 3099/5674 [05:50<01:03, 40.31it/s] 55%|█████▍    | 3104/5674 [05:51<01:03, 40.19it/s] 55%|█████▍    | 3110/5674 [05:51<00:59, 42.78it/s] 55%|█████▍    | 3116/5674 [05:51<01:05, 38.77it/s] 55%|█████▌    | 3124/5674 [05:51<00:53, 47.85it/s] 55%|█████▌    | 3131/5674 [05:51<00:48, 52.58it/s] 55%|█████▌    | 3137/5674 [05:51<01:03, 39.69it/s] 55%|█████▌    | 3143/5674 [05:51<00:58, 43.08it/s] 55%|█████▌    | 3148/5674 [05:52<01:02, 40.71it/s] 56%|█████▌    | 3155/5674 [05:52<00:54, 46.48it/s] 56%|█████▌    | 3161/5674 [05:52<01:00, 41.23it/s] 56%|█████▌    | 3166/5674 [05:52<00:59, 42.18it/s] 56%|█████▌    | 3173/5674 [05:52<00:51, 48.22it/s] 56%|█████▌    | 3179/5674 [05:52<00:53, 46.25it/s] 56%|█████▌    | 3184/5674 [05:53<01:30, 27.52it/s] 56%|█████▌    | 3190/5674 [05:53<01:15, 32.69it/s] 56%|█████▋    | 3196/5674 [05:53<01:09, 35.52it/s] 56%|█████▋    | 3201/5674 [05:53<01:05, 37.91it/s] 57%|█████▋    | 3210/5674 [05:53<00:50, 48.93it/s] 57%|█████▋    | 3216/5674 [05:53<00:48, 51.19it/s] 57%|█████▋    | 3229/5674 [05:53<00:34, 70.25it/s] 57%|█████▋    | 3239/5674 [05:53<00:31, 76.83it/s] 57%|█████▋    | 3254/5674 [05:54<00:25, 95.53it/s] 58%|█████▊    | 3265/5674 [05:54<00:30, 78.71it/s] 58%|█████▊    | 3274/5674 [05:54<00:34, 69.93it/s] 58%|█████▊    | 3282/5674 [05:54<00:33, 70.58it/s] 58%|█████▊    | 3290/5674 [05:54<00:43, 54.48it/s] 58%|█████▊    | 3299/5674 [05:54<00:38, 61.71it/s] 58%|█████▊    | 3307/5674 [05:55<00:39, 59.46it/s] 58%|█████▊    | 3314/5674 [05:55<00:38, 60.55it/s] 59%|█████▊    | 3324/5674 [05:55<00:48, 48.18it/s] 59%|█████▊    | 3333/5674 [05:55<00:44, 52.92it/s] 59%|█████▉    | 3343/5674 [05:55<00:37, 62.18it/s] 59%|█████▉    | 3351/5674 [05:56<00:56, 40.85it/s] 59%|█████▉    | 3357/5674 [05:56<01:04, 36.07it/s] 59%|█████▉    | 3364/5674 [05:56<00:57, 40.52it/s] 59%|█████▉    | 3370/5674 [05:56<01:05, 35.17it/s] 60%|█████▉    | 3380/5674 [05:56<00:56, 40.92it/s] 60%|█████▉    | 3385/5674 [05:57<01:07, 34.03it/s] 60%|█████▉    | 3391/5674 [05:57<01:03, 36.22it/s] 60%|█████▉    | 3399/5674 [05:57<00:53, 42.49it/s] 60%|█████▉    | 3404/5674 [05:57<00:57, 39.40it/s] 60%|██████    | 3409/5674 [05:57<01:18, 28.95it/s] 60%|██████    | 3415/5674 [05:57<01:07, 33.50it/s] 60%|██████    | 3420/5674 [05:57<01:02, 36.03it/s] 60%|██████    | 3425/5674 [05:58<01:03, 35.55it/s] 60%|██████    | 3429/5674 [05:58<01:09, 32.16it/s] 61%|██████    | 3433/5674 [05:58<01:12, 30.88it/s] 61%|██████    | 3439/5674 [05:58<01:01, 36.16it/s] 61%|██████    | 3445/5674 [05:58<01:08, 32.67it/s] 61%|██████    | 3449/5674 [05:58<01:06, 33.34it/s] 61%|██████    | 3459/5674 [05:58<00:46, 47.44it/s] 61%|██████    | 3465/5674 [05:59<00:49, 44.24it/s] 61%|██████    | 3470/5674 [05:59<00:53, 40.93it/s] 61%|██████    | 3475/5674 [05:59<00:53, 40.99it/s] 61%|██████▏   | 3483/5674 [05:59<00:44, 49.63it/s] 61%|██████▏   | 3489/5674 [05:59<00:44, 49.64it/s] 62%|██████▏   | 3506/5674 [05:59<00:27, 78.47it/s] 62%|██████▏   | 3506/5674 [07:00<00:27, 78.47it/s] 62%|██████▏   | 3515/5674 [07:00<1:11:01,  1.97s/it] 62%|██████▏   | 3522/5674 [07:01<53:45,  1.50s/it]   62%|██████▏   | 3530/5674 [07:01<38:35,  1.08s/it] 62%|██████▏   | 3537/5674 [07:01<28:35,  1.25it/s] 62%|██████▏   | 3543/5674 [07:01<22:02,  1.61it/s] 63%|██████▎   | 3552/5674 [07:01<14:37,  2.42it/s] 63%|██████▎   | 3558/5674 [07:01<11:08,  3.16it/s] 63%|██████▎   | 3564/5674 [07:02<08:29,  4.14it/s] 63%|██████▎   | 3578/5674 [07:02<04:38,  7.52it/s] 63%|██████▎   | 3586/5674 [07:02<03:32,  9.81it/s] 63%|██████▎   | 3596/5674 [07:02<02:37, 13.17it/s] 63%|██████▎   | 3602/5674 [07:02<02:11, 15.81it/s] 64%|██████▎   | 3612/5674 [07:02<01:33, 22.08it/s] 64%|██████▍   | 3619/5674 [07:02<01:19, 25.77it/s] 64%|██████▍   | 3626/5674 [07:03<01:19, 25.90it/s] 64%|██████▍   | 3633/5674 [07:03<01:05, 30.95it/s] 64%|██████▍   | 3640/5674 [07:03<01:00, 33.57it/s] 64%|██████▍   | 3646/5674 [07:03<00:55, 36.48it/s] 64%|██████▍   | 3652/5674 [07:03<00:50, 40.42it/s] 64%|██████▍   | 3658/5674 [07:03<00:53, 37.64it/s] 65%|██████▍   | 3663/5674 [07:04<00:54, 37.13it/s] 65%|██████▍   | 3668/5674 [07:04<00:51, 38.72it/s] 65%|██████▍   | 3673/5674 [07:04<00:48, 41.22it/s] 65%|██████▍   | 3679/5674 [07:04<00:51, 38.62it/s] 65%|██████▍   | 3684/5674 [07:04<00:54, 36.64it/s] 65%|██████▍   | 3688/5674 [07:04<00:55, 35.79it/s] 65%|██████▌   | 3692/5674 [07:04<00:59, 33.19it/s] 65%|██████▌   | 3697/5674 [07:05<00:58, 33.90it/s] 65%|██████▌   | 3702/5674 [07:05<00:54, 36.15it/s] 65%|██████▌   | 3709/5674 [07:05<00:45, 42.78it/s] 66%|██████▌   | 3722/5674 [07:05<00:34, 56.48it/s] 66%|██████▌   | 3730/5674 [07:05<00:33, 58.01it/s] 66%|██████▌   | 3740/5674 [07:05<00:29, 65.76it/s] 66%|██████▌   | 3749/5674 [07:05<00:27, 70.98it/s] 66%|██████▌   | 3757/5674 [07:05<00:31, 60.94it/s] 66%|██████▋   | 3766/5674 [07:06<00:28, 66.71it/s] 67%|██████▋   | 3774/5674 [07:06<00:37, 50.57it/s] 67%|██████▋   | 3783/5674 [07:06<00:32, 58.37it/s] 67%|██████▋   | 3792/5674 [07:06<00:29, 62.79it/s] 67%|██████▋   | 3799/5674 [07:06<00:30, 61.68it/s] 67%|██████▋   | 3807/5674 [07:06<00:30, 60.71it/s] 67%|██████▋   | 3815/5674 [07:06<00:28, 65.06it/s] 67%|██████▋   | 3829/5674 [07:06<00:22, 81.39it/s] 68%|██████▊   | 3839/5674 [07:07<00:21, 83.78it/s] 68%|██████▊   | 3850/5674 [07:07<00:20, 88.99it/s] 68%|██████▊   | 3860/5674 [07:07<00:20, 89.42it/s] 68%|██████▊   | 3870/5674 [07:07<00:22, 78.95it/s] 68%|██████▊   | 3880/5674 [07:07<00:21, 82.48it/s] 69%|██████▊   | 3889/5674 [07:07<00:25, 70.13it/s] 69%|██████▊   | 3897/5674 [07:07<00:25, 70.50it/s] 69%|██████▉   | 3908/5674 [07:08<00:22, 77.70it/s] 69%|██████▉   | 3917/5674 [07:08<00:23, 74.08it/s] 69%|██████▉   | 3925/5674 [07:08<00:27, 64.53it/s] 69%|██████▉   | 3932/5674 [07:08<00:26, 64.90it/s] 69%|██████▉   | 3939/5674 [07:08<00:30, 57.78it/s] 70%|██████▉   | 3946/5674 [07:08<00:35, 48.07it/s] 70%|██████▉   | 3952/5674 [07:08<00:35, 47.96it/s] 70%|██████▉   | 3959/5674 [07:09<00:33, 50.59it/s] 70%|██████▉   | 3966/5674 [07:09<00:32, 53.24it/s] 70%|███████   | 3975/5674 [07:09<00:30, 55.34it/s] 70%|███████   | 3981/5674 [07:09<00:34, 48.84it/s] 70%|███████   | 3987/5674 [07:09<00:34, 49.21it/s] 70%|███████   | 3993/5674 [07:09<00:35, 47.12it/s] 71%|███████   | 4002/5674 [07:09<00:29, 55.79it/s] 71%|███████   | 4008/5674 [07:09<00:30, 54.81it/s] 71%|███████   | 4014/5674 [07:10<00:33, 50.09it/s] 71%|███████   | 4025/5674 [07:10<00:25, 63.97it/s] 71%|███████   | 4032/5674 [07:10<00:26, 61.21it/s] 71%|███████   | 4042/5674 [07:10<00:25, 62.86it/s] 71%|███████▏  | 4049/5674 [07:10<00:32, 50.02it/s] 72%|███████▏  | 4059/5674 [07:10<00:27, 59.02it/s] 72%|███████▏  | 4066/5674 [07:10<00:26, 59.73it/s] 72%|███████▏  | 4074/5674 [07:11<00:27, 57.69it/s] 72%|███████▏  | 4081/5674 [07:11<00:29, 53.65it/s] 72%|███████▏  | 4087/5674 [07:11<00:32, 48.22it/s] 72%|███████▏  | 4096/5674 [07:11<00:27, 56.91it/s] 72%|███████▏  | 4103/5674 [07:11<00:27, 57.96it/s] 72%|███████▏  | 4110/5674 [07:11<00:28, 55.23it/s] 73%|███████▎  | 4118/5674 [07:11<00:25, 60.27it/s] 73%|███████▎  | 4125/5674 [07:12<00:30, 51.53it/s] 73%|███████▎  | 4134/5674 [07:12<00:26, 58.16it/s] 73%|███████▎  | 4141/5674 [07:12<00:26, 58.95it/s] 73%|███████▎  | 4148/5674 [07:12<00:27, 55.36it/s] 73%|███████▎  | 4155/5674 [07:12<00:29, 51.32it/s] 73%|███████▎  | 4165/5674 [07:12<00:25, 59.69it/s] 74%|███████▎  | 4172/5674 [07:12<00:30, 49.46it/s] 74%|███████▎  | 4178/5674 [07:13<00:33, 44.72it/s] 74%|███████▎  | 4183/5674 [07:13<00:32, 45.68it/s] 74%|███████▍  | 4190/5674 [07:13<00:30, 49.05it/s] 74%|███████▍  | 4200/5674 [07:13<00:25, 58.51it/s] 74%|███████▍  | 4208/5674 [07:13<00:23, 62.68it/s] 74%|███████▍  | 4215/5674 [07:13<00:22, 64.10it/s] 74%|███████▍  | 4225/5674 [07:13<00:19, 72.99it/s] 75%|███████▍  | 4233/5674 [07:13<00:24, 58.23it/s] 75%|███████▍  | 4240/5674 [07:14<00:26, 54.49it/s] 75%|███████▍  | 4246/5674 [07:14<00:30, 47.55it/s] 75%|███████▍  | 4255/5674 [07:14<00:26, 54.57it/s] 75%|███████▌  | 4261/5674 [07:14<00:27, 50.95it/s] 75%|███████▌  | 4267/5674 [07:14<00:28, 49.76it/s] 75%|███████▌  | 4273/5674 [07:14<00:33, 42.32it/s] 75%|███████▌  | 4278/5674 [07:15<00:38, 36.61it/s] 76%|███████▌  | 4285/5674 [07:15<00:32, 42.94it/s] 76%|███████▌  | 4294/5674 [07:15<00:26, 52.86it/s] 76%|███████▌  | 4301/5674 [07:15<00:24, 56.65it/s] 76%|███████▌  | 4310/5674 [07:15<00:23, 57.13it/s] 76%|███████▌  | 4317/5674 [07:15<00:27, 48.87it/s] 76%|███████▌  | 4323/5674 [07:15<00:31, 43.39it/s] 76%|███████▋  | 4329/5674 [07:16<00:29, 44.94it/s] 76%|███████▋  | 4334/5674 [07:16<00:30, 44.51it/s] 77%|███████▋  | 4343/5674 [07:16<00:24, 54.37it/s] 77%|███████▋  | 4352/5674 [07:16<00:21, 62.75it/s] 77%|███████▋  | 4360/5674 [07:16<00:21, 62.45it/s] 77%|███████▋  | 4367/5674 [07:16<00:21, 61.53it/s] 77%|███████▋  | 4379/5674 [07:16<00:16, 76.31it/s] 77%|███████▋  | 4379/5674 [08:32<00:16, 76.31it/s] 77%|███████▋  | 4388/5674 [08:32<54:46,  2.56s/it] 78%|███████▊  | 4401/5674 [08:32<33:25,  1.58s/it] 78%|███████▊  | 4411/5674 [08:32<23:26,  1.11s/it] 78%|███████▊  | 4419/5674 [08:33<17:40,  1.18it/s] 78%|███████▊  | 4427/5674 [08:33<12:58,  1.60it/s] 78%|███████▊  | 4440/5674 [08:33<08:00,  2.57it/s] 78%|███████▊  | 4451/5674 [08:33<05:29,  3.71it/s] 79%|███████▊  | 4467/5674 [08:33<03:19,  6.05it/s] 79%|███████▉  | 4478/5674 [08:33<02:25,  8.22it/s] 79%|███████▉  | 4489/5674 [08:33<01:47, 11.05it/s] 79%|███████▉  | 4499/5674 [08:33<01:21, 14.42it/s] 80%|███████▉  | 4515/5674 [08:33<00:52, 22.08it/s] 80%|███████▉  | 4527/5674 [08:34<00:39, 28.85it/s] 80%|████████  | 4540/5674 [08:34<00:30, 37.38it/s] 80%|████████  | 4559/5674 [08:34<00:20, 54.51it/s] 81%|████████  | 4577/5674 [08:34<00:15, 71.11it/s] 81%|████████  | 4599/5674 [08:34<00:11, 90.34it/s] 81%|████████▏ | 4615/5674 [08:34<00:10, 102.88it/s] 82%|████████▏ | 4631/5674 [08:34<00:09, 105.94it/s] 82%|████████▏ | 4646/5674 [08:34<00:09, 110.96it/s] 82%|████████▏ | 4664/5674 [08:34<00:08, 126.24it/s] 82%|████████▏ | 4679/5674 [08:35<00:09, 108.41it/s] 83%|████████▎ | 4692/5674 [08:35<00:10, 90.88it/s]  83%|████████▎ | 4703/5674 [08:35<00:12, 78.67it/s] 83%|████████▎ | 4713/5674 [08:35<00:12, 78.83it/s] 83%|████████▎ | 4722/5674 [08:35<00:13, 70.49it/s] 83%|████████▎ | 4733/5674 [08:35<00:12, 75.67it/s] 84%|████████▎ | 4742/5674 [08:36<00:14, 64.15it/s] 84%|████████▎ | 4750/5674 [08:36<00:14, 63.87it/s] 84%|████████▍ | 4757/5674 [08:36<00:14, 63.35it/s] 84%|████████▍ | 4764/5674 [08:36<00:17, 52.84it/s] 84%|████████▍ | 4774/5674 [08:36<00:14, 62.61it/s] 84%|████████▍ | 4782/5674 [08:36<00:14, 62.68it/s] 84%|████████▍ | 4791/5674 [08:36<00:12, 68.72it/s] 85%|████████▍ | 4799/5674 [08:37<00:13, 65.12it/s] 85%|████████▍ | 4809/5674 [08:37<00:16, 54.06it/s] 85%|████████▍ | 4819/5674 [08:37<00:14, 60.98it/s] 85%|████████▌ | 4832/5674 [08:37<00:11, 75.15it/s] 85%|████████▌ | 4845/5674 [08:37<00:09, 88.02it/s] 86%|████████▌ | 4855/5674 [08:37<00:09, 82.88it/s] 86%|████████▌ | 4871/5674 [08:37<00:08, 98.64it/s] 86%|████████▌ | 4891/5674 [08:38<00:06, 122.79it/s] 86%|████████▋ | 4907/5674 [08:38<00:05, 132.41it/s] 87%|████████▋ | 4924/5674 [08:38<00:05, 142.47it/s] 87%|████████▋ | 4939/5674 [08:38<00:06, 114.08it/s] 87%|████████▋ | 4954/5674 [08:38<00:05, 121.64it/s] 88%|████████▊ | 4968/5674 [08:38<00:06, 112.52it/s] 88%|████████▊ | 4981/5674 [08:38<00:06, 99.75it/s]  88%|████████▊ | 4992/5674 [08:39<00:07, 89.49it/s] 88%|████████▊ | 5002/5674 [08:39<00:07, 86.22it/s] 88%|████████▊ | 5015/5674 [08:39<00:07, 93.44it/s] 89%|████████▊ | 5027/5674 [08:39<00:06, 97.44it/s] 89%|████████▉ | 5040/5674 [08:39<00:06, 104.32it/s] 89%|████████▉ | 5051/5674 [08:39<00:06, 102.76it/s] 89%|████████▉ | 5062/5674 [08:39<00:06, 95.45it/s]  89%|████████▉ | 5072/5674 [08:39<00:06, 93.95it/s] 90%|████████▉ | 5082/5674 [08:39<00:06, 87.26it/s] 90%|████████▉ | 5091/5674 [08:40<00:07, 81.26it/s] 90%|████████▉ | 5102/5674 [08:40<00:06, 88.28it/s] 90%|█████████ | 5112/5674 [08:40<00:07, 78.29it/s] 90%|█████████ | 5124/5674 [08:40<00:06, 87.67it/s] 91%|█████████ | 5140/5674 [08:40<00:05, 96.52it/s] 91%|█████████ | 5152/5674 [08:40<00:05, 99.67it/s] 91%|█████████ | 5163/5674 [08:40<00:05, 98.34it/s] 91%|█████████ | 5173/5674 [08:40<00:05, 98.53it/s] 91%|█████████▏| 5184/5674 [08:41<00:04, 98.77it/s] 92%|█████████▏| 5198/5674 [08:41<00:04, 95.86it/s] 92%|█████████▏| 5208/5674 [08:41<00:04, 94.49it/s] 92%|█████████▏| 5218/5674 [08:41<00:05, 83.62it/s] 92%|█████████▏| 5227/5674 [08:41<00:05, 84.31it/s] 92%|█████████▏| 5237/5674 [08:41<00:05, 80.10it/s] 92%|█████████▏| 5246/5674 [08:41<00:05, 72.95it/s] 93%|█████████▎| 5254/5674 [08:41<00:05, 70.04it/s] 93%|█████████▎| 5262/5674 [08:42<00:06, 66.89it/s] 93%|█████████▎| 5270/5674 [08:42<00:05, 69.10it/s] 93%|█████████▎| 5278/5674 [08:42<00:05, 69.20it/s] 93%|█████████▎| 5289/5674 [08:42<00:05, 73.97it/s] 93%|█████████▎| 5301/5674 [08:42<00:04, 82.92it/s] 94%|█████████▎| 5310/5674 [08:42<00:04, 75.89it/s] 94%|█████████▍| 5326/5674 [08:42<00:03, 94.11it/s] 94%|█████████▍| 5339/5674 [08:42<00:03, 95.86it/s] 94%|█████████▍| 5349/5674 [08:43<00:03, 96.14it/s] 94%|█████████▍| 5360/5674 [08:43<00:03, 99.29it/s] 95%|█████████▍| 5371/5674 [08:43<00:03, 94.04it/s] 95%|█████████▍| 5385/5674 [08:43<00:02, 105.91it/s] 95%|█████████▌| 5405/5674 [08:43<00:02, 121.44it/s] 96%|█████████▌| 5421/5674 [08:43<00:02, 125.10it/s] 96%|█████████▌| 5434/5674 [08:43<00:01, 122.75it/s] 96%|█████████▌| 5447/5674 [08:43<00:02, 107.80it/s] 96%|█████████▌| 5459/5674 [08:44<00:02, 84.08it/s]  96%|█████████▋| 5469/5674 [08:44<00:02, 80.61it/s] 97%|█████████▋| 5484/5674 [08:44<00:02, 94.48it/s] 97%|█████████▋| 5498/5674 [08:44<00:01, 104.00it/s] 97%|█████████▋| 5513/5674 [08:44<00:01, 114.01it/s] 97%|█████████▋| 5527/5674 [08:44<00:01, 113.70it/s] 98%|█████████▊| 5540/5674 [08:44<00:01, 117.17it/s] 98%|█████████▊| 5560/5674 [08:44<00:00, 139.24it/s] 98%|█████████▊| 5575/5674 [08:45<00:00, 113.75it/s] 99%|█████████▊| 5591/5674 [08:45<00:00, 120.31it/s] 99%|█████████▉| 5604/5674 [08:45<00:00, 110.14it/s] 99%|█████████▉| 5616/5674 [08:45<00:00, 100.82it/s] 99%|█████████▉| 5628/5674 [08:45<00:00, 103.48it/s] 99%|█████████▉| 5642/5674 [08:45<00:00, 112.32it/s]100%|█████████▉| 5654/5674 [08:45<00:00, 96.45it/s] 100%|█████████▉| 5665/5674 [08:46<00:00, 78.72it/s]100%|██████████| 5674/5674 [08:46<00:00, 47.77it/s]100%|██████████| 5674/5674 [08:46<00:00, 10.78it/s]
+2026-01-14 18:51:47.214 | INFO     | lean_reinforcement.training.trainer:_start_workers:202 - Starting 16 workers
+2026-01-14 19:02:22.003 | INFO     | lean_reinforcement.training.trainer:_run_epoch:152 - Starting Epoch 1/128
+2026-01-14 19:02:22.101 | INFO     | lean_reinforcement.training.trainer:_run_epoch:163 - Processing 32 theorems with 16 workers.
+2026-01-14 19:02:50.508 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Eq.cmp_eq_eq'
+2026-01-14 19:02:52.976 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: le_of_mul_le_mul_left'
+2026-01-14 19:02:55.102 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:02:57.582 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:03:03.374 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simp [h]
+2026-01-14 19:03:03.440 | SUCCESS  | lean_reinforcement.agent.runner:run:238 - Proof finished in 1 steps and 12.93s.
+2026-01-14 19:03:03.441 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simpa only [mul_comm] using mul_le_mul_of_le_of_le bc a⁻¹
+2026-01-14 19:03:03.508 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="unknown identifier 'mul_le_mul_of_le_of_le'")
+2026-01-14 19:03:03.508 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 10.53s.
+2026-01-14 19:03:03.508 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="unknown identifier 'mul_le_mul_of_le_of_le'")
+2026-01-14 19:03:03.572 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:03:03.572 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:03:03.636 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:03:03.637 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:03:08.195 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Multiset.prod_hom_rel
+2026-01-14 19:03:12.659 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 596s)...
+2026-01-14 19:03:15.968 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Finset.prod_le_one'
+2026-01-14 19:03:20.507 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:03:23.841 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: CategoryTheory.Functor.shiftMap_zero
+2026-01-14 19:03:28.441 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:03:37.364 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Metric.exists_isOpen_isBounded_image_of_isCompact_of_continuousOn
+2026-01-14 19:03:42.035 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:03:44.508 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Set.EqOn.eventuallyEq_of_mem
+2026-01-14 19:03:46.429 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: CharP.quotient
+2026-01-14 19:03:49.243 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:03:50.457 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: rcases exists_isBounded_image_of_isCompact_of_continuousOn hk hf hs hks hf with
+  ⟨t, htk, hto, htb⟩
+2026-01-14 19:03:50.528 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error='rcases tactic failed: x✝ : ?m.23846 is not an inductive datatype')
+2026-01-14 19:03:50.529 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 13.16s.
+2026-01-14 19:03:50.529 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error='rcases tactic failed: x✝ : ?m.23846 is not an inductive datatype')
+2026-01-14 19:03:50.662 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:03:50.663 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:03:50.977 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:03:51.397 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simp [shiftMap]
+2026-01-14 19:03:51.485 | SUCCESS  | lean_reinforcement.agent.runner:run:238 - Proof finished in 1 steps and 27.64s.
+2026-01-14 19:03:51.618 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:03:51.618 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:03:54.232 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: ConvexOn.mul_concaveOn'
+2026-01-14 19:03:55.708 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Asymptotics.isBigO_snd_prod
+2026-01-14 19:03:58.996 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:04:00.420 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:04:07.706 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: NormedAddGroupHom.coe_nsmul
+2026-01-14 19:04:08.601 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simpa using prod_le_prod' h
+2026-01-14 19:04:08.692 | SUCCESS  | lean_reinforcement.agent.runner:run:238 - Proof finished in 1 steps and 52.72s.
+2026-01-14 19:04:08.826 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:04:08.826 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:04:12.272 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:04:13.575 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: rw [eventuallyLE_antisymm_iff]
+2026-01-14 19:04:13.653 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error='failed to synthesize\n  PartialOrder β\nuse `set_option diagnostics true` to get diagnostic information')
+2026-01-14 19:04:13.654 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 29.15s.
+2026-01-14 19:04:13.654 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error='failed to synthesize\n  PartialOrder β\nuse `set_option diagnostics true` to get diagnostic information')
+2026-01-14 19:04:13.785 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:04:13.786 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:04:14.034 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: MeasureTheory.AEEqFun.comp₂Measurable_toGerm
+2026-01-14 19:04:18.631 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:04:24.437 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: NNReal.rpow_inv_rpow
+2026-01-14 19:04:28.947 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:04:33.808 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Lagrange.nodal_empty
+2026-01-14 19:04:38.351 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:04:50.599 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Fin.succAbove_predAbove
+2026-01-14 19:04:52.084 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Finset.card_bij
+2026-01-14 19:04:55.237 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:04:56.642 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:04:57.949 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Filter.le_prod_map_fst_snd
+2026-01-14 19:04:58.219 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: EReal.nhds_bot'
+2026-01-14 19:05:00.632 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: SetTheory.PGame.birthday_star
+2026-01-14 19:05:03.059 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:05:03.192 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:05:05.488 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:05:09.506 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: MeasureTheory.Measure.InnerRegular.map_iff
+2026-01-14 19:05:13.997 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 596s)...
+2026-01-14 19:05:19.583 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: LinearMap.eq_adjoint_iff_basis_left
+2026-01-14 19:05:23.865 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 596s)...
+2026-01-14 19:05:32.810 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: rw [mem_nonunits_iff_dvd_subset] at hp2
+2026-01-14 19:05:32.902 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.7912\nR : Type u\ninst✝ : CommRing R\np : ℕ\nhp1 : Fact (Nat.Prime p)\nhp2 : ↑p ∈ nonunits R\n⊢ CharP (R ⧸ Ideal.span {↑p}) p")
+2026-01-14 19:05:32.902 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 106.47s.
+2026-01-14 19:05:32.902 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.7912\nR : Type u\ninst✝ : CommRing R\np : ℕ\nhp1 : Fact (Nat.Prime p)\nhp2 : ↑p ∈ nonunits R\n⊢ CharP (R ⧸ Ideal.span {↑p}) p")
+2026-01-14 19:05:33.035 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:05:33.035 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:05:36.626 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: induction f using Nat.strong_induction_on with
+| zero => simp
+| succ n ih =>
+  simp only [ih, Nat.cast_zero, zero_add]
+| succ n ih =>
+  simp only [ih, Nat.cast_zero, zero_smul, Nat.cast_zero, zero_add]
+| succ n ih =>
+  simp only [ih, Nat.cast_zero, zero_add]
+| succ n ih =>
+  simp only [ih, Nat.cast_zero, zero_add]
+| succ n ih =>
+  simp only [ih, Nat.cast_zero, zero_add]
+| succ n ih =>
+  simp only [ih, Nat.cast_zero, zero_add]
+| succ n ih =>
+  simp only [ih, Nat.cast_zero, zero_add]
+| succ n ih =>
+  simp only [ih, Nat.cast_zero, zero_add]
+| succ n ih =>
+  simp only [ih, Nat.cast_zero, zero_add]
+| succ n ih =>
+  simp only [ih, Nat.cast_zero, zero_add]
+| succ n ih =>
+  simp only [ih, Nat.cast_zero, zero_add]
+| succ n ih =>
+  simp only [ih, Nat.cast_zero, zero_add]
+| succ n ih =>
+  simp only [ih, Nat.cast_zero, zero_add]
+2026-01-14 19:05:36.707 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error='target\n  f\nhas type\n  NormedAddGroupHom V₁ V₂ : Type (max u_2 u_3)\nbut is expected to have type\n  ℕ : Type')
+2026-01-14 19:05:36.707 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 89.00s.
+2026-01-14 19:05:36.707 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error='target\n  f\nhas type\n  NormedAddGroupHom V₁ V₂ : Type (max u_2 u_3)\nbut is expected to have type\n  ℕ : Type')
+2026-01-14 19:05:36.840 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:05:36.840 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:06:18.091 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: groupCohomology.isMulOneCocycle_of_oneCocycles
+2026-01-14 19:06:22.599 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:06:59.337 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: ENNReal.coe_smul
+2026-01-14 19:07:03.622 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 596s)...
+2026-01-14 19:07:11.611 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: rw [predAbove_of_castSucc_lt _ _ h, succ_pred]
+2026-01-14 19:07:11.714 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  (?i.pred ?h).succ\nn m : ℕ\np : Fin n\ni : Fin (n + 1)\nh : i ≠ p.castSucc\n⊢ p.castSucc.succAbove (i.pred ⋯) = i")
+2026-01-14 19:07:11.714 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 141.12s.
+2026-01-14 19:07:11.715 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  (?i.pred ?h).succ\nn m : ℕ\np : Fin n\ni : Fin (n + 1)\nh : i ≠ p.castSucc\n⊢ p.castSucc.succAbove (i.pred ⋯) = i")
+2026-01-14 19:07:11.846 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:07:11.846 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:07:11.949 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: rw [map_le_iff_le_comap, ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod, ←
+  prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod,
+  ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod,
+  ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod,
+  ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod,
+  ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod,
+  ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod,
+  ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod,
+  ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod,
+  ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod,
+  ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod, ← prod_inf_prod]
+2026-01-14 19:07:12.066 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  Filter.map ?m.28445 ?m.28443 ≤ ?m.28444\nα : Type u_1\nβ : Type u_2\nγ : Type u_3\nδ : Type u_4\nι : Sort u_5\ns : Set α\nt : Set β\nf✝ : Filter α\ng : Filter β\nf : Filter (α × β)\n⊢ f ≤ Filter.map Prod.fst f ×ˢ Filter.map Prod.snd f")
+2026-01-14 19:07:12.066 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 134.12s.
+2026-01-14 19:07:12.066 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  Filter.map ?m.28445 ?m.28443 ≤ ?m.28444\nα : Type u_1\nβ : Type u_2\nγ : Type u_3\nδ : Type u_4\nι : Sort u_5\ns : Set α\nt : Set β\nf✝ : Filter α\ng : Filter β\nf : Filter (α × β)\n⊢ f ≤ Filter.map Prod.fst f ×ˢ Filter.map Prod.snd f")
+2026-01-14 19:07:12.198 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:07:12.198 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:07:25.057 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: classical
+rw [← Finset.card_image_of_injOn i_surj, ← Finset.card_image_of_injOn i_surj]
+rw [Finset.card_image_of_injOn i_surj, Finset.card_image_of_injOn i_surj, Finset.card_image_of_injOn i_surj,
+  Finset.card_image_of_injOn i_surj, Finset.card_image_of_injOn i_surj, Finset.card_image_of_injOn i_surj,
+  Finset.card_image_of_injOn i_surj, Finset.card_image_of_injOn i_surj, Finset.card_image_of_injOn i_surj]
+2026-01-14 19:07:25.241 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  (Finset.image ?m.263575 ?m.263574).card\nα : Type u_1\nβ : Type u_2\nR : Type u_3\ns t✝ u : Finset α\nf : α → β\nn : ℕ\nt : Finset β\ni : (a : α) → a ∈ s → β\nhi : ∀ (a : α) (ha : a ∈ s), i a ha ∈ t\ni_inj : ∀ (a₁ : α) (ha₁ : a₁ ∈ s) (a₂ : α) (ha₂ : a₂ ∈ s), i a₁ ha₁ = i a₂ ha₂ → a₁ = a₂\ni_surj : ∀ b ∈ t, ∃ a, ∃ (ha : a ∈ s), i a ha = b\n⊢ s.card = t.card")
+2026-01-14 19:07:25.241 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 153.16s.
+2026-01-14 19:07:25.241 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  (Finset.image ?m.263575 ?m.263574).card\nα : Type u_1\nβ : Type u_2\nR : Type u_3\ns t✝ u : Finset α\nf : α → β\nn : ℕ\nt : Finset β\ni : (a : α) → a ∈ s → β\nhi : ∀ (a : α) (ha : a ∈ s), i a ha ∈ t\ni_inj : ∀ (a₁ : α) (ha₁ : a₁ ∈ s) (a₂ : α) (ha₂ : a₂ ∈ s), i a₁ ha₁ = i a₂ ha₂ → a₁ = a₂\ni_surj : ∀ b ∈ t, ∃ a, ∃ (ha : a ∈ s), i a ha = b\n⊢ s.card = t.card")
+2026-01-14 19:07:25.372 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:07:25.372 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:07:47.024 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Matrix.separatingLeft_toLinearMap₂'_iff_separatingLeft_toLinearMap₂
+2026-01-14 19:07:51.416 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 596s)...
+2026-01-14 19:08:07.031 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: exact IsMulOneCocycle.isMulOneCocycle (Rep.ofMulDistribMulAction G M)
+  (Rep.ofMulDistribMulAction G M)
+  (Rep.ofMulDistribMulAction G M)
+  (Rep.ofMulDistribMulAction G M)
+  (Rep.ofMulDistribMulAction G M)
+  (Rep.ofMulDistribMulAction G M)
+  (Rep.ofMulDistribMulAction G M)
+  (Rep.ofMulDistribMulAction G M)
+  (Rep.ofMulDistribMulAction G M)
+  (Rep.ofMulDistribMulAction G M)
+  (Rep.ofMulDistribMulAction G M)
+  (Rep.ofMulDistribMulAction G M)
+  (Rep.ofMulDistribMulAction G M)
+  (Rep.ofMulDistribMulAction G M)
+  (Rep.ofMulDistribMulAction G M)
+  (Rep.ofMulDistribMulAction G M)
+  (Rep.ofMulDistribMulAction G M)
+  (Rep.ofMulDistribMulAction G M)
+  (Rep.ofMulDistribMulAction G M)
+  (Rep.ofMulDistribMulAction G M)
+  (Rep.ofMulDistribMulAction G M)
+  (Rep.ofMulDistribMulAction G M)
+  (Rep.ofMulDistribMulAction G M)
+  (Rep.ofMulDistribMulAction G M) (Rep.ofMulDistribMulAction G M)
+2026-01-14 19:08:07.118 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error='invalid field notation, type is not of the form (C ...) where C is a constant\n  IsMulOneCocycle\nhas type\n  (?m.452710 → ?m.452711) → Prop')
+2026-01-14 19:08:07.119 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 109.03s.
+2026-01-14 19:08:07.119 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error='invalid field notation, type is not of the form (C ...) where C is a constant\n  IsMulOneCocycle\nhas type\n  (?m.452710 → ?m.452711) → Prop')
+2026-01-14 19:08:07.253 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:08:07.253 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:08:08.629 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: not_infIrred_top
+2026-01-14 19:08:13.690 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:08:19.858 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: UV.shadow_compression_subset_compression_shadow
+2026-01-14 19:08:24.684 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:08:29.163 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Homeomorph.coinduced_eq
+2026-01-14 19:08:33.610 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 596s)...
+2026-01-14 19:09:05.465 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Rel.inv_bot
+2026-01-14 19:09:10.116 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:09:37.039 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simp only [isBigO_def]
+2026-01-14 19:09:37.058 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: rw [← rpow_mul, inv_mul_cancel hy, rpow_one]
+2026-01-14 19:09:37.103 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error='simp made no progress')
+2026-01-14 19:09:37.103 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 341.39s.
+2026-01-14 19:09:37.103 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error='simp made no progress')
+2026-01-14 19:09:37.126 | SUCCESS  | lean_reinforcement.agent.runner:run:238 - Proof finished in 1 steps and 312.69s.
+2026-01-14 19:09:37.209 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simp [nodal]
+2026-01-14 19:09:37.236 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:09:37.236 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:09:37.256 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:09:37.256 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:09:37.308 | SUCCESS  | lean_reinforcement.agent.runner:run:238 - Proof finished in 1 steps and 303.50s.
+2026-01-14 19:09:37.443 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:09:37.443 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:09:43.421 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: rw [← coe_smul, ← coe_smul, ← coe_smul, ← coe_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg,
+  ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg, ← coe_nnreal_smul_of_nonneg]
+2026-01-14 19:09:43.535 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  ?r • ↑?s\na b c d : ℝ≥0∞\nr✝ p q : ℝ≥0\nR : Type u_1\nr : R\ns : ℝ≥0\ninst✝³ : SMul R ℝ≥0\ninst✝² : SMul R ℝ≥0∞\ninst✝¹ : IsScalarTower R ℝ≥0 ℝ≥0\ninst✝ : IsScalarTower R ℝ≥0 ℝ≥0∞\n⊢ ↑(r • s) = ↑(r • s)")
+2026-01-14 19:09:43.535 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 164.20s.
+2026-01-14 19:09:43.535 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="tactic 'rewrite' failed, did not find instance of the pattern in the target expression\n  ?r • ↑?s\na b c d : ℝ≥0∞\nr✝ p q : ℝ≥0\nR : Type u_1\nr : R\ns : ℝ≥0\ninst✝³ : SMul R ℝ≥0\ninst✝² : SMul R ℝ≥0∞\ninst✝¹ : IsScalarTower R ℝ≥0 ℝ≥0\ninst✝ : IsScalarTower R ℝ≥0 ℝ≥0∞\n⊢ ↑(r • s) = ↑(r • s)")
+2026-01-14 19:09:43.667 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:09:43.667 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:10:14.447 | INFO     | lean_reinforcement.training.trainer:_collect_data:297 - Completed 16/32 proofs
+2026-01-14 19:10:15.294 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simp [birthday_def]
+2026-01-14 19:10:15.565 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="tactic 'simp' failed, nested error:\nmaximum recursion depth has been reached\nuse `set_option maxRecDepth <num>` to increase limit\nuse `set_option diagnostics true` to get diagnostic information")
+2026-01-14 19:10:15.565 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 314.93s.
+2026-01-14 19:10:15.565 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="tactic 'simp' failed, nested error:\nmaximum recursion depth has been reached\nuse `set_option maxRecDepth <num>` to increase limit\nuse `set_option diagnostics true` to get diagnostic information")
+2026-01-14 19:10:15.698 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:10:15.698 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:10:20.533 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simp
+2026-01-14 19:10:20.600 | SUCCESS  | lean_reinforcement.agent.runner:run:238 - Proof finished in 1 steps and 131.97s.
+2026-01-14 19:10:20.734 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:10:20.734 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:10:22.957 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Function.Embedding.exists_of_card_le_finset
+2026-01-14 19:10:24.030 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: rw [← LinearMap.separatingLeft_toLinearMap₂'_iff, LinearMap.separatingLeft_toLinearMap₂'_iff,
+  LinearMap.separatingLeft_toLinearMap₂'_iff, LinearMap.separatingLeft_toLinearMap₂'_iff,
+  LinearMap.separatingLeft_toLinearMap₂'_iff, LinearMap.separatingLeft_toLinearMap₂'_iff,
+  LinearMap.separatingLeft_toLinearMap₂'_iff, LinearMap.separatingLeft_toLinearMap₂'_iff,
+  LinearMap.separatingLeft_toLinearMap₂'_iff, LinearMap.separatingLeft_toLinearMap₂'_iff,
+  LinearMap.separatingLeft_toLinearMap₂'_iff, LinearMap.separatingLeft_toLinearMap₂'_iff,
+  LinearMap.separatingLeft_toLinearMap₂'_iff]
+2026-01-14 19:10:24.181 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.650595\nR : Type u_1\nR₁ : Type u_2\nR₂ : Type u_3\nM✝ : Type u_4\nM₁ : Type u_5\nM₂ : Type u_6\nM₁' : Type u_7\nM₂' : Type u_8\nn : Type u_9\nm : Type u_10\nn' : Type u_11\nm' : Type u_12\nι : Type u_13\ninst✝⁴ : CommRing R₁\ninst✝³ : AddCommMonoid M₁\ninst✝² : Module R₁ M₁\ninst✝¹ : DecidableEq ι\ninst✝ : Fintype ι\nM : Matrix ι ι R₁\nb : Basis ι R₁ M₁\n⊢ (Matrix.toLinearMap₂' M).SeparatingLeft ↔ ((Matrix.toLinearMap₂ b b) M).SeparatingLeft")
+2026-01-14 19:10:24.181 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 157.16s.
+2026-01-14 19:10:24.181 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.650595\nR : Type u_1\nR₁ : Type u_2\nR₂ : Type u_3\nM✝ : Type u_4\nM₁ : Type u_5\nM₂ : Type u_6\nM₁' : Type u_7\nM₂' : Type u_8\nn : Type u_9\nm : Type u_10\nn' : Type u_11\nm' : Type u_12\nι : Type u_13\ninst✝⁴ : CommRing R₁\ninst✝³ : AddCommMonoid M₁\ninst✝² : Module R₁ M₁\ninst✝¹ : DecidableEq ι\ninst✝ : Fintype ι\nM : Matrix ι ι R₁\nb : Basis ι R₁ M₁\n⊢ (Matrix.toLinearMap₂' M).SeparatingLeft ↔ ((Matrix.toLinearMap₂ b b) M).SeparatingLeft")
+2026-01-14 19:10:24.316 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:10:24.316 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:10:27.836 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:10:34.684 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: CategoryTheory.Limits.IsIndObject.mk
+2026-01-14 19:10:39.289 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:11:08.551 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: CategoryTheory.ShortComplex.Exact.desc'
+2026-01-14 19:11:13.364 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:11:31.174 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simp only [subset_def, mem_compression, mem_shadow_iff_exists_disjoint_erase, mem_sup, and_imp,
+  forall_exists_index, and_imp, forall_apply_eq_imp_iff₂, and_imp, forall_exists_index,
+  and_imp, forall_apply_eq_imp_iff₂, and_imp, forall_exists_index, and_imp, forall_apply_eq_imp_iff₂,
+  and_imp, forall_exists_index, and_imp, forall_exists_index, and_imp, forall_apply_eq_imp_iff₂,
+  forall_exists_index, and_imp, forall_exists_index, and_imp, forall_apply_eq_imp_iff₂,
+  forall_exists_index, and_imp, forall_exists_index, and_imp, forall_apply_eq_imp_iff₂,
+  forall_exists_index, and_imp, forall_exists_index, and_imp, forall_apply_eq_imp_iff₂,
+  forall_exists_index, and_imp, forall_exists_index, and_imp, forall_apply_eq_imp_iff₂,
+  forall_exists_index, and_imp, forall_exists_index, and_imp, forall_apply_eq_imp_iff₂,
+  forall_exists_index, and_imp, forall_exists_index, and_imp, forall_apply_eq_imp_iff₂,
+  forall_exists_index, and_imp, forall_exists_index, and_imp, forall_apply_eq_imp_iff₂,
+  forall_exists_index, and_imp, forall_exists_index, and_imp, forall_apply_eq_imp_iff₂,
+  forall_exists_index, and_imp, forall_exists_index, and_imp, forall_apply_eq_imp_iff₂,
+  forall_exists_index, and_imp, forall_exists_index, and_imp, forall_apply_eq_imp_iff₂,
+  forall_exists_index, and_imp, forall_exists_index, and_imp, forall_apply_eq_imp_iff₂,
+  forall_exists_index, and_imp, forall_apply_eq_imp_iff₂]
+2026-01-14 19:11:31.264 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="unknown identifier 'mem_shadow_iff_exists_disjoint_erase'")
+2026-01-14 19:11:31.264 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 191.41s.
+2026-01-14 19:11:31.264 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="unknown identifier 'mem_shadow_iff_exists_disjoint_erase'")
+2026-01-14 19:11:31.396 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:11:31.396 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:11:33.287 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: rw [TopologicalSpace.coinduced, coinduced_eq_preimage]
+2026-01-14 19:11:33.418 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.16026\nX : Type u_1\nY : Type u_2\nZ : Type u_3\ninst✝⁴ : TopologicalSpace X\ninst✝³ : TopologicalSpace Y\ninst✝² : TopologicalSpace Z\nX' : Type u_4\nY' : Type u_5\ninst✝¹ : TopologicalSpace X'\ninst✝ : TopologicalSpace Y'\nh : X ≃ₜ Y\n⊢ { IsOpen := fun s => IsOpen (⇑h ⁻¹' s), isOpen_univ := ⋯, isOpen_inter := ⋯, isOpen_sUnion := ⋯ } = inst✝³")
+2026-01-14 19:11:33.418 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 184.26s.
+2026-01-14 19:11:33.418 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.16026\nX : Type u_1\nY : Type u_2\nZ : Type u_3\ninst✝⁴ : TopologicalSpace X\ninst✝³ : TopologicalSpace Y\ninst✝² : TopologicalSpace Z\nX' : Type u_4\nY' : Type u_5\ninst✝¹ : TopologicalSpace X'\ninst✝ : TopologicalSpace Y'\nh : X ≃ₜ Y\n⊢ { IsOpen := fun s => IsOpen (⇑h ⁻¹' s), isOpen_univ := ⋯, isOpen_inter := ⋯, isOpen_sUnion := ⋯ } = inst✝³")
+2026-01-14 19:11:33.553 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:11:33.553 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:12:08.804 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: smoothAt_finset_prod
+2026-01-14 19:12:13.522 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:13:57.901 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: induction' s using Quotient.inductionOn with l
+2026-01-14 19:13:58.664 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: refine ⟨hf.1, fun x hx y hy a b ha hb hab =>?_⟩
+2026-01-14 19:14:02.530 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: rw [← inv_bot, inv_top]
+2026-01-14 19:14:02.614 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.12501\nα : Type u_1\nβ : Type u_2\nγ : Type u_3\nr : Rel α β\n⊢ ⊥.inv = ⊥.inv")
+2026-01-14 19:14:02.615 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 297.15s.
+2026-01-14 19:14:02.615 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.12501\nα : Type u_1\nβ : Type u_2\nγ : Type u_3\nr : Rel α β\n⊢ ⊥.inv = ⊥.inv")
+2026-01-14 19:14:02.616 | WARNING  | lean_reinforcement.agent.runner:run:101 - Proof search exceeded 600s timeout after 654.4s. Stopping.
+2026-01-14 19:14:02.617 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 2 steps and 654.42s.
+2026-01-14 19:14:02.748 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:14:02.748 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:14:02.748 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:14:02.748 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:14:03.226 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simp only [comp₂Measurable, toMeasure_apply]
+2026-01-14 19:14:03.711 | WARNING  | lean_reinforcement.agent.runner:run:101 - Proof search exceeded 600s timeout after 609.5s. Stopping.
+2026-01-14 19:14:03.711 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 2 steps and 609.48s.
+2026-01-14 19:14:03.847 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:14:03.847 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:14:04.255 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: rw [isIndObject_iff_isIndependent, ← IndObjectPresentation.isIndependent_iff_isIndependent,
+  ← IndObjectPresentation.isIndependent_iff_isIndependent, ← IndObjectPresentation.isIndependent_iff_isIndependent,
+  IndObjectPresentation.isIndependent_iff_isIndependent]
+2026-01-14 19:14:04.356 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.17522\nC : Type u\ninst✝ : CategoryTheory.Category.{v, u} C\nA : Cᵒᵖ ⥤ Type v\nP : CategoryTheory.Limits.IndObjectPresentation A\n⊢ CategoryTheory.Limits.IsIndObject A")
+2026-01-14 19:14:04.356 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 209.67s.
+2026-01-14 19:14:04.356 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.17522\nC : Type u\ninst✝ : CategoryTheory.Category.{v, u} C\nA : Cᵒᵖ ⥤ Type v\nP : CategoryTheory.Limits.IndObjectPresentation A\n⊢ CategoryTheory.Limits.IsIndObject A")
+2026-01-14 19:14:04.492 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:14:04.492 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:14:04.541 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simp [nhds_def]
+2026-01-14 19:14:06.484 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: refine ⟨fun h =>?_, fun h =>?_⟩
+2026-01-14 19:14:10.285 | WARNING  | lean_reinforcement.agent.runner:run:108 - Only 3.7s remaining (< 30s minimum). Stopping to avoid partial search.
+2026-01-14 19:14:10.286 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 2 steps and 596.25s.
+2026-01-14 19:14:10.422 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:14:10.422 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:14:11.198 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 2: Running MCTS search for 200 iterations (max 47s)...
+2026-01-14 19:14:12.172 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 2: Running MCTS search for 200 iterations (max 57s)...
+2026-01-14 19:14:12.556 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: lift s to Finset α using h
+2026-01-14 19:14:12.642 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error='failed to synthesize\n  CanLift (Finset β) (Finset α) ?m.45213 ?m.45214\nuse `set_option diagnostics true` to get diagnostic information')
+2026-01-14 19:14:12.642 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 229.68s.
+2026-01-14 19:14:12.642 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error='failed to synthesize\n  CanLift (Finset β) (Finset α) ?m.45213 ?m.45214\nuse `set_option diagnostics true` to get diagnostic information')
+2026-01-14 19:14:12.774 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:14:12.774 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:14:58.839 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 2: Applying best tactic: refine le_antisymm (le_iInf₂ fun s hs =>?_) (le_iInf₂ fun s hs =>?_)
+2026-01-14 19:15:09.520 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 2: Applying best tactic: exacts [innerRegular_map f f.symm.continuous.measurable, innerRegular_map f f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable,
+  innerRegular_map f.symm.continuous.measurable, innerRegular_map f.symm.continuous.measurable]
+2026-01-14 19:15:09.584 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error='no goals to be solved')
+2026-01-14 19:15:09.585 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 2 steps and 600.08s.
+2026-01-14 19:15:09.585 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error='no goals to be solved')
+2026-01-14 19:15:09.716 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:15:09.716 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:15:12.475 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: constructor
+2026-01-14 19:15:13.778 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error='application type mismatch\n  le_antisymm (le_iInf₂ fun s hs => ?m.354969 s hs)\nargument\n  le_iInf₂ fun s hs => ?m.354969 s hs\nhas type\n  ⨅ s, ⨅ (_ : ⊥ ∈ s ∧ IsOpen s), 𝓟 s ≤ ⨅ i, ⨅ j, ?m.347858 i j : Prop\nbut is expected to have type\n  ⨅ s, ⨅ (_ : ⊥ ∈ s ∧ IsOpen s), 𝓟 s ≤ ⨅ a, 𝓟 (Set.Iio ↑a) : Prop')
+2026-01-14 19:15:13.778 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 2 steps and 615.56s.
+2026-01-14 19:15:13.778 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error='application type mismatch\n  le_antisymm (le_iInf₂ fun s hs => ?m.354969 s hs)\nargument\n  le_iInf₂ fun s hs => ?m.354969 s hs\nhas type\n  ⨅ s, ⨅ (_ : ⊥ ∈ s ∧ IsOpen s), 𝓟 s ≤ ⨅ i, ⨅ j, ?m.347858 i j : Prop\nbut is expected to have type\n  ⨅ s, ⨅ (_ : ⊥ ∈ s ∧ IsOpen s), 𝓟 s ≤ ⨅ a, 𝓟 (Set.Iio ↑a) : Prop')
+2026-01-14 19:15:13.912 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:15:13.912 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:15:17.242 | WARNING  | lean_reinforcement.agent.runner:run:108 - Only 2.3s remaining (< 30s minimum). Stopping to avoid partial search.
+2026-01-14 19:15:17.242 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 2 steps and 597.66s.
+2026-01-14 19:15:17.375 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:15:17.375 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:15:26.376 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: obtain ⟨l, hl₁, hl₂⟩ := hS.hasHomology
+2026-01-14 19:15:31.158 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 2: Running MCTS search for 200 iterations (max 337s)...
+2026-01-14 19:16:08.517 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 2: Applying best tactic: obtain ⟨l₁, l₂⟩ := hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed
+  hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed
+  hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed
+  hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed
+  hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed
+  hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed
+  hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed
+  hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed
+  hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed
+  hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed
+  hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed
+  hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed
+  hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed
+  hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed
+  hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed hS.exact.downward_closed
+2026-01-14 19:16:08.588 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error='rcases tactic failed: x✝ : ?m.156900 is not an inductive datatype')
+2026-01-14 19:16:08.588 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 2 steps and 300.04s.
+2026-01-14 19:16:08.588 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error='rcases tactic failed: x✝ : ?m.156900 is not an inductive datatype')
+2026-01-14 19:16:08.719 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:16:08.719 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:16:25.403 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: induction' t using Finset.induction_on with i t hit
+2026-01-14 19:16:30.368 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 2: Running MCTS search for 200 iterations (max 338s)...
+2026-01-14 19:16:30.369 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 2: Applying best tactic: exacts [h i (Finset.mem_insert_self i t), h i (Finset.mem_insert_of_mem i t)]
+2026-01-14 19:16:30.474 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="type mismatch\n  h (sorryAx ι true) (sorryAx (sorryAx ι true ∈ ∅) true)\nhas type\n  SmoothAt I' I (f (sorryAx ι true)) x : Prop\nbut is expected to have type\n  SmoothAt I' I (fun x => ∏ i ∈ ∅, f i x) x : Prop")
+2026-01-14 19:16:30.474 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 2 steps and 261.67s.
+2026-01-14 19:16:30.474 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="type mismatch\n  h (sorryAx ι true) (sorryAx (sorryAx ι true ∈ ∅) true)\nhas type\n  SmoothAt I' I (f (sorryAx ι true)) x : Prop\nbut is expected to have type\n  SmoothAt I' I (fun x => ∏ i ∈ ∅, f i x) x : Prop")
+2026-01-14 19:16:30.605 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:16:30.605 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:16:34.917 | INFO     | lean_reinforcement.training.trainer:_collect_data:297 - Completed 32/32 proofs
+2026-01-14 19:16:34.928 | INFO     | lean_reinforcement.training.trainer:_stop_workers:221 - Stopping workers for this epoch...
+2026-01-14 19:16:39.933 | WARNING  | lean_reinforcement.training.trainer:_stop_workers:228 - Worker 2692658 did not exit gracefully. Terminating.
+2026-01-14 19:16:45.301 | WARNING  | lean_reinforcement.training.trainer:_stop_workers:228 - Worker 2692916 did not exit gracefully. Terminating.
+2026-01-14 19:16:50.515 | WARNING  | lean_reinforcement.training.trainer:_stop_workers:228 - Worker 2693074 did not exit gracefully. Terminating.
+2026-01-14 19:16:55.735 | WARNING  | lean_reinforcement.training.trainer:_stop_workers:228 - Worker 2693271 did not exit gracefully. Terminating.
+2026-01-14 19:17:00.978 | WARNING  | lean_reinforcement.training.trainer:_stop_workers:228 - Worker 2693509 did not exit gracefully. Terminating.
+2026-01-14 19:17:06.203 | WARNING  | lean_reinforcement.training.trainer:_stop_workers:228 - Worker 2693698 did not exit gracefully. Terminating.
+2026-01-14 19:17:11.626 | INFO     | lean_reinforcement.training.trainer:_drain_queues:241 - Draining queues...
+2026-01-14 19:17:11.628 | INFO     | lean_reinforcement.utilities.analyze_training_data:print_training_stats:87 - ============================================================
+2026-01-14 19:17:11.628 | INFO     | lean_reinforcement.utilities.analyze_training_data:print_training_stats:88 - TRAINING DATA STATISTICS
+2026-01-14 19:17:11.628 | INFO     | lean_reinforcement.utilities.analyze_training_data:print_training_stats:89 - ============================================================
+2026-01-14 19:17:11.628 | INFO     | lean_reinforcement.utilities.analyze_training_data:print_training_stats:91 - Total samples: 36
+2026-01-14 19:17:11.629 | INFO     | lean_reinforcement.utilities.analyze_training_data:print_training_stats:92 -   Positive (successful proofs): 6 (16.7%)
+2026-01-14 19:17:11.629 | INFO     | lean_reinforcement.utilities.analyze_training_data:print_training_stats:96 -   Negative (failed proofs): 30 (83.3%)
+2026-01-14 19:17:11.629 | INFO     | lean_reinforcement.utilities.analyze_training_data:print_training_stats:101 - 
+Value Targets:
+2026-01-14 19:17:11.629 | INFO     | lean_reinforcement.utilities.analyze_training_data:print_training_stats:103 -   Mean: -0.6667, Std: 0.7454, Range: [-1.0000, 1.0000]
+2026-01-14 19:17:11.629 | INFO     | lean_reinforcement.utilities.analyze_training_data:print_training_stats:107 - 
+Visit Counts:
+2026-01-14 19:17:11.629 | INFO     | lean_reinforcement.utilities.analyze_training_data:print_training_stats:109 -   Mean: 179.3, Std: 60.6, Range: [8, 215]
+2026-01-14 19:17:11.629 | INFO     | lean_reinforcement.utilities.analyze_training_data:print_training_stats:113 - 
+Steps in Trajectory:
+2026-01-14 19:17:11.629 | INFO     | lean_reinforcement.utilities.analyze_training_data:print_training_stats:115 -   Mean: 1.1, Std: 0.3, Range: [1, 2]
+2026-01-14 19:17:11.629 | INFO     | lean_reinforcement.utilities.analyze_training_data:print_training_stats:120 - 
+MCTS Value Estimates:
+2026-01-14 19:17:11.630 | INFO     | lean_reinforcement.utilities.analyze_training_data:print_training_stats:122 -   Mean: -0.6389, Std: 0.7510, Range: [-1.0000, 1.0000]
+2026-01-14 19:17:11.630 | INFO     | lean_reinforcement.utilities.analyze_training_data:print_training_stats:125 -   Samples with MCTS values: 36
+2026-01-14 19:17:11.630 | INFO     | lean_reinforcement.utilities.analyze_training_data:print_training_stats:127 - ============================================================
+2026-01-14 19:17:11.656 | INFO     | lean_reinforcement.utilities.analyze_training_data:save_training_data:143 - Training data saved to /gpfs/scratch1/shared/lean-reinforcement/checkpoints/training_data_epoch_1.json
+2026-01-14 19:17:11.656 | INFO     | lean_reinforcement.training.trainer:_train_value_head_model:378 - Training Value Head on 36 samples...
+2026-01-14 19:17:11.656 | INFO     | lean_reinforcement.training.trainer:_train_value_head_model:379 -   Data distribution: 6 positive, 30 negative
+2026-01-14 19:17:11.656 | INFO     | lean_reinforcement.training.trainer:_train_value_head_model:382 -   Average target value: -0.6667
+2026-01-14 19:17:11.656 | INFO     | lean_reinforcement.training.trainer:_train_value_head_model:388 -   Average MCTS value estimate: -0.6389
+2026-01-14 19:17:11.657 | INFO     | lean_reinforcement.training.trainer:_train_value_head_model:395 -   Balancing dataset to 6 samples per class.
+2026-01-14 19:17:12.174 | INFO     | lean_reinforcement.training.trainer:_train_value_head_model:446 - Value Head Epoch 1/4, Avg. Loss: 0.9798
+2026-01-14 19:17:12.530 | INFO     | lean_reinforcement.training.trainer:_train_value_head_model:446 - Value Head Epoch 2/4, Avg. Loss: 0.9791
+2026-01-14 19:17:12.885 | INFO     | lean_reinforcement.training.trainer:_train_value_head_model:446 - Value Head Epoch 3/4, Avg. Loss: 0.9779
+2026-01-14 19:17:13.240 | INFO     | lean_reinforcement.training.trainer:_train_value_head_model:446 - Value Head Epoch 4/4, Avg. Loss: 0.9767
+2026-01-14 19:20:00.859 | INFO     | lean_reinforcement.agent.value_head:save_checkpoint:172 - Checkpoint saved to /gpfs/scratch1/shared/lean-reinforcement/checkpoints/value_head_guided_rollout_latest.pth
+2026-01-14 19:20:00.965 | INFO     | lean_reinforcement.agent.value_head:save_checkpoint:172 - Checkpoint saved to /gpfs/scratch1/shared/lean-reinforcement/checkpoints/value_head_guided_rollout_epoch_1.pth
+2026-01-14 19:20:01.060 | INFO     | lean_reinforcement.utilities.checkpoint:save_checkpoint:61 - Saved checkpoints: value_head_guided_rollout_latest.pth and value_head_guided_rollout_epoch_1.pth
+2026-01-14 19:20:01.061 | INFO     | lean_reinforcement.training.trainer:_run_epoch:199 - Checkpoint saved for epoch 1
+2026-01-14 19:20:01.169 | INFO     | lean_reinforcement.training.trainer:_start_workers:202 - Starting 16 workers
+2026-01-14 19:30:37.528 | INFO     | lean_reinforcement.training.trainer:_run_epoch:152 - Starting Epoch 2/128
+2026-01-14 19:30:37.626 | INFO     | lean_reinforcement.training.trainer:_run_epoch:163 - Processing 32 theorems with 16 workers.
+2026-01-14 19:30:38.922 | ERROR    | lean_reinforcement.utilities.gym:reset:41 - Error during environment reset: Cannot interact with theorems with the `where` keyword.
+2026-01-14 19:30:38.922 | ERROR    | lean_reinforcement.training.worker:process_theorem:44 - Failed to initialize environment for theorem IsMulFreimanHom.div: Cannot interact with theorems with the `where` keyword.
+2026-01-14 19:30:38.924 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:30:58.765 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: le_sup_of_le_left
+2026-01-14 19:30:58.913 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: le_iff_exists_sup
+2026-01-14 19:31:00.758 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Prod.mk_lt_mk_of_le_of_lt
+2026-01-14 19:31:03.800 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:31:04.032 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:31:04.392 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Nat.findGreatest_mono
+2026-01-14 19:31:05.528 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:31:08.852 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 596s)...
+2026-01-14 19:31:10.284 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: exact le_sup_left.trans h
+2026-01-14 19:31:10.354 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error='internal exception #4')
+2026-01-14 19:31:10.354 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 11.59s.
+2026-01-14 19:31:10.354 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error='internal exception #4')
+2026-01-14 19:31:10.486 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:31:10.486 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:31:12.283 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simp [lt_iff_le_and_ne, h₁, h₂]
+2026-01-14 19:31:12.358 | SUCCESS  | lean_reinforcement.agent.runner:run:238 - Proof finished in 1 steps and 11.60s.
+2026-01-14 19:31:12.492 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:31:12.492 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:31:13.328 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: List.reduceOption_get?_iff
+2026-01-14 19:31:14.750 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: CovBy.unique_left
+2026-01-14 19:31:18.244 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:31:19.754 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:31:24.195 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Monoid.Coprod.mk_of_inr
+2026-01-14 19:31:28.969 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:31:29.114 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Set.subset_centralizer_centralizer
+2026-01-14 19:31:30.546 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: OrderRingIso.coe_toOrderRingHom
+2026-01-14 19:31:30.644 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: pow_left_surj_of_rootableBy
+2026-01-14 19:31:32.747 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: ENNReal.mul_inv_cancel
+2026-01-14 19:31:34.233 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:31:35.908 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:31:35.980 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:31:36.751 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: StructureGroupoid.LocalInvariantProp.liftPropOn_chart
+2026-01-14 19:31:37.545 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:31:39.283 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: MulAction.orbit_eq_iff
+2026-01-14 19:31:39.708 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: rw [findGreatest_def, findGreatest_def, ← findGreatest_def, ← findGreatest_def, ←
+  findGreatest_def, ← findGreatest_def, ← findGreatest_def, ← findGreatest_def, ←
+  findGreatest_def, ← findGreatest_def, ← findGreatest_def, ← findGreatest_def, ←
+  findGreatest_def, ← findGreatest_def, ← findGreatest_def, ← findGreatest_def, ←
+  findGreatest_def, ← findGreatest_def, ← findGreatest_def, ← findGreatest_def, ←
+  findGreatest_def, ← findGreatest_def, ← findGreatest_def, ← findGreatest_def, ←
+  findGreatest_def, ← findGreatest_def, ← findGreatest_def, ← findGreatest_def, ←
+  findGreatest_def, ← findGreatest_def, ← findGreatest_def, ← findGreatest_def, ←
+  findGreatest_def, ← findGreatest_def, ← findGreatest_def, ← findGreatest_def, ←
+  findGreatest_def, ← findGreatest_def, ← findGreatest_def, ← findGreatest_def, ←
+  findGreatest_def, ← findGreatest_def, ← findGreatest_def, ← findGreatest_def, ←
+  findGreatest_def, ← findGreatest_def, ← findGreatest_def, ← findGreatest_def, ←
+  findGreatest_def, ← findGreatest_def, ← findGreatest_def, ← findGreatest_def, ←
+  findGreatest_def, ← findGreatest_def, ← findGreatest_def, ← findGreatest_def]
+2026-01-14 19:31:39.812 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.164494\na b c d m n✝ k : ℕ\np q P Q : ℕ → Prop\ninst✝¹ : DecidablePred P\nn : ℕ\ninst✝ : DecidablePred Q\nhPQ : ∀ (n : ℕ), P n → Q n\nhmn : m ≤ n\n⊢ Nat.findGreatest P m ≤ Nat.findGreatest Q n")
+2026-01-14 19:31:39.812 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 35.42s.
+2026-01-14 19:31:39.813 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.164494\na b c d m n✝ k : ℕ\np q P Q : ℕ → Prop\ninst✝¹ : DecidablePred P\nn : ℕ\ninst✝ : DecidablePred Q\nhPQ : ∀ (n : ℕ), P n → Q n\nhmn : m ≤ n\n⊢ Nat.findGreatest P m ≤ Nat.findGreatest Q n")
+2026-01-14 19:31:39.947 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:31:39.948 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:31:41.759 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:31:42.239 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: ContinuousAlternatingMap.map_coord_zero
+2026-01-14 19:31:44.357 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:31:45.312 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Finset.centroid_map
+2026-01-14 19:31:47.060 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:31:47.148 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Metric.mem_thickening_iff_exists_edist_lt
+2026-01-14 19:31:50.011 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:31:50.317 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Continuous.ennreal_mul
+2026-01-14 19:31:52.108 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:31:54.858 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:32:59.381 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Complex.tan_add_mul_I
+2026-01-14 19:33:03.990 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:33:17.192 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: exact mk_inr_injective (Sum.inr_injective.comp MulOneClass.comp MulOneClass.comp MulOneClass.comp MulOneClass.comp
+  MulOneClass.comp MulOneClass.comp MulOneClass.comp MulOneClass.comp MulOneClass.comp MulOneClass.comp MulOneClass.inr_injective
+2026-01-14 19:33:17.262 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="<stdin>:2:129: unexpected end of input; expected ')', ',' or ':'")
+2026-01-14 19:33:17.262 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 113.07s.
+2026-01-14 19:33:17.262 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="<stdin>:2:129: unexpected end of input; expected ')', ',' or ':'")
+2026-01-14 19:33:17.266 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: exact eq_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy
+  (covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy
+  (covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy
+  (covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy
+  (covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy
+  (covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy
+  (covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy
+  (covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy
+  (covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy
+  (covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy
+  (covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy
+  (covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy
+  (covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy
+  (covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy
+  (covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy
+  (covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy
+  (covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy
+  (covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_covBy_of_cov
+2026-01-14 19:33:17.337 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="<stdin>:18:195: unexpected end of input; expected ')', ',' or ':'")
+2026-01-14 19:33:17.337 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 122.59s.
+2026-01-14 19:33:17.337 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="<stdin>:18:195: unexpected end of input; expected ')', ',' or ':'")
+2026-01-14 19:33:17.394 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:33:17.394 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:33:17.467 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:33:17.467 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:33:35.506 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: CategoryTheory.unop_add
+2026-01-14 19:33:40.064 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:33:40.372 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: exact surjective_pow_of_pow_eq_one hn
+2026-01-14 19:33:40.439 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="unknown identifier 'surjective_pow_of_pow_eq_one'")
+2026-01-14 19:33:40.440 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 129.80s.
+2026-01-14 19:33:40.440 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="unknown identifier 'surjective_pow_of_pow_eq_one'")
+2026-01-14 19:33:40.572 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:33:40.572 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:33:41.499 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: exact mul_inv_cancel h0 ht
+2026-01-14 19:33:41.573 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="kernel type check failed: (kernel) declaration has free variables '[anonymous]'")
+2026-01-14 19:33:41.573 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 128.83s.
+2026-01-14 19:33:41.573 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="kernel type check failed: (kernel) declaration has free variables '[anonymous]'")
+2026-01-14 19:33:41.707 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:33:41.707 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:33:41.810 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: exact hG.liftPropOn_chartAt_source (chart_mem_atlas H x) (chart_mem_atlas H x)
+  (chart_mem_atlas H x) (chart_mem_atlas H x) (chart_mem_atlas H x) (chart_mem_atlas H x)
+  (chart_mem_atlas H x) (chart_mem_atlas H x) (chart_mem_atlas H x) (chart_mem_atlas H x)
+  (chart_mem_atlas H x) (chart_mem_atlas H x) (chart_mem_atlas H x) (chart_mem_atlas H x)
+2026-01-14 19:33:41.901 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="invalid field 'liftPropOn_chartAt_source', the environment does not contain 'StructureGroupoid.LocalInvariantProp.liftPropOn_chartAt_source'\n  hG\nhas type\n  G.LocalInvariantProp G Q")
+2026-01-14 19:33:41.901 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 125.15s.
+2026-01-14 19:33:41.901 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="invalid field 'liftPropOn_chartAt_source', the environment does not contain 'StructureGroupoid.LocalInvariantProp.liftPropOn_chartAt_source'\n  hG\nhas type\n  G.LocalInvariantProp G Q")
+2026-01-14 19:33:42.035 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:33:42.035 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:33:42.349 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: rw [f.map_eq_zero_iff] at h
+2026-01-14 19:33:42.507 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.45835\nR : Type u_1\nM : Type u_2\nM' : Type u_3\nN : Type u_4\nN' : Type u_5\nι : Type u_6\ninst✝¹² : Semiring R\ninst✝¹¹ : AddCommMonoid M\ninst✝¹⁰ : Module R M\ninst✝⁹ : TopologicalSpace M\ninst✝⁸ : AddCommMonoid M'\ninst✝⁷ : Module R M'\ninst✝⁶ : TopologicalSpace M'\ninst✝⁵ : AddCommMonoid N\ninst✝⁴ : Module R N\ninst✝³ : TopologicalSpace N\ninst✝² : AddCommMonoid N'\ninst✝¹ : Module R N'\ninst✝ : TopologicalSpace N'\nn : ℕ\nf g : M [⋀^ι]→L[R] N\nm : ι → M\ni : ι\nh : m i = 0\n⊢ f m = 0")
+2026-01-14 19:33:42.507 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 120.27s.
+2026-01-14 19:33:42.507 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.45835\nR : Type u_1\nM : Type u_2\nM' : Type u_3\nN : Type u_4\nN' : Type u_5\nι : Type u_6\ninst✝¹² : Semiring R\ninst✝¹¹ : AddCommMonoid M\ninst✝¹⁰ : Module R M\ninst✝⁹ : TopologicalSpace M\ninst✝⁸ : AddCommMonoid M'\ninst✝⁷ : Module R M'\ninst✝⁶ : TopologicalSpace M'\ninst✝⁵ : AddCommMonoid N\ninst✝⁴ : Module R N\ninst✝³ : TopologicalSpace N\ninst✝² : AddCommMonoid N'\ninst✝¹ : Module R N'\ninst✝ : TopologicalSpace N'\nn : ℕ\nf g : M [⋀^ι]→L[R] N\nm : ι → M\ni : ι\nh : m i = 0\n⊢ f m = 0")
+2026-01-14 19:33:42.642 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:33:42.642 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:33:43.006 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: rfl
+2026-01-14 19:33:43.072 | SUCCESS  | lean_reinforcement.agent.runner:run:238 - Proof finished in 1 steps and 132.53s.
+2026-01-14 19:33:43.209 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:33:43.209 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:33:56.774 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Set.eq_preimage_subtype_val_iff
+2026-01-14 19:34:01.198 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 596s)...
+2026-01-14 19:34:11.845 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: le_of_pow_le_pow_left
+2026-01-14 19:34:13.897 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Fin.mem_piFinset_succ
+2026-01-14 19:34:16.660 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:34:18.700 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:34:27.434 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: NoZeroSMulDivisors.algebraMap_injective
+2026-01-14 19:34:27.926 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: ENNReal.ofReal_lt_ofReal_iff'
+2026-01-14 19:34:32.563 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:34:33.295 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:34:43.479 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: balanced_univ
+2026-01-14 19:34:48.160 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:35:24.223 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Complex.differentiableAt_sin
+2026-01-14 19:35:28.799 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:36:11.437 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simpa only [mul_comm] using hf.mul hg.continuous
+2026-01-14 19:36:11.536 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="invalid field 'continuous', the environment does not contain 'Continuous.continuous'\n  hg\nhas type\n  Continuous g\nfailed to synthesize\n  ContinuousMul ℝ≥0∞\nuse `set_option diagnostics true` to get diagnostic information")
+2026-01-14 19:36:11.537 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 261.22s.
+2026-01-14 19:36:11.537 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="invalid field 'continuous', the environment does not contain 'Continuous.continuous'\n  hg\nhas type\n  Continuous g\nfailed to synthesize\n  ContinuousMul ℝ≥0∞\nuse `set_option diagnostics true` to get diagnostic information")
+2026-01-14 19:36:11.669 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:36:11.669 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:36:13.138 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: rw [tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh,
+  tan_eq_sinh_div_cosh, tan_eq_sinh_div_cosh, tan_eq_si
+2026-01-14 19:36:13.208 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="<stdin>:27:55: unexpected end of input; expected ']'")
+2026-01-14 19:36:13.208 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 193.83s.
+2026-01-14 19:36:13.208 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="<stdin>:27:55: unexpected end of input; expected ']'")
+2026-01-14 19:36:13.341 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:36:13.342 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:36:13.472 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: rw [← orbitRel.orbit_eq_orbit_iff, orbitRel.orbit_eq_orbit_iff, orbitRel.orbit_eq_orbit_iff]
+2026-01-14 19:36:13.576 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.62465\nG : Type u_1\nα : Type u_2\nβ : Type u_3\ninst✝² : Group G\ninst✝¹ : MulAction G α\ninst✝ : MulAction G β\na b : α\n⊢ MulAction.orbit G a = MulAction.orbit G b ↔ a ∈ MulAction.orbit G b")
+2026-01-14 19:36:13.576 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 274.29s.
+2026-01-14 19:36:13.576 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.62465\nG : Type u_1\nα : Type u_2\nβ : Type u_3\ninst✝² : Group G\ninst✝¹ : MulAction G α\ninst✝ : MulAction G β\na b : α\n⊢ MulAction.orbit G a = MulAction.orbit G b ↔ a ∈ MulAction.orbit G b")
+2026-01-14 19:36:13.593 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simp only [subset_def, mem_centralizer_iff, mem_centralizer_iff]
+2026-01-14 19:36:13.710 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:36:13.710 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:36:17.609 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simp only [piFinset_def, mem_piFinset, mem_filter, mem_piFinset]
+2026-01-14 19:36:17.687 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="unknown identifier 'piFinset_def'\nunknown identifier 'mem_filter'")
+2026-01-14 19:36:17.687 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 123.79s.
+2026-01-14 19:36:17.688 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="unknown identifier 'piFinset_def'\nunknown identifier 'mem_filter'")
+2026-01-14 19:36:17.823 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:36:17.823 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:36:18.164 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: rw [unop_def, unop_def, unop_def, unop_def, unop_def, unop_def]
+2026-01-14 19:36:18.263 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.6684\nC : Type u_1\ninst✝¹ : CategoryTheory.Category.{u_2, u_1} C\ninst✝ : CategoryTheory.Preadditive C\nX Y : Cᵒᵖ\nf g : X ⟶ Y\n⊢ (f + g).unop = f.unop + g.unop")
+2026-01-14 19:36:18.263 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 162.76s.
+2026-01-14 19:36:18.263 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="tactic 'rewrite' failed, equality or iff proof expected\n  ?m.6684\nC : Type u_1\ninst✝¹ : CategoryTheory.Category.{u_2, u_1} C\ninst✝ : CategoryTheory.Preadditive C\nX Y : Cᵒᵖ\nf g : X ⟶ Y\n⊢ (f + g).unop = f.unop + g.unop")
+2026-01-14 19:36:18.398 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:36:18.398 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:36:18.922 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 2: Running MCTS search for 200 iterations (max 310s)...
+2026-01-14 19:36:18.923 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 2: Applying best tactic: simp (config := { contextual := true })
+2026-01-14 19:36:19.023 | SUCCESS  | lean_reinforcement.agent.runner:run:238 - Proof finished in 2 steps and 289.91s.
+2026-01-14 19:36:19.157 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:36:19.158 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:36:26.223 | INFO     | lean_reinforcement.training.trainer:_collect_data:297 - Completed 16/32 proofs
+2026-01-14 19:36:29.921 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: refine Finset.induction_on s₂?_?_
+2026-01-14 19:36:30.008 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="unknown identifier 's₂?_?_'\nfailed to elaborate eliminator, insufficient number of arguments, expected type:\n  centroid k (map e s₂) p = centroid k s₂ (p ∘ ⇑e)")
+2026-01-14 19:36:30.009 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 284.70s.
+2026-01-14 19:36:30.009 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="unknown identifier 's₂?_?_'\nfailed to elaborate eliminator, insufficient number of arguments, expected type:\n  centroid k (map e s₂) p = centroid k s₂ (p ∘ ⇑e)")
+2026-01-14 19:36:30.141 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:36:30.141 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:36:31.073 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: exact balanced_univ
+2026-01-14 19:36:31.146 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error="kernel type check failed: (kernel) declaration has free variables '[anonymous]'")
+2026-01-14 19:36:31.146 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 107.67s.
+2026-01-14 19:36:31.146 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error="kernel type check failed: (kernel) declaration has free variables '[anonymous]'")
+2026-01-14 19:36:31.279 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:36:31.279 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:36:31.796 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: exact NoZeroSMulDivisors.algebraMap_injective R A
+2026-01-14 19:36:31.900 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error='application type mismatch\n  algebraMap_injective R\nargument\n  R\nhas type\n  Type u_1 : Type (u_1 + 1)\nbut is expected to have type\n  (algebraMap R A) ?m.102750 = (algebraMap R A) ?m.102751 : Prop')
+2026-01-14 19:36:31.900 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 124.47s.
+2026-01-14 19:36:31.900 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error='application type mismatch\n  algebraMap_injective R\nargument\n  R\nhas type\n  Type u_1 : Type (u_1 + 1)\nbut is expected to have type\n  (algebraMap R A) ?m.102750 = (algebraMap R A) ?m.102751 : Prop')
+2026-01-14 19:36:32.034 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:36:32.034 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:36:34.020 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simp [mem_thickening_iff]
+2026-01-14 19:36:34.135 | WARNING  | lean_reinforcement.agent.runner:run:205 - Tactic resulted in error: LeanError(error='simp made no progress')
+2026-01-14 19:36:34.135 | ERROR    | lean_reinforcement.agent.runner:run:242 - Proof failed after 1 steps and 286.99s.
+2026-01-14 19:36:34.135 | WARNING  | lean_reinforcement.agent.runner:run:246 - Final state: LeanError(error='simp made no progress')
+2026-01-14 19:36:34.269 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:36:34.270 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:36:54.528 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: List.length_modifyNthTail
+2026-01-14 19:36:56.719 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: simp [ENNReal.ofReal, ENNReal.ofReal]
+2026-01-14 19:36:56.794 | SUCCESS  | lean_reinforcement.agent.runner:run:238 - Proof finished in 1 steps and 148.87s.
+2026-01-14 19:36:56.927 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:36:56.927 | INFO     | lean_reinforcement.utilities.gym:close:99 - Environment closed.
+2026-01-14 19:36:59.374 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: constructor
+2026-01-14 19:36:59.404 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:37:04.054 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 2: Running MCTS search for 200 iterations (max 249s)...
+2026-01-14 19:37:11.792 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Finsupp.embDomain_inj
+2026-01-14 19:37:13.974 | INFO     | lean_reinforcement.agent.runner:run:81 - Starting proof search for: Submodule.sub_mem_sup
+2026-01-14 19:37:16.879 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:37:18.825 | INFO     | lean_reinforcement.agent.runner:run:133 - Step 1: Running MCTS search for 200 iterations (max 595s)...
+2026-01-14 19:37:25.659 | INFO     | lean_reinforcement.agent.runner:run:196 - Step 1: Applying best tactic: rw [← differentiableWithinAt_univ]
+2026-01-14 19:38:44.019 | ERROR    | lean_reinforcement.training.trainer:_collect_data:308 - Found 1 dead worker(s). Stopping training.
+2026-01-14 19:38:44.021 | ERROR    | lean_reinforcement.training.trainer:_collect_data:312 - Worker exit code: -9
+2026-01-14 19:38:44.023 | ERROR    | lean_reinforcement.training.trainer:train:145 - Training crashed: One or more worker processes died unexpectedly.
+2026-01-14 19:38:44.023 | INFO     | lean_reinforcement.training.trainer:_cleanup_workers:234 - Shutting down workers...
+Traceback (most recent call last):
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/train.py", line 16, in <module>
+    trainer.train()
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 146, in train
+    raise e
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 140, in train
+    self._run_epoch(epoch, inference_server)
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 167, in _run_epoch
+    training_data_buffer = self._collect_data(
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 316, in _collect_data
+    raise RuntimeError("One or more worker processes died unexpectedly.")
+RuntimeError: One or more worker processes died unexpectedly.
+Traceback (most recent call last):
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/train.py", line 16, in <module>
+    trainer.train()
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 146, in train
+    raise e
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 140, in train
+    self._run_epoch(epoch, inference_server)
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 167, in _run_epoch
+    training_data_buffer = self._collect_data(
+  File "/gpfs/home1/gkoopman/lean_reinforcement/lean_reinforcement/training/trainer.py", line 316, in _collect_data
+    raise RuntimeError("One or more worker processes died unexpectedly.")
+RuntimeError: One or more worker processes died unexpectedly.
+[1;34mwandb[0m: 
+[1;34mwandb[0m: 🚀 View run [33mcelestial-tree-72[0m at: [34mhttps://wandb.ai/gerbennkoopman-university-of-amsterdam/lean-reinforcement/runs/skqyl96k[0m
+[1;34mwandb[0m: Find logs at: [1;35m../../../gpfs/home1/gkoopman/lean_reinforcement/wandb/run-20260114_184047-skqyl96k/logs[0m
+[2026-01-14T19:39:09.238] error: Detected 1 oom_kill event in StepId=18346903.0. Some of the step tasks have been OOM Killed.
+srun: error: gcn20: task 0: Out Of Memory
+srun: Terminating StepId=18346903.0

@@ -32,7 +32,7 @@ class MCTS_AlphaZero(BaseMCTS):
         batch_size: int = 8,
         num_tactics_to_expand: int = 8,
         max_rollout_depth: int = 30,
-        max_time: float = 300.0,
+        max_time: float = 300.0,  # Max time per MCTS search step (seconds)
         **kwargs,
     ):
         super().__init__(
@@ -81,6 +81,7 @@ class MCTS_AlphaZero(BaseMCTS):
         Expand the leaf node by generating all promising actions from the
         policy head, creating a child for each, and storing their prior
         probabilities. Also caches encoder features for efficiency.
+        Duplicate states are reused (DAG structure) for multi-path backpropagation.
         Then, return the node itself for simulation.
         """
         if not isinstance(node.state, TacticState):
@@ -96,26 +97,43 @@ class MCTS_AlphaZero(BaseMCTS):
             state_str, n=self.num_tactics_to_expand
         )
 
-        # Create a child for each promising tactic
+        # Create a child for each promising tactic (reusing existing nodes for duplicates)
+        # Collect children with TacticState for batch encoding
+        children_to_encode: List[Node] = []
+        states_to_encode: List[str] = []
+
         for tactic, prob in tactics_with_probs:
             # Skip if we already have an edge for this action
             if node.has_edge_for_action(tactic):
                 continue
 
-            try:
-                next_state = self.env.run_tactic_stateless(node.state, tactic)
-            except Exception as e:
-                next_state = LeanError(error=str(e))
-
-            # Prune Error States
-            if isinstance(next_state, (LeanError, ProofGivenUp)):
+            # Check for duplicate states
+            state_key = self._get_state_key(next_state)
+            if state_key is not None and state_key in self.seen_states:
+                # Reuse existing node - add as child with additional parent edge
+                existing_node = self.seen_states[state_key]
+                existing_node.add_parent(node, tactic)
+                if existing_node not in node.children:
+                    node.children.append(existing_node)
                 continue
 
-            # Check Transposition Table
-            child_node = self._get_or_create_node(next_state)
+            child = Node(next_state, parent=node, action=tactic)
+            child.prior_p = prob
+            node.children.append(child)
+            self.node_count += 1
 
-            edge = Edge(action=tactic, prior=prob, child=child_node)
-            node.add_edge(edge)
+            # Register new state in seen_states and collect for batch encoding
+            if isinstance(next_state, TacticState):
+                assert state_key is not None  # Guaranteed by TacticState check
+                self.seen_states[state_key] = child
+                children_to_encode.append(child)
+                states_to_encode.append(next_state.pp)
+
+        # Batch encode all children's states at once for efficiency
+        if children_to_encode:
+            batch_features = self.value_head.encode_states(states_to_encode)
+            for i, child in enumerate(children_to_encode):
+                child.encoder_features = batch_features[i : i + 1]
 
         node.untried_actions = []
 
@@ -125,11 +143,28 @@ class MCTS_AlphaZero(BaseMCTS):
         # 1. Generate tactics for all nodes
         states = []
         nodes_to_generate = []
+        nodes_needing_features: List[Node] = []
+        states_for_features: List[str] = []
 
         for node in nodes:
             if isinstance(node.state, TacticState):
                 states.append(node.state.pp)
                 nodes_to_generate.append(node)
+
+                # Collect nodes needing encoder features for batch encoding
+                if node.encoder_features is None:
+                    nodes_needing_features.append(node)
+                    states_for_features.append(node.state.pp)
+
+        # Early timeout check before expensive operations
+        if self._is_timeout():
+            return nodes
+
+        # Batch encode parent nodes' features if any are missing
+        if nodes_needing_features:
+            batch_features = self.value_head.encode_states(states_for_features)
+            for i, node in enumerate(nodes_needing_features):
+                node.encoder_features = batch_features[i : i + 1]
 
         if not states:
             empty_results: List[tuple[Node, Optional[Edge]]] = [
@@ -137,21 +172,32 @@ class MCTS_AlphaZero(BaseMCTS):
             ]
             return empty_results
 
+        # Early timeout check after encoding
+        if self._is_timeout():
+            return nodes
+
         # Batch generate tactics
         batch_tactics_with_probs = self.transformer.generate_tactics_with_probs_batch(
             states, n=self.num_tactics_to_expand
         )
 
-        # 2. Prepare tasks for parallel execution
+        # Early timeout check after model call
+        if self._is_timeout():
+            return nodes
+
+        # Prepare tasks
         tasks = []
         for i, tactics_probs in enumerate(batch_tactics_with_probs):
             node = nodes_to_generate[i]
             for tactic, prob in tactics_probs:
                 tasks.append((node, tactic, prob))
 
-        # 3. Run tactics sequentially
+        # Run tactics sequentially with timeout checks
         results = []
+        assert self.env.dojo is not None, "Dojo not initialized"
         for node, tactic, prob in tasks:
+            if self._is_timeout():
+                break
             try:
                 next_state = self.env.dojo.run_tac(node.state, tactic)
             except Exception as e:
@@ -163,13 +209,39 @@ class MCTS_AlphaZero(BaseMCTS):
 
             results.append((node, tactic, prob, next_state))
 
-        # 4. Create children (using add_edge for deduplication)
+        # Create children (reusing existing nodes for duplicates - DAG structure)
+        # Collect children with TacticState for batch encoding
+        children_to_encode: List[Node] = []
+        states_to_encode: List[str] = []
+
         for node, tactic, prob, next_state in results:
-            if node.has_edge_for_action(tactic):
+            # Check for duplicate states
+            state_key = self._get_state_key(next_state)
+            if state_key is not None and state_key in self.seen_states:
+                # Reuse existing node - add as child with additional parent edge
+                existing_node = self.seen_states[state_key]
+                existing_node.add_parent(node, tactic)
+                if existing_node not in node.children:
+                    node.children.append(existing_node)
                 continue
-            child_node = self._get_or_create_node(next_state)
-            edge = Edge(action=tactic, prior=prob, child=child_node)
-            node.add_edge(edge)
+
+            child = Node(next_state, parent=node, action=tactic)
+            child.prior_p = prob
+            node.children.append(child)
+            self.node_count += 1
+
+            # Register new state in seen_states and collect for batch encoding
+            if isinstance(next_state, TacticState):
+                assert state_key is not None  # Guaranteed by TacticState check
+                self.seen_states[state_key] = child
+                children_to_encode.append(child)
+                states_to_encode.append(next_state.pp)
+
+        # Batch encode all children's states at once for efficiency
+        if children_to_encode:
+            batch_features = self.value_head.encode_states(states_to_encode)
+            for i, child in enumerate(children_to_encode):
+                child.encoder_features = batch_features[i : i + 1]
 
         for node in nodes_to_generate:
             node.untried_actions = []
@@ -184,6 +256,10 @@ class MCTS_AlphaZero(BaseMCTS):
         Phase 3: Evaluation (using Value Head)
         Uses cached encoder features if available to avoid recomputation.
         """
+        # Check timeout before evaluation
+        if self._is_timeout():
+            return 0.0  # Neutral reward on timeout
+
         if node.is_terminal:
             if isinstance(node.state, ProofFinished):
                 return 1.0
@@ -208,6 +284,10 @@ class MCTS_AlphaZero(BaseMCTS):
         """
         Phase 3: Batch Evaluation
         """
+        # Check timeout before batch evaluation
+        if self._is_timeout():
+            return [0.0] * len(nodes)  # Neutral rewards on timeout
+
         # Separate nodes by terminal status and feature availability
         results = [0.0] * len(nodes)
 
