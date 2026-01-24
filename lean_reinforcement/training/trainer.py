@@ -319,6 +319,14 @@ class Trainer:
         logged_dead_workers: set = set()  # Track workers we've already logged as dead
 
         temp_data_file = self.checkpoint_dir / f"temp_data_epoch_{epoch + 1}.jsonl"
+
+        # Ensure checkpoint directory exists before writing temporary files
+        try:
+            self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
+        except Exception:
+            # Fallback: try creating parent directory path via os.makedirs
+            os.makedirs(str(self.checkpoint_dir), exist_ok=True)
+
         if os.path.exists(temp_data_file):
             os.remove(temp_data_file)
 
