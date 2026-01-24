@@ -35,16 +35,16 @@ srun python3 -m lean_reinforcement.training.train \
     --data-type novel_premises \
     --indexed-corpus-path $CORPUS_DIR/indexed_corpus.pkl \
     --num-epochs 128 \
-    --num-theorems 128 \
+    --num-theorems 100 \
     --num-iterations 200 \
-    --batch-size 32 \
+    --batch-size 16 \
     --num-tactics-to-expand 16 \
-    --num-workers 16 \
-    --env-timeout 600 \
-    --max-time 120 \
-    --proof-timeout 1200 \
+    --num-workers 12 \
+    --env-timeout 72 \
+    --max-time 40 \
+    --proof-timeout 300.0 \
     --mcts-type guided_rollout \
-    --train-epochs 4 \
+    --train-epochs 3 \
     --train-value-head \
     --use-final-reward \
     --save-training-data \
