@@ -11,6 +11,7 @@ name: Upload Python Package
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -23,7 +24,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      
 
       - uses: actions/setup-python@v5
         with:
@@ -31,9 +31,21 @@ jobs:
 
       - name: Build release distributions
         run: |
-          # NOTE: put your own distribution build steps here.
           python -m pip install build
-          python -m build
+          # Only build the source tarball here (we build wheels separately below)
+          python -m build --sdist
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.21.3
+        env:
+          CIBW_SKIP: "pp* cp36-* cp37-*"
+          CIBW_ARCHS_LINUX: auto64
+
+      - name: Move wheels to dist directory
+        run: |
+          # cibuildwheel outputs to 'wheelhouse/', we move them to 'dist/' for easier upload
+          mkdir -p dist
+          mv wheelhouse/*.whl dist/
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4
@@ -49,16 +61,9 @@ jobs:
       # IMPORTANT: this permission is mandatory for trusted publishing
       id-token: write
 
-    # Dedicated environments with protections for publishing are strongly recommended.
-    # For more information, see: https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment#deployment-protection-rules
     environment:
       name: pypi
-      # OPTIONAL: uncomment and update to include your PyPI project URL in the deployment status:
       url: https://pypi.org/p/lean-reinforcement
-      #
-      # ALTERNATIVE: if your GitHub Release name is the PyPI project version string
-      # ALTERNATIVE: exactly, uncomment the following line instead:
-      # url: https://pypi.org/project/YOURPROJECT/${{ github.event.release.name }}
 
     steps:
       - name: Retrieve release distributions
