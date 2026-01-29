@@ -1,0 +1,143 @@
+_wandb:
+    value:
+        cli_version: 0.23.1
+        e:
+            rpv6dpbd5mxxoep9ub63p34tic0ijlvf:
+                args:
+                    - --data-type
+                    - novel_premises
+                    - --indexed-corpus-path
+                    - /indexed_corpus.pkl
+                    - --num-epochs
+                    - "128"
+                    - --num-theorems
+                    - "100"
+                    - --num-iterations
+                    - "200"
+                    - --batch-size
+                    - "16"
+                    - --num-tactics-to-expand
+                    - "16"
+                    - --num-workers
+                    - "12"
+                    - --env-timeout
+                    - "72"
+                    - --max-time
+                    - "40"
+                    - --proof-timeout
+                    - "300.0"
+                    - --mcts-type
+                    - alpha_zero
+                    - --train-epochs
+                    - "3"
+                    - --train-value-head
+                    - --use-final-reward
+                    - --save-training-data
+                    - --save-checkpoints
+                    - --resume
+                    - --use-wandb
+                cpu_count: 16
+                cpu_count_logical: 22
+                cudaVersion: "13.0"
+                disk:
+                    /:
+                        total: "262486331392"
+                        used: "170822733824"
+                email: gerbennkoopman@gmail.com
+                executable: /home/gerben-koopman/conda/envs/lean-reinforcement/bin/python3
+                git:
+                    commit: c30e264bc178089585ecfa4ba78abe24c7886346
+                    remote: git@github.com:GerbenKoopman/LeanReinforcement.git
+                gpu: NVIDIA GeForce RTX 4060 Laptop GPU
+                gpu_count: 1
+                gpu_nvidia:
+                    - architecture: Ada
+                      cudaCores: 3072
+                      memoryTotal: "8585740288"
+                      name: NVIDIA GeForce RTX 4060 Laptop GPU
+                      uuid: GPU-f3fa68b1-e965-9828-36c0-091f9369015a
+                host: Laptop-studie-linux
+                memory:
+                    total: "33237995520"
+                os: Linux-6.14.0-37-generic-x86_64-with-glibc2.39
+                program: -m lean_reinforcement.training.train
+                python: CPython 3.10.19
+                root: /home/gerben-koopman/projects/study/lean_related/lean_reinforcement
+                startedAt: "2026-01-28T19:27:07.567352Z"
+                writerId: rpv6dpbd5mxxoep9ub63p34tic0ijlvf
+        m: []
+        python_version: 3.10.19
+        t:
+            "1":
+                - 1
+                - 9
+                - 11
+                - 30
+                - 41
+                - 49
+                - 103
+            "2":
+                - 1
+                - 9
+                - 11
+                - 30
+                - 41
+                - 49
+                - 103
+            "3":
+                - 16
+            "4": 3.10.19
+            "5": 0.23.1
+            "6": 4.57.3
+            "12": 0.23.1
+            "13": linux-x86_64
+batch_size:
+    value: 16
+checkpoint_dir:
+    value: null
+data_type:
+    value: novel_premises
+env_timeout:
+    value: 72
+indexed_corpus_path:
+    value: /indexed_corpus.pkl
+inference_timeout:
+    value: 600
+max_rollout_depth:
+    value: 30
+max_steps:
+    value: 10
+max_time:
+    value: 40
+mcts_type:
+    value: alpha_zero
+model_name:
+    value: kaiyuy/leandojo-lean4-tacgen-byt5-small
+num_epochs:
+    value: 128
+num_iterations:
+    value: 200
+num_tactics_to_expand:
+    value: 16
+num_theorems:
+    value: 100
+num_workers:
+    value: 12
+proof_timeout:
+    value: 300
+resume:
+    value: true
+save_checkpoints:
+    value: true
+save_training_data:
+    value: true
+train_epochs:
+    value: 3
+train_value_head:
+    value: true
+use_final_reward:
+    value: true
+use_test_value_head:
+    value: false
+use_wandb:
+    value: true
