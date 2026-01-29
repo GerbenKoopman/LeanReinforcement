@@ -3,11 +3,13 @@ from lean_reinforcement.agent.mcts.mcts_cy.base_mcts_cy import BaseMCTS, Node
 
 class MCTS_AlphaZero(BaseMCTS):
     value_head: Any
+    config: Any
     def __init__(
         self,
         value_head: Any,
         env: Any,
         transformer: Any,
+        config: Any,
         exploration_weight: float = ...,
         max_tree_nodes: int = ...,
         batch_size: int = ...,

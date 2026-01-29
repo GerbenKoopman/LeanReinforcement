@@ -10,6 +10,7 @@ from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 from lean_reinforcement.utilities.gym import LeanDojoEnv
 from lean_reinforcement.agent.mcts.base_mcts import BaseMCTS, Node
 from lean_reinforcement.agent.transformer import TransformerProtocol
+from lean_reinforcement.utilities.config import TrainingConfig
 
 
 class MCTS_GuidedRollout(BaseMCTS):
@@ -24,6 +25,7 @@ class MCTS_GuidedRollout(BaseMCTS):
         self,
         env: LeanDojoEnv,
         transformer: TransformerProtocol,
+        config: TrainingConfig,
         exploration_weight: float = math.sqrt(2),
         max_tree_nodes: int = 10000,
         batch_size: int = 8,
@@ -35,6 +37,7 @@ class MCTS_GuidedRollout(BaseMCTS):
         super().__init__(
             env=env,
             transformer=transformer,
+            config=config,
             exploration_weight=exploration_weight,
             max_tree_nodes=max_tree_nodes,
             batch_size=batch_size,

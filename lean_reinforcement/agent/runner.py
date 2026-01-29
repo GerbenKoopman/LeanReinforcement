@@ -13,6 +13,7 @@ from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 from lean_reinforcement.agent.mcts import BaseMCTS, MCTS_GuidedRollout
 from lean_reinforcement.utilities.gym import LeanDojoEnv
 from lean_reinforcement.agent.transformer import TransformerProtocol
+from lean_reinforcement.utilities.config import TrainingConfig
 
 
 class AgentRunner:
@@ -24,6 +25,7 @@ class AgentRunner:
         self,
         env: LeanDojoEnv,
         transformer: TransformerProtocol,
+        config: TrainingConfig,
         mcts_class: Type[BaseMCTS] = MCTS_GuidedRollout,
         mcts_kwargs: Optional[dict] = None,
         num_iterations: int = 100,
@@ -44,6 +46,7 @@ class AgentRunner:
         """
         self.env = env
         self.transformer = transformer
+        self.config = config
         self.mcts_class = mcts_class
         self.num_iterations = num_iterations
         self.max_steps = max_steps
@@ -127,6 +130,7 @@ class AgentRunner:
                     mcts_instance = self.mcts_class(
                         env=self.env,
                         transformer=self.transformer,
+                        config=self.config,
                         **self.mcts_kwargs,
                     )
 

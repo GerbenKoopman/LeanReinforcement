@@ -9,6 +9,7 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
         self,
         env,
         transformer,
+        config,
         float exploration_weight=1.41421356,
         int max_tree_nodes=10000,
         int batch_size=8,
@@ -20,6 +21,7 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
         super().__init__(
             env=env,
             transformer=transformer,
+            config=config,
             exploration_weight=exploration_weight,
             max_tree_nodes=max_tree_nodes,
             batch_size=batch_size,

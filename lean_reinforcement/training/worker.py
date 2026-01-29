@@ -75,6 +75,7 @@ def process_theorem(
     runner = AgentRunner(
         env=env,
         transformer=transformer,
+        config=args,
         mcts_class=mcts_class,
         mcts_kwargs=mcts_kwargs,
         num_iterations=args.num_iterations,

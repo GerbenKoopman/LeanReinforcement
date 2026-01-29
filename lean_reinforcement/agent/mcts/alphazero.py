@@ -12,6 +12,7 @@ from lean_reinforcement.utilities.gym import LeanDojoEnv
 from lean_reinforcement.agent.value_head import ValueHead
 from lean_reinforcement.agent.mcts.base_mcts import BaseMCTS, Node
 from lean_reinforcement.agent.transformer import TransformerProtocol
+from lean_reinforcement.utilities.config import TrainingConfig
 
 
 class MCTS_AlphaZero(BaseMCTS):
@@ -27,6 +28,7 @@ class MCTS_AlphaZero(BaseMCTS):
         value_head: ValueHead,
         env: LeanDojoEnv,
         transformer: TransformerProtocol,
+        config: TrainingConfig,
         exploration_weight: float = math.sqrt(2),
         max_tree_nodes: int = 10000,
         batch_size: int = 8,
@@ -38,6 +40,7 @@ class MCTS_AlphaZero(BaseMCTS):
         super().__init__(
             env=env,
             transformer=transformer,
+            config=config,
             exploration_weight=exploration_weight,
             max_tree_nodes=max_tree_nodes,
             batch_size=batch_size,
@@ -46,6 +49,7 @@ class MCTS_AlphaZero(BaseMCTS):
             max_time=max_time,
         )
         self.value_head = value_head
+        self.config = config
 
     def _puct_score(self, node: Node) -> float:
         """Calculates the PUCT score for a node."""
@@ -91,7 +95,7 @@ class MCTS_AlphaZero(BaseMCTS):
         state_str = node.state.pp
 
         # Cache encoder features for this node if not already cached
-        if node.encoder_features is None:
+        if node.encoder_features is None and self.config.use_caching:
             node.encoder_features = self.value_head.encode_states([state_str])
 
         tactics_with_probs = self.transformer.generate_tactics_with_probs(
@@ -129,7 +133,7 @@ class MCTS_AlphaZero(BaseMCTS):
                 states_to_encode.append(next_state.pp)
 
         # Batch encode all children's states at once for efficiency
-        if children_to_encode:
+        if children_to_encode and self.config.use_caching:
             batch_features = self.value_head.encode_states(states_to_encode)
             for i, child in enumerate(children_to_encode):
                 child.encoder_features = batch_features[i : i + 1]
@@ -160,7 +164,7 @@ class MCTS_AlphaZero(BaseMCTS):
             return nodes
 
         # Batch encode parent nodes' features if any are missing
-        if nodes_needing_features:
+        if nodes_needing_features and self.config.use_caching:
             batch_features = self.value_head.encode_states(states_for_features)
             for i, node in enumerate(nodes_needing_features):
                 node.encoder_features = batch_features[i : i + 1]
@@ -229,7 +233,7 @@ class MCTS_AlphaZero(BaseMCTS):
                 states_to_encode.append(next_state.pp)
 
         # Batch encode all children's states at once for efficiency
-        if children_to_encode:
+        if children_to_encode and self.config.use_caching:
             batch_features = self.value_head.encode_states(states_to_encode)
             for i, child in enumerate(children_to_encode):
                 child.encoder_features = batch_features[i : i + 1]

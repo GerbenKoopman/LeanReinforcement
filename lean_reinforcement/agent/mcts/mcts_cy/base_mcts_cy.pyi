@@ -1,5 +1,4 @@
 from typing import List, Optional, Dict, Any, Tuple
-import torch
 
 class Node:
     state: Any
@@ -45,6 +44,7 @@ class BaseMCTS:
         self,
         env: Any,
         transformer: Any,
+        config: Any,
         exploration_weight: float = ...,
         max_tree_nodes: int = ...,
         batch_size: int = ...,

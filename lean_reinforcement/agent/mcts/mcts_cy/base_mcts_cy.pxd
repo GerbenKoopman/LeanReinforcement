@@ -18,6 +18,7 @@ cdef class Node:
 cdef class BaseMCTS:
     cdef public object env
     cdef public object transformer
+    cdef public config
     cdef public float exploration_weight
     cdef public int max_tree_nodes
     cdef public int batch_size

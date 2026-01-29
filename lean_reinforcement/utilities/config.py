@@ -22,6 +22,7 @@ class TrainingConfig:
     train_value_head: bool
     use_final_reward: bool
     save_training_data: bool
+    use_caching: bool
 
     # Checkpoint Args
     save_checkpoints: bool
@@ -67,6 +68,7 @@ class TrainingConfig:
             train_value_head=args.train_value_head,
             use_final_reward=args.use_final_reward,
             save_training_data=args.save_training_data,
+            use_caching=args.use_caching,
             save_checkpoints=args.save_checkpoints,
             resume=args.resume,
             use_test_value_head=args.use_test_value_head,
@@ -206,6 +208,12 @@ def get_config() -> TrainingConfig:
         action=argparse.BooleanOptionalAction,
         default=True,
         help="Save raw training data to JSON files for offline analysis.",
+    )
+    parser.add_argument(
+        "--use-caching",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Cache encoded node features whenever possible (memory intensive).",
     )
 
     # --- Checkpoint Args ---

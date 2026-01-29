@@ -13,6 +13,7 @@ from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
 from lean_reinforcement.utilities.gym import LeanDojoEnv
 from lean_reinforcement.agent.transformer import TransformerProtocol
+from lean_reinforcement.utilities.config import TrainingConfig
 
 
 class Node:
@@ -81,6 +82,7 @@ class BaseMCTS:
         self,
         env: LeanDojoEnv,
         transformer: TransformerProtocol,
+        config: TrainingConfig,
         exploration_weight: float = math.sqrt(2),
         max_tree_nodes: int = 10000,
         batch_size: int = 8,

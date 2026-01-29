@@ -6,6 +6,7 @@ class MCTS_GuidedRollout(BaseMCTS):
         self,
         env: Any,
         transformer: Any,
+        config: Any,
         exploration_weight: float = ...,
         max_tree_nodes: int = ...,
         batch_size: int = ...,

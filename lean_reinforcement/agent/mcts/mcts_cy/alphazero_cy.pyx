@@ -12,6 +12,7 @@ cdef class MCTS_AlphaZero(BaseMCTS):
         value_head,
         env,
         transformer,
+        config,
         float exploration_weight=1.41421356,
         int max_tree_nodes=10000,
         int batch_size=8,
@@ -23,6 +24,7 @@ cdef class MCTS_AlphaZero(BaseMCTS):
         super().__init__(
             env=env,
             transformer=transformer,
+            config=config,
             exploration_weight=exploration_weight,
             max_tree_nodes=max_tree_nodes,
             batch_size=batch_size,
@@ -30,6 +32,7 @@ cdef class MCTS_AlphaZero(BaseMCTS):
             max_rollout_depth=max_rollout_depth,
         )
         self.value_head = value_head
+        self.config = config
 
     cpdef float _puct_score(self, Node node):
         cdef float q_value
@@ -85,7 +88,7 @@ cdef class MCTS_AlphaZero(BaseMCTS):
 
         state_str = node.state.pp
 
-        if node.encoder_features is None:
+        if node.encoder_features is None and self.config.use_caching:
             node.encoder_features = self.value_head.encode_states([state_str])
 
         tactics_with_probs = self.transformer.generate_tactics_with_probs(
@@ -111,7 +114,7 @@ cdef class MCTS_AlphaZero(BaseMCTS):
             self.node_count += 1
             
             # Register new state in seen_states and encode features
-            if isinstance(next_state, TacticState):
+            if isinstance(next_state, TacticState) and self.config.use_caching:
                 self.seen_states[state_key] = child
                 child.encoder_features = self.value_head.encode_states([next_state.pp])
 

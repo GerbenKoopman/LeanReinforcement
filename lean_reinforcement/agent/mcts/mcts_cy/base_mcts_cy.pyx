@@ -57,6 +57,7 @@ cdef class BaseMCTS:
         self,
         env,
         transformer,
+        config,
         float exploration_weight=1.41421356,
         int max_tree_nodes=10000,
         int batch_size=8,
