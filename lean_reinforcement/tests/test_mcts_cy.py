@@ -10,6 +10,7 @@ from lean_reinforcement.agent.mcts.mcts_cy.guidedrollout_cy import MCTS_GuidedRo
 from lean_reinforcement.agent.mcts.mcts_cy.alphazero_cy import MCTS_AlphaZero
 from lean_reinforcement.agent.transformer import Transformer
 from lean_reinforcement.agent.value_head import ValueHead
+from lean_reinforcement.utilities.config import TrainingConfig
 
 
 class TestNodeCy(unittest.TestCase):
@@ -62,17 +63,25 @@ class TestBaseMCTSCy(unittest.TestCase):
     def setUp(self) -> None:
         self.env = MockLeanDojoEnv()
         self.transformer = Mock(spec=Transformer)
+        self.config = MagicMock(spec=TrainingConfig)
+        self.config.use_caching = False
 
     def test_base_mcts_initialization(self) -> None:
-        mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
+        mcts = MCTS_GuidedRollout(
+            env=self.env, transformer=self.transformer, config=self.config
+        )
         self.assertIsInstance(mcts.root, Node)
         self.assertEqual(mcts.root.state, self.env.current_state)
 
     def test_backpropagate(self) -> None:
-        mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
+        mcts = MCTS_GuidedRollout(
+            env=self.env, transformer=self.transformer, config=self.config
+        )
         node1 = Node(Mock(spec=TacticState))
-        node2 = Node(Mock(spec=TacticState), parent=node1)
-        node3 = Node(Mock(spec=TacticState), parent=node2)
+        node2 = Node(Mock(spec=TacticState))
+        node2.parents.append((node1, "tactic"))
+        node3 = Node(Mock(spec=TacticState))
+        node3.parents.append((node2, "tactic"))
 
         mcts._backpropagate(node3, 0.5)
 
@@ -84,10 +93,12 @@ class TestBaseMCTSCy(unittest.TestCase):
         self.assertEqual(node1.max_value, 0.5)
 
     def test_move_root(self) -> None:
-        mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
+        mcts = MCTS_GuidedRollout(
+            env=self.env, transformer=self.transformer, config=self.config
+        )
         root = mcts.root
 
-        # Create children manually with pp attribute for seen_states
+        # Create children manually with pp attributes for seen_states
         child1_state = Mock(spec=TacticState)
         child1_state.pp = "child1_state"
         child2_state = Mock(spec=TacticState)
@@ -123,12 +134,17 @@ class TestMCTSGuidedRolloutCy(unittest.TestCase):
     def setUp(self) -> None:
         self.env = MockLeanDojoEnv()
         self.transformer = Mock(spec=Transformer)
-        self.mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
+        self.config = MagicMock(spec=TrainingConfig)
+        self.config.use_caching = False
+        self.mcts = MCTS_GuidedRollout(
+            env=self.env, transformer=self.transformer, config=self.config
+        )
 
     def test_puct_score(self) -> None:
         parent = Node(Mock(spec=TacticState))
         parent.visit_count = 10
-        child = Node(Mock(spec=TacticState), parent=parent)
+        child = Node(Mock(spec=TacticState))
+        child.parents.append((parent, "tactic"))
         child.visit_count = 1
         child.max_value = 0.8
         child.prior_p = 0.5
@@ -151,11 +167,12 @@ class TestMCTSGuidedRolloutCy(unittest.TestCase):
         self.env.run_tactic_stateless = Mock(return_value=next_state_mock)
 
         child = self.mcts._expand(node)
+        self.assertIsInstance(child, Node)
 
         self.assertEqual(len(node.children), 1)
-        self.assertIs(child.parent, node)
-        self.assertEqual(child.action, "tactic1")
-        self.assertEqual(child.prior_p, 0.5)
+        self.assertIs(node.children[0].get_parent(), node)
+        self.assertEqual(node.children[0].action, "tactic1")
+        self.assertEqual(node.children[0].prior_p, 0.5)
         self.transformer.generate_tactics_with_probs.assert_called_once()
         self.env.run_tactic_stateless.assert_called_once_with(state, "tactic1")
 
@@ -191,15 +208,21 @@ class TestMCTSAlphaZeroCy(unittest.TestCase):
         self.env = MockLeanDojoEnv()
         self.transformer = Mock(spec=Transformer)
         self.value_head = Mock(spec=ValueHead)
+        self.config = MagicMock(spec=TrainingConfig)
+        self.config.use_caching = False
         self.mcts = MCTS_AlphaZero(
-            value_head=self.value_head, env=self.env, transformer=self.transformer
+            value_head=self.value_head,
+            env=self.env,
+            transformer=self.transformer,
+            config=self.config,
         )
 
     def test_puct_score(self) -> None:
         parent = Node(Mock(spec=TacticState))
         parent.visit_count = 10
 
-        child = Node(Mock(spec=TacticState), parent=parent)
+        child = Node(Mock(spec=TacticState))
+        child.parents.append((parent, "tactic"))
         child.visit_count = 1
         child.max_value = 0.8
         child.prior_p = 0.8
@@ -209,7 +232,8 @@ class TestMCTSAlphaZeroCy(unittest.TestCase):
         expected_score = 0.8 + self.mcts.exploration_weight * 0.8 * ((10) ** 0.5 / 2)
         self.assertAlmostEqual(score, expected_score, places=5)
 
-        child_unvisited = Node(Mock(spec=TacticState), parent=parent)
+        child_unvisited = Node(Mock(spec=TacticState))
+        child_unvisited.parents.append((parent, "tactic"))
         child_unvisited.visit_count = 0
         child_unvisited.max_value = float("-inf")
         child_unvisited.prior_p = 0.5
@@ -242,7 +266,7 @@ class TestMCTSAlphaZeroCy(unittest.TestCase):
         self.value_head.encode_states.return_value = [Mock(), Mock()]
 
         expanded_node = self.mcts._expand(node)
-        self.assertIs(expanded_node, node)
+        self.assertIsInstance(expanded_node, Node)
         self.assertEqual(len(node.children), 2)
         self.assertEqual(node.children[0].action, "tactic1")
         self.assertAlmostEqual(node.children[0].prior_p, 0.6, places=5)

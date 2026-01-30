@@ -28,6 +28,7 @@ class TestCheckpoint(unittest.TestCase):
             use_test_value_head=False,
             checkpoint_dir=str(self.checkpoint_dir),
             use_wandb=False,
+            use_caching=False,
         )
 
     @patch("lean_reinforcement.utilities.checkpoint.save_training_metadata")

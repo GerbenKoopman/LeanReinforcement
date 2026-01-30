@@ -29,6 +29,7 @@ class TestWorker(unittest.TestCase):
             train_value_head=False,
             use_final_reward=True,
             use_wandb=False,
+            use_caching=False,
         )
         self.corpus = MagicMock()
         self.dataloader = MagicMock()

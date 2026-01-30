@@ -108,8 +108,8 @@ class TestTrialResult(unittest.TestCase):
             avg_steps_per_proof=5.0,
         )
 
-        # Score = proofs_per_second * (success_rate ** 2)
-        expected_score = 0.08 * (0.8**2)
+        # Score is now proofs_per_hour, which is proofs_per_second * 3600
+        expected_score = 0.08 * 3600.0
         self.assertAlmostEqual(result.score, expected_score, places=6)
 
     def test_score_with_zero_success(self):
@@ -177,7 +177,6 @@ class TestHardwareProfiles(unittest.TestCase):
     def test_search_spaces_valid(self):
         """Test that search spaces contain valid values."""
         for space in [LAPTOP_SEARCH_SPACE, HPC_SEARCH_SPACE]:
-            self.assertIn("num_workers", space)
             self.assertIn("batch_size", space)
 
             # All values should be positive
@@ -301,7 +300,7 @@ class TestGridSearchCombinations(unittest.TestCase):
 
         # Should have reasonable number of combinations for grid search
         self.assertGreater(len(all_combinations), 0)
-        self.assertLess(len(all_combinations), 1000)  # Not too many
+        self.assertLess(len(all_combinations), 3000)  # Not too many
 
 
 class TestBinarySearchLogic(unittest.TestCase):

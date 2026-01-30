@@ -25,12 +25,14 @@ class TestTrainingConfig(unittest.TestCase):
             train_value_head=False,
             use_final_reward=True,
             save_training_data=False,
+            use_config=False,
             save_checkpoints=False,
             resume=True,
             use_test_value_head=False,
             checkpoint_dir="/tmp/ckpt",
             use_wandb=False,
             inference_timeout=600.0,
+            use_caching=False,
         )
 
         config = TrainingConfig.from_args(args)

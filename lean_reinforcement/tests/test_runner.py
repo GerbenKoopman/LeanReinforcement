@@ -34,9 +34,11 @@ class TestAgentRunner(unittest.TestCase):
         self.initial_state.pp = "initial_state_pp"
         self.env.current_state = self.initial_state
 
+        self.config = MagicMock()
         self.runner = AgentRunner(
             self.env,
             self.transformer,
+            self.config,
             mcts_class=MCTS_GuidedRollout,
             num_iterations=10,
             max_steps=5,
@@ -63,6 +65,7 @@ class TestAgentRunner(unittest.TestCase):
         runner = AgentRunner(
             self.env,
             self.transformer,
+            self.config,
             mcts_class=MockMCTS,
             num_iterations=10,
             max_steps=5,
@@ -117,6 +120,7 @@ class TestAgentRunner(unittest.TestCase):
         runner = AgentRunner(
             self.env,
             self.transformer,
+            self.config,
             mcts_class=MockMCTS,
             num_iterations=10,
             max_steps=5,
@@ -154,6 +158,7 @@ class TestAgentRunner(unittest.TestCase):
         runner = AgentRunner(
             self.env,
             self.transformer,
+            self.config,
             mcts_class=MockMCTS,
             num_iterations=10,
             max_steps=5,

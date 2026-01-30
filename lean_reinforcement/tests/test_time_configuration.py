@@ -7,7 +7,7 @@ properly passed from configuration through trainer, worker, runner, and MCTS.
 
 import unittest
 from typing import Any, cast
-from unittest.mock import Mock
+from unittest.mock import Mock, MagicMock
 from lean_dojo import TacticState
 
 from lean_reinforcement.utilities.config import TrainingConfig
@@ -59,8 +59,8 @@ class TestTimeConfigurationPropagation(unittest.TestCase):
             use_test_value_head=False,
             checkpoint_dir=None,
             use_wandb=False,
+            use_caching=False,
         )
-
         self.assertEqual(config.max_time, 300.0)
 
     def test_config_max_time_custom_value(self):
@@ -84,9 +84,9 @@ class TestTimeConfigurationPropagation(unittest.TestCase):
             use_test_value_head=False,
             checkpoint_dir=None,
             use_wandb=False,
+            use_caching=False,
             max_time=300.0,
         )
-
         self.assertEqual(config.max_time, 300.0)
 
     def test_config_env_timeout_value(self):
@@ -110,8 +110,8 @@ class TestTimeConfigurationPropagation(unittest.TestCase):
             use_test_value_head=False,
             checkpoint_dir=None,
             use_wandb=False,
+            use_caching=False,
         )
-
         self.assertEqual(config.env_timeout, 180)
 
     def test_config_env_timeout_custom_value(self):
@@ -135,9 +135,9 @@ class TestTimeConfigurationPropagation(unittest.TestCase):
             use_test_value_head=False,
             checkpoint_dir=None,
             use_wandb=False,
+            use_caching=False,
             env_timeout=120,
         )
-
         self.assertEqual(config.env_timeout, 120)
 
     def test_config_inference_timeout_default(self):
@@ -161,8 +161,8 @@ class TestTimeConfigurationPropagation(unittest.TestCase):
             use_test_value_head=False,
             checkpoint_dir=None,
             use_wandb=False,
+            use_caching=False,
         )
-
         self.assertEqual(config.inference_timeout, 600.0)
 
     def test_config_inference_timeout_custom_value(self):
@@ -186,9 +186,9 @@ class TestTimeConfigurationPropagation(unittest.TestCase):
             use_test_value_head=False,
             checkpoint_dir=None,
             use_wandb=False,
+            use_caching=False,
             inference_timeout=1200.0,
         )
-
         self.assertEqual(config.inference_timeout, 1200.0)
 
 
@@ -198,20 +198,25 @@ class TestMCTSTimeInitialization(unittest.TestCase):
     def setUp(self):
         self.env = cast(LeanDojoEnv, MockLeanDojoEnv())
         self.transformer = cast(TransformerProtocol, MockTransformer())
+        self.config = MagicMock(spec=TrainingConfig)
+        self.config.use_caching = False
 
     def test_mcts_receives_max_time_from_kwargs(self):
         """Test that MCTS initialization receives max_time from kwargs."""
         max_time = 300.0
         mcts = MCTS_GuidedRollout(
-            env=self.env, transformer=self.transformer, max_time=max_time
+            env=self.env,
+            transformer=self.transformer,
+            config=self.config,
+            max_time=max_time,
         )
-
         self.assertEqual(mcts.max_time, max_time)
 
     def test_mcts_default_max_time(self):
         """Test that MCTS has correct default max_time."""
-        mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
-
+        mcts = MCTS_GuidedRollout(
+            env=self.env, transformer=self.transformer, config=self.config
+        )
         self.assertEqual(mcts.max_time, 300.0)
 
     def test_mcts_kwargs_with_extra_parameters(self):
@@ -219,11 +224,11 @@ class TestMCTSTimeInitialization(unittest.TestCase):
         mcts = MCTS_GuidedRollout(
             env=self.env,
             transformer=self.transformer,
+            config=self.config,
             max_time=250.0,
             batch_size=8,
             num_tactics_to_expand=16,
         )
-
         self.assertEqual(mcts.max_time, 250.0)
         self.assertEqual(mcts.batch_size, 8)
         self.assertEqual(mcts.num_tactics_to_expand, 16)
@@ -235,41 +240,42 @@ class TestAgentRunnerTimeHandling(unittest.TestCase):
     def setUp(self):
         self.env = cast(LeanDojoEnv, MockLeanDojoEnv())
         self.transformer = cast(TransformerProtocol, MockTransformer())
+        self.config = MagicMock(spec=TrainingConfig)
 
     def test_runner_initialization_with_mcts_kwargs(self):
         """Test that AgentRunner passes mcts_kwargs correctly."""
         mcts_kwargs = {"max_time": 300.0, "batch_size": 8, "num_tactics_to_expand": 16}
-
         runner = AgentRunner(
             env=self.env,
             transformer=self.transformer,
+            config=self.config,
             mcts_class=MCTS_GuidedRollout,
             mcts_kwargs=mcts_kwargs,
             num_iterations=100,
             max_steps=10,
         )
-
         self.assertEqual(runner.mcts_kwargs, mcts_kwargs)
         self.assertEqual(runner.mcts_kwargs["max_time"], 300.0)
 
     def test_runner_mcts_instantiation(self):
         """Test that runner correctly instantiates MCTS with kwargs."""
         mcts_kwargs = {"max_time": 250.0}
-
         runner = AgentRunner(
             env=self.env,
             transformer=self.transformer,
+            config=self.config,
             mcts_class=MCTS_GuidedRollout,
             mcts_kwargs=mcts_kwargs,
             num_iterations=100,
             max_steps=10,
         )
-
         # Create MCTS instance as runner would
         mcts = runner.mcts_class(
-            env=runner.env, transformer=runner.transformer, **runner.mcts_kwargs
+            env=runner.env,
+            transformer=runner.transformer,
+            config=self.config,
+            **runner.mcts_kwargs,
         )
-
         self.assertEqual(mcts.max_time, 250.0)
 
     def test_runner_handles_empty_mcts_kwargs(self):
@@ -277,17 +283,19 @@ class TestAgentRunnerTimeHandling(unittest.TestCase):
         runner = AgentRunner(
             env=self.env,
             transformer=self.transformer,
+            config=self.config,
             mcts_class=MCTS_GuidedRollout,
             mcts_kwargs={},
             num_iterations=100,
             max_steps=10,
         )
-
         # MCTS should use defaults
         mcts = runner.mcts_class(
-            env=runner.env, transformer=runner.transformer, **runner.mcts_kwargs
+            env=runner.env,
+            transformer=runner.transformer,
+            config=self.config,
+            **runner.mcts_kwargs,
         )
-
         self.assertEqual(mcts.max_time, 300.0)  # default
 
 
@@ -297,19 +305,21 @@ class TestTimeParameterValidation(unittest.TestCase):
     def setUp(self):
         self.env = cast(LeanDojoEnv, MockLeanDojoEnv())
         self.transformer = cast(TransformerProtocol, MockTransformer())
+        self.config = MagicMock(spec=TrainingConfig)
+        self.config.use_caching = False
 
     def test_max_time_positive_value(self):
         """Test that max_time must be positive."""
         # Positive value should work
         mcts = MCTS_GuidedRollout(
-            env=self.env, transformer=self.transformer, max_time=1.0
+            env=self.env, transformer=self.transformer, config=self.config, max_time=1.0
         )
         self.assertEqual(mcts.max_time, 1.0)
 
     def test_max_time_zero(self):
         """Test that max_time can be zero (disabled)."""
         mcts = MCTS_GuidedRollout(
-            env=self.env, transformer=self.transformer, max_time=0.0
+            env=self.env, transformer=self.transformer, config=self.config, max_time=0.0
         )
         self.assertEqual(mcts.max_time, 0.0)
 
@@ -317,7 +327,10 @@ class TestTimeParameterValidation(unittest.TestCase):
         """Test that max_time can handle large values."""
         large_time = 86400.0  # 24 hours
         mcts = MCTS_GuidedRollout(
-            env=self.env, transformer=self.transformer, max_time=large_time
+            env=self.env,
+            transformer=self.transformer,
+            config=self.config,
+            max_time=large_time,
         )
         self.assertEqual(mcts.max_time, large_time)
 
@@ -328,14 +341,17 @@ class TestSearchTimeParameters(unittest.TestCase):
     def setUp(self):
         self.env = cast(LeanDojoEnv, MockLeanDojoEnv())
         self.transformer = cast(TransformerProtocol, MockTransformer())
+        self.config = MagicMock(spec=TrainingConfig)
+        self.config.use_caching = False
 
     def test_search_with_override_max_time(self):
         """Test that MCTS accepts max_time parameter."""
         mcts = MCTS_GuidedRollout(
-            env=self.env, transformer=self.transformer, max_time=600.0
+            env=self.env,
+            transformer=self.transformer,
+            config=self.config,
+            max_time=600.0,
         )
-
-        # Verify the parameter was set
         self.assertEqual(mcts.max_time, 600.0)
 
     def test_search_batch_size_parameter(self):
@@ -344,25 +360,22 @@ class TestSearchTimeParameters(unittest.TestCase):
         mcts = MCTS_GuidedRollout(
             env=self.env,
             transformer=self.transformer,
+            config=self.config,
             batch_size=batch_size,
         )
-
-        # Verify the parameter was set
         self.assertEqual(mcts.batch_size, batch_size)
 
     def test_search_uses_instance_defaults(self):
         """Test that MCTS instance stores defaults correctly."""
         instance_max_time = 200.0
         instance_batch_size = 6
-
         mcts = MCTS_GuidedRollout(
             env=self.env,
             transformer=self.transformer,
+            config=self.config,
             max_time=instance_max_time,
             batch_size=instance_batch_size,
         )
-
-        # Verify both parameters are set
         self.assertEqual(mcts.max_time, instance_max_time)
         self.assertEqual(mcts.batch_size, instance_batch_size)
 
@@ -370,45 +383,44 @@ class TestSearchTimeParameters(unittest.TestCase):
 class TestProofTimeoutHandling(unittest.TestCase):
     """Test proof search timeout handling in runner."""
 
+    def setUp(self):
+        self.env = cast(LeanDojoEnv, MockLeanDojoEnv())
+        self.transformer = cast(TransformerProtocol, MockTransformer())
+        self.config = MagicMock(spec=TrainingConfig)
+
     def test_proof_timeout_constant(self):
         """Test that PROOF_TIMEOUT is defined in runner."""
-        # Import runner and check for PROOF_TIMEOUT
-
         # Create a runner to check internal timeout
-        env = cast(LeanDojoEnv, MockLeanDojoEnv())
-        transformer = cast(TransformerProtocol, MockTransformer())
-
         agent_runner = AgentRunner(
-            env=env, transformer=transformer, mcts_kwargs={"max_time": 600.0}
+            env=self.env,
+            transformer=self.transformer,
+            config=self.config,
+            mcts_kwargs={"max_time": 600.0},
         )
-
-        # Runner should initialize without errors
         self.assertIsNotNone(agent_runner)
 
     def test_runner_max_steps_parameter(self):
         """Test that runner respects max_steps parameter."""
         max_steps = 20
-
         runner = AgentRunner(
-            env=cast(LeanDojoEnv, MockLeanDojoEnv()),
-            transformer=cast(TransformerProtocol, MockTransformer()),
+            env=self.env,
+            transformer=self.transformer,
+            config=self.config,
             mcts_kwargs={},
             max_steps=max_steps,
         )
-
         self.assertEqual(runner.max_steps, max_steps)
 
     def test_runner_num_iterations_parameter(self):
         """Test that runner respects num_iterations parameter."""
         num_iterations = 250
-
         runner = AgentRunner(
-            env=cast(LeanDojoEnv, MockLeanDojoEnv()),
-            transformer=cast(TransformerProtocol, MockTransformer()),
+            env=self.env,
+            transformer=self.transformer,
+            config=self.config,
             mcts_kwargs={},
             num_iterations=num_iterations,
         )
-
         self.assertEqual(runner.num_iterations, num_iterations)
 
 

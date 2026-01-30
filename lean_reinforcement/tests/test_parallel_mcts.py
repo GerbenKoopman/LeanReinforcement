@@ -13,8 +13,12 @@ class TestParallelMCTS(unittest.TestCase):
         self.env.theorem_pos = MagicMock()
 
         self.transformer = MagicMock()
+        self.config = MagicMock()
+        self.config.use_caching = False
 
-        self.mcts = MCTS_GuidedRollout(env=self.env, transformer=self.transformer)
+        self.mcts = MCTS_GuidedRollout(
+            env=self.env, transformer=self.transformer, config=self.config
+        )
 
     def test_virtual_loss(self) -> None:
         node = Node(TacticState("pp", 0, "id"))

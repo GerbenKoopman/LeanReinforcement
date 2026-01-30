@@ -121,9 +121,11 @@ def test_trainer_train_loop(
     with patch.object(
         trainer,
         "_collect_data",
-        return_value=[{"type": "value", "value_target": 1.0, "state": "some_state"}],
-    ) as mock_collect:
-        # Mock parameters for optimizer
+        return_value=(
+            [{"type": "value", "value_target": 1.0, "state": "some_state"}],
+            {},
+        ),
+    ) as mock_collect:  # Mock parameters for optimizer
         mock_param = MagicMock()
         mock_value_head.return_value.value_head.parameters.return_value = [mock_param]
 
