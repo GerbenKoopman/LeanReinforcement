@@ -29,54 +29,11 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
             max_rollout_depth=max_rollout_depth,
         )
 
-    cpdef float _puct_score(self, Node node):
-        cdef float q_value
-        cdef float exploration
-        cdef int v_loss
-        cdef int visit_count
-        cdef Node parent = node.parent
 
-        if parent is None:
-            return 0.0
-
-        v_loss = self._get_virtual_loss(node)
-        visit_count = node.visit_count + v_loss
-
-        if visit_count == 0:
-            q_value = 0.0
-        else:
-            q_value = node.max_value - (v_loss / <float>visit_count)
-
-        exploration = (
-            self.exploration_weight
-            * node.prior_p
-            * (sqrt(parent.visit_count) / (1 + visit_count))
-        )
-
-        return q_value + exploration
-
-    cpdef Node _get_best_child(self, Node node):
-        cdef Node child
-        cdef Node best_child = None
-        cdef float max_score = -1e9
-        cdef float score
-
-        if not node.children:
-            raise ValueError("Node has no children")
-
-        for child in node.children:
-            score = self._puct_score(child)
-            if best_child is None or score > max_score:
-                max_score = score
-                best_child = child
-        
-        return best_child
 
     cpdef Node _expand(self, Node node):
-        cdef object state_key
         cdef object next_state
         cdef Node child
-        cdef Node existing_node
 
         if not isinstance(node.state, TacticState):
             raise TypeError("Cannot expand a node without a TacticState.")
@@ -89,25 +46,7 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
 
         for tactic, prob in tactics_with_probs:
             next_state = self.env.run_tactic_stateless(node.state, tactic)
-
-            # Check for duplicate states
-            state_key = self._get_state_key(next_state)
-            if state_key is not None and state_key in self.seen_states:
-                # Reuse existing node - add as child with additional parent edge
-                existing_node = self.seen_states[state_key]
-                existing_node.add_parent(node, tactic)
-                if existing_node not in node.children:
-                    node.children.append(existing_node)
-                continue
-
-            child = Node(next_state, parent=node, action=tactic)
-            child.prior_p = prob
-            node.children.append(child)
-            self.node_count += 1
-
-            # Register new state in seen_states
-            if state_key is not None:
-                self.seen_states[state_key] = child
+            child = self._create_child_node(node, tactic, next_state, prob)
 
         node.untried_actions = []
 
@@ -127,8 +66,6 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
         cdef float prob
         cdef object next_state
         cdef Node child
-        cdef Node existing_node
-        cdef object state_key
 
         for node in nodes:
             if isinstance(node.state, TacticState):
@@ -165,24 +102,7 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
 
         # Create children (reusing existing nodes for duplicates - DAG structure)
         for node, tactic, prob, next_state in results:
-            # Check for duplicate states
-            state_key = self._get_state_key(next_state)
-            if state_key is not None and state_key in self.seen_states:
-                # Reuse existing node - add as child with additional parent edge
-                existing_node = self.seen_states[state_key]
-                existing_node.add_parent(node, tactic)
-                if existing_node not in node.children:
-                    node.children.append(existing_node)
-                continue
-
-            child = Node(next_state, parent=node, action=tactic)
-            child.prior_p = prob
-            node.children.append(child)
-            self.node_count += 1
-
-            # Register new state in seen_states
-            if state_key is not None:
-                self.seen_states[state_key] = child
+            child = self._create_child_node(node, tactic, next_state, prob)
 
         for node in nodes_to_generate:
             node.untried_actions = []

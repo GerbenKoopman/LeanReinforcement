@@ -1,3 +1,4 @@
+from libc.math cimport sqrt
 import math
 import time
 import torch
@@ -118,6 +119,29 @@ cdef class BaseMCTS:
             return state.pp
         return None
 
+    cdef Node _create_child_node(self, Node parent_node, object action, object next_state, float prior_p):
+        """Create a new child node, reusing an existing node if the state is already in seen_states (DAG)."""
+        cdef Node child
+        cdef Node existing_node
+        cdef object state_key = self._get_state_key(next_state)
+
+        if state_key is not None and state_key in self.seen_states:
+            existing_node = self.seen_states[state_key]
+            existing_node.add_parent(parent_node, action)
+            if existing_node not in parent_node.children:
+                parent_node.children.append(existing_node)
+            return existing_node
+
+        child = Node(next_state, parent=parent_node, action=action)
+        child.prior_p = prior_p
+        parent_node.children.append(child)
+        self.node_count += 1
+        
+        if state_key is not None:
+            self.seen_states[state_key] = child
+        
+        return child
+
     def _log_gpu_memory(self):
         if torch.cuda.is_available():
             allocated = torch.cuda.memory_allocated() / 1024**3
@@ -222,8 +246,48 @@ cdef class BaseMCTS:
             current = self._get_best_child(current)
         return current
 
+    cpdef float _puct_score(self, Node node):
+        cdef float q_value
+        cdef float exploration
+        cdef int v_loss
+        cdef int visit_count
+        cdef Node parent = node.get_parent()
+
+        if parent is None:
+            return 0.0
+
+        v_loss = self._get_virtual_loss(node)
+        visit_count = node.visit_count + v_loss
+
+        if visit_count == 0:
+            q_value = 0.0
+        else:
+            q_value = node.max_value - (v_loss / <float>visit_count)
+
+        exploration = (
+            self.exploration_weight
+            * node.prior_p
+            * (sqrt(parent.visit_count) / (1 + visit_count))
+        )
+
+        return q_value + exploration
+
     cpdef Node _get_best_child(self, Node node):
-        raise NotImplementedError
+        cdef Node child
+        cdef Node best_child = None
+        cdef float max_score = -1e9
+        cdef float score
+
+        if not node.children:
+            raise ValueError("Node has no children")
+
+        for child in node.children:
+            score = self._puct_score(child)
+            if best_child is None or score > max_score:
+                max_score = score
+                best_child = child
+        
+        return best_child
 
     cpdef Node _expand(self, Node node):
         raise NotImplementedError
