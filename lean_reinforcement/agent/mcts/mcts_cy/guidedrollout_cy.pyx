@@ -11,7 +11,7 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
         transformer,
         config,
         float exploration_weight=1.41421356,
-        int max_tree_nodes=1000,
+        int max_tree_nodes=10000,
         int batch_size=8,
         int num_tactics_to_expand=8,
         int max_rollout_depth=30,
