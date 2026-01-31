@@ -283,7 +283,25 @@ class InferenceServer:
                     all_states.extend(s)
                     lengths.append(len(s))
 
-                all_results = self.value_head.predict_batch(all_states)
+                all_results = []
+                chunk_size = int(self.max_safe_batch_size)
+                for i in range(0, len(all_states), chunk_size):
+                    chunk = all_states[i : i + chunk_size]
+                    try:
+                        all_results.extend(self.value_head.predict_batch(chunk))
+                    except torch.cuda.OutOfMemoryError:
+                        gc.collect()
+                        torch.cuda.empty_cache()
+                        new_limit = len(chunk) // 2
+                        if new_limit < self.max_safe_batch_size:
+                            self.max_safe_batch_size = max(1, new_limit)
+                            logger.warning(
+                                f"OOM in value_head. Reducing max safe batch size to {self.max_safe_batch_size}"
+                            )
+                        # Retry with smaller chunks
+                        for j in range(0, len(chunk), max(1, new_limit)):
+                            sub_chunk = chunk[j : j + max(1, new_limit)]
+                            all_results.extend(self.value_head.predict_batch(sub_chunk))
 
                 execution_results = []
                 start = 0
