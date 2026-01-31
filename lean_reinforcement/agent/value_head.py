@@ -50,7 +50,7 @@ class ValueHead(nn.Module):
         del hidden_state
         del lens
 
-        return cast(torch.Tensor, features)
+        return cast(torch.Tensor, features.detach())
 
     @torch.no_grad()
     def predict(self, state_str: str) -> float:
