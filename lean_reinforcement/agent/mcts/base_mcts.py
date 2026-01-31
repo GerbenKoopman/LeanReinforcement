@@ -84,7 +84,7 @@ class BaseMCTS:
         transformer: TransformerProtocol,
         config: TrainingConfig,
         exploration_weight: float = math.sqrt(2),
-        max_tree_nodes: int = 5000,
+        max_tree_nodes: int = 1000,
         batch_size: int = 8,
         num_tactics_to_expand: int = 8,
         max_rollout_depth: int = 30,

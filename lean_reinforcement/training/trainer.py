@@ -620,7 +620,7 @@ class Trainer:
                     batch_value_targets, min=-0.99, max=0.99
                 )
                 features = value_head.encode_states(states)
-                value_preds = torch.tanh(value_head.value_head(features).squeeze())
+                value_preds = value_head.value_head(features).squeeze()
                 loss = loss_fn(value_preds, batch_value_targets)
 
                 optimizer.zero_grad()

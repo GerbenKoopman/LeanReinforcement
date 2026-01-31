@@ -62,7 +62,6 @@ def test_trainer_initialization(
 
 
 @patch("lean_reinforcement.training.trainer.torch.nn.MSELoss")
-@patch("lean_reinforcement.training.trainer.torch.tanh")
 @patch("lean_reinforcement.training.trainer.optim.AdamW")
 @patch("lean_reinforcement.training.trainer.wandb")
 @patch("lean_reinforcement.training.trainer.get_checkpoint_dir")
@@ -84,7 +83,6 @@ def test_trainer_train_loop(
     mock_get_checkpoint_dir,
     mock_wandb,
     mock_adamw,
-    mock_tanh,
     mock_mse_loss,
     mock_config,
 ):
@@ -142,5 +140,4 @@ def test_trainer_train_loop(
         assert mock_collect.call_count == 1
         # assert trainer._train_value_head.call_count == 1 # We are not mocking it anymore
         mock_adamw.assert_called_once()
-        mock_tanh.assert_called()
         mock_mse_loss.assert_called_once()
