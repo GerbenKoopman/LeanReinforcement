@@ -3,6 +3,7 @@ Utilities for checkpoint management across the project.
 """
 
 import os
+import re
 import json
 from pathlib import Path
 from typing import Dict, Any
@@ -15,6 +16,70 @@ from lean_reinforcement.utilities.config import TrainingConfig
 
 # Load environment variables
 load_dotenv()
+
+
+def get_next_iteration(base_checkpoint_dir: Path, mcts_type: str) -> int:
+    """
+    Find the next iteration number for a given mcts_type.
+
+    Scans existing directories matching the pattern {mcts_type}-{N}/
+    and returns N+1 for the highest N found, or 1 if none exist.
+
+    Args:
+        base_checkpoint_dir: Base directory containing iteration folders
+        mcts_type: The MCTS type (e.g., 'alpha_zero' or 'guided_rollout')
+
+    Returns:
+        The next iteration number to use
+    """
+    if not base_checkpoint_dir.exists():
+        return 1
+
+    pattern = re.compile(rf"^{re.escape(mcts_type)}-(\d+)$")
+    max_iteration = 0
+
+    for item in base_checkpoint_dir.iterdir():
+        if item.is_dir():
+            match = pattern.match(item.name)
+            if match:
+                iteration = int(match.group(1))
+                max_iteration = max(max_iteration, iteration)
+
+    return max_iteration + 1
+
+
+def get_iteration_checkpoint_dir(
+    base_checkpoint_dir: Path, mcts_type: str, resume: bool = False
+) -> Path:
+    """
+    Get the checkpoint directory for a specific mcts_type and iteration.
+
+    If resume=True, returns the latest existing iteration directory.
+    If resume=False, creates and returns a new iteration directory.
+
+    Args:
+        base_checkpoint_dir: Base directory containing iteration folders
+        mcts_type: The MCTS type (e.g., 'alpha_zero' or 'guided_rollout')
+        resume: Whether to resume from existing checkpoint or start new
+
+    Returns:
+        Path to the iteration-specific checkpoint directory
+    """
+    if resume:
+        latest_iteration = get_next_iteration(base_checkpoint_dir, mcts_type) - 1
+        if latest_iteration < 1:
+            logger.warning(
+                f"No existing checkpoint found for {mcts_type}. Starting new iteration 1."
+            )
+            latest_iteration = 1
+        iteration_dir = base_checkpoint_dir / f"{mcts_type}-{latest_iteration}"
+    else:
+        next_iteration = get_next_iteration(base_checkpoint_dir, mcts_type)
+        iteration_dir = base_checkpoint_dir / f"{mcts_type}-{next_iteration}"
+
+    iteration_dir.mkdir(parents=True, exist_ok=True)
+    logger.info(f"Using iteration checkpoint directory: {iteration_dir}")
+    return iteration_dir
 
 
 def save_checkpoint(

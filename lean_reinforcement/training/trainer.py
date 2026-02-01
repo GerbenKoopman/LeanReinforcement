@@ -1,6 +1,8 @@
 import os
 import time
 import json
+import glob
+import copy
 import pickle
 import random
 import queue
@@ -19,6 +21,7 @@ from ReProver.common import Corpus
 from lean_reinforcement.utilities.dataloader import LeanDataLoader
 from lean_reinforcement.utilities.checkpoint import (
     get_checkpoint_dir,
+    get_iteration_checkpoint_dir,
     save_checkpoint,
     load_checkpoint,
 )
@@ -38,7 +41,11 @@ from lean_reinforcement.utilities.config import TrainingConfig
 class Trainer:
     def __init__(self, config: TrainingConfig):
         self.config = config
-        self.checkpoint_dir = get_checkpoint_dir()
+        # Get the base checkpoint directory, then create iteration-specific subdirectory
+        base_checkpoint_dir = get_checkpoint_dir()
+        self.checkpoint_dir = get_iteration_checkpoint_dir(
+            base_checkpoint_dir, config.mcts_type, resume=config.resume
+        )
 
         # Setup wandb
         if self.config.use_wandb:
@@ -530,15 +537,65 @@ class Trainer:
                 )
                 save_training_data(training_data_buffer, data_save_path)
 
+    def _load_experience_replay_data(self) -> List[Dict[str, Any]]:
+        """
+        Load all training data from previous epochs for experience replay.
+        Returns a combined list of all value training samples.
+        """
+        all_data: List[Dict[str, Any]] = []
+        data_files = sorted(
+            glob.glob(str(self.checkpoint_dir / "training_data_epoch_*.json"))
+        )
+
+        if not data_files:
+            logger.info("No previous training data found for experience replay.")
+            return all_data
+
+        logger.info(
+            f"Loading experience replay data from {len(data_files)} epoch files..."
+        )
+
+        for filepath in data_files:
+            try:
+                with open(filepath, "r") as f:
+                    epoch_data = json.load(f)
+                    value_samples = [d for d in epoch_data if d.get("type") == "value"]
+                    all_data.extend(value_samples)
+                    logger.debug(
+                        f"  Loaded {len(value_samples)} samples from {os.path.basename(filepath)}"
+                    )
+            except Exception as e:
+                logger.error(f"Error loading {filepath}: {e}")
+
+        logger.info(f"Total experience replay samples: {len(all_data)}")
+        return all_data
+
     def _train_value_head_epoch(self, training_data_buffer: List[Dict[str, Any]]):
-        value_data = [d for d in training_data_buffer if d.get("type") == "value"]
+        current_value_data = [
+            d for d in training_data_buffer if d.get("type") == "value"
+        ]
+
+        replay_data = self._load_experience_replay_data()
+
+        combined_data = replay_data + current_value_data
+
+        seen_states = {}
+        for item in combined_data:
+            state = item.get("state", "")
+            seen_states[state] = item
+
+        unique_data = list(seen_states.values())
+        logger.info(
+            f"Experience replay: {len(replay_data)} replay + {len(current_value_data)} current = {len(unique_data)} unique samples"
+        )
+
         assert (
             self.value_head is not None
         ), "ValueHead must be initialized before training"
 
         self._train_value_head_model(
             self.value_head,
-            value_data,
+            unique_data,
             epochs=self.config.train_epochs,
             batch_size=self.config.value_head_batch_size,
             use_wandb=self.config.use_wandb,
@@ -548,9 +605,11 @@ class Trainer:
         self,
         value_head: ValueHead,
         data_buffer: List[Dict[str, Any]],
-        epochs: int = 1,
+        epochs: int = 50,
         batch_size: int = 32,
         use_wandb: bool = True,
+        val_split: float = 0.1,
+        patience: int = 5,
     ):
         if not data_buffer:
             logger.warning("Value Head training skipped: No data provided.")
@@ -573,22 +632,37 @@ class Trainer:
             avg_mcts = sum(mcts_values) / len(mcts_values)
             logger.info(f"  Average MCTS value estimate: {avg_mcts:.4f}")
 
-        positive_data = [item for item in data_buffer if item["value_target"] > 0]
-        negative_data = [item for item in data_buffer if item["value_target"] < 0]
+        random.shuffle(data_buffer)
+        val_size = int(len(data_buffer) * val_split)
+
+        if val_size < 1:
+            logger.warning(
+                "Dataset too small for validation split. Using all data for training."
+            )
+            train_data = data_buffer
+            val_data = None
+        else:
+            val_data = data_buffer[:val_size]
+            train_data = data_buffer[val_size:]
+            logger.info(
+                f"  Train/Val split: {len(train_data)} train, {len(val_data)} val (unbalanced)"
+            )
+
+        positive_data = [item for item in train_data if item["value_target"] > 0]
+        negative_data = [item for item in train_data if item["value_target"] < 0]
 
         if positive_data and negative_data:
             min_count = min(len(positive_data), len(negative_data))
-            logger.info(f"  Balancing dataset to {min_count} samples per class.")
+            logger.info(f"  Balancing training set to {min_count} samples per class.")
             random.shuffle(positive_data)
             random.shuffle(negative_data)
-            balanced_data = positive_data[:min_count] + negative_data[:min_count]
-            random.shuffle(balanced_data)
-            training_data = balanced_data
+            balanced_train_data = positive_data[:min_count] + negative_data[:min_count]
+            random.shuffle(balanced_train_data)
         else:
             logger.warning(
-                "  Cannot balance dataset: One class is missing. Using full dataset."
+                "  Cannot balance training set: One class is missing. Using full training set."
             )
-            training_data = data_buffer
+            balanced_train_data = train_data
 
         if use_wandb:
             wandb.log(
@@ -597,20 +671,34 @@ class Trainer:
                     "value_head/positive_samples": positive_samples,
                     "value_head/negative_samples": negative_samples,
                     "value_head/avg_mcts_value": avg_mcts,
-                    "value_head/training_samples": len(training_data),
+                    "value_head/training_samples": len(balanced_train_data),
+                    "value_head/validation_samples": len(val_data) if val_data else 0,
                 }
             )
 
-        value_head.train()
+        train_dataset = ValueHeadDataset(balanced_train_data)
+        val_dataset = ValueHeadDataset(val_data) if val_data else None
 
-        dataset = ValueHeadDataset(training_data)
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+        val_loader = (
+            DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+            if val_dataset
+            else None
+        )
+
         optimizer = optim.AdamW(value_head.value_head.parameters(), lr=1e-4)
         loss_fn = torch.nn.MSELoss()
 
+        best_val_loss = float("inf")
+        patience_counter = 0
+        best_model_state = None
+
+        value_head.train()
+
         for epoch in range(epochs):
-            total_loss = 0
-            for batch in dataloader:
+            value_head.train()
+            total_train_loss = 0
+            for batch in train_loader:
                 states = batch["state"]
                 batch_value_targets = batch["value_target"].to(
                     dtype=torch.float32,
@@ -626,14 +714,66 @@ class Trainer:
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-                total_loss += loss.item()
+                total_train_loss += loss.item()
 
-            avg_loss = total_loss / len(dataloader)
-            logger.info(
-                f"Value Head Epoch {epoch+1}/{epochs}, Avg. Loss: {avg_loss:.4f}"
-            )
-            if use_wandb:
-                wandb.log({"value_head/avg_loss": avg_loss})
+            avg_train_loss = total_train_loss / len(train_loader)
+
+            if val_loader:
+                value_head.eval()
+                total_val_loss = 0
+                with torch.no_grad():
+                    for batch in val_loader:
+                        states = batch["state"]
+                        batch_value_targets = batch["value_target"].to(
+                            dtype=torch.float32,
+                            device="cuda" if torch.cuda.is_available() else "cpu",
+                        )
+                        batch_value_targets = torch.clamp(
+                            batch_value_targets, min=-0.99, max=0.99
+                        )
+                        features = value_head.encode_states(states)
+                        value_preds = value_head.value_head(features).squeeze()
+                        loss = loss_fn(value_preds, batch_value_targets)
+                        total_val_loss += loss.item()
+
+                avg_val_loss = total_val_loss / len(val_loader)
+
+                logger.info(
+                    f"Value Head Epoch {epoch+1}/{epochs}, Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}"
+                )
+
+                if use_wandb:
+                    wandb.log(
+                        {
+                            "value_head/train_loss": avg_train_loss,
+                            "value_head/val_loss": avg_val_loss,
+                        }
+                    )
+
+                if avg_val_loss < best_val_loss:
+                    best_val_loss = avg_val_loss
+                    patience_counter = 0
+                    best_model_state = copy.deepcopy(value_head.value_head.state_dict())
+                    logger.info(f"  > New best validation loss: {best_val_loss:.4f}")
+                else:
+                    patience_counter += 1
+                    logger.info(
+                        f"  > No improvement. Patience: {patience_counter}/{patience}"
+                    )
+
+                    if patience_counter >= patience:
+                        logger.info(f"Early stopping triggered after {epoch+1} epochs.")
+                        break
+            else:
+                logger.info(
+                    f"Value Head Epoch {epoch+1}/{epochs}, Avg. Loss: {avg_train_loss:.4f}"
+                )
+                if use_wandb:
+                    wandb.log({"value_head/avg_loss": avg_train_loss})
+
+        if best_model_state is not None:
+            logger.info("Restoring best model weights from validation.")
+            value_head.value_head.load_state_dict(best_model_state)
 
         value_head.eval()
         gc.collect()
