@@ -44,7 +44,7 @@ srun python3 -m lean_reinforcement.training.train \
     --max-time 40 \
     --proof-timeout 300.0 \
     --mcts-type alpha_zero \
-    --train-epochs 3 \
+    --train-epochs 50 \
     --train-value-head \
     --use-final-reward \
     --save-training-data \
