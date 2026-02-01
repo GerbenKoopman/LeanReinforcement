@@ -540,7 +540,7 @@ class Trainer:
             self.value_head,
             value_data,
             epochs=self.config.train_epochs,
-            batch_size=32,  # Could be config param
+            batch_size=self.config.value_head_batch_size,
             use_wandb=self.config.use_wandb,
         )
 

@@ -19,6 +19,7 @@ class TrainingConfig:
 
     # Training Args
     train_epochs: int
+    value_head_batch_size: int
     train_value_head: bool
     use_final_reward: bool
     save_training_data: bool
@@ -65,6 +66,7 @@ class TrainingConfig:
             env_timeout=args.env_timeout,
             proof_timeout=args.proof_timeout,
             train_epochs=args.train_epochs,
+            value_head_batch_size=args.value_head_batch_size,
             train_value_head=args.train_value_head,
             use_final_reward=args.use_final_reward,
             save_training_data=args.save_training_data,
@@ -190,6 +192,12 @@ def get_config() -> TrainingConfig:
         type=int,
         default=1,
         help="Number of training epochs to run on collected data *per* self-play epoch.",
+    )
+    parser.add_argument(
+        "--value-head-batch-size",
+        type=int,
+        default=4,
+        help="Batch size for training the value head.",
     )
     parser.add_argument(
         "--train-value-head",
