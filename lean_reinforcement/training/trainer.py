@@ -747,6 +747,7 @@ class Trainer:
                         {
                             "value_head/train_loss": avg_train_loss,
                             "value_head/val_loss": avg_val_loss,
+                            "value_head/epoch": epoch + 1,
                         }
                     )
 
@@ -769,7 +770,12 @@ class Trainer:
                     f"Value Head Epoch {epoch+1}/{epochs}, Avg. Loss: {avg_train_loss:.4f}"
                 )
                 if use_wandb:
-                    wandb.log({"value_head/avg_loss": avg_train_loss})
+                    wandb.log(
+                        {
+                            "value_head/train_loss": avg_train_loss,
+                            "value_head/epoch": epoch + 1,
+                        }
+                    )
 
         if best_model_state is not None:
             logger.info("Restoring best model weights from validation.")
