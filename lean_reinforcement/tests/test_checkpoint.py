@@ -1,7 +1,14 @@
 import unittest
+import tempfile
+import shutil
 from unittest.mock import MagicMock, patch
 from pathlib import Path
-from lean_reinforcement.utilities.checkpoint import save_checkpoint, load_checkpoint
+from lean_reinforcement.utilities.checkpoint import (
+    save_checkpoint,
+    load_checkpoint,
+    get_next_iteration,
+    get_iteration_checkpoint_dir,
+)
 from lean_reinforcement.utilities.config import TrainingConfig
 
 
@@ -20,6 +27,7 @@ class TestCheckpoint(unittest.TestCase):
             mcts_type="guided_rollout",
             indexed_corpus_path=None,
             train_epochs=1,
+            value_head_batch_size=4,
             train_value_head=True,
             use_final_reward=False,
             save_training_data=True,
@@ -89,3 +97,83 @@ class TestCheckpoint(unittest.TestCase):
 
         self.assertEqual(epoch, 0)
         self.mock_value_head.load_checkpoint.assert_not_called()
+
+
+class TestIterationCheckpoint(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp_dir = tempfile.mkdtemp()
+        self.base_checkpoint_dir = Path(self.temp_dir)
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.temp_dir)
+
+    def test_get_next_iteration_empty_dir(self):
+        """Test get_next_iteration with no existing iterations."""
+        result = get_next_iteration(self.base_checkpoint_dir, "alpha_zero")
+        self.assertEqual(result, 1)
+
+    def test_get_next_iteration_with_existing(self):
+        """Test get_next_iteration with existing iteration directories."""
+        # Create some iteration directories
+        (self.base_checkpoint_dir / "alpha_zero-1").mkdir()
+        (self.base_checkpoint_dir / "alpha_zero-3").mkdir()
+        (self.base_checkpoint_dir / "alpha_zero-5").mkdir()
+        (self.base_checkpoint_dir / "guided_rollout-2").mkdir()
+
+        result = get_next_iteration(self.base_checkpoint_dir, "alpha_zero")
+        self.assertEqual(result, 6)  # Should be 5 + 1
+
+    def test_get_next_iteration_different_mcts_types(self):
+        """Test that different mcts types have independent iteration counts."""
+        (self.base_checkpoint_dir / "alpha_zero-3").mkdir()
+        (self.base_checkpoint_dir / "guided_rollout-7").mkdir()
+
+        alpha_result = get_next_iteration(self.base_checkpoint_dir, "alpha_zero")
+        guided_result = get_next_iteration(self.base_checkpoint_dir, "guided_rollout")
+
+        self.assertEqual(alpha_result, 4)
+        self.assertEqual(guided_result, 8)
+
+    def test_get_next_iteration_nonexistent_dir(self):
+        """Test get_next_iteration when base directory doesn't exist."""
+        nonexistent = Path("/tmp/nonexistent_checkpoint_dir_xyz123")
+        result = get_next_iteration(nonexistent, "alpha_zero")
+        self.assertEqual(result, 1)
+
+    def test_get_iteration_checkpoint_dir_new(self):
+        """Test creating a new iteration directory."""
+        result = get_iteration_checkpoint_dir(
+            self.base_checkpoint_dir, "alpha_zero", resume=False
+        )
+        self.assertEqual(result, self.base_checkpoint_dir / "alpha_zero-1")
+        self.assertTrue(result.exists())
+
+    def test_get_iteration_checkpoint_dir_new_with_existing(self):
+        """Test creating a new iteration when some already exist."""
+        (self.base_checkpoint_dir / "alpha_zero-1").mkdir()
+        (self.base_checkpoint_dir / "alpha_zero-2").mkdir()
+
+        result = get_iteration_checkpoint_dir(
+            self.base_checkpoint_dir, "alpha_zero", resume=False
+        )
+        self.assertEqual(result, self.base_checkpoint_dir / "alpha_zero-3")
+        self.assertTrue(result.exists())
+
+    def test_get_iteration_checkpoint_dir_resume(self):
+        """Test resuming from the latest iteration."""
+        (self.base_checkpoint_dir / "alpha_zero-1").mkdir()
+        (self.base_checkpoint_dir / "alpha_zero-2").mkdir()
+        (self.base_checkpoint_dir / "alpha_zero-3").mkdir()
+
+        result = get_iteration_checkpoint_dir(
+            self.base_checkpoint_dir, "alpha_zero", resume=True
+        )
+        self.assertEqual(result, self.base_checkpoint_dir / "alpha_zero-3")
+
+    def test_get_iteration_checkpoint_dir_resume_no_existing(self):
+        """Test resume when no iterations exist (should create iteration 1)."""
+        result = get_iteration_checkpoint_dir(
+            self.base_checkpoint_dir, "alpha_zero", resume=True
+        )
+        self.assertEqual(result, self.base_checkpoint_dir / "alpha_zero-1")
+        self.assertTrue(result.exists())

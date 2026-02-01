@@ -16,6 +16,7 @@ class TestWorker(unittest.TestCase):
             num_theorems=1,
             num_workers=1,
             train_epochs=1,
+            value_head_batch_size=4,
             save_training_data=False,
             save_checkpoints=False,
             resume=False,

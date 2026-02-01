@@ -22,6 +22,7 @@ class TestTrainingConfig(unittest.TestCase):
             env_timeout=180,
             proof_timeout=1200.0,
             train_epochs=2,
+            value_head_batch_size=4,
             train_value_head=False,
             use_final_reward=True,
             save_training_data=False,
