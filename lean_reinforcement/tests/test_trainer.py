@@ -17,6 +17,7 @@ def mock_config() -> MagicMock:
     config.num_workers = 2
     config.batch_size = 4
     config.value_head_batch_size = 4
+    config.value_head_hidden_dims = [256]
     config.num_epochs = 1
     config.num_theorems = 2
     config.save_training_data = False

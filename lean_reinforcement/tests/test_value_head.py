@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 import torch
 import torch.nn as nn
 
-from lean_reinforcement.agent.value_head import ValueHead
+from lean_reinforcement.agent.value_head import ValueHead, ENCODER_OUTPUT_DIM
 from lean_reinforcement.agent.transformer import Transformer
 
 
@@ -27,11 +27,11 @@ class TestValueHead(unittest.TestCase):
         self.mock_encoder.parameters.return_value = [nn.Parameter(torch.randn(2, 2))]
 
         # Create a mock transformer
-        mock_transformer = MagicMock(spec=Transformer)
-        mock_transformer.tokenizer = self.mock_tokenizer
-        mock_transformer.model = self.mock_transformer_model
+        self.mock_transformer = MagicMock(spec=Transformer)
+        self.mock_transformer.tokenizer = self.mock_tokenizer
+        self.mock_transformer.model = self.mock_transformer_model
 
-        self.value_head = ValueHead(mock_transformer)
+        self.value_head = ValueHead(self.mock_transformer)
 
     def test_initialization(self) -> None:
         # Check if encoder parameters are frozen
@@ -120,6 +120,126 @@ class TestValueHead(unittest.TestCase):
             # Verify the value is in the expected range [-1, 1]
             self.assertGreaterEqual(value, -1.0)
             self.assertLessEqual(value, 1.0)
+
+
+class TestValueHeadHiddenDims(unittest.TestCase):
+    """Test suite for configurable hidden dimensions."""
+
+    @patch("lean_reinforcement.agent.transformer.AutoModelForSeq2SeqLM.from_pretrained")
+    @patch("lean_reinforcement.agent.transformer.AutoTokenizer.from_pretrained")
+    def setUp(self, mock_tokenizer_from_pretrained, mock_model_from_pretrained):
+        self.mock_tokenizer = MagicMock()
+        self.mock_transformer_model = MagicMock()
+        self.mock_encoder = MagicMock()
+
+        mock_tokenizer_from_pretrained.return_value = self.mock_tokenizer
+        mock_model_from_pretrained.return_value = self.mock_transformer_model
+
+        self.mock_transformer_model.to.return_value = self.mock_transformer_model
+        self.mock_transformer_model.get_encoder.return_value = self.mock_encoder
+        self.mock_encoder.parameters.return_value = [nn.Parameter(torch.randn(2, 2))]
+
+        self.mock_transformer = MagicMock(spec=Transformer)
+        self.mock_transformer.tokenizer = self.mock_tokenizer
+        self.mock_transformer.model = self.mock_transformer_model
+
+    def test_default_hidden_dims(self) -> None:
+        """Test that default hidden dims is [256]."""
+        value_head = ValueHead(self.mock_transformer)
+        self.assertEqual(value_head.hidden_dims, [256])
+        self.assertEqual(value_head.input_dim, ENCODER_OUTPUT_DIM)
+
+    def test_empty_hidden_dims(self) -> None:
+        """Test direct linear projection with empty hidden dims."""
+        value_head = ValueHead(self.mock_transformer, hidden_dims=[])
+        self.assertEqual(value_head.hidden_dims, [])
+
+        # Check architecture: should be just one linear layer
+        layers = list(value_head.value_head.children())
+        self.assertEqual(len(layers), 1)
+        self.assertIsInstance(layers[0], nn.Linear)
+        self.assertEqual(layers[0].in_features, ENCODER_OUTPUT_DIM)
+        self.assertEqual(layers[0].out_features, 1)
+
+    def test_single_hidden_layer(self) -> None:
+        """Test single hidden layer configuration."""
+        value_head = ValueHead(self.mock_transformer, hidden_dims=[512])
+        self.assertEqual(value_head.hidden_dims, [512])
+
+        # Check architecture: Linear -> ReLU -> Linear
+        layers = list(value_head.value_head.children())
+        self.assertEqual(len(layers), 3)
+        self.assertIsInstance(layers[0], nn.Linear)
+        self.assertEqual(layers[0].in_features, ENCODER_OUTPUT_DIM)
+        self.assertEqual(layers[0].out_features, 512)
+        self.assertIsInstance(layers[1], nn.ReLU)
+        self.assertIsInstance(layers[2], nn.Linear)
+        self.assertEqual(layers[2].in_features, 512)
+        self.assertEqual(layers[2].out_features, 1)
+
+    def test_multiple_hidden_layers(self) -> None:
+        """Test multiple hidden layers configuration."""
+        hidden_dims = [512, 256, 128]
+        value_head = ValueHead(self.mock_transformer, hidden_dims=hidden_dims)
+        self.assertEqual(value_head.hidden_dims, hidden_dims)
+
+        # Check architecture: Linear -> ReLU -> Linear -> ReLU -> Linear -> ReLU -> Linear
+        layers = list(value_head.value_head.children())
+        self.assertEqual(len(layers), 7)  # 3 Linear + 3 ReLU + 1 final Linear
+
+        # First hidden layer
+        self.assertEqual(layers[0].in_features, ENCODER_OUTPUT_DIM)
+        self.assertEqual(layers[0].out_features, 512)
+
+        # Second hidden layer
+        self.assertEqual(layers[2].in_features, 512)
+        self.assertEqual(layers[2].out_features, 256)
+
+        # Third hidden layer
+        self.assertEqual(layers[4].in_features, 256)
+        self.assertEqual(layers[4].out_features, 128)
+
+        # Output layer
+        self.assertEqual(layers[6].in_features, 128)
+        self.assertEqual(layers[6].out_features, 1)
+
+    def test_custom_input_dim(self) -> None:
+        """Test custom input dimension."""
+        value_head = ValueHead(self.mock_transformer, hidden_dims=[256], input_dim=768)
+        self.assertEqual(value_head.input_dim, 768)
+
+        layers = list(value_head.value_head.children())
+        self.assertEqual(layers[0].in_features, 768)
+
+    def test_forward_pass_default(self) -> None:
+        """Test forward pass with default configuration."""
+        value_head = ValueHead(self.mock_transformer)
+        device = next(value_head.value_head.parameters()).device
+        features = torch.randn(2, ENCODER_OUTPUT_DIM, device=device)
+        output = value_head.value_head(features)
+        self.assertEqual(output.shape, (2, 1))
+
+    def test_forward_pass_empty_hidden(self) -> None:
+        """Test forward pass with empty hidden dims."""
+        value_head = ValueHead(self.mock_transformer, hidden_dims=[])
+        device = next(value_head.value_head.parameters()).device
+        features = torch.randn(2, ENCODER_OUTPUT_DIM, device=device)
+        output = value_head.value_head(features)
+        self.assertEqual(output.shape, (2, 1))
+
+    def test_forward_pass_deep_network(self) -> None:
+        """Test forward pass with deep network."""
+        value_head = ValueHead(self.mock_transformer, hidden_dims=[1024, 512, 256, 128])
+        device = next(value_head.value_head.parameters()).device
+        features = torch.randn(2, ENCODER_OUTPUT_DIM, device=device)
+        output = value_head.value_head(features)
+        self.assertEqual(output.shape, (2, 1))
+
+    def test_parameters_require_grad(self) -> None:
+        """Test that value head parameters require gradients."""
+        value_head = ValueHead(self.mock_transformer, hidden_dims=[512, 256])
+        for param in value_head.value_head.parameters():
+            self.assertTrue(param.requires_grad)
 
 
 if __name__ == "__main__":

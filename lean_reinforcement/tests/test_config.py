@@ -14,6 +14,7 @@ class TestConfig(unittest.TestCase):
             self.assertEqual(config.num_epochs, 10)
             self.assertEqual(config.mcts_type, "guided_rollout")
             self.assertTrue(config.train_value_head)
+            self.assertEqual(config.value_head_hidden_dims, [256])
 
     def test_custom_args(self) -> None:
         """Test that command line arguments override defaults."""
@@ -37,3 +38,37 @@ class TestConfig(unittest.TestCase):
             self.assertFalse(config.train_value_head)
             self.assertFalse(config.save_training_data)
             self.assertFalse(config.save_checkpoints)
+
+    def test_value_head_hidden_dims_custom(self) -> None:
+        """Test custom value head hidden dimensions."""
+        test_args = [
+            "prog",
+            "--value-head-hidden-dims",
+            "512",
+            "256",
+            "128",
+        ]
+        with patch.object(sys, "argv", test_args):
+            config = get_config()
+            self.assertEqual(config.value_head_hidden_dims, [512, 256, 128])
+
+    def test_value_head_hidden_dims_empty(self) -> None:
+        """Test empty value head hidden dimensions (direct projection)."""
+        test_args = [
+            "prog",
+            "--value-head-hidden-dims",
+        ]
+        with patch.object(sys, "argv", test_args):
+            config = get_config()
+            self.assertEqual(config.value_head_hidden_dims, [])
+
+    def test_value_head_hidden_dims_single(self) -> None:
+        """Test single value head hidden dimension."""
+        test_args = [
+            "prog",
+            "--value-head-hidden-dims",
+            "1024",
+        ]
+        with patch.object(sys, "argv", test_args):
+            config = get_config()
+            self.assertEqual(config.value_head_hidden_dims, [1024])
