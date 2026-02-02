@@ -1,7 +1,7 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import argparse
 import os
-from typing import Optional
+from typing import List, Optional
 
 
 @dataclass
@@ -20,17 +20,18 @@ class TrainingConfig:
     # Training Args
     train_epochs: int
     value_head_batch_size: int
-    train_value_head: bool
-    use_final_reward: bool
-    save_training_data: bool
-    use_caching: bool
+    value_head_hidden_dims: List[int] = field(default_factory=lambda: [256])
+    train_value_head: bool = True
+    use_final_reward: bool = False
+    save_training_data: bool = True
+    use_caching: bool = False
 
     # Checkpoint Args
-    save_checkpoints: bool
-    resume: bool
-    use_test_value_head: bool
-    checkpoint_dir: Optional[str]
-    use_wandb: bool
+    save_checkpoints: bool = True
+    resume: bool = False
+    use_test_value_head: bool = False
+    checkpoint_dir: Optional[str] = None
+    use_wandb: bool = True
 
     # Inference / IPC Args
     inference_timeout: float = 600.0
@@ -67,6 +68,7 @@ class TrainingConfig:
             proof_timeout=args.proof_timeout,
             train_epochs=args.train_epochs,
             value_head_batch_size=args.value_head_batch_size,
+            value_head_hidden_dims=args.value_head_hidden_dims,
             train_value_head=args.train_value_head,
             use_final_reward=args.use_final_reward,
             save_training_data=args.save_training_data,
@@ -198,6 +200,13 @@ def get_config() -> TrainingConfig:
         type=int,
         default=4,
         help="Batch size for training the value head.",
+    )
+    parser.add_argument(
+        "--value-head-hidden-dims",
+        type=int,
+        nargs="*",
+        default=[256],
+        help="Hidden dimensions for the value head MLP. Empty list means direct linear projection. Default: [256].",
     )
     parser.add_argument(
         "--train-value-head",

@@ -67,7 +67,9 @@ class Trainer:
         self.start_epoch = 0
 
         if self.config.mcts_type == "alpha_zero" or self.config.train_value_head:
-            self.value_head = ValueHead(self.transformer)
+            self.value_head = ValueHead(
+                self.transformer, hidden_dims=self.config.value_head_hidden_dims
+            )
 
             if self.config.resume or self.config.use_test_value_head:
                 if self.config.use_test_value_head:

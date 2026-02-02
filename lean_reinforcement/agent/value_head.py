@@ -6,30 +6,81 @@ value (win probability) of a given proof state.
 from typing_extensions import Self
 import torch
 import torch.nn as nn
-from typing import List, cast
+from typing import List, Optional, cast
 import os
 from loguru import logger
 
 from lean_reinforcement.agent.transformer import Transformer
 
 
+# Default encoder output dimension for the ByT5 model
+ENCODER_OUTPUT_DIM = 1472
+
+
 class ValueHead(nn.Module):
-    def __init__(self, transformer: Transformer):
+    def __init__(
+        self,
+        transformer: Transformer,
+        hidden_dims: Optional[List[int]] = None,
+        input_dim: int = ENCODER_OUTPUT_DIM,
+    ):
+        """
+        Initialize the value head.
+
+        Args:
+            transformer: The transformer model to use for encoding states.
+            hidden_dims: List of hidden layer dimensions. If None, uses [256].
+                        Empty list means direct linear projection from input to output.
+            input_dim: Input dimension from encoder (default: 1472 for ByT5).
+        """
         super().__init__()
         self.tokenizer = transformer.tokenizer
         self.encoder = transformer.model.get_encoder()
+
+        # Store dimensions for serialization
+        self.input_dim = input_dim
+        self.hidden_dims = hidden_dims if hidden_dims is not None else [256]
 
         # Freeze the pre-trained encoder
         for param in self.encoder.parameters():
             param.requires_grad = False
 
-        # The new value head that will be trained
-        self.value_head = nn.Sequential(
-            nn.Linear(1472, 256), nn.ReLU(), nn.Linear(256, 1)
-        )
+        # Build the value head network dynamically
+        self.value_head = self._build_value_head(input_dim, self.hidden_dims)
 
         if torch.cuda.is_available():
             self.to("cuda")
+
+    def _build_value_head(
+        self, input_dim: int, hidden_dims: List[int]
+    ) -> nn.Sequential:
+        """
+        Build the value head MLP with configurable hidden dimensions.
+
+        Args:
+            input_dim: Input dimension (encoder output size).
+            hidden_dims: List of hidden layer sizes. Empty list means
+                        direct projection to scalar output.
+
+        Returns:
+            nn.Sequential module implementing the MLP.
+        """
+        if not hidden_dims:
+            # Direct linear projection: input_dim -> 1
+            return nn.Sequential(nn.Linear(input_dim, 1))
+
+        layers: List[nn.Module] = []
+        prev_dim = input_dim
+
+        for dim in hidden_dims:
+            layers.append(nn.Linear(prev_dim, dim))
+            layers.append(nn.ReLU())
+            prev_dim = dim
+
+        # Final projection to scalar output
+        layers.append(nn.Linear(prev_dim, 1))
+
+        return nn.Sequential(*layers)
 
     def encode_states(self, s: List[str]) -> torch.Tensor:
         """Encode a batch of texts into feature vectors."""
@@ -166,6 +217,8 @@ class ValueHead(nn.Module):
         checkpoint = {
             "value_head_state_dict": self.value_head.state_dict(),
             "transformer_name": self.tokenizer.name_or_path,
+            "hidden_dims": self.hidden_dims,
+            "input_dim": self.input_dim,
         }
 
         torch.save(checkpoint, filepath)
