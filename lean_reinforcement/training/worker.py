@@ -8,6 +8,9 @@ import torch.multiprocessing as mp
 import gc
 import queue
 import os
+import random
+import numpy as np
+import torch
 
 from lean_dojo import DojoInitError
 from ReProver.common import Pos
@@ -92,7 +95,11 @@ def process_theorem(
         logger.debug(
             f"Collected {len(theorem_training_data)} training samples for theorem: {theorem.full_name}"
         )
-        return {"metrics": metrics, "data": theorem_training_data}
+        return {
+            "metrics": metrics,
+            "data": theorem_training_data,
+            "theorem_name": theorem.full_name,
+        }
     except InferenceTimeoutError as e:
         logger.error(
             f"Inference timeout during proof search for theorem {theorem.full_name}: {e}"
@@ -105,6 +112,7 @@ def process_theorem(
                 "proof_search/inference_timeout": True,
             },
             "data": [],
+            "theorem_name": theorem.full_name,
         }
     except Exception as e:
         logger.error(f"Error during proof search for theorem {theorem.full_name}: {e}")
@@ -116,6 +124,7 @@ def process_theorem(
                 "proof_search/time": 0.0,
             },
             "data": [],
+            "theorem_name": theorem.full_name,
         }
     finally:
         if env:
@@ -142,6 +151,14 @@ def worker_loop(
     """
     # Configure logging for this worker
     logger.add(f"logs/worker_{worker_id}.log", rotation="10 MB")
+
+    # Set deterministic seed per worker for reproducibility
+    if args.seed is not None:
+        worker_seed = args.seed * 1000 + worker_id
+        random.seed(worker_seed)
+        np.random.seed(worker_seed)
+        torch.manual_seed(worker_seed)
+        logger.info(f"Worker {worker_id} seed set to {worker_seed}")
 
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
 

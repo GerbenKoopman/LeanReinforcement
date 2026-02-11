@@ -7,6 +7,7 @@ import pickle
 import random
 import queue
 import gc
+import numpy as np
 from typing import List, Dict, Any, Optional
 from dataclasses import asdict
 import torch
@@ -41,6 +42,12 @@ from lean_reinforcement.utilities.config import TrainingConfig
 class Trainer:
     def __init__(self, config: TrainingConfig):
         self.config = config
+
+        # Set global random seeds for reproducibility
+        if config.seed is not None:
+            self._set_seeds(config.seed)
+            logger.info(f"Global random seed set to {config.seed}")
+
         # Get the base checkpoint directory, then create iteration-specific subdirectory
         base_checkpoint_dir = get_checkpoint_dir()
         self.checkpoint_dir = get_iteration_checkpoint_dir(
@@ -58,6 +65,18 @@ class Trainer:
         self._setup_models()
         self._setup_data()
         self._setup_multiprocessing()
+
+    @staticmethod
+    def _set_seeds(seed: int) -> None:
+        """Set all random seeds for reproducibility."""
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+        # Make CuDNN deterministic (may reduce performance slightly)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
 
     def _setup_models(self) -> None:
         logger.info(f"Using checkpoint directory: {self.checkpoint_dir}")
@@ -176,6 +195,12 @@ class Trainer:
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
+        # Seed the shuffle per-epoch for reproducibility
+        if self.config.seed is not None:
+            epoch_seed = self.config.seed + epoch
+            random.seed(epoch_seed)
+            logger.info(f"Epoch {epoch + 1} shuffle seed: {epoch_seed}")
+
         random.shuffle(self.dataloader.train_data)
         theorems_to_process = self.dataloader.train_data[: self.config.num_theorems]
 
@@ -204,6 +229,18 @@ class Trainer:
 
         if self.config.train_value_head:
             self._train_value_head_epoch(training_data_buffer)
+
+            # Save the best validation loss for this epoch
+            best_val_loss = getattr(self, "_last_best_val_loss", None)
+            if best_val_loss is not None:
+                val_loss_file = self.checkpoint_dir / f"val_loss_epoch_{epoch + 1}.json"
+                try:
+                    with open(val_loss_file, "w") as f:
+                        json.dump(
+                            {"epoch": epoch + 1, "best_val_loss": best_val_loss}, f
+                        )
+                except Exception as e:
+                    logger.error(f"Failed to save val loss: {e}")
 
         if (
             self.config.train_value_head
@@ -327,6 +364,9 @@ class Trainer:
         collected_metrics: List[Dict[str, Any]] = []
         logged_dead_workers: set = set()  # Track workers we've already logged as dead
 
+        # Track per-theorem results for detailed logging
+        theorem_results: List[Dict[str, Any]] = []
+
         temp_data_file = self.checkpoint_dir / f"temp_data_epoch_{epoch + 1}.jsonl"
 
         # Ensure checkpoint directory exists before writing temporary files
@@ -342,18 +382,22 @@ class Trainer:
         epoch_start_time = time.time()
         last_result_time = time.time()
 
-        # Safety net: 4 hour max per epoch
-        max_epoch_time = 4 * 3600
+        # Dynamic safety timeout based on config:
+        # Worst case = every theorem takes the full proof_timeout, processed
+        # in parallel across num_workers, plus a 2x safety buffer for
+        # inference overhead, worker startup, and value head training.
+        num_batches = max(1, total_theorems / max(1, self.config.num_workers))
+        max_epoch_time = num_batches * self.config.proof_timeout * 2
+        # Clamp to a reasonable range: at least 30 min, at most 12 hours
+        max_epoch_time = max(1800, min(max_epoch_time, 12 * 3600))
 
         # How long to wait for more results after all workers die
         drain_timeout = 60  # seconds
 
         # Stall timeout: if no progress for this long, assume workers are stuck
         # This should be longer than the longest expected single theorem time
-        # proof_timeout (default 1200s) + some buffer for slow inference
-        stall_timeout = (
-            self.config.proof_timeout * 1.5
-        )  # 30 minutes with default settings
+        # proof_timeout + some buffer for slow inference
+        stall_timeout = self.config.proof_timeout * 1.5
 
         logger.info(
             f"Collecting results for {total_theorems} theorems "
@@ -390,6 +434,30 @@ class Trainer:
                             collected_metrics.append(res["metrics"])
                             if self.config.use_wandb:
                                 wandb.log(res["metrics"])
+
+                            # Track per-theorem success/failure with name
+                            theorem_name = res.get(
+                                "theorem_name", f"unknown_{results_received}"
+                            )
+                            success = res["metrics"].get("proof_search/success", False)
+                            theorem_results.append(
+                                {
+                                    "theorem_name": theorem_name,
+                                    "success": success,
+                                    "steps": res["metrics"].get(
+                                        "proof_search/steps", 0
+                                    ),
+                                    "time": res["metrics"].get(
+                                        "proof_search/time", 0.0
+                                    ),
+                                }
+                            )
+                            status = "✓ PROVED" if success else "✗ FAILED"
+                            logger.info(
+                                f"[{status}] {theorem_name} "
+                                f"(steps={res['metrics'].get('proof_search/steps', 0)}, "
+                                f"time={res['metrics'].get('proof_search/time', 0.0):.1f}s)"
+                            )
 
                         if "data" in res:
                             data = res["data"]
@@ -523,6 +591,57 @@ class Trainer:
                 for line in f:
                     training_data_buffer.append(json.loads(line))
             os.remove(temp_data_file)
+
+        # Log and save per-theorem results summary
+        if theorem_results:
+            proved = [t for t in theorem_results if t["success"]]
+            failed = [t for t in theorem_results if not t["success"]]
+            logger.info(f"\n{'='*60}")
+            logger.info(
+                f"EPOCH {epoch + 1} THEOREM RESULTS: {len(proved)}/{len(theorem_results)} proved"
+            )
+            logger.info(f"{'='*60}")
+            if proved:
+                logger.info("PROVED theorems:")
+                for t in proved:
+                    logger.info(
+                        f"  ✓ {t['theorem_name']} (steps={t['steps']}, time={t['time']:.1f}s)"
+                    )
+            if failed:
+                logger.info("FAILED theorems:")
+                for t in failed:
+                    logger.info(
+                        f"  ✗ {t['theorem_name']} (steps={t['steps']}, time={t['time']:.1f}s)"
+                    )
+            logger.info(f"{'='*60}\n")
+
+            # Save theorem results to checkpoint directory
+            results_file = (
+                self.checkpoint_dir / f"theorem_results_epoch_{epoch + 1}.json"
+            )
+            try:
+                with open(results_file, "w") as f:
+                    json.dump(
+                        {
+                            "epoch": epoch + 1,
+                            "seed": self.config.seed,
+                            "mcts_type": self.config.mcts_type,
+                            "total": len(theorem_results),
+                            "proved": len(proved),
+                            "failed": len(failed),
+                            "success_rate": (
+                                len(proved) / len(theorem_results)
+                                if theorem_results
+                                else 0
+                            ),
+                            "theorems": theorem_results,
+                        },
+                        f,
+                        indent=2,
+                    )
+                logger.info(f"Theorem results saved to {results_file}")
+            except Exception as e:
+                logger.error(f"Failed to save theorem results: {e}")
 
         return training_data_buffer, collected_metrics
 
@@ -782,6 +901,11 @@ class Trainer:
         if best_model_state is not None:
             logger.info("Restoring best model weights from validation.")
             value_head.value_head.load_state_dict(best_model_state)
+
+        # Store best validation loss for later analysis / plotting
+        self._last_best_val_loss = (
+            best_val_loss if best_val_loss < float("inf") else None
+        )
 
         value_head.eval()
         gc.collect()

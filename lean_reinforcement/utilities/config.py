@@ -26,6 +26,9 @@ class TrainingConfig:
     save_training_data: bool = True
     use_caching: bool = False
 
+    # Reproducibility
+    seed: Optional[int] = None
+
     # Checkpoint Args
     save_checkpoints: bool = True
     resume: bool = False
@@ -73,6 +76,7 @@ class TrainingConfig:
             use_final_reward=args.use_final_reward,
             save_training_data=args.save_training_data,
             use_caching=args.use_caching,
+            seed=args.seed,
             save_checkpoints=args.save_checkpoints,
             resume=args.resume,
             use_test_value_head=args.use_test_value_head,
@@ -231,6 +235,14 @@ def get_config() -> TrainingConfig:
         action=argparse.BooleanOptionalAction,
         default=False,
         help="Cache encoded node features whenever possible (memory intensive).",
+    )
+
+    # --- Reproducibility ---
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Random seed for reproducibility. Sets Python, NumPy, and PyTorch RNGs.",
     )
 
     # --- Checkpoint Args ---
