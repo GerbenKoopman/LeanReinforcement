@@ -71,7 +71,14 @@ class TestWorker(unittest.TestCase):
         MockLeanDojoEnv.assert_called_once()
         MockAgentRunner.assert_called_once()
         mock_runner.run.assert_called_once()
-        self.assertEqual(result, {"metrics": expected_metrics, "data": expected_data})
+        self.assertEqual(
+            result,
+            {
+                "metrics": expected_metrics,
+                "data": expected_data,
+                "theorem_name": "TestTheorem",
+            },
+        )
 
     @patch("lean_reinforcement.training.worker.LeanDojoEnv")
     def test_process_theorem_env_error(self, MockLeanDojoEnv):
