@@ -35,6 +35,7 @@ class TestTrainingConfig(unittest.TestCase):
             use_wandb=False,
             inference_timeout=600.0,
             use_caching=False,
+            seed=None,
         )
 
         config = TrainingConfig.from_args(args)
