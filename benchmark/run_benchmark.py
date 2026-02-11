@@ -161,8 +161,12 @@ def build_config(
     num_workers_val: int = BASE_PARAMS["num_workers"]  # type: ignore[assignment]
     indexed_corpus_val = BASE_PARAMS["indexed_corpus_path"]
     train_epochs_val: int = BASE_PARAMS["train_epochs"]  # type: ignore[assignment]
-    value_head_batch_size_val: int = BASE_PARAMS["value_head_batch_size"]  # type: ignore[assignment]
-    value_head_hidden_dims_val: list = BASE_PARAMS["value_head_hidden_dims"]  # type: ignore[assignment]
+    value_head_batch_size_val: int = BASE_PARAMS[  # type: ignore[assignment]
+        "value_head_batch_size"
+    ]
+    value_head_hidden_dims_val: list = BASE_PARAMS[  # type: ignore[assignment]
+        "value_head_hidden_dims"
+    ]
     train_value_head_val: bool = BASE_PARAMS["train_value_head"]  # type: ignore[assignment]
     use_final_reward_val: bool = BASE_PARAMS["use_final_reward"]  # type: ignore[assignment]
     save_training_data_val: bool = BASE_PARAMS["save_training_data"]  # type: ignore[assignment]
@@ -238,7 +242,12 @@ def mark_run_complete(
 
 
 def run_single_benchmark(
-    algorithm: str, seed: int, size: str, benchmark_dir: Path
+    algorithm: str,
+    seed: int,
+    size: str,
+    benchmark_dir: Path,
+    run_index: int = 0,
+    total_runs: int = 0,
 ) -> Dict[str, Any]:
     """Run a single benchmark configuration. Returns summary dict."""
     run_dir = get_run_dir(benchmark_dir, algorithm, seed, size)
@@ -291,6 +300,10 @@ def run_single_benchmark(
     start_time = time.time()
     try:
         trainer = BenchmarkTrainer(config, run_dir, start_epoch_override=completed)
+        # Set benchmark context on the progress display
+        trainer.progress_stats.benchmark_run_name = run_name
+        trainer.progress_stats.benchmark_run_index = run_index
+        trainer.progress_stats.benchmark_total_runs = total_runs
         trainer.train()
         elapsed = time.time() - start_time
         mark_run_complete(run_dir, algorithm, seed, size, elapsed)
@@ -319,6 +332,19 @@ class BenchmarkTrainer(Trainer):
     ):
         self.config = config
         self._start_epoch_override = start_epoch_override
+
+        # Live progress display
+        from lean_reinforcement.training.progress import (
+            ProgressStats,
+            make_progress_display,
+        )
+
+        self.progress_stats = ProgressStats(
+            total_epochs=start_epoch_override + config.num_epochs,
+            total_workers=config.num_workers,
+            cumulative_total_theorems=config.num_epochs * config.num_theorems,
+        )
+        self.progress_display = make_progress_display(self.progress_stats)
 
         # Set global random seeds for reproducibility
         if config.seed is not None:
@@ -381,6 +407,8 @@ class BenchmarkTrainer(Trainer):
     def train(self) -> List[Dict[str, Any]]:
         """Override train to use absolute epoch numbers."""
         all_metrics = []
+        self.progress_stats.run_start_time = time.time()
+        self.progress_display.start()
         try:
             from lean_reinforcement.training.inference_server import InferenceServer
 
@@ -407,6 +435,7 @@ class BenchmarkTrainer(Trainer):
             logger.error(f"Training crashed: {e}")
             raise e
         finally:
+            self.progress_display.stop()
             self._cleanup_workers()
             if self.config.use_wandb:
                 import wandb
@@ -541,7 +570,12 @@ def main():
             f"{'#'*60}"
         )
         result = run_single_benchmark(
-            run["algorithm"], run["seed"], run["size"], benchmark_dir
+            run["algorithm"],
+            run["seed"],
+            run["size"],
+            benchmark_dir,
+            run_index=i,
+            total_runs=len(runs),
         )
         results.append(result)
 

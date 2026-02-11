@@ -93,7 +93,8 @@ def process_theorem(
             use_wandb=args.use_wandb,
         )
         logger.debug(
-            f"Collected {len(theorem_training_data)} training samples for theorem: {theorem.full_name}"
+            f"Collected {len(theorem_training_data)} training "
+            f"samples for theorem: {theorem.full_name}"
         )
         return {
             "metrics": metrics,
@@ -151,6 +152,9 @@ def worker_loop(
     """
     # Configure logging for this worker
     logger.add(f"logs/worker_{worker_id}.log", rotation="10 MB")
+
+    # Suppress NVML/accelerator warnings in worker processes
+    # warnings.filterwarnings("ignore", message="Can't initialize NVML")
 
     # Set deterministic seed per worker for reproducibility
     if args.seed is not None:

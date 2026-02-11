@@ -35,6 +35,10 @@ from lean_reinforcement.agent.transformer import Transformer
 from lean_reinforcement.agent.value_head import ValueHead
 from lean_reinforcement.training.datasets import ValueHeadDataset
 from lean_reinforcement.training.inference_server import InferenceServer
+from lean_reinforcement.training.progress import (
+    ProgressStats,
+    make_progress_display,
+)
 from lean_reinforcement.training.worker import worker_loop
 from lean_reinforcement.utilities.config import TrainingConfig
 
@@ -42,6 +46,14 @@ from lean_reinforcement.utilities.config import TrainingConfig
 class Trainer:
     def __init__(self, config: TrainingConfig):
         self.config = config
+
+        # Live progress display
+        self.progress_stats = ProgressStats(
+            total_epochs=config.num_epochs,
+            total_workers=config.num_workers,
+            cumulative_total_theorems=config.num_epochs * config.num_theorems,
+        )
+        self.progress_display = make_progress_display(self.progress_stats)
 
         # Set global random seeds for reproducibility
         if config.seed is not None:
@@ -157,6 +169,8 @@ class Trainer:
         Returns a list of metrics for each epoch.
         """
         all_metrics = []
+        self.progress_stats.run_start_time = time.time()
+        self.progress_display.start()
         try:
             inference_server = InferenceServer(
                 self.transformer,
@@ -181,6 +195,7 @@ class Trainer:
             logger.error(f"Training crashed: {e}")
             raise e
         finally:
+            self.progress_display.stop()
             self._cleanup_workers()
 
     def _run_epoch(
@@ -190,7 +205,9 @@ class Trainer:
         self._drain_theorem_queue()
 
         self._start_workers()
-        logger.info(f"Starting Epoch {epoch + 1}/{self.config.num_epochs}")
+        logger.info(
+            f"Starting Epoch {epoch + 1}/{self.start_epoch + self.config.num_epochs}"
+        )
 
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
@@ -199,7 +216,6 @@ class Trainer:
         if self.config.seed is not None:
             epoch_seed = self.config.seed + epoch
             random.seed(epoch_seed)
-            logger.info(f"Epoch {epoch + 1} shuffle seed: {epoch_seed}")
 
         random.shuffle(self.dataloader.train_data)
         theorems_to_process = self.dataloader.train_data[: self.config.num_theorems]
@@ -207,9 +223,13 @@ class Trainer:
         for thm in theorems_to_process:
             self.theorem_queue.put(thm)
 
-        logger.info(
-            f"Processing {len(theorems_to_process)} theorems with {self.config.num_workers} workers."
+        # Update progress display for this epoch
+        self.progress_stats.reset_epoch(
+            epoch=epoch + 1, total_theorems=len(theorems_to_process)
         )
+        self.progress_stats.total_epochs = self.start_epoch + self.config.num_epochs
+        self.progress_stats.alive_workers = self.config.num_workers
+        self.progress_display.refresh()
 
         training_data_buffer, epoch_metrics = self._collect_data(
             theorems_to_process, inference_server, epoch
@@ -225,9 +245,13 @@ class Trainer:
             logger.warning("No data collected in this epoch. Skipping training.")
             return epoch_metrics
 
+        self.progress_stats.phase = "saving"
+        self.progress_display.refresh()
         self._analyze_and_save_data(training_data_buffer, epoch)
 
         if self.config.train_value_head:
+            self.progress_stats.phase = "training_value_head"
+            self.progress_display.refresh()
             self._train_value_head_epoch(training_data_buffer)
 
             # Save the best validation loss for this epoch
@@ -399,7 +423,7 @@ class Trainer:
         # proof_timeout + some buffer for slow inference
         stall_timeout = self.config.proof_timeout * 1.5
 
-        logger.info(
+        logger.debug(
             f"Collecting results for {total_theorems} theorems "
             f"(safety timeout: {max_epoch_time/3600:.1f}h, stall timeout: {stall_timeout/60:.0f}m)"
         )
@@ -452,12 +476,14 @@ class Trainer:
                                     ),
                                 }
                             )
-                            status = "✓ PROVED" if success else "✗ FAILED"
-                            logger.info(
-                                f"[{status}] {theorem_name} "
-                                f"(steps={res['metrics'].get('proof_search/steps', 0)}, "
-                                f"time={res['metrics'].get('proof_search/time', 0.0):.1f}s)"
+                            # Update live progress display
+                            self.progress_stats.record_theorem(
+                                name=theorem_name,
+                                success=success,
+                                steps=res["metrics"].get("proof_search/steps", 0),
+                                elapsed=res["metrics"].get("proof_search/time", 0.0),
                             )
+                            self.progress_display.refresh()
 
                         if "data" in res:
                             data = res["data"]
@@ -491,13 +517,7 @@ class Trainer:
                                     f.write(json.dumps(item) + "\n")
                             training_data_buffer = []
 
-                    # Progress logging
-                    if results_received % self.config.num_workers == 0:
-                        pct = 100 * results_received / total_theorems
-                        logger.info(
-                            f"Progress: {results_received}/{total_theorems} "
-                            f"({pct:.0f}%) in {elapsed/60:.1f} min"
-                        )
+                    # Progress is shown in the live display (updated above)
             except queue.Empty:
                 pass
 
@@ -509,6 +529,8 @@ class Trainer:
             dead_workers = [
                 (i, p) for i, p in enumerate(self.workers) if not p.is_alive()
             ]
+            self.progress_stats.alive_workers = len(alive_workers)
+            self.progress_display.refresh()
 
             # Log dead workers and restart crashed ones (once per worker)
             for i, p in dead_workers:
@@ -524,6 +546,10 @@ class Trainer:
 
                         # Mark the lost theorem as "completed" (failed)
                         results_received += 1
+                        self.progress_stats.record_theorem(
+                            name=f"worker_{i}_crash", success=False
+                        )
+                        self.progress_display.refresh()
 
                         # Terminate the old process object to be safe
                         p.join(timeout=1)
@@ -545,9 +571,9 @@ class Trainer:
                         logger.info(f"Worker {i} restarted successfully.")
                     else:
                         # Graceful exit (exit code 0)
-                        logger.info(
+                        logger.debug(
                             f"Worker {i} (PID: {p.pid}) exited gracefully. "
-                            f"{len([w for w in self.workers if w.is_alive()])} workers still alive."
+                            f"{len(alive_workers)} workers still alive."
                         )
 
             # Check for stall - no progress for too long even with alive workers
@@ -596,24 +622,12 @@ class Trainer:
         if theorem_results:
             proved = [t for t in theorem_results if t["success"]]
             failed = [t for t in theorem_results if not t["success"]]
-            logger.info(f"\n{'='*60}")
+            sr = len(proved) / len(theorem_results) * 100 if theorem_results else 0
             logger.info(
-                f"EPOCH {epoch + 1} THEOREM RESULTS: {len(proved)}/{len(theorem_results)} proved"
+                f"Epoch {epoch + 1} summary: "
+                f"{len(proved)}/{len(theorem_results)} proved ({sr:.1f}%) "
+                f"in {elapsed/60:.1f} min"
             )
-            logger.info(f"{'='*60}")
-            if proved:
-                logger.info("PROVED theorems:")
-                for t in proved:
-                    logger.info(
-                        f"  ✓ {t['theorem_name']} (steps={t['steps']}, time={t['time']:.1f}s)"
-                    )
-            if failed:
-                logger.info("FAILED theorems:")
-                for t in failed:
-                    logger.info(
-                        f"  ✗ {t['theorem_name']} (steps={t['steps']}, time={t['time']:.1f}s)"
-                    )
-            logger.info(f"{'='*60}\n")
 
             # Save theorem results to checkpoint directory
             results_file = (
@@ -707,7 +721,9 @@ class Trainer:
 
         unique_data = list(seen_states.values())
         logger.info(
-            f"Experience replay: {len(replay_data)} replay + {len(current_value_data)} current = {len(unique_data)} unique samples"
+            f"Experience replay: {len(replay_data)} replay + "
+            f"{len(current_value_data)} current = "
+            f"{len(unique_data)} unique samples"
         )
 
         assert (
@@ -741,17 +757,16 @@ class Trainer:
         positive_samples = sum(1 for v in value_targets if v > 0)
         negative_samples = sum(1 for v in value_targets if v < 0)
 
-        logger.info(f"Training Value Head on {len(data_buffer)} samples...")
         logger.info(
-            f"  Data distribution: {positive_samples} positive, {negative_samples} negative"
+            f"Training Value Head: {len(data_buffer)} samples "
+            f"({positive_samples}+ / {negative_samples}-), avg target {avg_target:.4f}"
         )
-        logger.info(f"  Average target value: {avg_target:.4f}")
 
         avg_mcts = None
         if "mcts_value" in data_buffer[0]:
             mcts_values = [item["mcts_value"] for item in data_buffer]
             avg_mcts = sum(mcts_values) / len(mcts_values)
-            logger.info(f"  Average MCTS value estimate: {avg_mcts:.4f}")
+            logger.debug(f"  Average MCTS value estimate: {avg_mcts:.4f}")
 
         random.shuffle(data_buffer)
         val_size = int(len(data_buffer) * val_split)
@@ -765,7 +780,7 @@ class Trainer:
         else:
             val_data = data_buffer[:val_size]
             train_data = data_buffer[val_size:]
-            logger.info(
+            logger.debug(
                 f"  Train/Val split: {len(train_data)} train, {len(val_data)} val (unbalanced)"
             )
 
@@ -774,7 +789,7 @@ class Trainer:
 
         if positive_data and negative_data:
             min_count = min(len(positive_data), len(negative_data))
-            logger.info(f"  Balancing training set to {min_count} samples per class.")
+            logger.debug(f"  Balancing training set to {min_count} samples per class.")
             random.shuffle(positive_data)
             random.shuffle(negative_data)
             balanced_train_data = positive_data[:min_count] + negative_data[:min_count]
@@ -814,8 +829,16 @@ class Trainer:
         patience_counter = 0
         best_model_state = None
 
+        # Update progress display for value head training phase
+        ps = self.progress_stats
+        ps.value_head_total_epochs = epochs
+        ps.value_head_patience_limit = patience
+        ps.phase = "training_value_head"
+        self.progress_display.refresh()
+
         value_head.train()
 
+        epoch = 0
         for epoch in range(epochs):
             value_head.train()
             total_train_loss = 0
@@ -859,9 +882,12 @@ class Trainer:
 
                 avg_val_loss = total_val_loss / len(val_loader)
 
-                logger.info(
-                    f"Value Head Epoch {epoch+1}/{epochs}, Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}"
-                )
+                # Update progress display
+                ps.value_head_epoch = epoch + 1
+                ps.value_head_train_loss = avg_train_loss
+                ps.value_head_val_loss = avg_val_loss
+                ps.value_head_patience_counter = patience_counter
+                self.progress_display.refresh()
 
                 if use_wandb:
                     wandb.log(
@@ -876,20 +902,20 @@ class Trainer:
                     best_val_loss = avg_val_loss
                     patience_counter = 0
                     best_model_state = copy.deepcopy(value_head.value_head.state_dict())
-                    logger.info(f"  > New best validation loss: {best_val_loss:.4f}")
+                    ps.value_head_best_val_loss = best_val_loss
                 else:
                     patience_counter += 1
-                    logger.info(
-                        f"  > No improvement. Patience: {patience_counter}/{patience}"
-                    )
+                    ps.value_head_patience_counter = patience_counter
+                    self.progress_display.refresh()
 
                     if patience_counter >= patience:
                         logger.info(f"Early stopping triggered after {epoch+1} epochs.")
                         break
             else:
-                logger.info(
-                    f"Value Head Epoch {epoch+1}/{epochs}, Avg. Loss: {avg_train_loss:.4f}"
-                )
+                ps.value_head_epoch = epoch + 1
+                ps.value_head_train_loss = avg_train_loss
+                self.progress_display.refresh()
+
                 if use_wandb:
                     wandb.log(
                         {
@@ -897,6 +923,11 @@ class Trainer:
                             "value_head/epoch": epoch + 1,
                         }
                     )
+
+        logger.info(
+            f"Value Head training done: {epoch+1}/{epochs} epochs, "
+            f"best val loss: {best_val_loss:.4f}"
+        )
 
         if best_model_state is not None:
             logger.info("Restoring best model weights from validation.")
