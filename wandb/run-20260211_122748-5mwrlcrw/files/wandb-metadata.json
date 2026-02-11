@@ -1,0 +1,26 @@
+{
+  "os":  "Linux-6.17.0-14-generic-x86_64-with-glibc2.39",
+  "python":  "CPython 3.10.19",
+  "startedAt":  "2026-02-11T11:27:48.288515Z",
+  "program":  "-m benchmark.run_benchmark",
+  "git":  {
+    "remote":  "git@github.com:GerbenKoopman/LeanReinforcement.git",
+    "commit":  "33d0ac995ae4cd6c7c8286b8f0855674c4a749ca"
+  },
+  "email":  "gerbennkoopman@gmail.com",
+  "root":  "/home/gerben-koopman/projects/study/lean_related/lean_reinforcement",
+  "host":  "Laptop-studie-linux",
+  "executable":  "/home/gerben-koopman/conda/envs/lean-reinforcement/bin/python",
+  "cpu_count":  16,
+  "cpu_count_logical":  22,
+  "disk":  {
+    "/":  {
+      "total":  "262486331392",
+      "used":  "178798895104"
+    }
+  },
+  "memory":  {
+    "total":  "33236471808"
+  },
+  "writerId":  "a3udk59kchcgbpnv9pllfyvd0r4exq4d"
+}
