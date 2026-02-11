@@ -184,6 +184,15 @@ def _fmt_time(seconds: Optional[float]) -> str:
     return f"{s // 60}:{s % 60:02d}"
 
 
+def _fmt_eta(seconds: Optional[float]) -> str:
+    """Format ETA as duration plus target date/time."""
+    if seconds is None or seconds < 0:
+        return "--:--"
+    target = time.time() + seconds
+    stamp = time.strftime("%Y-%m-%d %H:%M", time.localtime(target))
+    return f"{_fmt_time(seconds)} ({stamp})"
+
+
 def _bar(frac: float, width: int = 30) -> str:
     """ASCII progress bar."""
     filled = int(frac * width)
@@ -209,7 +218,7 @@ class LiveProgressDisplay:
     def __init__(self, stats: ProgressStats, refresh_rate: float = 4.0):
         self._stats = stats
         self._console = (
-            Console(stderr=True)  # type: ignore[possibly-undefined]
+            Console(stderr=True, force_terminal=True)  # type: ignore[possibly-undefined]
             if HAS_RICH
             else None
         )
@@ -295,7 +304,7 @@ class LiveProgressDisplay:
             # Epoch info
             pct = s.epoch_progress_frac * 100
             bar = _bar(s.epoch_progress_frac)
-            eta = _fmt_time(s.epoch_eta_seconds)
+            eta = _fmt_eta(s.epoch_eta_seconds)
             elapsed = _fmt_time(s.epoch_elapsed)
 
             lines.append(
@@ -319,7 +328,7 @@ class LiveProgressDisplay:
                 cum_pct = s.overall_progress_frac * 100
                 cum_bar = _bar(s.overall_progress_frac, width=20)
                 cum_sr = s.cumulative_success_rate * 100
-                run_eta = _fmt_time(s.run_eta_seconds)
+                run_eta = _fmt_eta(s.run_eta_seconds)
                 run_elapsed = _fmt_time(s.run_elapsed)
                 lines.append(
                     f"  [dim]Overall {cum_bar} {cum_pct:5.1f}%  "
