@@ -9,6 +9,7 @@ import gc
 import queue
 import os
 import random
+import warnings
 import numpy as np
 import torch
 
@@ -150,11 +151,15 @@ def worker_loop(
     """
     Worker process loop.
     """
-    # Configure logging for this worker
+    # Configure logging for this worker:
+    # Remove default stderr handler so worker logs don't interfere
+    # with the main process's live progress display, then add a
+    # file-only handler.
+    logger.remove()
     logger.add(f"logs/worker_{worker_id}.log", rotation="10 MB")
 
     # Suppress NVML/accelerator warnings in worker processes
-    # warnings.filterwarnings("ignore", message="Can't initialize NVML")
+    warnings.filterwarnings("ignore", message="Can't initialize NVML")
 
     # Set deterministic seed per worker for reproducibility
     if args.seed is not None:

@@ -215,32 +215,19 @@ class LiveProgressDisplay:
         )
         self._live: Optional[Any] = None
         self._refresh_rate = refresh_rate
-        self._loguru_handler_id: Optional[int] = None
 
     # ── Lifecycle ───────────────────────────────────────────────────────
 
     def _redirect_loguru(self) -> None:
-        """Redirect loguru to write through rich's console so log lines
-        appear *above* the live panel instead of clashing with it."""
+        """Suppress loguru's default stderr handler while the Live
+        panel is active.  File-level handlers (worker logs, etc.) and
+        wandb are unaffected."""
         try:
             from loguru import logger as _logger
 
-            # Remove loguru's default stderr handler (id=0) to prevent clashes
+            # Remove loguru's default stderr handler (id=0)
+            # so log lines don't break the Live panel.
             _logger.remove(0)
-
-            # Add a handler that writes through the rich console
-            console = self._console
-
-            def _rich_sink(message: Any) -> None:
-                """Write loguru messages through rich so they render above
-                the Live panel."""
-                text = str(message).rstrip("\n")
-                if console is not None:
-                    console.print(text, highlight=False, markup=False)
-
-            self._loguru_handler_id = _logger.add(
-                _rich_sink, format="{message}", level="DEBUG"
-            )
         except Exception:
             # If anything goes wrong, leave loguru alone
             pass
@@ -250,10 +237,6 @@ class LiveProgressDisplay:
         try:
             from loguru import logger as _logger
 
-            if self._loguru_handler_id is not None:
-                _logger.remove(self._loguru_handler_id)
-                self._loguru_handler_id = None
-            # Re-add the default stderr handler
             _logger.add(sys.stderr)
         except Exception:
             pass
@@ -265,18 +248,20 @@ class LiveProgressDisplay:
             self._render(),
             console=self._console,
             refresh_per_second=self._refresh_rate,
-            transient=False,
+            transient=True,
         )
         self._live.start()
         self._redirect_loguru()
 
     def stop(self) -> None:
         if self._live is not None:
-            self._restore_loguru()
-            # Render one final frame so the summary stays visible
-            self._live.update(self._render())
             self._live.stop()
             self._live = None
+            self._restore_loguru()
+            # Print a final static frame so the summary persists
+            # after the transient Live panel disappears
+            if self._console is not None:
+                self._console.print(self._render())
 
     def refresh(self) -> None:
         if self._live is not None:
