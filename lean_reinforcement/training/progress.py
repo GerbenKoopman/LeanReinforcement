@@ -218,7 +218,11 @@ class LiveProgressDisplay:
     def __init__(self, stats: ProgressStats, refresh_rate: float = 4.0):
         self._stats = stats
         self._console = (
-            Console(stderr=True, force_terminal=True)  # type: ignore[possibly-undefined]
+            Console(  # type: ignore[possibly-undefined]
+                stderr=True,
+                force_terminal=True,
+                force_interactive=True,
+            )
             if HAS_RICH
             else None
         )
@@ -234,9 +238,9 @@ class LiveProgressDisplay:
         try:
             from loguru import logger as _logger
 
-            # Remove loguru's default stderr handler (id=0)
-            # so log lines don't break the Live panel.
-            _logger.remove(0)
+            # Remove all loguru handlers so log lines don't
+            # break the Live panel while it is active.
+            _logger.remove()
         except Exception:
             # If anything goes wrong, leave loguru alone
             pass
@@ -258,6 +262,8 @@ class LiveProgressDisplay:
             console=self._console,
             refresh_per_second=self._refresh_rate,
             transient=True,
+            redirect_stdout=False,
+            redirect_stderr=False,
         )
         self._live.start()
         self._redirect_loguru()
