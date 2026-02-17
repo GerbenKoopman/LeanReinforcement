@@ -4,7 +4,7 @@ Benchmark runner for AlphaZero and Guided Rollout MCTS algorithms.
 
 Runs 18 configurations total:
   - 2 algorithms (alpha_zero, guided_rollout)
-  - 3 seeds (42, 43, 44)
+  - 2 seeds (42, 43)
   - 3 sizes (light=1x, medium=1.5x, heavy=2x)
 
 Each run uses 20 epochs. Checkpoints are stored as:
