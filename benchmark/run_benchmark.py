@@ -21,12 +21,21 @@ import time
 from dataclasses import asdict
 from pathlib import Path
 from typing import Dict, Any, List
+import wandb
 
 from loguru import logger
 from dotenv import load_dotenv
 
+from lean_reinforcement.agent.transformer import Transformer
+from lean_reinforcement.agent.value_head import ValueHead
+from lean_reinforcement.utilities.checkpoint import load_checkpoint
+from lean_reinforcement.training.progress import (
+    ProgressStats,
+    make_progress_display,
+)
 from lean_reinforcement.utilities.config import TrainingConfig
 from lean_reinforcement.training.trainer import Trainer
+from lean_reinforcement.training.inference_server import InferenceServer
 
 load_dotenv()
 
@@ -334,11 +343,6 @@ class BenchmarkTrainer(Trainer):
         self._start_epoch_override = start_epoch_override
 
         # Live progress display
-        from lean_reinforcement.training.progress import (
-            ProgressStats,
-            make_progress_display,
-        )
-
         self.progress_stats = ProgressStats(
             total_epochs=start_epoch_override + config.num_epochs,
             total_workers=config.num_workers,
@@ -357,9 +361,6 @@ class BenchmarkTrainer(Trainer):
 
         # Setup wandb with a descriptive run name
         if self.config.use_wandb:
-            import wandb
-            from dataclasses import asdict
-
             wandb.init(
                 entity="gerbennkoopman-university-of-amsterdam",
                 project="lean-reinforcement-benchmark",
@@ -375,10 +376,6 @@ class BenchmarkTrainer(Trainer):
     def _setup_models(self) -> None:
         """Override to handle resume with the benchmark's flat directory structure."""
         logger.info(f"Using checkpoint directory: {self.checkpoint_dir}")
-
-        from lean_reinforcement.agent.transformer import Transformer
-        from lean_reinforcement.agent.value_head import ValueHead
-        from lean_reinforcement.utilities.checkpoint import load_checkpoint
 
         self.transformer = Transformer(model_name=self.config.model_name)
 
@@ -410,8 +407,6 @@ class BenchmarkTrainer(Trainer):
         self.progress_stats.run_start_time = time.time()
         self.progress_display.start()
         try:
-            from lean_reinforcement.training.inference_server import InferenceServer
-
             inference_server = InferenceServer(
                 self.transformer,
                 self.value_head,
@@ -438,8 +433,6 @@ class BenchmarkTrainer(Trainer):
             self.progress_display.stop()
             self._cleanup_workers()
             if self.config.use_wandb:
-                import wandb
-
                 wandb.finish()
 
 
