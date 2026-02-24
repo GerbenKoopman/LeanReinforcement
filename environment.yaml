@@ -20,6 +20,7 @@ dependencies:
   - pip:
     - lean-dojo
     - wandb
+    - rich
     - tqdm
     - deepspeed
     - pytorch-lightning[extra]
