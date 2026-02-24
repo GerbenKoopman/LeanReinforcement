@@ -29,15 +29,29 @@ class InferenceServer:
         # Start with a conservative max_safe_batch_size to prevent OOM
         self.max_safe_batch_size = min(batch_size, 4)
         self._batch_count = 0
+        self._batches_since_last_oom = 0  # Track batches since last OOM for recovery
 
     def _proactive_memory_cleanup(self):
         """Proactively clean up GPU memory before processing a batch."""
         self._batch_count += 1
+        self._batches_since_last_oom += 1
         # Clean up every 5 batches to prevent memory fragmentation
         if self._batch_count % 5 == 0:
             gc.collect()
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
+
+        # Periodically try to recover batch size (every 50 successful batches)
+        if (
+            self._batches_since_last_oom >= 50
+            and self.max_safe_batch_size < self.batch_size
+        ):
+            new_size = min(self.max_safe_batch_size + 1, self.batch_size)
+            logger.debug(
+                f"Recovering max_safe_batch_size: {self.max_safe_batch_size} -> {new_size}"
+            )
+            self.max_safe_batch_size = new_size
+            self._batches_since_last_oom = 0
 
     def _check_gpu_memory(self) -> bool:
         """Check if GPU memory usage is too high and clean up if needed.
@@ -46,13 +60,14 @@ class InferenceServer:
             return True
 
         allocated = torch.cuda.memory_allocated()
-        torch.cuda.memory_reserved()
+        reserved = torch.cuda.memory_reserved()
         total = torch.cuda.get_device_properties(0).total_memory
 
         # If using more than 80% of total memory, force cleanup
         if allocated > 0.8 * total:
             logger.warning(
-                f"GPU memory high ({allocated / 1e9:.1f}GB / {total / 1e9:.1f}GB). "
+                f"GPU memory high ({allocated / 1e9:.1f}GB allocated, "
+                f"{reserved / 1e9:.1f}GB reserved / {total / 1e9:.1f}GB total). "
                 "Forcing cleanup..."
             )
             gc.collect()
@@ -61,6 +76,7 @@ class InferenceServer:
             # Reduce batch size more aggressively
             if self.max_safe_batch_size > 1:
                 self.max_safe_batch_size = max(1, self.max_safe_batch_size // 2)
+                self._batches_since_last_oom = 0
                 logger.warning(
                     f"Reducing max_safe_batch_size to {self.max_safe_batch_size}"
                 )
@@ -192,6 +208,7 @@ class InferenceServer:
 
         if new_limit < self.max_safe_batch_size:
             self.max_safe_batch_size = new_limit
+            self._batches_since_last_oom = 0
             logger.warning(
                 f"OOM encountered. Reducing max safe batch size to {self.max_safe_batch_size}"
             )
@@ -295,6 +312,7 @@ class InferenceServer:
                         new_limit = len(chunk) // 2
                         if new_limit < self.max_safe_batch_size:
                             self.max_safe_batch_size = max(1, new_limit)
+                            self._batches_since_last_oom = 0
                             logger.warning(
                                 f"OOM in value_head. Reducing max safe batch size to {self.max_safe_batch_size}"
                             )
@@ -321,13 +339,39 @@ class InferenceServer:
                     all_states.extend(s)
                     lengths.append(len(s))
 
-                features = self.value_head.encode_states(all_states)
+                # Process in chunks with OOM protection (same as predict_batch)
+                all_features = []
+                chunk_size = int(self.max_safe_batch_size)
+                for i in range(0, len(all_states), chunk_size):
+                    chunk = all_states[i : i + chunk_size]
+                    try:
+                        chunk_features = self.value_head.encode_states(chunk)
+                        all_features.append(chunk_features.cpu())
+                    except torch.cuda.OutOfMemoryError:
+                        gc.collect()
+                        torch.cuda.empty_cache()
+                        new_limit = len(chunk) // 2
+                        if new_limit < self.max_safe_batch_size:
+                            self.max_safe_batch_size = max(1, new_limit)
+                            self._batches_since_last_oom = 0
+                            logger.warning(
+                                f"OOM in encode_states. Reducing max safe batch size to {self.max_safe_batch_size}"
+                            )
+                        # Retry with smaller chunks
+                        for j in range(0, len(chunk), max(1, new_limit)):
+                            sub_chunk = chunk[j : j + max(1, new_limit)]
+                            sub_features = self.value_head.encode_states(sub_chunk)
+                            all_features.append(sub_features.cpu())
+
+                features = (
+                    torch.cat(all_features, dim=0) if all_features else torch.tensor([])
+                )
 
                 execution_results = []
                 start = 0
                 for length in lengths:
                     res = features[start : start + length]
-                    execution_results.append(res.cpu())  # Move to CPU
+                    execution_results.append(res)
                     start += length
             else:
                 logger.error("Received encode_states request but value_head is None")

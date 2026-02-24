@@ -30,6 +30,13 @@ class Transformer:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name).to(self.device)
+        self._generate_call_count = 0
+
+    def _periodic_cache_cleanup(self) -> None:
+        """Clear GPU cache periodically instead of on every call."""
+        self._generate_call_count += 1
+        if self._generate_call_count % 10 == 0 and torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
     @torch.no_grad()
     def generate_tactics(self, state: str, n: int = 1) -> List[str]:
@@ -56,9 +63,8 @@ class Transformer:
         del tokenized_state
         del tactics_ids
 
-        # Clear KV-cache after beam search
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        # Periodic KV-cache cleanup
+        self._periodic_cache_cleanup()
 
         assert isinstance(
             tactics, list
@@ -99,9 +105,8 @@ class Transformer:
         del outputs
         del sequence_scores
 
-        # Clear KV-cache after beam search
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        # Periodic KV-cache cleanup
+        self._periodic_cache_cleanup()
 
         return result
 
@@ -125,6 +130,7 @@ class Transformer:
         input_length = tokenized_states.input_ids.shape[1]
         tactics_ids = self.model.generate(
             tokenized_states.input_ids,
+            attention_mask=tokenized_states.attention_mask,
             max_length=input_length + 512,
             num_beams=n,
             do_sample=False,
@@ -145,9 +151,8 @@ class Transformer:
         for i in range(0, len(tactics), n):
             result.append(tactics[i : i + n])
 
-        # Clear KV-cache after beam search
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        # Periodic KV-cache cleanup
+        self._periodic_cache_cleanup()
 
         return result
 
@@ -172,6 +177,7 @@ class Transformer:
         input_length = tokenized_states.input_ids.shape[1]
         outputs = self.model.generate(
             tokenized_states.input_ids,
+            attention_mask=tokenized_states.attention_mask,
             max_length=input_length + 512,
             num_beams=n,
             do_sample=False,
@@ -206,8 +212,7 @@ class Transformer:
         del outputs
         del sequence_scores
 
-        # Clear KV-cache after beam search
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        # Periodic KV-cache cleanup
+        self._periodic_cache_cleanup()
 
         return results

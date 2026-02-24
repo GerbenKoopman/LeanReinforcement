@@ -51,6 +51,8 @@ class ValueHead(nn.Module):
         if torch.cuda.is_available():
             self.to("cuda")
 
+        self._predict_call_count = 0
+
     def _build_value_head(
         self, input_dim: int, hidden_dims: List[int]
     ) -> nn.Sequential:
@@ -81,6 +83,12 @@ class ValueHead(nn.Module):
         layers.append(nn.Linear(prev_dim, 1))
 
         return nn.Sequential(*layers)
+
+    def _periodic_cache_cleanup(self) -> None:
+        """Clear GPU cache periodically instead of on every call."""
+        self._predict_call_count += 1
+        if self._predict_call_count % 10 == 0 and torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
     def encode_states(self, s: List[str]) -> torch.Tensor:
         """Encode a batch of texts into feature vectors."""
@@ -124,8 +132,7 @@ class ValueHead(nn.Module):
         # Clean up
         del features
         del value
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        self._periodic_cache_cleanup()
 
         return result
 
@@ -148,8 +155,7 @@ class ValueHead(nn.Module):
         # Clean up
         del features
         del values
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        self._periodic_cache_cleanup()
 
         return results
 
@@ -176,8 +182,7 @@ class ValueHead(nn.Module):
 
         # Clean up
         del value
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        self._periodic_cache_cleanup()
 
         return result
 
@@ -197,8 +202,7 @@ class ValueHead(nn.Module):
 
         # Clean up
         del values
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        self._periodic_cache_cleanup()
 
         return results
 

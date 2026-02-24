@@ -196,6 +196,7 @@ class Trainer:
             raise e
         finally:
             self.progress_display.stop()
+            self._drain_queues()
             self._cleanup_workers()
 
     def _run_epoch(
@@ -405,6 +406,7 @@ class Trainer:
 
         epoch_start_time = time.time()
         last_result_time = time.time()
+        last_activity_time = time.time()  # Tracks ANY progress (results or inference)
 
         # Dynamic safety timeout based on config:
         # Worst case = every theorem takes the full proof_timeout, processed
@@ -418,10 +420,14 @@ class Trainer:
         # How long to wait for more results after all workers die
         drain_timeout = 60  # seconds
 
-        # Stall timeout: if no progress for this long, assume workers are stuck
-        # This should be longer than the longest expected single theorem time
-        # proof_timeout + some buffer for slow inference
-        stall_timeout = self.config.proof_timeout * 1.5
+        # Stall timeout: if no activity (no results AND no inference processing)
+        # for this long, assume workers are truly stuck.
+        # During alpha_zero evaluation, the inference server being busy is a
+        # signal that workers are still computing, even if no theorem results
+        # have arrived yet. So we track inference activity separately.
+        stall_timeout = getattr(self, "stall_timeout_override", None) or (
+            max(self.config.proof_timeout, self.config.inference_timeout) * 3
+        )
 
         logger.debug(
             f"Collecting results for {total_theorems} theorems "
@@ -442,6 +448,8 @@ class Trainer:
 
             # Process inference requests (keeps GPU busy)
             processed_batch = inference_server.process_requests()
+            if processed_batch:
+                last_activity_time = time.time()
 
             # Collect results from workers
             got_result = False
@@ -451,6 +459,7 @@ class Trainer:
                     results_received += 1
                     got_result = True
                     last_result_time = time.time()
+                    last_activity_time = time.time()
 
                     if res:
                         if "metrics" in res:
@@ -546,6 +555,8 @@ class Trainer:
 
                         # Mark the lost theorem as "completed" (failed)
                         results_received += 1
+                        last_result_time = time.time()
+                        last_activity_time = time.time()
                         self.progress_stats.record_theorem(
                             name=f"worker_{i}_crash", success=False
                         )
@@ -576,11 +587,13 @@ class Trainer:
                             f"{len(alive_workers)} workers still alive."
                         )
 
-            # Check for stall - no progress for too long even with alive workers
-            time_since_last_result = time.time() - last_result_time
-            if time_since_last_result > stall_timeout:
+            # Check for stall - no activity (no results AND no inference)
+            # for too long. Inference activity means workers are still
+            # computing even if no theorem results have arrived yet.
+            time_since_last_activity = time.time() - last_activity_time
+            if time_since_last_activity > stall_timeout:
                 logger.warning(
-                    f"No progress for {time_since_last_result/60:.1f} minutes "
+                    f"No activity for {time_since_last_activity/60:.1f} minutes "
                     f"(stall timeout: {stall_timeout/60:.0f}m). "
                     f"Collected {results_received}/{total_theorems} results. "
                     f"Proceeding with training."
@@ -589,6 +602,7 @@ class Trainer:
 
             # If all workers are dead, wait a bit for queue to drain, then exit
             if not alive_workers:
+                time_since_last_result = time.time() - last_result_time
                 if time_since_last_result > drain_timeout:
                     logger.warning(
                         f"All workers dead and no results for {drain_timeout}s. "

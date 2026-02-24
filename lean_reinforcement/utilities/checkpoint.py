@@ -5,6 +5,7 @@ Utilities for checkpoint management across the project.
 import os
 import re
 import json
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any
 from loguru import logger
@@ -148,9 +149,16 @@ def load_checkpoint(
             value_head.load_checkpoint(str(checkpoint_dir), latest_filename)
 
             # Try to determine the epoch from other checkpoints
-            epoch_checkpoints = sorted(checkpoint_dir.glob(f"{prefix}_epoch_*.pth"))
+            epoch_checkpoints = list(checkpoint_dir.glob(f"{prefix}_epoch_*.pth"))
             if epoch_checkpoints:
-                # Extract epoch number from the last checkpoint
+                # Sort numerically by epoch number (not lexicographically)
+                def _extract_epoch(p: Path) -> int:
+                    try:
+                        return int(p.stem.split("_")[-1])
+                    except ValueError:
+                        return 0
+
+                epoch_checkpoints.sort(key=_extract_epoch)
                 last_checkpoint = epoch_checkpoints[-1]
                 epoch_str = last_checkpoint.stem.split("_")[-1]
                 try:
@@ -205,7 +213,7 @@ def save_training_metadata(
 
     # Update with new metadata
     existing_metadata.update(
-        {"last_epoch": epoch, "last_updated": str(Path.cwd()), **metadata}
+        {"last_epoch": epoch, "last_updated": datetime.now().isoformat(), **metadata}
     )
 
     # Save updated metadata
