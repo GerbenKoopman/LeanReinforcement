@@ -44,6 +44,9 @@ class TrainingConfig:
     num_tactics_to_expand: int = 32
     max_rollout_depth: int = 30
 
+    # Search mode
+    full_search: bool = True  # Run MCTS from root with full budget (allows backtracking)
+
     # Timeout parameters (all in seconds)
     # Note: These form a hierarchy - each level should be larger than the one below
     # env_timeout < max_time < proof_timeout
@@ -83,6 +86,7 @@ class TrainingConfig:
             checkpoint_dir=args.checkpoint_dir,
             use_wandb=args.use_wandb,
             inference_timeout=args.inference_timeout,
+            full_search=args.full_search,
         )
 
 
@@ -182,6 +186,15 @@ def get_config() -> TrainingConfig:
         type=float,
         default=1200.0,
         help="Max time (seconds) for entire proof search per theorem. Should be > max-time.",
+    )
+
+    # --- Search mode ---
+    parser.add_argument(
+        "--full-search",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Run MCTS from root with full budget (enables backtracking). "
+        "Disable with --no-full-search for step-by-step commitment.",
     )
 
     # --- Inference / IPC Args ---

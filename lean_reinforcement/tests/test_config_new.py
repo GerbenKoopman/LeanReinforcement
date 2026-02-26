@@ -36,6 +36,7 @@ class TestTrainingConfig(unittest.TestCase):
             inference_timeout=600.0,
             use_caching=False,
             seed=None,
+            full_search=True,
         )
 
         config = TrainingConfig.from_args(args)
