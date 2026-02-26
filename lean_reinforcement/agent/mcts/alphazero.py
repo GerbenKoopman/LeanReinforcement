@@ -140,6 +140,11 @@ class MCTS_AlphaZero(BaseMCTS):
 
         node.untried_actions = []
 
+        # If any child reached ProofFinished, return it immediately
+        for child in node.children:
+            if isinstance(child.state, ProofFinished):
+                return child
+
         return node
 
     def _expand_batch(self, nodes: List[Node]) -> List[Node]:
@@ -241,7 +246,15 @@ class MCTS_AlphaZero(BaseMCTS):
         for node in nodes_to_generate:
             node.untried_actions = []
 
-        return nodes
+        # Check for immediate proofs - return ProofFinished children for simulation
+        result = []
+        for node in nodes:
+            proof_child = next(
+                (c for c in node.children if isinstance(c.state, ProofFinished)),
+                None,
+            )
+            result.append(proof_child if proof_child else node)
+        return result
 
     def _simulate(self, node: Node, env: Optional[LeanDojoEnv] = None) -> float:
         """

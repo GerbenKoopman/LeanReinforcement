@@ -50,6 +50,11 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
 
         node.untried_actions = []
 
+        # If any child reached ProofFinished, return it immediately
+        for child in node.children:
+            if isinstance(child.state, ProofFinished):
+                return child
+
         if node.children:
             return self._get_best_child(node)
         return node
@@ -107,7 +112,21 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
         for node in nodes_to_generate:
             node.untried_actions = []
 
-        return [self._get_best_child(node) if node.children else node for node in nodes]
+        # Return best child for each node, preferring ProofFinished children
+        cdef list result_nodes = []
+        for node in nodes:
+            proof_child = None
+            for child in node.children:
+                if isinstance(child.state, ProofFinished):
+                    proof_child = child
+                    break
+            if proof_child is not None:
+                result_nodes.append(proof_child)
+            elif node.children:
+                result_nodes.append(self._get_best_child(node))
+            else:
+                result_nodes.append(node)
+        return result_nodes
 
     cpdef float _simulate(self, Node node):
         cdef object current_state

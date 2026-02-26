@@ -118,6 +118,11 @@ class MCTS_GuidedRollout(BaseMCTS):
 
         node.untried_actions = []
 
+        # If any child reached ProofFinished, return it immediately
+        for child in node.children:
+            if isinstance(child.state, ProofFinished):
+                return child
+
         # Return the best child based on PUCT score to start simulation from
         if node.children:
             return self._get_best_child(node)
@@ -191,8 +196,20 @@ class MCTS_GuidedRollout(BaseMCTS):
         for node in nodes_to_generate:
             node.untried_actions = []
 
-        # Return the best child for each node to start simulation
-        return [self._get_best_child(node) if node.children else node for node in nodes]
+        # Return best child for each node, preferring ProofFinished children
+        result = []
+        for node in nodes:
+            proof_child = next(
+                (c for c in node.children if isinstance(c.state, ProofFinished)),
+                None,
+            )
+            if proof_child:
+                result.append(proof_child)
+            elif node.children:
+                result.append(self._get_best_child(node))
+            else:
+                result.append(node)
+        return result
 
     def _simulate(self, node: Node, env: Optional[LeanDojoEnv] = None) -> float:
         """
