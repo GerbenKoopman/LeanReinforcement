@@ -33,6 +33,7 @@ dependencies = [
     "types-tqdm",
     "types-setuptools",
     "cython",
+    "psutil",
 ]
 
 [tool.setuptools]
