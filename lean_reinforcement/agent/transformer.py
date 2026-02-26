@@ -53,8 +53,7 @@ class Transformer:
             do_sample=False,
             num_return_sequences=n,
             early_stopping=False,
-            repetition_penalty=1.2,
-            no_repeat_ngram_size=3,
+            length_penalty=0.0,
         )
         tactics: List[str] = self.tokenizer.batch_decode(
             tactics_ids, skip_special_tokens=True
@@ -89,8 +88,7 @@ class Transformer:
             early_stopping=False,
             return_dict_in_generate=True,
             output_scores=True,
-            repetition_penalty=1.2,
-            no_repeat_ngram_size=3,
+            length_penalty=0.0,
         )
         tactics = self.tokenizer.batch_decode(
             outputs.sequences, skip_special_tokens=True
@@ -136,8 +134,7 @@ class Transformer:
             do_sample=False,
             num_return_sequences=n,
             early_stopping=False,
-            repetition_penalty=1.2,
-            no_repeat_ngram_size=3,
+            length_penalty=0.0,
         )
 
         # tactics_ids shape: (batch_size * n, sequence_length)
@@ -185,8 +182,7 @@ class Transformer:
             early_stopping=False,
             return_dict_in_generate=True,
             output_scores=True,
-            repetition_penalty=1.2,
-            no_repeat_ngram_size=3,
+            length_penalty=0.0,
         )
 
         all_tactics = self.tokenizer.batch_decode(
