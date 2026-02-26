@@ -52,7 +52,7 @@ BASE_PARAMS = {
     "value_head_hidden_dims": [1024, 512, 256, 128, 64],
     "num_theorems": 100,
     "batch_size": 16,
-    "num_tactics_to_expand": 16,
+    "num_tactics_to_expand": 32,
     "num_workers": 12,
     "train_epochs": 50,
     "train_value_head": True,
