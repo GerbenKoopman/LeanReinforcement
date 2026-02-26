@@ -424,6 +424,13 @@ class BaseMCTS:
             if child.action == action:
                 found_child = child
                 break
+            # Also check DAG parent-action pairs for deduplicated nodes
+            for parent, parent_action in child.parents:
+                if parent is self.root and parent_action == action:
+                    found_child = child
+                    break
+            if found_child:
+                break
 
         if found_child:
             old_root = self.root
