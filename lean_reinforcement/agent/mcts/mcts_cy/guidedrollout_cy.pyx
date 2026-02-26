@@ -158,22 +158,34 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
                 return 0.0  # Neutral reward on timeout
                 
             state_str = current_state.pp
-            tactic = self.transformer.generate_tactics(state_str, n=1)[0]
-            
+
+            # Generate multiple tactics for robustness (try first successful one)
+            tactics = self.transformer.generate_tactics(state_str, n=3)
+            # Deduplicate while preserving order
+            tactics = list(dict.fromkeys(tactics))
+
             # Check timeout after model call
             if self._is_timeout():
                 return 0.0
-                
-            result = sim_env.run_tactic_stateless(current_state, tactic)
 
-            if isinstance(result, ProofFinished):
-                return 1.0 - 0.01 * (step_idx + 1)
-            if isinstance(result, (LeanError, ProofGivenUp)):
-                return -1.0
-            if not isinstance(result, TacticState):
-                return -1.0
-            
-            current_state = result
+            # Try each tactic, use the first successful one
+            next_state = None
+            for tactic in tactics:
+                if self._is_timeout():
+                    return 0.0
+                result = sim_env.run_tactic_stateless(current_state, tactic)
+
+                if isinstance(result, ProofFinished):
+                    # Reward shorter proofs: 1.0 - 0.01 per step
+                    return 1.0 - 0.01 * (step_idx + 1)
+
+                if isinstance(result, TacticState) and next_state is None:
+                    next_state = result
+
+            if next_state is None:
+                return -1.0  # All tactics failed
+
+            current_state = next_state  # Continue rollout
 
         return 0.0
 
