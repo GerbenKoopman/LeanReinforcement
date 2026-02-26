@@ -124,6 +124,7 @@ class AgentRunner:
         self._log_gpu_memory("Initial ")
 
         training_data: list[dict] = []
+        mcts_instance = None
 
         if not isinstance(self.env.current_state, TacticState):
             return self._finalise(
@@ -144,7 +145,6 @@ class AgentRunner:
         max_time = self.proof_timeout - (time.time() - start_time)
         if max_time < 30:
             logger.warning("Not enough time for full search. Skipping.")
-            del mcts_instance
             return self._finalise(
                 start_time, 0, training_data, collect_value_data, use_final_reward
             )
@@ -158,7 +158,6 @@ class AgentRunner:
             mcts_instance.search(total_iterations, max_time=max_time)
         except Exception as e:
             logger.error(f"MCTS search failed with error: {e}")
-            del mcts_instance
             return self._finalise(
                 start_time, 0, training_data, collect_value_data, use_final_reward
             )
@@ -172,9 +171,7 @@ class AgentRunner:
         if mcts_instance.root.max_value == 1.0:
             proof_path = mcts_instance.extract_proof_path()
             if proof_path:
-                logger.info(
-                    f"Found complete proof with {len(proof_path)} tactics"
-                )
+                logger.info(f"Found complete proof with {len(proof_path)} tactics")
                 for tactic in proof_path:
                     logger.info(f"  Applying proof tactic: {tactic}")
                     try:
@@ -317,9 +314,7 @@ class AgentRunner:
                 )
 
                 try:
-                    mcts_instance.search(
-                        self.num_iterations, max_time=step_max_time
-                    )
+                    mcts_instance.search(self.num_iterations, max_time=step_max_time)
                 except Exception as e:
                     logger.error(f"MCTS search failed with error: {e}")
                     break
@@ -355,9 +350,7 @@ class AgentRunner:
                             try:
                                 _, _, terminated = self.env.step(tactic)
                             except Exception as e:
-                                logger.error(
-                                    f"Proof path application failed: {e}"
-                                )
+                                logger.error(f"Proof path application failed: {e}")
                                 break
                             if terminated:
                                 break
@@ -369,9 +362,7 @@ class AgentRunner:
                 if root_node.children:
                     if root_node.max_value == 1.0:
                         # A proof was found - follow the proof path
-                        best_child = max(
-                            root_node.children, key=lambda c: c.max_value
-                        )
+                        best_child = max(root_node.children, key=lambda c: c.max_value)
                     else:
                         best_child = max(
                             root_node.children, key=lambda c: c.visit_count
@@ -382,11 +373,7 @@ class AgentRunner:
                 state_pp = current_state.pp
 
                 if collect_value_data:
-                    mcts_value = (
-                        root_node.value()
-                        if root_node.visit_count > 0
-                        else 0.0
-                    )
+                    mcts_value = root_node.value() if root_node.visit_count > 0 else 0.0
                     visit_count = root_node.visit_count
 
                     visit_distribution: dict[str, float] = {}
@@ -419,9 +406,7 @@ class AgentRunner:
                     break
 
                 # Take the best action in the environment
-                logger.info(
-                    f"Step {step_num}: Applying best tactic: {best_action}"
-                )
+                logger.info(f"Step {step_num}: Applying best tactic: {best_action}")
 
                 try:
                     _, _, terminated = self.env.step(best_action)
@@ -429,9 +414,7 @@ class AgentRunner:
                     logger.error(f"Environment step failed with error: {e}")
                     break
 
-                if isinstance(
-                    self.env.current_state, (LeanError, ProofGivenUp)
-                ):
+                if isinstance(self.env.current_state, (LeanError, ProofGivenUp)):
                     logger.warning(
                         f"Tactic resulted in error: {self.env.current_state}"
                     )
