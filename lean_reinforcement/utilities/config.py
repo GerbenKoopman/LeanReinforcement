@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 import argparse
 import os
+import shutil
 from typing import List, Optional
 
 
@@ -301,6 +302,9 @@ def get_config() -> TrainingConfig:
     # explicitly set batch-size / num-tactics-to-expand on the CLI.
     _apply_gpu_params(args, parser)
 
+    # Warn if worker count may exceed available memory
+    _warn_worker_memory(args)
+
     return TrainingConfig.from_args(args)
 
 
@@ -334,3 +338,37 @@ def _apply_gpu_params(
 
     if args.num_tactics_to_expand == defaults.num_tactics_to_expand:
         args.num_tactics_to_expand = algo_params["num_tactics_to_expand"]
+
+
+def _warn_worker_memory(args: argparse.Namespace) -> None:
+    """Warn the user if the requested worker count risks OOM on this machine.
+
+    Each LeanDojo worker process typically uses 2-3 GB of RAM.  We estimate
+    the safe headroom and print a warning if the configuration looks risky.
+    """
+    try:
+        import psutil
+
+        total_gb = psutil.virtual_memory().total / (1024**3)
+    except ImportError:
+        # psutil not available – can't check
+        return
+
+    # Reserve ~6 GB for the OS, desktop environment, and the main process
+    reserved_gb = 6.0
+    per_worker_gb = 2.5  # conservative estimate per LeanDojo worker
+    safe_workers = max(1, int((total_gb - reserved_gb) / per_worker_gb))
+
+    if args.num_workers > safe_workers:
+        terminal_width = shutil.get_terminal_size((80, 24)).columns
+        border = "=" * min(terminal_width, 72)
+        print(f"\n{border}")
+        print("  WARNING: High worker count may trigger the Linux OOM killer")
+        print(f"{border}")
+        print(f"  System RAM:       {total_gb:.0f} GB")
+        print(f"  Requested workers: {args.num_workers}")
+        print(f"  Safe estimate:     {safe_workers} workers")
+        print(f"\n  With {args.num_workers} workers the training may exhaust memory,")
+        print("  causing the desktop environment to crash (forced re-login).")
+        print(f"  Consider using --num-workers {safe_workers} or fewer.")
+        print(f"{border}\n")

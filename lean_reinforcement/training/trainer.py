@@ -8,6 +8,7 @@ import random
 import queue
 import gc
 import numpy as np
+import psutil
 from typing import List, Dict, Any, Optional
 from dataclasses import asdict
 import torch
@@ -155,6 +156,41 @@ class Trainer:
         ]
         self.workers: List[mp.Process] = []
 
+    @staticmethod
+    def _set_oom_score_adj(score: int = 1000) -> None:
+        """Set OOM score adjustment so the kernel kills this process
+        instead of the desktop environment when memory is exhausted.
+        Score ranges from -1000 (never kill) to 1000 (kill first)."""
+        try:
+            with open(f"/proc/{os.getpid()}/oom_score_adj", "w") as f:
+                f.write(str(score))
+            logger.info(f"Set OOM score adjustment to {score} for PID {os.getpid()}")
+        except (PermissionError, OSError) as e:
+            logger.warning(f"Could not set OOM score adjustment: {e}")
+
+    @staticmethod
+    def _get_memory_usage_percent() -> float:
+        """Return current system memory usage as a percentage (0-100)."""
+        mem = psutil.virtual_memory()
+        return mem.percent
+
+    @staticmethod
+    def _get_available_memory_gb() -> float:
+        """Return available system memory in GB."""
+        mem = psutil.virtual_memory()
+        return mem.available / (1024**3)
+
+    def _check_memory_pressure(self, threshold: float = 90.0) -> bool:
+        """Return True if memory usage exceeds threshold percentage."""
+        usage = self._get_memory_usage_percent()
+        if usage > threshold:
+            logger.warning(
+                f"Memory pressure: {usage:.1f}% used "
+                f"({self._get_available_memory_gb():.1f}GB available)"
+            )
+            return True
+        return False
+
     def _log_gpu_memory(self, prefix: str = "") -> None:
         if torch.cuda.is_available():
             allocated = torch.cuda.memory_allocated() / 1024**3
@@ -168,6 +204,11 @@ class Trainer:
         Runs the training loop.
         Returns a list of metrics for each epoch.
         """
+        # Protect the desktop: make this process the preferred OOM-kill
+        # target so the Linux OOM killer terminates training instead of
+        # the desktop environment (GNOME Shell / gdm).
+        self._set_oom_score_adj(1000)
+
         all_metrics = []
         self.progress_stats.run_start_time = time.time()
         self.progress_display.start()
@@ -445,6 +486,20 @@ class Trainer:
                     f"Proceeding with training."
                 )
                 break
+
+            # --- Memory pressure check ---
+            # When system memory is critically high, pause processing to
+            # let workers finish and free memory before continuing.  This
+            # avoids triggering the Linux OOM killer, which could kill the
+            # desktop environment and force the user to re-login.
+            if self._check_memory_pressure(threshold=85.0):
+                gc.collect()
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                # Brief pause to let workers finish and release memory
+                time.sleep(2.0)
+                # Skip inference processing this iteration to reduce load
+                continue
 
             # Process inference requests (keeps GPU busy)
             processed_batch = inference_server.process_requests()

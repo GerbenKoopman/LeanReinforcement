@@ -171,6 +171,13 @@ def worker_loop(
 
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
+    # Set high OOM score so the kernel kills workers before the desktop
+    try:
+        with open(f"/proc/{os.getpid()}/oom_score_adj", "w") as f:
+            f.write("1000")
+    except (PermissionError, OSError):
+        pass
+
     transformer_proxy = QueueProxyTransformer(
         request_queue,
         response_queue,

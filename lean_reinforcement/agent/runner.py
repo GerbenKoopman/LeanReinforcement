@@ -139,9 +139,14 @@ class AgentRunner:
             **self.mcts_kwargs,
         )
 
-        # Full budget: num_iterations * max_steps iterations,
-        # bounded by proof_timeout in wall-clock time.
-        total_iterations = self.num_iterations * self.max_steps
+        # Full budget: use num_iterations directly (NOT multiplied by
+        # max_steps).  The old step-by-step mode ran num_iterations per
+        # step but discarded most of the tree between steps via move_root.
+        # Multiplying here creates a tree with up to
+        # (num_iterations * max_steps * num_tactics_to_expand) nodes that
+        # stays fully in memory — easily 10+ GB per worker and enough to
+        # OOM-kill the desktop on a 32 GB machine.
+        total_iterations = self.num_iterations
         max_time = self.proof_timeout - (time.time() - start_time)
         if max_time < 30:
             logger.warning("Not enough time for full search. Skipping.")
