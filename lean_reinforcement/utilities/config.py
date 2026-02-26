@@ -297,4 +297,38 @@ def get_config() -> TrainingConfig:
     if args.checkpoint_dir:
         os.environ["CHECKPOINT_DIR"] = args.checkpoint_dir
 
+    # Auto-load GPU params if gpu_params.json exists and user didn't
+    # explicitly set batch-size / num-tactics-to-expand on the CLI.
+    _apply_gpu_params(args, parser)
+
     return TrainingConfig.from_args(args)
+
+
+def _apply_gpu_params(args: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
+    """Override batch_size/num_tactics_to_expand from gpu_params.json when not set explicitly."""
+    import json
+    from pathlib import Path
+
+    gpu_params_path = Path("gpu_params.json")
+    if not gpu_params_path.exists():
+        return
+
+    try:
+        with open(gpu_params_path) as f:
+            gpu_params = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return
+
+    algo = args.mcts_type
+    algo_params = gpu_params.get(algo)
+    if algo_params is None:
+        return
+
+    # Only apply if user used the default values (didn't pass them explicitly)
+    defaults = parser.parse_args([])  # get defaults
+
+    if args.batch_size == defaults.batch_size:
+        args.batch_size = algo_params["batch_size"]
+
+    if args.num_tactics_to_expand == defaults.num_tactics_to_expand:
+        args.num_tactics_to_expand = algo_params["num_tactics_to_expand"]

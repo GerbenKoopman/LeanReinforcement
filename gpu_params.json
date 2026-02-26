@@ -1,0 +1,27 @@
+{
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "total_gb": 7.62,
+    "compute_capability": "8.9"
+  },
+  "model_name": "kaiyuy/leandojo-lean4-tacgen-byt5-small",
+  "model_size_gb": 1.121,
+  "reserve_gb": 1.0,
+  "timestamp": "2026-02-26 15:28:50",
+  "guided_rollout": {
+    "algorithm": "guided_rollout",
+    "batch_size": 16,
+    "num_tactics_to_expand": 64,
+    "peak_vram_gb": 3.929,
+    "total_vram_gb": 7.62,
+    "product": 1024
+  },
+  "alpha_zero": {
+    "algorithm": "alpha_zero",
+    "batch_size": 16,
+    "num_tactics_to_expand": 64,
+    "peak_vram_gb": 3.929,
+    "total_vram_gb": 7.62,
+    "product": 1024
+  }
+}
