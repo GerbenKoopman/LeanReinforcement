@@ -45,7 +45,9 @@ class TrainingConfig:
     max_rollout_depth: int = 30
 
     # Search mode
-    full_search: bool = True  # Run MCTS from root with full budget (allows backtracking)
+    full_search: bool = (
+        True  # Run MCTS from root with full budget (allows backtracking)
+    )
 
     # Timeout parameters (all in seconds)
     # Note: These form a hierarchy - each level should be larger than the one below
