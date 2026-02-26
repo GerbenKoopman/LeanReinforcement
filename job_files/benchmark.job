@@ -1,0 +1,70 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=1
+#SBATCH --job-name=benchmark_suite
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=18
+#SBATCH --time=72:00:00
+#SBATCH --output=logs/benchmark_%A.out
+
+module purge
+module load 2024
+module load Anaconda3/2024.06-1
+module load CUDA/12.6.0
+
+# Set CUDA_HOME environment variable
+export CUDA_HOME=$CUDA_ROOT
+export CUDA_PATH=$CUDA_ROOT
+
+source activate lean-reinforcement
+
+# Source environment variables
+set -a
+source $HOME/lean_reinforcement/.env
+set +a
+
+cd $HOME/lean_reinforcement
+
+# Build Cython extensions
+echo "Building Cython extensions..."
+python3 setup.py build_ext --inplace
+
+echo "============================================"
+echo "Starting Benchmark Suite"
+echo "Date: $(date)"
+echo "============================================"
+
+# Phase 1: Run all 18 training configurations
+# The benchmark runner is resumable — if the job is interrupted and resubmitted,
+# completed runs will be skipped automatically.
+echo ""
+echo "PHASE 1: Training runs (18 configurations)"
+echo "============================================"
+python3 -m benchmark.run_benchmark \
+    --algorithms alpha_zero guided_rollout \
+    --seeds 42 43 44 \
+    --sizes light medium heavy
+
+echo ""
+echo "PHASE 2: Evaluating on test set"
+echo "============================================"
+python3 -m benchmark.evaluate_benchmark \
+    --algorithms alpha_zero guided_rollout \
+    --seeds 42 43 44 \
+    --sizes light medium heavy \
+    --split test \
+    --num-theorems 500
+
+echo ""
+echo "PHASE 3: Generating plots"
+echo "============================================"
+python3 -m benchmark.plot_benchmark \
+    --output-dir plots/benchmark \
+    --split test
+
+echo ""
+echo "============================================"
+echo "Benchmark Suite Complete"
+echo "Date: $(date)"
+echo "============================================"

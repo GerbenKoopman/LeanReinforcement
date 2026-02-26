@@ -34,6 +34,7 @@ echo "Starting training run with distributed environment..."
 srun python3 -m lean_reinforcement.training.train \
     --data-type novel_premises \
     --indexed-corpus-path $CORPUS_DIR/indexed_corpus.pkl \
+    --value-head-hidden-dims 1024 512 256 128 64 \
     --num-epochs 128 \
     --num-theorems 100 \
     --num-iterations 200 \
