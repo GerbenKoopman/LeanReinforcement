@@ -193,9 +193,7 @@ def test_value_head(
     clear_gpu()
     try:
         torch.cuda.reset_peak_memory_stats()
-        states = (SAMPLE_STATES * ((batch_size // len(SAMPLE_STATES)) + 1))[
-            :batch_size
-        ]
+        states = (SAMPLE_STATES * ((batch_size // len(SAMPLE_STATES)) + 1))[:batch_size]
         tokenized = tokenizer(
             states,
             return_tensors="pt",
@@ -253,7 +251,9 @@ def run_tuning(
 
     total_gb = gpu_info["total_gb"]
     usable_gb = total_gb - reserve_gb
-    print(f"GPU: {gpu_info['name']} ({total_gb:.1f} GB total, {usable_gb:.1f} GB usable)")
+    print(
+        f"GPU: {gpu_info['name']} ({total_gb:.1f} GB total, {usable_gb:.1f} GB usable)"
+    )
     print(f"Model: {model_name}")
     print(f"Reserve: {reserve_gb:.1f} GB headroom")
     print()
@@ -262,9 +262,11 @@ def run_tuning(
     print("Loading model... ", end="", flush=True)
     device = "cuda"
     tokenizer = __import__("transformers").AutoTokenizer.from_pretrained(model_name)
-    model = __import__("transformers").AutoModelForSeq2SeqLM.from_pretrained(
-        model_name
-    ).to(device)
+    model = (
+        __import__("transformers")
+        .AutoModelForSeq2SeqLM.from_pretrained(model_name)
+        .to(device)
+    )
     model_gb = torch.cuda.memory_allocated() / 1024**3
     print(f"done ({model_gb:.2f} GB)")
     print()
@@ -287,7 +289,9 @@ def run_tuning(
 
     for batch_size, num_tactics in PARAM_LEVELS:
         product = batch_size * num_tactics
-        label = f"  batch={batch_size:>2}, tactics={num_tactics:>2} (product={product:>4})"
+        label = (
+            f"  batch={batch_size:>2}, tactics={num_tactics:>2} (product={product:>4})"
+        )
 
         peak = test_generate(model, tokenizer, device, batch_size, num_tactics)
         if peak is None:
@@ -333,7 +337,9 @@ def run_tuning(
 
     for batch_size, num_tactics in PARAM_LEVELS:
         product = batch_size * num_tactics
-        label = f"  batch={batch_size:>2}, tactics={num_tactics:>2} (product={product:>4})"
+        label = (
+            f"  batch={batch_size:>2}, tactics={num_tactics:>2} (product={product:>4})"
+        )
 
         peak = test_value_head(
             model, tokenizer, device, batch_size, num_tactics, value_head_hidden_dims

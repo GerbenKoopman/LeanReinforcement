@@ -304,7 +304,9 @@ def get_config() -> TrainingConfig:
     return TrainingConfig.from_args(args)
 
 
-def _apply_gpu_params(args: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
+def _apply_gpu_params(
+    args: argparse.Namespace, parser: argparse.ArgumentParser
+) -> None:
     """Override batch_size/num_tactics_to_expand from gpu_params.json when not set explicitly."""
     import json
     from pathlib import Path
