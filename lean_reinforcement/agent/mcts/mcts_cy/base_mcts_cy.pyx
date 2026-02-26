@@ -351,8 +351,51 @@ cdef class BaseMCTS:
                 return self.root.untried_actions[0]
             return None
 
-        best_child = max(self.root.children, key=lambda c: c.visit_count)
+        # If a proof was found, follow the proof path
+        if self.root.max_value == 1.0:
+            best_child = max(self.root.children, key=lambda c: c.max_value)
+        else:
+            # Select the child with the most visits (most robust)
+            best_child = max(self.root.children, key=lambda c: c.visit_count)
         return best_child.action
+
+    def extract_proof_path(self):
+        """
+        Extract the full sequence of tactics from root to ProofFinished.
+        Returns None if no proof was found in the tree.
+        """
+        if self.root.max_value != 1.0:
+            return None
+
+        cdef list path = []
+        cdef Node current = self.root
+        cdef Node proof_child
+        cdef object action
+        while not isinstance(current.state, ProofFinished):
+            # Find the child on the proof path (max_value == 1.0)
+            proof_child = None
+            for child in current.children:
+                if child.max_value == 1.0:
+                    proof_child = child
+                    break
+            if proof_child is None:
+                return None  # Shouldn't happen if max_value == 1.0
+
+            # Find the action leading from current to proof_child
+            action = proof_child.action
+            # Check parent-action pairs for DAG-deduplicated nodes
+            for parent_tuple in proof_child.parents:
+                if parent_tuple[0] is current and parent_tuple[1] is not None:
+                    action = parent_tuple[1]
+                    break
+
+            if action is None:
+                return None
+
+            path.append(action)
+            current = proof_child
+
+        return path
 
     def move_root(self, str action):
         cdef Node found_child = None

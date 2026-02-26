@@ -149,11 +149,54 @@ class AgentRunner:
                 # Extract lightweight data immediately after search
                 root_node = mcts_instance.root
 
-                # Get the best child based on visit count
+                # If a complete proof was found, extract and apply full path
+                if root_node.max_value == 1.0:
+                    proof_path = mcts_instance.extract_proof_path()
+                    if proof_path:
+                        logger.info(
+                            f"Step {step_num}: Found complete proof with {len(proof_path)} tactics"
+                        )
+                        # Collect training data for current state before applying
+                        if collect_value_data:
+                            state_pp = current_state.pp
+                            training_data.append(
+                                {
+                                    "type": "value",
+                                    "state": state_pp,
+                                    "step": step_num,
+                                    "mcts_value": 1.0,
+                                    "visit_count": root_node.visit_count,
+                                    "visit_distribution": {},
+                                }
+                            )
+                        del root_node
+                        # Apply all tactics in the proof path
+                        for tactic in proof_path:
+                            logger.info(f"  Applying proof tactic: {tactic}")
+                            try:
+                                _, _, terminated = self.env.step(tactic)
+                            except Exception as e:
+                                logger.error(
+                                    f"Proof path application failed: {e}"
+                                )
+                                break
+                            if terminated:
+                                break
+                        break  # Exit step loop — proof applied
+
+                # Get the best child based on visit count (or max_value for proof path)
                 best_child = None
                 best_action = None
                 if root_node.children:
-                    best_child = max(root_node.children, key=lambda c: c.visit_count)
+                    if root_node.max_value == 1.0:
+                        # A proof was found — follow the proof path
+                        best_child = max(
+                            root_node.children, key=lambda c: c.max_value
+                        )
+                    else:
+                        best_child = max(
+                            root_node.children, key=lambda c: c.visit_count
+                        )
                     best_action = best_child.action
                 else:
                     best_action = mcts_instance.get_best_action()
