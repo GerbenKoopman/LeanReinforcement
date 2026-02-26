@@ -203,6 +203,7 @@ class BaseMCTS:
 
                 current_batch_size = min(batch_size, num_iterations - iteration)
                 leaves = []
+                selected_leaf_ids: set[int] = set()
 
                 # 1. Selection Phase (Batch)
                 for _ in range(current_batch_size):
@@ -224,6 +225,12 @@ class BaseMCTS:
                         else:
                             self._backpropagate(leaf, -1.0)
                         continue
+
+                    # Skip duplicate selections within the same batch
+                    leaf_id = id(leaf)
+                    if leaf_id in selected_leaf_ids:
+                        continue
+                    selected_leaf_ids.add(leaf_id)
 
                     # Apply virtual loss to encourage diversity in the batch
                     self._add_virtual_loss(leaf)

@@ -185,6 +185,7 @@ cdef class BaseMCTS:
 
                 current_batch_size = min(b_size, num_iterations - iteration)
                 leaves = []
+                selected_leaf_ids = set()
 
                 for _ in range(current_batch_size):
                     if self._is_timeout():
@@ -205,6 +206,12 @@ cdef class BaseMCTS:
                         else:
                             self._backpropagate(leaf, -1.0)
                         continue
+
+                    # Skip duplicate selections within the same batch
+                    leaf_id = id(leaf)
+                    if leaf_id in selected_leaf_ids:
+                        continue
+                    selected_leaf_ids.add(leaf_id)
 
                     self._add_virtual_loss(leaf)
                     leaves.append(leaf)
