@@ -36,6 +36,12 @@ dependencies = [
     "psutil",
 ]
 
+[project.optional-dependencies]
+onnx = [
+    "optimum",
+    "onnxruntime-gpu",
+]
+
 [tool.setuptools]
 include-package-data = true
 
