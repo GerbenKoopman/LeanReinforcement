@@ -11,6 +11,7 @@ import os
 from loguru import logger
 
 from lean_reinforcement.agent.transformer import Transformer
+from lean_reinforcement.utilities.memory import periodic_cache_cleanup
 
 
 # Default encoder output dimension for the ByT5 model
@@ -84,12 +85,6 @@ class ValueHead(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def _periodic_cache_cleanup(self) -> None:
-        """Clear GPU cache periodically instead of on every call."""
-        self._predict_call_count += 1
-        if self._predict_call_count % 10 == 0 and torch.cuda.is_available():
-            torch.cuda.empty_cache()
-
     def encode_states(self, s: List[str]) -> torch.Tensor:
         """Encode a batch of texts into feature vectors."""
         tokenized_s = self.tokenizer(
@@ -103,11 +98,6 @@ class ValueHead(nn.Module):
         features = (hidden_state * tokenized_s.attention_mask.unsqueeze(2)).sum(
             dim=1
         ) / lens.unsqueeze(1)
-
-        # Clean up intermediate tensors
-        del tokenized_s
-        del hidden_state
-        del lens
 
         return cast(torch.Tensor, features.detach())
 
@@ -129,10 +119,7 @@ class ValueHead(nn.Module):
         # Apply tanh to squash the value between -1 and 1
         result: float = torch.tanh(value).item()
 
-        # Clean up
-        del features
-        del value
-        self._periodic_cache_cleanup()
+        self._predict_call_count = periodic_cache_cleanup(self._predict_call_count)
 
         return result
 
@@ -152,10 +139,7 @@ class ValueHead(nn.Module):
 
         results: List[float] = torch.tanh(values).tolist()
 
-        # Clean up
-        del features
-        del values
-        self._periodic_cache_cleanup()
+        self._predict_call_count = periodic_cache_cleanup(self._predict_call_count)
 
         return results
 
@@ -180,9 +164,7 @@ class ValueHead(nn.Module):
         # Apply tanh to squash the value between -1 and 1
         result: float = torch.tanh(value).item()
 
-        # Clean up
-        del value
-        self._periodic_cache_cleanup()
+        self._predict_call_count = periodic_cache_cleanup(self._predict_call_count)
 
         return result
 
@@ -200,9 +182,7 @@ class ValueHead(nn.Module):
 
         results: List[float] = torch.tanh(values).tolist()
 
-        # Clean up
-        del values
-        self._periodic_cache_cleanup()
+        self._predict_call_count = periodic_cache_cleanup(self._predict_call_count)
 
         return results
 

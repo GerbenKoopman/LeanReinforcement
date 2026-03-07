@@ -7,6 +7,8 @@ import torch
 from typing import List, Protocol, Tuple, runtime_checkable
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
+from lean_reinforcement.utilities.memory import periodic_cache_cleanup
+
 
 @runtime_checkable
 class TransformerProtocol(Protocol):
@@ -32,12 +34,6 @@ class Transformer:
         self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name).to(self.device)
         self._generate_call_count = 0
 
-    def _periodic_cache_cleanup(self) -> None:
-        """Clear GPU cache periodically instead of on every call."""
-        self._generate_call_count += 1
-        if self._generate_call_count % 10 == 0 and torch.cuda.is_available():
-            torch.cuda.empty_cache()
-
     @torch.no_grad()
     def generate_tactics(self, state: str, n: int = 1) -> List[str]:
         tokenized_state = self.tokenizer(
@@ -59,11 +55,7 @@ class Transformer:
             tactics_ids, skip_special_tokens=True
         )
 
-        del tokenized_state
-        del tactics_ids
-
-        # Periodic KV-cache cleanup
-        self._periodic_cache_cleanup()
+        self._generate_call_count = periodic_cache_cleanup(self._generate_call_count)
 
         assert isinstance(
             tactics, list
@@ -99,12 +91,7 @@ class Transformer:
 
         result = list(zip(tactics, probs.tolist()))
 
-        del tokenized_state
-        del outputs
-        del sequence_scores
-
-        # Periodic KV-cache cleanup
-        self._periodic_cache_cleanup()
+        self._generate_call_count = periodic_cache_cleanup(self._generate_call_count)
 
         return result
 
@@ -140,16 +127,12 @@ class Transformer:
         # tactics_ids shape: (batch_size * n, sequence_length)
         tactics = self.tokenizer.batch_decode(tactics_ids, skip_special_tokens=True)
 
-        del tokenized_states
-        del tactics_ids
-
         # Reshape the flat list of tactics into a list of lists
         result = []
         for i in range(0, len(tactics), n):
             result.append(tactics[i : i + n])
 
-        # Periodic KV-cache cleanup
-        self._periodic_cache_cleanup()
+        self._generate_call_count = periodic_cache_cleanup(self._generate_call_count)
 
         return result
 
@@ -204,11 +187,6 @@ class Transformer:
 
             results.append(list(zip(batch_tactics, batch_probs)))
 
-        del tokenized_states
-        del outputs
-        del sequence_scores
-
-        # Periodic KV-cache cleanup
-        self._periodic_cache_cleanup()
+        self._generate_call_count = periodic_cache_cleanup(self._generate_call_count)
 
         return results

@@ -3,6 +3,15 @@ from lean_reinforcement.agent.mcts.mcts_cy.base_mcts_cy cimport Node, BaseMCTS
 import math
 import torch
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
+from lean_reinforcement.utilities.memory import (
+    get_rss_gb,
+    get_available_memory_gb,
+    MCTS_MIN_AVAILABLE_GB,
+    MAX_WORKER_RSS_GB,
+)
+
+# Cap on proof-state string length — same as GuidedRollout.
+cdef int _MAX_EXPAND_STATE_CHARS = 20000
 
 cdef class MCTS_AlphaZero(BaseMCTS):
     cdef public object value_head
@@ -14,7 +23,7 @@ cdef class MCTS_AlphaZero(BaseMCTS):
         transformer,
         config,
         float exploration_weight=1.41421356,
-        int max_tree_nodes=10000,
+        int max_tree_nodes=1000,
         int batch_size=8,
         int num_tactics_to_expand=8,
         int max_rollout_depth=30,
@@ -44,6 +53,8 @@ cdef class MCTS_AlphaZero(BaseMCTS):
             raise TypeError("Cannot expand a node without a TacticState.")
 
         state_str = node.state.pp
+        if len(state_str) > _MAX_EXPAND_STATE_CHARS:
+            return node
 
         if node.encoder_features is None and self.config.use_caching:
             node.encoder_features = self.value_head.encode_states([state_str])
@@ -89,11 +100,14 @@ cdef class MCTS_AlphaZero(BaseMCTS):
 
         for node in nodes:
             if isinstance(node.state, TacticState):
+                state_pp = node.state.pp
+                if len(state_pp) > _MAX_EXPAND_STATE_CHARS:
+                    continue
                 # If caching is on and we don't have features, encode them now.
                 if node.encoder_features is None and self.config.use_caching:
                     # This is suboptimal (batching would be better), but preserves original logic.
-                    node.encoder_features = self.value_head.encode_states([node.state.pp])
-                states.append(node.state.pp)
+                    node.encoder_features = self.value_head.encode_states([state_pp])
+                states.append(state_pp)
                 nodes_to_generate.append(node)
 
         if not states:
@@ -117,10 +131,20 @@ cdef class MCTS_AlphaZero(BaseMCTS):
         for node, tactic, prob in tasks:
             if self._is_timeout():
                 break
+            if get_available_memory_gb() < MCTS_MIN_AVAILABLE_GB:
+                break
+            if get_rss_gb() > (MAX_WORKER_RSS_GB * 0.9):
+                break
             try:
                 next_state = self.env.run_tactic_stateless(node.state, tactic)
             except Exception as e:
                 next_state = LeanError(error=str(e))
+            # Skip child states whose string representation is too large
+            if (
+                isinstance(next_state, TacticState)
+                and len(next_state.pp) > _MAX_EXPAND_STATE_CHARS
+            ):
+                continue
             results.append((node, tactic, prob, next_state))
 
         for node, tactic, prob, next_state in results:
@@ -144,7 +168,7 @@ cdef class MCTS_AlphaZero(BaseMCTS):
         for node in nodes_to_generate:
             node.untried_actions = []
 
-        # Check for immediate proofs - return ProofFinished children for simulation
+        # Return best child for each node, preferring ProofFinished children
         cdef list result_nodes = []
         for node in nodes:
             proof_child = None
@@ -154,6 +178,8 @@ cdef class MCTS_AlphaZero(BaseMCTS):
                     break
             if proof_child is not None:
                 result_nodes.append(proof_child)
+            elif node.children:
+                result_nodes.append(self._get_best_child(node))
             else:
                 result_nodes.append(node)
         return result_nodes

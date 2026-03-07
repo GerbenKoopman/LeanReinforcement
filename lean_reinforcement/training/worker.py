@@ -5,10 +5,11 @@ Worker module for parallel theorem proving.
 from typing import Dict, Any, Optional, Type
 from loguru import logger
 import torch.multiprocessing as mp
-import gc
 import queue
 import os
 import random
+import sys
+import time
 import warnings
 import numpy as np
 import torch
@@ -16,6 +17,20 @@ import torch
 from lean_dojo import DojoInitError
 from ReProver.common import Pos
 
+from lean_reinforcement.utilities.memory import (
+    aggressive_cleanup,
+    configure_glibc_for_workers,
+    get_available_memory_gb,
+    get_rss_gb,
+    install_memory_dump_signal_handler,
+    kill_child_processes,
+    kill_lean_orphans,
+    set_oom_score_adj,
+    start_rss_watchdog,
+    MAX_WORKER_RSS_GB,
+    RSS_WATCHDOG_EXIT_CODE,
+    WORKER_MIN_AVAILABLE_GB,
+)
 from lean_reinforcement.utilities.dataloader import LeanDataLoader
 from lean_reinforcement.utilities.gym import LeanDojoEnv
 from lean_reinforcement.utilities.config import TrainingConfig
@@ -25,7 +40,12 @@ from lean_reinforcement.agent.proxies import (
     QueueProxyTransformer,
     QueueProxyValueHead,
     InferenceTimeoutError,
+    MemoryLimitExceeded,
 )
+
+# Workers use this exit code when they voluntarily recycle themselves
+# due to high RSS.  The trainer recognises it and restarts the worker.
+_RSS_RECYCLE_EXIT_CODE = RSS_WATCHDOG_EXIT_CODE
 
 
 def process_theorem(
@@ -40,11 +60,31 @@ def process_theorem(
     """
     theorem = dataloader.extract_theorem(thm_data)
     if not theorem:
-        return {}
+        logger.error("Failed to extract theorem from data")
+        return {
+            "metrics": {
+                "proof_search/success": False,
+                "proof_search/steps": 0,
+                "proof_search/time": 0.0,
+                "proof_search/extraction_error": True,
+            },
+            "data": [],
+            "theorem_name": "unknown_extraction_failed",
+        }
 
     theorem_pos = Pos(*thm_data["start"])
     if not theorem_pos:
-        return {}
+        logger.error(f"Failed to create position for theorem {theorem.full_name}")
+        return {
+            "metrics": {
+                "proof_search/success": False,
+                "proof_search/steps": 0,
+                "proof_search/time": 0.0,
+                "proof_search/position_error": True,
+            },
+            "data": [],
+            "theorem_name": theorem.full_name,
+        }
 
     try:
         env = LeanDojoEnv(theorem, theorem_pos, args.env_timeout)
@@ -52,14 +92,53 @@ def process_theorem(
         logger.error(
             f"Failed to initialize environment for theorem {theorem.full_name}: {e}"
         )
-        gc.collect()  # Clean up any partially created objects
+        aggressive_cleanup()  # Clean up any partially created objects
         return {}
     except Exception as e:
         logger.error(
             f"Unexpected error initializing environment for theorem {theorem.full_name}: {e}"
         )
-        gc.collect()  # Clean up any partially created objects
-        return {}
+        aggressive_cleanup()  # Clean up any partially created objects
+        return {
+            "metrics": {
+                "proof_search/success": False,
+                "proof_search/steps": 0,
+                "proof_search/time": 0.0,
+                "proof_search/env_init_unexpected_error": True,
+            },
+            "data": [],
+            "theorem_name": theorem.full_name,
+        }
+
+    # --- Mid-theorem RSS check ---
+    # Abort before MCTS search if RSS is already near the ceiling.
+    rss_after_env = get_rss_gb()
+    if rss_after_env > MAX_WORKER_RSS_GB:
+        logger.error(
+            f"RSS {rss_after_env:.1f} GB exceeds hard cap "
+            f"{MAX_WORKER_RSS_GB:.1f} GB after env creation for "
+            f"{theorem.full_name}. Aborting theorem."
+        )
+        try:
+            env.close()
+        except Exception:
+            pass
+        try:
+            kill_child_processes()
+        except Exception:
+            pass
+        del env
+        aggressive_cleanup()
+        return {
+            "metrics": {
+                "proof_search/success": False,
+                "proof_search/steps": 0,
+                "proof_search/time": 0.0,
+                "proof_search/rss_abort": True,
+            },
+            "data": [],
+            "theorem_name": theorem.full_name,
+        }
 
     mcts_class: Type[BaseMCTS]
     mcts_kwargs: Dict[str, Any]
@@ -75,6 +154,7 @@ def process_theorem(
     mcts_kwargs["num_tactics_to_expand"] = args.num_tactics_to_expand
     mcts_kwargs["max_rollout_depth"] = args.max_rollout_depth
     mcts_kwargs["max_time"] = args.max_time
+    mcts_kwargs["max_tree_nodes"] = getattr(args, "max_tree_nodes", 1000)
 
     runner = AgentRunner(
         env=env,
@@ -116,6 +196,21 @@ def process_theorem(
             "data": [],
             "theorem_name": theorem.full_name,
         }
+    except MemoryLimitExceeded as e:
+        logger.error(
+            f"Memory limit exceeded during proof search for theorem "
+            f"{theorem.full_name}: {e}"
+        )
+        return {
+            "metrics": {
+                "proof_search/success": False,
+                "proof_search/steps": 0,
+                "proof_search/time": 0.0,
+                "proof_search/memory_limit_exceeded": True,
+            },
+            "data": [],
+            "theorem_name": theorem.full_name,
+        }
     except Exception as e:
         logger.error(f"Error during proof search for theorem {theorem.full_name}: {e}")
         # Return partial metrics if possible - at minimum we want to track that this failed
@@ -135,9 +230,16 @@ def process_theorem(
             except Exception as e:
                 logger.error(f"Error closing environment: {e}")
 
+        # Kill any orphaned lean/lake processes after env.close().
+        try:
+            kill_child_processes()
+            kill_lean_orphans()
+        except Exception:
+            pass
+
         del runner
         del env
-        gc.collect()
+        aggressive_cleanup()
 
 
 def worker_loop(
@@ -151,12 +253,32 @@ def worker_loop(
     """
     Worker process loop.
     """
+    # --- Optional memray profiling (set LEAN_RL_MEMRAY=1) ---
+    from lean_reinforcement.utilities.memray_profile import (
+        start_memray_tracker,
+        stop_memray_tracker,
+    )
+
+    _memray_tracker = start_memray_tracker(worker_id)
+
+    # --- glibc malloc tuning (must be first) ---
+    configure_glibc_for_workers()
+
+    # --- SIGUSR1 memory diagnostic handler ---
+    install_memory_dump_signal_handler()
+
     # Configure logging for this worker:
     # Remove default stderr handler so worker logs don't interfere
     # with the main process's live progress display, then add a
-    # file-only handler.
+    # file-only handler.  Must happen BEFORE start_rss_watchdog()
+    # so the watchdog's startup logger.info goes to the file, not
+    # to stderr (which clobbers the Rich progress display).
+    os.makedirs("logs", exist_ok=True)
     logger.remove()
     logger.add(f"logs/worker_{worker_id}.log", rotation="10 MB")
+
+    # --- RSS watchdog (daemon thread, checks every 1s) ---
+    start_rss_watchdog(hard_cap_gb=MAX_WORKER_RSS_GB, check_interval=1.0)
 
     # Suppress NVML/accelerator warnings in worker processes
     warnings.filterwarnings("ignore", message="Can't initialize NVML")
@@ -171,12 +293,33 @@ def worker_loop(
 
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
-    # Set high OOM score so the kernel kills workers before the desktop
+    # --- Hard memory limit on the Lean 4 REPL subprocess ---
+    # Patch lean_dojo's TACTIC_MEMORY_LIMIT at runtime since lean_dojo
+    # reads it at import time.
+    lean_mem_gb = getattr(args, "lean_memory_limit_gb", 2)
+    os.environ["TACTIC_MEMORY_LIMIT"] = f"{lean_mem_gb}g"
+    # Patch the already-imported constant so Dojo.__enter__ picks it up
     try:
-        with open(f"/proc/{os.getpid()}/oom_score_adj", "w") as f:
-            f.write("1000")
-    except (PermissionError, OSError):
-        pass
+        import lean_dojo.constants as _ldc
+
+        _ldc.TACTIC_MEMORY_LIMIT = f"{lean_mem_gb}g"
+        # Also patch the dojo module's local reference if it cached it
+        import lean_dojo.interaction.dojo as _ldd
+
+        _ldd.TACTIC_MEMORY_LIMIT = f"{lean_mem_gb}g"
+    except Exception as e:
+        logger.warning(f"Worker {worker_id}: Could not patch TACTIC_MEMORY_LIMIT: {e}")
+    logger.info(
+        f"Worker {worker_id}: Lean REPL memory limit set to {lean_mem_gb} GB "
+        f"(--memory={lean_mem_gb * 1024} MB)"
+    )
+
+    # NOTE: RLIMIT_AS is NOT used — it caps virtual address space (not
+    # RSS) and would break Python/torch/ray mmap usage.  The Lean
+    # --memory flag above is the correct enforcement layer.
+
+    # Set high OOM score so the kernel kills workers before the desktop
+    set_oom_score_adj(1000)
 
     transformer_proxy = QueueProxyTransformer(
         request_queue,
@@ -202,6 +345,10 @@ def worker_loop(
 
     theorems_processed = 0
 
+    # Memory backpressure: pause when system memory is low.
+    MEMORY_BACKOFF_MAX = 30.0
+    MEMORY_BACKOFF_BASE = 2.0
+
     while True:
         try:
             thm_data = theorem_queue.get(timeout=1)
@@ -210,6 +357,39 @@ def worker_loop(
 
         if thm_data is None:
             break
+
+        # --- Per-worker RSS check before new theorem ---
+        rss_gb = get_rss_gb()
+        rss_soft_cap = MAX_WORKER_RSS_GB * 0.75
+        if rss_gb > rss_soft_cap:
+            logger.warning(
+                f"Worker {worker_id}: RSS {rss_gb:.1f} GB exceeds "
+                f"soft cap {rss_soft_cap:.1f} GB before new theorem. "
+                f"Attempting cleanup."
+            )
+            aggressive_cleanup()
+            rss_gb = get_rss_gb()
+            if rss_gb > rss_soft_cap:
+                logger.error(
+                    f"Worker {worker_id}: RSS still {rss_gb:.1f} GB "
+                    f"after cleanup. Recycling worker."
+                )
+                sys.exit(_RSS_RECYCLE_EXIT_CODE)
+
+        # --- System memory backpressure ---
+        backoff = MEMORY_BACKOFF_BASE
+        avail_gb = get_available_memory_gb()
+        while avail_gb < WORKER_MIN_AVAILABLE_GB:
+            logger.warning(
+                f"Worker {worker_id}: Low system memory "
+                f"({avail_gb:.1f} GB available, "
+                f"need {WORKER_MIN_AVAILABLE_GB:.0f} GB). "
+                f"Waiting {backoff:.0f}s before starting next theorem."
+            )
+            aggressive_cleanup()
+            time.sleep(backoff)
+            backoff = min(backoff * 1.5, MEMORY_BACKOFF_MAX)
+            avail_gb = get_available_memory_gb()
 
         # Process theorem
         data = process_theorem(
@@ -223,8 +403,43 @@ def worker_loop(
         # Send result back
         result_queue.put(data)
 
-        # Force garbage collection every 4 theorems to prevent memory accumulation
+        rss_soft_cap_gb = MAX_WORKER_RSS_GB * 0.9
+        rss_after_theorem_gb = get_rss_gb()
+        if rss_after_theorem_gb > rss_soft_cap_gb:
+            logger.warning(
+                f"Worker {worker_id}: RSS {rss_after_theorem_gb:.1f} GB exceeds "
+                f"soft cap {rss_soft_cap_gb:.1f} GB after theorem. "
+                "Attempting cleanup and worker recycle if still high."
+            )
+            aggressive_cleanup()
+            rss_post_cleanup_gb = get_rss_gb()
+            if rss_post_cleanup_gb > rss_soft_cap_gb:
+                logger.error(
+                    f"Worker {worker_id}: RSS still high at {rss_post_cleanup_gb:.1f} GB "
+                    "after cleanup. Exiting worker to prevent runaway memory growth."
+                )
+                sys.exit(_RSS_RECYCLE_EXIT_CODE)
+
+        # gc + malloc_trim after every theorem to prevent RSS creep.
         theorems_processed += 1
-        if theorems_processed % 4 == 0:
-            del data
-            gc.collect()
+        del data
+        aggressive_cleanup()
+
+    # Cleanup when worker exits
+    logger.info(
+        f"Worker {worker_id} shutting down after processing {theorems_processed} theorems"
+    )
+
+    # Clean up dataloader and other resources
+    del dataloader
+    del transformer_proxy
+    if value_head_proxy is not None:
+        del value_head_proxy
+
+    # Stop memray profiling (flushes the .bin file)
+    stop_memray_tracker(_memray_tracker)
+
+    # Final aggressive cleanup before exit
+    aggressive_cleanup()
+
+    logger.info(f"Worker {worker_id} cleanup complete")

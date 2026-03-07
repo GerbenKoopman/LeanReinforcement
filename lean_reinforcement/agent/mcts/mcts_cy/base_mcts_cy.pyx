@@ -1,15 +1,35 @@
 from libc.math cimport sqrt
+import gc
+import heapq
 import math
+import os
 import time
 import torch
 from typing import List, Optional, Dict
 from loguru import logger
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
+from lean_reinforcement.utilities.memory import (
+    malloc_trim,
+    empty_gpu_cache,
+    get_rss_gb,
+    get_available_memory_gb,
+    log_gpu_memory,
+    MCTS_MIN_AVAILABLE_GB,
+    MAX_WORKER_RSS_GB,
+)
+
+
+# Nodes with at least this many visits are protected from pruning.
+cdef int _MIN_VISITS_TO_PROTECT = 4
+cdef int _MAX_STATE_KEY_CHARS = 100000
+cdef int _MIN_MAX_UNIQUE_STATES = 5000
 
 cdef class Node:
 
     def __init__(self, state, Node parent=None, action=None):
         self.state = state
+        # Cache pretty-print string for fast dedup lookups
+        self._pp = state.pp if isinstance(state, TacticState) else None
         # Support multiple parents for DAG structure
         # Each entry is (parent_node, action_that_led_here)
         self.parents = []
@@ -23,6 +43,7 @@ cdef class Node:
         self.is_terminal = isinstance(state, (ProofFinished, LeanError, ProofGivenUp))
         self.untried_actions = None
         self.encoder_features = None
+        self.depth = (parent.depth + 1) if parent is not None else 0
 
     cpdef void add_parent(self, Node parent, object action=None):
         """Add an additional parent to this node (for DAG structure)."""
@@ -52,6 +73,10 @@ cdef class Node:
     cpdef bint is_fully_expanded(self):
         return self.untried_actions is not None and len(self.untried_actions) == 0
 
+    cpdef void release_encoder_features(self):
+        """Free the (potentially large) encoder features tensor."""
+        self.encoder_features = None
+
 cdef class BaseMCTS:
 
     def __init__(
@@ -60,7 +85,7 @@ cdef class BaseMCTS:
         transformer,
         config,
         float exploration_weight=1.41421356,
-        int max_tree_nodes=10000,
+        int max_tree_nodes=1000,
         int batch_size=8,
         int num_tactics_to_expand=8,
         int max_rollout_depth=30,
@@ -116,6 +141,8 @@ cdef class BaseMCTS:
     cpdef object _get_state_key(self, object state):
         """Get a hashable key for a state for deduplication purposes."""
         if isinstance(state, TacticState):
+            if len(state.pp) > _MAX_STATE_KEY_CHARS:
+                return None
             return state.pp
         return None
 
@@ -124,6 +151,14 @@ cdef class BaseMCTS:
         cdef Node child
         cdef Node existing_node
         cdef object state_key = self._get_state_key(next_state)
+        cdef int max_unique_states = max(self.max_tree_nodes * 2, _MIN_MAX_UNIQUE_STATES)
+
+        if (
+            state_key is not None
+            and state_key not in self.seen_states
+            and len(self.seen_states) >= max_unique_states
+        ):
+            return parent_node
 
         if state_key is not None and state_key in self.seen_states:
             existing_node = self.seen_states[state_key]
@@ -141,14 +176,6 @@ cdef class BaseMCTS:
             self.seen_states[state_key] = child
         
         return child
-
-    def _log_gpu_memory(self):
-        if torch.cuda.is_available():
-            allocated = torch.cuda.memory_allocated() / 1024**3
-            reserved = torch.cuda.memory_reserved() / 1024**3
-            logger.debug(
-                f"GPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved"
-            )
 
     def search(self, int num_iterations, batch_size=None, max_time=None):
         cdef int iteration
@@ -174,13 +201,21 @@ cdef class BaseMCTS:
         start_time = time.time()
         self._search_deadline = start_time + effective_max_time
 
+        # --- Search start ---
+        cdef int _pid = os.getpid()
+        cdef float _search_start_rss = get_rss_gb()
+        logger.info(
+            f"[MCTS] search() START pid={_pid} "
+            f"rss={_search_start_rss:.2f}GB "
+            f"iters={num_iterations} batch={b_size} "
+            f"max_time={effective_max_time:.0f}s"
+        )
+
         with torch.no_grad():
+            batch_count = 0
             for iteration in range(0, num_iterations, b_size):
                 # Check time limit
                 if self._is_timeout():
-                    break
-
-                if self.node_count >= self.max_tree_nodes:
                     break
 
                 current_batch_size = min(b_size, num_iterations - iteration)
@@ -223,14 +258,22 @@ cdef class BaseMCTS:
                             self._remove_virtual_loss(leaf)
                     continue
 
+                _t_expand = time.time()
                 expanded_nodes = self._expand_batch(leaves)
                 
                 if self._is_timeout():
                     for leaf in leaves:
                         self._remove_virtual_loss(leaf)
                     break
-                    
+
                 rewards = self._simulate_batch(expanded_nodes)
+
+                # Reclaim memory after heavy simulate phase
+                # (rollouts create many temporary TacticState / Goal objects
+                #  that may linger in glibc arenas or pymalloc pools)
+                if batch_count % 4 == 0:
+                    gc.collect()
+                    malloc_trim()
 
                 for i in range(len(leaves)):
                     leaf = leaves[i]
@@ -239,17 +282,62 @@ cdef class BaseMCTS:
                     reward = rewards[i]
                     self._backpropagate(child, reward)
 
+                    # Free encoder features after backprop
+                    child.release_encoder_features()
+
                     if reward == 1.0:
                         return
 
-                if torch.cuda.is_available() and iteration % 20 == 0 and iteration > 0:
-                    torch.cuda.empty_cache()
+                # Continuously prune excess nodes
+                if self.node_count > self.max_tree_nodes:
+                    self._prune_to_budget()
+
+                if torch.cuda.is_available() and batch_count % 5 == 0 and batch_count > 0:
+                    empty_gpu_cache()
+
+                # --- OOM prevention checks (every 4th batch) ---
+                if batch_count % 4 == 0:
+                    rss_gb = get_rss_gb()
+                    avail_gb = get_available_memory_gb()
+                    if avail_gb < MCTS_MIN_AVAILABLE_GB:
+                        logger.warning(
+                            f"[MCTS] System memory critically low "
+                            f"({avail_gb:.1f} GB available). "
+                            f"Aborting search. pid={_pid}"
+                        )
+                        break
+                    if rss_gb > (MAX_WORKER_RSS_GB * 0.9):
+                        logger.warning(
+                            f"[MCTS] RSS ({rss_gb:.1f} GB) near cap "
+                            f"({MAX_WORKER_RSS_GB:.1f} GB). "
+                            f"Aborting search. pid={_pid}"
+                        )
+                        break
+
+                batch_count += 1
+
+        # --- Search end ---
+        cdef float _end_rss = get_rss_gb()
+        cdef float _end_elapsed = time.time() - start_time
+        logger.info(
+            f"[MCTS] search() END pid={_pid} "
+            f"rss={_end_rss:.2f}GB (start={_search_start_rss:.2f}GB "
+            f"delta={_end_rss - _search_start_rss:+.2f}GB) "
+            f"elapsed={_end_elapsed:.0f}s iters_done={iteration + current_batch_size} "
+            f"nodes={self.node_count}"
+        )
 
     cpdef Node _select(self, Node node):
         cdef Node current = node
+        cdef set visited = set()
+        cdef object nid
         while not current.is_terminal and current.is_fully_expanded():
             if not current.children:
                 return current
+            nid = id(current)
+            if nid in visited:
+                return current  # cycle detected — treat as leaf
+            visited.add(nid)
             current = self._get_best_child(current)
         return current
 
@@ -454,19 +542,131 @@ cdef class BaseMCTS:
             if isinstance(self.env.current_state, TacticState):
                 self.seen_states[self.env.current_state.pp] = self.root
 
-    cpdef int _count_nodes(self, Node node):
-        cdef int count = 1
+    cpdef int _count_nodes(self, Node node, set _visited=None):
+        cdef int count
         cdef Node child
+        cdef object nid
+        if _visited is None:
+            _visited = set()
+        nid = id(node)
+        if nid in _visited:
+            return 0
+        _visited.add(nid)
+        count = 1
         for child in node.children:
-            count += self._count_nodes(child)
+            count += self._count_nodes(child, _visited)
         return count
 
-    cpdef void _rebuild_seen_states(self, Node node):
-        """Recursively rebuild seen_states dictionary from a subtree."""
-        cdef object state_key
+    cpdef void _rebuild_seen_states(self, Node node, set _visited=None):
+        """Recursively rebuild seen_states dictionary from a subtree.
+
+        Uses a visited set to handle DAG dedup cycles.
+        """
         cdef Node child
-        state_key = self._get_state_key(node.state)
-        if state_key is not None:
-            self.seen_states[state_key] = node
+        cdef object nid
+        if _visited is None:
+            _visited = set()
+        nid = id(node)
+        if nid in _visited:
+            return
+        _visited.add(nid)
+
+        if node._pp is not None:
+            self.seen_states[node._pp] = node
         for child in node.children:
-            self._rebuild_seen_states(child)
+            self._rebuild_seen_states(child, _visited)
+
+    cpdef float _pruning_score(self, Node node):
+        """Compute composite pruning score (lower = pruned first).
+
+        Zero-visit speculative leaves score lowest.  Well-visited nodes
+        (>= _MIN_VISITS_TO_PROTECT) get a large bonus and are protected.
+        """
+        cdef int v = node.visit_count
+        cdef float mv = node.max_value if node.max_value > -1e8 else 0.0
+
+        if v >= _MIN_VISITS_TO_PROTECT:
+            return v * 1000.0 + mv * 100.0 - node.depth
+        return v * 10.0 + max(mv, 0.0) * 5.0 - node.depth
+
+    cpdef void _prune_to_budget(self):
+        """Evict lowest-scored leaf nodes until tree fits within budget."""
+        if self.node_count <= self.max_tree_nodes:
+            return
+
+        cdef int target = int(self.max_tree_nodes * 0.75)
+        cdef int pruned = 0
+        cdef Node leaf, parent, grandparent
+        cdef float score, p_score
+        cdef object key
+
+        # Build min-heap of pruneable leaves
+        heap = []
+        self._collect_pruneable_leaves_cy(self.root, heap)
+        heapq.heapify(heap)
+
+        while heap and self.node_count > target:
+            _score, _nid, leaf, parent = heapq.heappop(heap)
+
+            if leaf.children or leaf not in parent.children:
+                continue
+
+            parent.children.remove(leaf)
+            key = leaf._pp
+            if key and key in self.seen_states and self.seen_states[key] is leaf:
+                del self.seen_states[key]
+
+            leaf.parents.clear()
+            leaf.encoder_features = None
+            leaf.state = None  # free TacticState / Lean state_id
+            self.node_count -= 1
+            pruned += 1
+
+            if (
+                not parent.children
+                and parent is not self.root
+                and parent.max_value != 1.0
+            ):
+                grandparent = parent.get_parent()
+                if grandparent is not None:
+                    p_score = self._pruning_score(parent)
+                    heapq.heappush(heap, (p_score, id(parent), parent, grandparent))
+
+        if pruned > 0:
+            # Keep pruning on the fast path: only rebuild occasionally when
+            # the dict has grown far beyond the live node count.
+            if len(self.seen_states) > (self.node_count * 3):
+                self.seen_states = {}
+                self._rebuild_seen_states(self.root)
+            # Force glibc to release freed arena pages immediately.
+            # Without this, the arena VMA grows monotonically because
+            # glibc doesn't return pages until malloc_trim is called.
+            malloc_trim()
+            logger.debug(
+                f"Pruned {pruned} leaf nodes "
+                f"({self.node_count} nodes remaining)"
+            )
+
+    def _collect_pruneable_leaves_cy(self, Node node, list heap, set _visited=None):
+        """Recursively collect leaf nodes eligible for pruning."""
+        cdef Node child, parent
+        cdef float score
+        cdef object nid
+
+        if _visited is None:
+            _visited = set()
+        nid = id(node)
+        if nid in _visited:
+            return
+        _visited.add(nid)
+
+        if not node.children:
+            if node is not self.root and node.max_value != 1.0:
+                parent = node.get_parent()
+                if parent is not None:
+                    score = self._pruning_score(node)
+                    heap.append((score, id(node), node, parent))
+            return
+
+        for child in node.children:
+            self._collect_pruneable_leaves_cy(child, heap, _visited)

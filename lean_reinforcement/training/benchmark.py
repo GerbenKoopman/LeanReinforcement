@@ -18,7 +18,6 @@ import time
 import json
 import random
 import argparse
-import gc
 from pathlib import Path
 from dataclasses import dataclass, asdict
 from typing import Dict, List, Any, Optional
@@ -32,6 +31,7 @@ from lean_reinforcement.agent.transformer import Transformer
 from lean_reinforcement.utilities.dataloader import LeanDataLoader
 from ReProver.common import Corpus
 from lean_reinforcement.utilities.config import TrainingConfig
+from lean_reinforcement.utilities.memory import aggressive_cleanup, empty_gpu_cache
 from lean_reinforcement.training.trainer import Trainer
 
 
@@ -361,9 +361,9 @@ class ProofBenchmark:
             results[profile] = result
 
             # Cleanup between profiles
-            gc.collect()
+            aggressive_cleanup()
             if torch.cuda.is_available():
-                torch.cuda.empty_cache()
+                empty_gpu_cache()
 
         self._print_comparison(results)
         return results

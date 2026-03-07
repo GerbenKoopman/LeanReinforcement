@@ -44,9 +44,9 @@ class HyperparameterConfig:
     """Configuration for a single hyperparameter search trial."""
 
     # Core search parameters (most impactful)
-    num_workers: int = 10
-    batch_size: int = 16
-    num_tactics_to_expand: int = 12
+    num_workers: int = 1
+    batch_size: int = 4
+    num_tactics_to_expand: int = 8
     num_iterations: int = 100
 
     # Timeout parameters (all in seconds)
@@ -157,9 +157,9 @@ class TrialResult:
 # NOTE: For hyperparameter search, we use shorter timeouts than production
 # to allow faster iteration. Production runs can use longer timeouts.
 LAPTOP_DEFAULTS = HyperparameterConfig(
-    num_workers=10,  # Avoid thermal throttling
-    batch_size=16,  # Saturate RTX 4060
-    num_tactics_to_expand=12,  # Reduce Lean executions
+    num_workers=1,  # Single-worker baseline
+    batch_size=4,  # Conservative single-worker inference for local hardware
+    num_tactics_to_expand=8,  # Balanced expansion for 1 worker
     num_iterations=100,  # Minimum viable for AlphaZero
     max_time=120.0,  # 2 minutes per MCTS step (reduced for search)
     max_steps=40,  # Reasonable depth
@@ -228,16 +228,16 @@ LAPTOP_PARAMETER_RANGES: List[ParameterRange] = [
     # === TIER 1: Resource/Capacity Parameters (no dependencies) ===
     ParameterRange(
         name="num_workers",
-        min_val=4,
-        max_val=16,
+        min_val=1,
+        max_val=4,
         is_integer=True,
         description="Number of parallel Lean workers",
         depends_on=[],
     ),
     ParameterRange(
         name="batch_size",
-        min_val=4,
-        max_val=32,
+        min_val=2,
+        max_val=16,
         is_integer=True,
         description="Inference batch size for GPU",
         depends_on=[],
@@ -246,7 +246,7 @@ LAPTOP_PARAMETER_RANGES: List[ParameterRange] = [
     ParameterRange(
         name="num_tactics_to_expand",
         min_val=4,
-        max_val=24,
+        max_val=16,
         is_integer=True,
         description="Tactics expanded per MCTS node",
         depends_on=["batch_size"],  # Should be <= batch_size for efficiency

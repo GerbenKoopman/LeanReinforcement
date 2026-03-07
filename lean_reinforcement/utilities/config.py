@@ -44,11 +44,16 @@ class TrainingConfig:
     model_name: str = "kaiyuy/leandojo-lean4-tacgen-byt5-small"
     num_tactics_to_expand: int = 32
     max_rollout_depth: int = 30
+    use_onnx: bool = False  # Use ONNX Runtime for faster inference (requires optimum)
 
     # Search mode
     full_search: bool = (
         True  # Run MCTS from root with full budget (allows backtracking)
     )
+
+    # Max MCTS tree nodes — limits per-worker memory.
+    # The PUCT-based pruner evicts worst-scored leaves at this limit.
+    max_tree_nodes: int = 1000
 
     # Timeout parameters (all in seconds)
     # Note: These form a hierarchy - each level should be larger than the one below
@@ -56,6 +61,11 @@ class TrainingConfig:
     max_time: float = 300.0  # Max time per MCTS search step
     env_timeout: int = 180  # Max time per tactic execution
     proof_timeout: float = 1200.0  # Max time for entire proof search
+
+    # Hard memory limit (GiB) for each Lean 4 REPL subprocess.
+    # Passed as --memory to the Lean runtime; exceeding it produces a
+    # catchable DojoCrashError instead of triggering the OOM killer.
+    lean_memory_limit_gb: int = 4
 
     @classmethod
     def from_args(cls, args: argparse.Namespace) -> "TrainingConfig":
@@ -72,6 +82,7 @@ class TrainingConfig:
             model_name=args.model_name,
             num_tactics_to_expand=args.num_tactics_to_expand,
             max_rollout_depth=args.max_rollout_depth,
+            use_onnx=getattr(args, "use_onnx", False),
             max_time=args.max_time,
             env_timeout=args.env_timeout,
             proof_timeout=args.proof_timeout,
@@ -89,7 +100,9 @@ class TrainingConfig:
             checkpoint_dir=args.checkpoint_dir,
             use_wandb=args.use_wandb,
             inference_timeout=args.inference_timeout,
-            full_search=args.full_search,
+            full_search=getattr(args, "full_search", True),
+            max_tree_nodes=getattr(args, "max_tree_nodes", 1000),
+            lean_memory_limit_gb=getattr(args, "lean_memory_limit_gb", 4),
         )
 
 
@@ -132,13 +145,13 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--batch-size",
         type=int,
-        default=8,
+        default=16,
         help="Batch size for MCTS search.",
     )
     parser.add_argument(
         "--num-workers",
         type=int,
-        default=16,
+        default=1,
         help="Number of parallel workers for processing theorems.",
     )
     parser.add_argument(
@@ -163,7 +176,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--num-tactics-to-expand",
         type=int,
-        default=32,
+        default=16,
         help="Number of tactics to expand in MCTS.",
     )
     parser.add_argument(
@@ -171,6 +184,18 @@ def get_config() -> TrainingConfig:
         type=int,
         default=30,
         help="Max depth for MCTS rollout.",
+    )
+    parser.add_argument(
+        "--max-tree-nodes",
+        type=int,
+        default=1000,
+        help="Maximum number of nodes kept in the MCTS tree.",
+    )
+    parser.add_argument(
+        "--use-onnx",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Use ONNX Runtime for inference (requires: pip install optimum onnxruntime-gpu).",
     )
     parser.add_argument(
         "--max-time",
@@ -189,6 +214,15 @@ def get_config() -> TrainingConfig:
         type=float,
         default=1200.0,
         help="Max time (seconds) for entire proof search per theorem. Should be > max-time.",
+    )
+    parser.add_argument(
+        "--lean-memory-limit-gb",
+        type=int,
+        default=4,
+        help="Hard memory limit (GiB) for each Lean 4 REPL subprocess. "
+        "Passed as --memory to the Lean runtime. When exceeded, Lean "
+        "exits cleanly instead of triggering the OS OOM killer. "
+        "Rule of thumb: total_ram / (num_workers + 2). Default: 4.",
     )
 
     # --- Search mode ---
@@ -341,11 +375,7 @@ def _apply_gpu_params(
 
 
 def _warn_worker_memory(args: argparse.Namespace) -> None:
-    """Warn the user if the requested worker count risks OOM on this machine.
-
-    Each LeanDojo worker process typically uses 2-3 GB of RAM.  We estimate
-    the safe headroom and print a warning if the configuration looks risky.
-    """
+    """Warn if the requested worker count risks OOM on this machine."""
     try:
         import psutil
 
@@ -354,9 +384,9 @@ def _warn_worker_memory(args: argparse.Namespace) -> None:
         # psutil not available – can't check
         return
 
-    # Reserve ~6 GB for the OS, desktop environment, and the main process
-    reserved_gb = 6.0
-    per_worker_gb = 2.5  # conservative estimate per LeanDojo worker
+    # ~10 GB reserved for OS/desktop/model; ~3 GB per worker (Python + Lean).
+    reserved_gb = 10.0
+    per_worker_gb = 3.0
     safe_workers = max(1, int((total_gb - reserved_gb) / per_worker_gb))
 
     if args.num_workers > safe_workers:

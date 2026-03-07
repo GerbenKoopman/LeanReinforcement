@@ -7,7 +7,13 @@ from loguru import logger
 import torch
 import torch.multiprocessing as mp
 import queue
-import gc
+
+from lean_reinforcement.utilities.memory import (
+    aggressive_cleanup,
+    empty_gpu_cache,
+    get_gpu_memory_usage_percent,
+    GPU_CLEANUP_THRESHOLD_PERCENT,
+)
 
 Request = Tuple[int, str, Tuple[Any, ...]]
 
@@ -37,9 +43,8 @@ class InferenceServer:
         self._batches_since_last_oom += 1
         # Clean up every 5 batches to prevent memory fragmentation
         if self._batch_count % 5 == 0:
-            gc.collect()
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
+            aggressive_cleanup()
+            empty_gpu_cache()
 
         # Periodically try to recover batch size (every 50 successful batches)
         if (
@@ -59,19 +64,19 @@ class InferenceServer:
         if not torch.cuda.is_available():
             return True
 
-        allocated = torch.cuda.memory_allocated()
-        reserved = torch.cuda.memory_reserved()
-        total = torch.cuda.get_device_properties(0).total_memory
+        usage_pct = get_gpu_memory_usage_percent()
 
-        # If using more than 80% of total memory, force cleanup
-        if allocated > 0.8 * total:
+        if usage_pct > GPU_CLEANUP_THRESHOLD_PERCENT:
+            allocated = torch.cuda.memory_allocated()
+            reserved = torch.cuda.memory_reserved()
+            total = torch.cuda.get_device_properties(0).total_memory
             logger.warning(
                 f"GPU memory high ({allocated / 1e9:.1f}GB allocated, "
                 f"{reserved / 1e9:.1f}GB reserved / {total / 1e9:.1f}GB total). "
                 "Forcing cleanup..."
             )
-            gc.collect()
-            torch.cuda.empty_cache()
+            aggressive_cleanup()
+            empty_gpu_cache()
 
             # Reduce batch size more aggressively
             if self.max_safe_batch_size > 1:
@@ -196,8 +201,8 @@ class InferenceServer:
         except torch.cuda.OutOfMemoryError:
             pass
 
-        gc.collect()
-        torch.cuda.empty_cache()
+        aggressive_cleanup()
+        empty_gpu_cache()
 
         new_limit = len(states) // 2
         if new_limit < 1:
@@ -219,6 +224,23 @@ class InferenceServer:
         return left + right
 
     def _execute_batch(self, req_type: str, batch: List[Any], indices: List[int]):
+        try:
+            self._execute_batch_inner(req_type, batch, indices)
+        except Exception as exc:
+            # CRITICAL: On any failure, send fallback responses to ALL
+            # workers in this batch.  Without this, workers hang forever
+            # on response_queue.get() because no response is ever sent.
+            logger.error(
+                f"Inference failed for {req_type} " f"(workers {indices}): {exc}"
+            )
+            for idx in indices:
+                try:
+                    # Send an empty list — proxy asserts isinstance(result, list)
+                    self.response_queues[idx].put([])
+                except Exception:
+                    pass
+
+    def _execute_batch_inner(self, req_type: str, batch: List[Any], indices: List[int]):
         execution_results: List[Any] = []
 
         if req_type == "generate_tactics_with_probs":
@@ -307,8 +329,8 @@ class InferenceServer:
                     try:
                         all_results.extend(self.value_head.predict_batch(chunk))
                     except torch.cuda.OutOfMemoryError:
-                        gc.collect()
-                        torch.cuda.empty_cache()
+                        aggressive_cleanup()
+                        empty_gpu_cache()
                         new_limit = len(chunk) // 2
                         if new_limit < self.max_safe_batch_size:
                             self.max_safe_batch_size = max(1, new_limit)
@@ -348,8 +370,8 @@ class InferenceServer:
                         chunk_features = self.value_head.encode_states(chunk)
                         all_features.append(chunk_features.cpu())
                     except torch.cuda.OutOfMemoryError:
-                        gc.collect()
-                        torch.cuda.empty_cache()
+                        aggressive_cleanup()
+                        empty_gpu_cache()
                         new_limit = len(chunk) // 2
                         if new_limit < self.max_safe_batch_size:
                             self.max_safe_batch_size = max(1, new_limit)

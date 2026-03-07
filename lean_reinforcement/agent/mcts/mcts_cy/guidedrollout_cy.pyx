@@ -1,7 +1,23 @@
 from libc.math cimport sqrt
 from lean_reinforcement.agent.mcts.mcts_cy.base_mcts_cy cimport Node, BaseMCTS
 import math
+import os
+from loguru import logger
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
+from lean_reinforcement.utilities.memory import (
+    get_rss_gb,
+    get_available_memory_gb,
+    MCTS_MIN_AVAILABLE_GB,
+    MAX_WORKER_RSS_GB,
+)
+
+cdef int _MAX_ROLLOUT_STATE_CHARS = 20000
+
+# Shorten rollouts for large states to limit per-batch memory.
+cdef int _LARGE_STATE_CHARS = 5000
+cdef int _LARGE_STATE_MAX_DEPTH = 15
+cdef int _VERY_LARGE_STATE_CHARS = 10000
+cdef int _VERY_LARGE_STATE_MAX_DEPTH = 8
 
 cdef class MCTS_GuidedRollout(BaseMCTS):
 
@@ -11,7 +27,7 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
         transformer,
         config,
         float exploration_weight=1.41421356,
-        int max_tree_nodes=10000,
+        int max_tree_nodes=1000,
         int batch_size=8,
         int num_tactics_to_expand=8,
         int max_rollout_depth=30,
@@ -39,6 +55,8 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
             raise TypeError("Cannot expand a node without a TacticState.")
 
         state_str = node.state.pp
+        if len(state_str) > _MAX_ROLLOUT_STATE_CHARS:
+            return node
 
         tactics_with_probs = self.transformer.generate_tactics_with_probs(
             state_str, n=self.num_tactics_to_expand
@@ -74,7 +92,10 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
 
         for node in nodes:
             if isinstance(node.state, TacticState):
-                states.append(node.state.pp)
+                state_pp = node.state.pp
+                if len(state_pp) > _MAX_ROLLOUT_STATE_CHARS:
+                    continue
+                states.append(state_pp)
                 nodes_to_generate.append(node)
 
         if not states:
@@ -101,6 +122,10 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
         for node, tactic, prob in tasks:
             # Check timeout before each Lean call
             if self._is_timeout():
+                break
+            if get_available_memory_gb() < MCTS_MIN_AVAILABLE_GB:
+                break
+            if get_rss_gb() > (MAX_WORKER_RSS_GB * 0.9):
                 break
             next_state = self.env.run_tactic_stateless(node.state, tactic)
             results.append((node, tactic, prob, next_state))
@@ -135,6 +160,7 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
         cdef str state_str
         cdef str tactic
         cdef object result
+        cdef float rss_soft_cap = MAX_WORKER_RSS_GB * 0.9
 
         # Check timeout at start of simulation
         if self._is_timeout():
@@ -152,12 +178,30 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
         current_state = node.state
         sim_env = self.env
 
-        for step_idx in range(self.max_rollout_depth):
+        # Dynamic depth: reduce rollout depth for large states to limit
+        # temporary string allocations that cause RSS growth.
+        cdef int effective_depth = self.max_rollout_depth
+        cdef int state_len = len(current_state.pp)
+        if state_len > _VERY_LARGE_STATE_CHARS:
+            effective_depth = min(effective_depth, _VERY_LARGE_STATE_MAX_DEPTH)
+        elif state_len > _LARGE_STATE_CHARS:
+            effective_depth = min(effective_depth, _LARGE_STATE_MAX_DEPTH)
+
+        for step_idx in range(effective_depth):
             # Check timeout at each rollout step
             if self._is_timeout():
                 return 0.0  # Neutral reward on timeout
+
+            # Abort rollout if memory is critically low (check every 5 steps)
+            if step_idx % 5 == 0:
+                if get_available_memory_gb() < MCTS_MIN_AVAILABLE_GB:
+                    return 0.0
+                if get_rss_gb() > rss_soft_cap:
+                    return 0.0
                 
             state_str = current_state.pp
+            if len(state_str) > _MAX_ROLLOUT_STATE_CHARS:
+                return 0.0
 
             # Generate multiple tactics for robustness (try first successful one)
             tactics = self.transformer.generate_tactics(state_str, n=3)
@@ -180,6 +224,10 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
                     return 1.0 - 0.01 * (step_idx + 1)
 
                 if isinstance(result, TacticState) and next_state is None:
+                    # Skip states whose string representation is too
+                    # large — they bloat RSS and are rarely useful.
+                    if len(result.pp) > _MAX_ROLLOUT_STATE_CHARS:
+                        continue
                     next_state = result
 
             if next_state is None:
@@ -190,4 +238,14 @@ cdef class MCTS_GuidedRollout(BaseMCTS):
         return 0.0
 
     cpdef list _simulate_batch(self, list nodes):
-        return [self._simulate(node) for node in nodes]
+        cdef list results = []
+        cdef float rss_soft_cap = MAX_WORKER_RSS_GB * 0.9
+        cdef Node node
+
+        for node in nodes:
+            # Abort remaining simulations when RSS budget is blown
+            if get_rss_gb() > rss_soft_cap:
+                results.append(0.0)
+                continue
+            results.append(self._simulate(node))
+        return results

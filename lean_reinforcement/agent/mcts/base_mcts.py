@@ -3,6 +3,7 @@ Implementations of MCTS algorithms. Guided-Rollout MCTS does greedy rollout for
 simulation, AlphaZero MCTS calls a trained value network for evaluation.
 """
 
+import heapq
 import math
 import torch
 from typing import List, Optional, Dict
@@ -14,6 +15,18 @@ from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 from lean_reinforcement.utilities.gym import LeanDojoEnv
 from lean_reinforcement.agent.transformer import TransformerProtocol
 from lean_reinforcement.utilities.config import TrainingConfig
+from lean_reinforcement.utilities.memory import (
+    aggressive_cleanup,
+    empty_gpu_cache,
+    get_rss_gb,
+    get_available_memory_gb,
+    MCTS_MIN_AVAILABLE_GB,
+    MAX_WORKER_RSS_GB,
+)
+
+# Nodes with at least this many visits are protected from pruning.
+_MIN_VISITS_TO_PROTECT = 4
+_MAX_STATE_KEY_CHARS = 100_000
 
 
 class Node:
@@ -21,7 +34,25 @@ class Node:
     A node in the Monte Carlo Tree Search.
     Holds state, statistics, and child nodes.
     Supports DAG structure with multiple parents for state deduplication.
+
+    Uses ``__slots__`` to reduce per-instance memory overhead (~100 bytes
+    saved per node).  With thousands of nodes this adds up.
     """
+
+    __slots__ = (
+        "state",
+        "_pp",
+        "parents",
+        "action",
+        "prior_p",
+        "children",
+        "visit_count",
+        "max_value",
+        "is_terminal",
+        "untried_actions",
+        "encoder_features",
+        "depth",
+    )
 
     def __init__(
         self,
@@ -29,7 +60,11 @@ class Node:
         parent: Optional["Node"] = None,
         action: Optional[str] = None,
     ):
-        self.state = state
+        self.state: TacticState | ProofFinished | LeanError | ProofGivenUp | None = (
+            state
+        )
+        # Cache the pretty-printed string for fast lookups / dedup.
+        self._pp: Optional[str] = state.pp if isinstance(state, TacticState) else None
         # Support multiple parents for DAG structure
         # Each entry is (parent_node, action_that_led_here)
         self.parents: List[tuple["Node", Optional[str]]] = []
@@ -48,6 +83,10 @@ class Node:
         self.untried_actions: Optional[List[str]] = None
 
         self.encoder_features: Optional[torch.Tensor] = None
+
+        # Depth from the root — used during pruning to prefer keeping
+        # shallow nodes (closer to the root) and pruning deep dead ends.
+        self.depth: int = (parent.depth + 1) if parent is not None else 0
 
     def add_parent(self, parent: "Node", action: Optional[str] = None) -> None:
         """Add an additional parent to this node (for DAG structure)."""
@@ -71,6 +110,10 @@ class Node:
         """Checks if all promising actions from this node have been expanded."""
         return self.untried_actions is not None and len(self.untried_actions) == 0
 
+    def release_encoder_features(self) -> None:
+        """Free the (potentially large) encoder features tensor."""
+        self.encoder_features = None
+
 
 class BaseMCTS:
     """
@@ -84,7 +127,7 @@ class BaseMCTS:
         transformer: TransformerProtocol,
         config: TrainingConfig,
         exploration_weight: float = math.sqrt(2),
-        max_tree_nodes: int = 10000,
+        max_tree_nodes: int = 1000,
         batch_size: int = 8,
         num_tactics_to_expand: int = 8,
         max_rollout_depth: int = 30,
@@ -133,8 +176,132 @@ class BaseMCTS:
         are not deduplicated.
         """
         if isinstance(state, TacticState):
-            return str(state.pp)
+            key = str(state.pp)
+            if len(key) > _MAX_STATE_KEY_CHARS:
+                return None
+            return key
         return None
+
+    # ------------------------------------------------------------------
+    # Bounded tree pruning — visit-count aware
+    # ------------------------------------------------------------------
+
+    def _pruning_score(self, node: Node) -> float:
+        """Compute a composite score for pruning decisions.
+
+        **Lower** score  →  pruned first.  The score is designed so that:
+
+        1. Zero-visit (speculative) leaves are the cheapest to prune.
+        2. Among zero-visit nodes, deeper ones are pruned before shallow.
+        3. Nodes with ``visit_count >= _MIN_VISITS_TO_PROTECT`` get a
+           large bonus and are effectively protected.
+        4. Nodes on the proof path (``max_value == 1.0``) are never
+           eligible in the first place (filtered in collection).
+
+        Composite:  ``visits * 1000  +  value * 100  -  depth``
+        """
+        v = node.visit_count
+        # Protect well-explored nodes with a large bonus
+        if v >= _MIN_VISITS_TO_PROTECT:
+            return v * 1000.0 + node.max_value * 100.0 - node.depth
+        # Low-visit: small bonus from visits + value, penalise depth
+        return v * 10.0 + max(node.max_value, 0.0) * 5.0 - node.depth
+
+    def _prune_to_budget(self) -> None:
+        """Evict the lowest-scored **leaf** nodes until the tree fits
+        within ``max_tree_nodes``.
+
+        Leaf nodes (no children, not on a proven path) are collected and
+        sorted by ``_pruning_score``.  The worst are removed first.
+        Newly created childless parents cascade into the heap.
+
+        Called automatically during ``search()`` whenever ``node_count``
+        exceeds the budget.
+        """
+        if self.node_count <= self.max_tree_nodes:
+            return
+
+        target = int(self.max_tree_nodes * 0.75)  # prune 25% below budget
+
+        # Build a min-heap of (score, id, node, parent) for pruneable leaves.
+        heap: list[tuple[float, int, Node, Node]] = []
+        self._collect_pruneable_leaves(self.root, heap)
+
+        heapq.heapify(heap)
+
+        pruned = 0
+        while heap and self.node_count > target:
+            _score, _nid, leaf, parent = heapq.heappop(heap)
+
+            # The leaf may have gained children since we enqueued it,
+            # or been removed from its parent by a prior iteration.
+            if leaf.children or leaf not in parent.children:
+                continue
+
+            parent.children.remove(leaf)
+            # Clean up seen_states
+            key = leaf._pp
+            if key and key in self.seen_states and self.seen_states[key] is leaf:
+                del self.seen_states[key]
+
+            # Remove DAG edges so GC can collect the node.
+            leaf.parents.clear()
+            leaf.encoder_features = None
+            leaf.state = None  # drop TacticState reference → frees Lean state ID
+            self.node_count -= 1
+            pruned += 1
+
+            # If the parent has become a childless, non-root leaf it is
+            # now itself a candidate for pruning.  Push it onto the heap.
+            if (
+                not parent.children
+                and parent is not self.root
+                and parent.max_value != 1.0
+            ):
+                p_score = self._pruning_score(parent)
+                grandparent = parent.parent
+                if grandparent is not None:
+                    heapq.heappush(heap, (p_score, id(parent), parent, grandparent))
+
+        if pruned > 0:
+            # Keep pruning on the fast path: only rebuild occasionally when
+            # the dict has grown far beyond the live node count.
+            if len(self.seen_states) > (self.node_count * 3):
+                self.seen_states = {}
+                self._rebuild_seen_states(self.root)
+            logger.debug(
+                f"Pruned {pruned} leaf nodes " f"({self.node_count} nodes remaining)"
+            )
+
+    def _collect_pruneable_leaves(
+        self,
+        node: Node,
+        heap: list[tuple[float, int, Node, Node]],
+        _visited: Optional[set[int]] = None,
+    ) -> None:
+        """Recursively collect leaf nodes eligible for pruning.
+
+        Uses a visited set to guard against DAG cycles created by
+        state deduplication.
+        """
+        if _visited is None:
+            _visited = set()
+        nid = id(node)
+        if nid in _visited:
+            return
+        _visited.add(nid)
+
+        if not node.children:
+            # Leaf node — pruneable unless it's the root or on proof path.
+            if node is not self.root and node.max_value != 1.0:
+                parent = node.parent
+                if parent is not None:
+                    score = self._pruning_score(node)
+                    heap.append((score, id(node), node, parent))
+            return
+
+        for child in node.children:
+            self._collect_pruneable_leaves(child, heap, _visited)
 
     def _get_virtual_loss(self, node: Node) -> int:
         return self.virtual_losses.get(node, 0)
@@ -147,15 +314,6 @@ class BaseMCTS:
             self.virtual_losses[node] -= loss
             if self.virtual_losses[node] <= 0:
                 del self.virtual_losses[node]
-
-    def _log_gpu_memory(self) -> None:
-        """Log current GPU memory usage."""
-        if torch.cuda.is_available():
-            allocated = torch.cuda.memory_allocated() / 1024**3
-            reserved = torch.cuda.memory_reserved() / 1024**3
-            logger.debug(
-                f"GPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved"
-            )
 
     def _is_timeout(self) -> bool:
         """Check if the search has exceeded its time limit."""
@@ -186,7 +344,13 @@ class BaseMCTS:
         # Store deadline as instance var so _expand/_simulate can check it
         self._search_deadline = start_time + max_time
 
+        # Track RSS at search start to detect runaway growth.
+        _rss_at_search_start = get_rss_gb()
+        # Abort if total RSS growth from search start exceeds this (GiB).
+        _RSS_MAX_GROWTH = 1.5
+
         with torch.no_grad():
+            batch_count = 0
             for iteration in range(0, num_iterations, batch_size):
                 # Early stopping if solution found
                 if self.root.max_value == 1.0:
@@ -195,10 +359,6 @@ class BaseMCTS:
                 # Check time limit (more frequent check)
                 if self._is_timeout():
                     logger.debug(f"MCTS search timeout after {iteration} iterations")
-                    break
-
-                # Stop if tree is too large
-                if self.node_count >= self.max_tree_nodes:
                     break
 
                 current_batch_size = min(batch_size, num_iterations - iteration)
@@ -263,22 +423,80 @@ class BaseMCTS:
                     reward = rewards[i]
                     self._backpropagate(child, reward)
 
+                    # Free encoder features after backprop — they are only
+                    # needed during expansion and can be large tensors.
+                    child.release_encoder_features()
+
                     if reward == 1.0:
                         return
 
-                # Clear CUDA cache periodically
-                if torch.cuda.is_available() and iteration % 20 == 0 and iteration > 0:
-                    torch.cuda.empty_cache()
+                # Prune excess nodes continuously (not just at the top)
+                if self.node_count > self.max_tree_nodes:
+                    self._prune_to_budget()
+
+                # --- Memory cleanup (every 4th batch) ---
+                if batch_count % 4 == 0:
+                    aggressive_cleanup()
+                    empty_gpu_cache()
+
+                # --- RSS growth check ---
+                rss_now = get_rss_gb()
+                rss_growth = rss_now - _rss_at_search_start
+                if rss_growth > _RSS_MAX_GROWTH:
+                    logger.warning(
+                        f"RSS grew +{rss_growth:.2f} GB since search start "
+                        f"(now {rss_now:.1f} GB, started at "
+                        f"{_rss_at_search_start:.1f} GB, limit "
+                        f"{_RSS_MAX_GROWTH} GB). Forcing cleanup."
+                    )
+                    aggressive_cleanup()
+                    rss_after = get_rss_gb()
+                    if rss_after - _rss_at_search_start > _RSS_MAX_GROWTH:
+                        logger.warning(
+                            f"RSS still {rss_after:.1f} GB after cleanup "
+                            f"(started at {_rss_at_search_start:.1f} GB). "
+                            f"Aborting search to prevent OOM."
+                        )
+                        break
+
+                # --- OOM checks (every 4th batch) ---
+                if batch_count % 4 == 0:
+                    avail_gb = get_available_memory_gb()
+                    if avail_gb < MCTS_MIN_AVAILABLE_GB:
+                        logger.warning(
+                            f"System memory critically low "
+                            f"({avail_gb:.1f} GB available, "
+                            f"threshold {MCTS_MIN_AVAILABLE_GB} GB). "
+                            f"Aborting search to prevent OOM kill."
+                        )
+                        break
+
+                    rss_gb = get_rss_gb()
+                    if rss_gb > MAX_WORKER_RSS_GB:
+                        logger.warning(
+                            f"RSS ({rss_gb:.1f} GB) exceeds hard cap "
+                            f"({MAX_WORKER_RSS_GB:.1f} GB). Aborting search."
+                        )
+                        break
+
+                batch_count += 1
 
     def _select(self, node: Node) -> Node:
         """
         Phase 1: Selection
-        Traverse the tree from the root, picking the best child until a leaf node is reached.
+        Traverse the tree from the root, picking the best child until a leaf
+        node is reached.  A visited set prevents infinite loops in DAGs
+        created by state deduplication.
         """
+        visited: set[int] = set()
         current = node
         while not current.is_terminal and current.is_fully_expanded():
             if not current.children:
                 return current
+            nid = id(current)
+            if nid in visited:
+                return current  # cycle detected — treat as leaf
+            visited.add(nid)
             current = self._get_best_child(current)
         return current
 
@@ -466,17 +684,37 @@ class BaseMCTS:
             if isinstance(self.env.current_state, TacticState):
                 self.seen_states[self.env.current_state.pp] = self.root
 
-    def _count_nodes(self, node: Node) -> int:
-        """Recursively counts the number of nodes in the subtree."""
+    def _count_nodes(self, node: Node, _visited: Optional[set[int]] = None) -> int:
+        """Recursively counts the number of nodes in the subtree.
+
+        Uses a visited set to handle DAG dedup cycles.
+        """
+        if _visited is None:
+            _visited = set()
+        nid = id(node)
+        if nid in _visited:
+            return 0
+        _visited.add(nid)
         count = 1
         for child in node.children:
-            count += self._count_nodes(child)
+            count += self._count_nodes(child, _visited)
         return count
 
-    def _rebuild_seen_states(self, node: Node) -> None:
-        """Recursively rebuild seen_states dictionary from a subtree."""
-        state_key = self._get_state_key(node.state)
-        if state_key is not None:
-            self.seen_states[state_key] = node
+    def _rebuild_seen_states(
+        self, node: Node, _visited: Optional[set[int]] = None
+    ) -> None:
+        """Recursively rebuild seen_states dictionary from a subtree.
+
+        Uses a visited set to handle DAG dedup cycles.
+        """
+        if _visited is None:
+            _visited = set()
+        nid = id(node)
+        if nid in _visited:
+            return
+        _visited.add(nid)
+
+        if node._pp is not None:
+            self.seen_states[node._pp] = node
         for child in node.children:
-            self._rebuild_seen_states(child)
+            self._rebuild_seen_states(child, _visited)

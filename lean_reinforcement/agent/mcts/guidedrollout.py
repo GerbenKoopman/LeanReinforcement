@@ -11,6 +11,25 @@ from lean_reinforcement.utilities.gym import LeanDojoEnv
 from lean_reinforcement.agent.mcts.base_mcts import BaseMCTS, Node
 from lean_reinforcement.agent.transformer import TransformerProtocol
 from lean_reinforcement.utilities.config import TrainingConfig
+from lean_reinforcement.utilities.memory import (
+    aggressive_cleanup,
+    malloc_trim,
+    get_rss_gb,
+    get_available_memory_gb,
+    MAX_WORKER_RSS_GB,
+    MCTS_MIN_AVAILABLE_GB,
+)
+
+# Cap on proof-state string length to prevent degenerate states from
+# bloating worker RSS. States beyond this are treated as dead ends.
+_MAX_ROLLOUT_STATE_CHARS = 20_000
+_MIN_MAX_UNIQUE_STATES = 5_000
+
+# Shorten rollouts for large states to limit per-batch memory.
+_LARGE_STATE_CHARS = 5_000
+_LARGE_STATE_MAX_DEPTH = 15
+_VERY_LARGE_STATE_CHARS = 10_000
+_VERY_LARGE_STATE_MAX_DEPTH = 8
 
 
 class MCTS_GuidedRollout(BaseMCTS):
@@ -27,7 +46,7 @@ class MCTS_GuidedRollout(BaseMCTS):
         transformer: TransformerProtocol,
         config: TrainingConfig,
         exploration_weight: float = math.sqrt(2),
-        max_tree_nodes: int = 10000,
+        max_tree_nodes: int = 1000,
         batch_size: int = 8,
         num_tactics_to_expand: int = 8,
         max_rollout_depth: int = 30,
@@ -87,15 +106,36 @@ class MCTS_GuidedRollout(BaseMCTS):
             raise TypeError("Cannot expand a node without a TacticState.")
 
         state_str = node.state.pp
+        if len(state_str) > _MAX_ROLLOUT_STATE_CHARS:
+            return node
 
         # Use generate_tactics_with_probs to get priors
         tactics_with_probs = self.transformer.generate_tactics_with_probs(
             state_str, n=self.num_tactics_to_expand
         )
+        max_unique_states = max(self.max_tree_nodes * 2, _MIN_MAX_UNIQUE_STATES)
 
         # Create a child for each promising tactic (reusing existing nodes for duplicates)
         for tactic, prob in tactics_with_probs:
+            # Memory/timeout guard before expensive Lean call
+            if self._is_timeout():
+                break
+            if get_available_memory_gb() < MCTS_MIN_AVAILABLE_GB:
+                break
+            if get_rss_gb() > (MAX_WORKER_RSS_GB * 0.9):
+                break
+
             next_state = self.env.run_tactic_stateless(node.state, tactic)
+
+            # Skip child states whose pretty-printed representation is
+            # excessively large — these bloat the worker RSS when glibc
+            # keeps the freed pages, and they are unlikely to lead to
+            # useful proofs.
+            if (
+                isinstance(next_state, TacticState)
+                and len(next_state.pp) > _MAX_ROLLOUT_STATE_CHARS
+            ):
+                continue
 
             # Check for duplicate states
             state_key = self._get_state_key(next_state)
@@ -105,6 +145,9 @@ class MCTS_GuidedRollout(BaseMCTS):
                 existing_node.add_parent(node, tactic)
                 if existing_node not in node.children:
                     node.children.append(existing_node)
+                continue
+
+            if state_key is not None and len(self.seen_states) >= max_unique_states:
                 continue
 
             child = Node(next_state, parent=node, action=tactic)
@@ -137,7 +180,10 @@ class MCTS_GuidedRollout(BaseMCTS):
 
         for node in nodes:
             if isinstance(node.state, TacticState):
-                states.append(node.state.pp)
+                state_pp = node.state.pp
+                if len(state_pp) > _MAX_ROLLOUT_STATE_CHARS:
+                    continue
+                states.append(state_pp)
                 nodes_to_generate.append(node)
 
         if not states:
@@ -157,6 +203,7 @@ class MCTS_GuidedRollout(BaseMCTS):
             return nodes
 
         # Prepare tasks
+        max_unique_states = max(self.max_tree_nodes * 2, _MIN_MAX_UNIQUE_STATES)
         tasks = []
         for i, tactics_probs in enumerate(batch_tactics_with_probs):
             node = nodes_to_generate[i]
@@ -169,7 +216,21 @@ class MCTS_GuidedRollout(BaseMCTS):
             # Check timeout periodically during Lean calls
             if self._is_timeout():
                 break
+            if get_available_memory_gb() < MCTS_MIN_AVAILABLE_GB:
+                break
+            if get_rss_gb() > (MAX_WORKER_RSS_GB * 0.9):
+                break
             next_state = self.env.run_tactic_stateless(node.state, tactic)
+
+            # Skip child states whose pretty-printed representation is
+            # excessively large — these bloat worker RSS via glibc heap
+            # fragmentation and are unlikely to lead to useful proofs.
+            if (
+                isinstance(next_state, TacticState)
+                and len(next_state.pp) > _MAX_ROLLOUT_STATE_CHARS
+            ):
+                continue
+
             results.append((node, tactic, prob, next_state))
 
         # Create children (reusing existing nodes for duplicates - DAG structure)
@@ -182,6 +243,9 @@ class MCTS_GuidedRollout(BaseMCTS):
                 existing_node.add_parent(node, tactic)
                 if existing_node not in node.children:
                     node.children.append(existing_node)
+                continue
+
+            if state_key is not None and len(self.seen_states) >= max_unique_states:
                 continue
 
             child = Node(next_state, parent=node, action=tactic)
@@ -233,12 +297,36 @@ class MCTS_GuidedRollout(BaseMCTS):
         # Use provided env or fallback to self.env
         sim_env = env if env else self.env
 
-        for step_idx in range(self.max_rollout_depth):
+        # Dynamic depth: reduce rollout depth for large states to limit
+        # the total number of temporary string allocations (which cause
+        # glibc heap fragmentation and RSS growth).
+        state_len = len(current_state.pp)
+        effective_depth = self.max_rollout_depth
+        if state_len > _VERY_LARGE_STATE_CHARS:
+            effective_depth = min(effective_depth, _VERY_LARGE_STATE_MAX_DEPTH)
+        elif state_len > _LARGE_STATE_CHARS:
+            effective_depth = min(effective_depth, _LARGE_STATE_MAX_DEPTH)
+
+        for step_idx in range(effective_depth):
             # Check timeout at each rollout step
             if self._is_timeout():
                 return 0.0  # Neutral reward on timeout
 
+            # Abort rollout if system memory is critically low.
+            # Guided rollouts create many Lean Dojo states (up to
+            # 3 tactics × 30 steps = 90 per rollout) that persist
+            # in the Lean subprocess and are never freed.  Checking
+            # system-wide available memory catches the collective
+            # pressure from all workers.
+            if get_available_memory_gb() < MCTS_MIN_AVAILABLE_GB:
+                return 0.0
+
+            if get_rss_gb() > (MAX_WORKER_RSS_GB * 0.9):
+                return 0.0
+
             state_str = current_state.pp
+            if len(state_str) > _MAX_ROLLOUT_STATE_CHARS:
+                return 0.0
 
             # Generate multiple tactics for robustness (try first successful one)
             tactics = self.transformer.generate_tactics(state_str, n=3)
@@ -261,6 +349,11 @@ class MCTS_GuidedRollout(BaseMCTS):
                     return 1.0 - 0.01 * (step_idx + 1)
 
                 if isinstance(result, TacticState) and next_state is None:
+                    # Skip states whose string representation is too
+                    # large — they would bloat RSS via glibc heap
+                    # fragmentation and are rarely useful.
+                    if len(result.pp) > _MAX_ROLLOUT_STATE_CHARS:
+                        continue
                     next_state = result
 
             if next_state is None:
@@ -271,4 +364,33 @@ class MCTS_GuidedRollout(BaseMCTS):
         return 0.0  # Reached max depth, count as a draw/timeout
 
     def _simulate_batch(self, nodes: List[Node]) -> List[float]:
-        return [self._simulate(node) for node in nodes]
+        """Run simulations with inter-simulation RSS tracking.
+
+        After every 2 simulations we check the worker's RSS.  If it has
+        grown significantly, we force a ``malloc_trim`` to reclaim freed
+        pages.  If RSS exceeds the soft cap even after cleanup, the
+        remaining simulations are skipped with a neutral reward (0.0) to
+        prevent the worker from OOM-killing the system.
+        """
+        results: List[float] = []
+        rss_before_batch = get_rss_gb()
+        rss_soft_cap = MAX_WORKER_RSS_GB * 0.85
+
+        for i, node in enumerate(nodes):
+            reward = self._simulate(node)
+            results.append(reward)
+
+            # Periodic RSS check inside the batch
+            if (i + 1) % 2 == 0:
+                rss_now = get_rss_gb()
+                # If RSS grew noticeably during this batch, reclaim pages
+                if rss_now - rss_before_batch > 0.2:
+                    malloc_trim()
+                # Abort remaining simulations if RSS is dangerously high
+                if rss_now > rss_soft_cap:
+                    aggressive_cleanup()
+                    if get_rss_gb() > rss_soft_cap:
+                        results.extend([0.0] * (len(nodes) - i - 1))
+                        break
+
+        return results

@@ -6,10 +6,8 @@ import copy
 import pickle
 import random
 import queue
-import gc
 import numpy as np
-import psutil
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, cast
 from dataclasses import asdict
 import torch
 import torch.optim as optim
@@ -42,6 +40,31 @@ from lean_reinforcement.training.progress import (
 )
 from lean_reinforcement.training.worker import worker_loop
 from lean_reinforcement.utilities.config import TrainingConfig
+from lean_reinforcement.utilities.memory import (
+    aggressive_cleanup,
+    configure_glibc_env_for_children,
+    empty_gpu_cache,
+    get_available_memory_gb,
+    log_gpu_memory,
+    set_oom_score_adj,
+    MAX_WORKER_RSS_GB,
+    RSS_WATCHDOG_EXIT_CODE,
+    TRAINER_MIN_AVAILABLE_GB,
+)
+
+
+def _safe_wandb_log(data: Dict[str, Any]) -> None:
+    """Log metrics to wandb, silently ignoring connection errors.
+
+    The wandb-core process may be killed by OOM or an external monitor;
+    we catch the resulting errors since local metrics are already saved.
+    """
+    try:
+        wandb.log(data)
+    except (ConnectionResetError, BrokenPipeError, OSError) as exc:
+        logger.warning(f"wandb.log() failed (connection lost): {exc}")
+    except Exception as exc:
+        logger.warning(f"wandb.log() failed unexpectedly: {exc}")
 
 
 class Trainer:
@@ -93,14 +116,47 @@ class Trainer:
 
     def _setup_models(self) -> None:
         logger.info(f"Using checkpoint directory: {self.checkpoint_dir}")
-        self.transformer = Transformer(model_name=self.config.model_name)
+
+        # Use ONNX Runtime if requested and available
+        use_onnx = getattr(self.config, "use_onnx", False)
+        needs_value_head = (
+            self.config.mcts_type == "alpha_zero" or self.config.train_value_head
+        )
+        if use_onnx and needs_value_head:
+            logger.warning(
+                "ONNX is not compatible with value head training. "
+                "Falling back to PyTorch."
+            )
+            use_onnx = False
+
+        if use_onnx:
+            from lean_reinforcement.agent.onnx_transformer import (
+                ONNXTransformer,
+                is_onnx_available,
+            )
+
+            if is_onnx_available():
+                logger.info("Using ONNX Runtime for inference")
+                self.transformer = cast(
+                    Transformer, ONNXTransformer(model_name=self.config.model_name)
+                )
+            else:
+                logger.warning(
+                    "ONNX requested but optimum/onnxruntime not installed. "
+                    "Falling back to PyTorch."
+                )
+                self.transformer = Transformer(model_name=self.config.model_name)
+        else:
+            self.transformer = Transformer(model_name=self.config.model_name)
 
         self.value_head: Optional[ValueHead] = None
         self.start_epoch = 0
 
         if self.config.mcts_type == "alpha_zero" or self.config.train_value_head:
+            transformer_for_value_head = cast(Transformer, self.transformer)
             self.value_head = ValueHead(
-                self.transformer, hidden_dims=self.config.value_head_hidden_dims
+                transformer_for_value_head,
+                hidden_dims=self.config.value_head_hidden_dims,
             )
 
             if self.config.resume or self.config.use_test_value_head:
@@ -122,7 +178,7 @@ class Trainer:
                     )
                     self.start_epoch = 0
 
-        self._log_gpu_memory("After model initialization - ")
+        log_gpu_memory(logger, prefix="After model initialization - ", level=20)
 
     def _setup_data(self) -> None:
         logger.info(f"Loading data from 'leandojo_benchmark_4/{self.config.data_type}'")
@@ -156,49 +212,6 @@ class Trainer:
         ]
         self.workers: List[mp.Process] = []
 
-    @staticmethod
-    def _set_oom_score_adj(score: int = 1000) -> None:
-        """Set OOM score adjustment so the kernel kills this process
-        instead of the desktop environment when memory is exhausted.
-        Score ranges from -1000 (never kill) to 1000 (kill first)."""
-        try:
-            with open(f"/proc/{os.getpid()}/oom_score_adj", "w") as f:
-                f.write(str(score))
-            logger.info(f"Set OOM score adjustment to {score} for PID {os.getpid()}")
-        except (PermissionError, OSError) as e:
-            logger.warning(f"Could not set OOM score adjustment: {e}")
-
-    @staticmethod
-    def _get_memory_usage_percent() -> float:
-        """Return current system memory usage as a percentage (0-100)."""
-        mem = psutil.virtual_memory()
-        return mem.percent
-
-    @staticmethod
-    def _get_available_memory_gb() -> float:
-        """Return available system memory in GB."""
-        mem = psutil.virtual_memory()
-        return mem.available / (1024**3)
-
-    def _check_memory_pressure(self, threshold: float = 90.0) -> bool:
-        """Return True if memory usage exceeds threshold percentage."""
-        usage = self._get_memory_usage_percent()
-        if usage > threshold:
-            logger.warning(
-                f"Memory pressure: {usage:.1f}% used "
-                f"({self._get_available_memory_gb():.1f}GB available)"
-            )
-            return True
-        return False
-
-    def _log_gpu_memory(self, prefix: str = "") -> None:
-        if torch.cuda.is_available():
-            allocated = torch.cuda.memory_allocated() / 1024**3
-            reserved = torch.cuda.memory_reserved() / 1024**3
-            logger.info(
-                f"{prefix}GPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved"
-            )
-
     def train(self) -> List[Dict[str, Any]]:
         """
         Runs the training loop.
@@ -207,7 +220,23 @@ class Trainer:
         # Protect the desktop: make this process the preferred OOM-kill
         # target so the Linux OOM killer terminates training instead of
         # the desktop environment (GNOME Shell / gdm).
-        self._set_oom_score_adj(1000)
+        set_oom_score_adj(1000)
+
+        # --- Memory preflight check ---
+        try:
+            import psutil
+
+            total_ram_gb = psutil.virtual_memory().total / (1024**3)
+            estimated_gb = 6.0 + self.config.num_workers * 3.0
+            if estimated_gb > total_ram_gb * 0.85:
+                logger.warning(
+                    f"Memory preflight: estimated workload ~{estimated_gb:.0f} GB "
+                    f"exceeds 85% of system RAM ({total_ram_gb:.0f} GB). "
+                    f"Consider reducing --num-workers from {self.config.num_workers} "
+                    f"to {max(1, int((total_ram_gb * 0.85 - 6) / 3))}."
+                )
+        except ImportError:
+            pass
 
         all_metrics = []
         self.progress_stats.run_start_time = time.time()
@@ -251,19 +280,24 @@ class Trainer:
             f"Starting Epoch {epoch + 1}/{self.start_epoch + self.config.num_epochs}"
         )
 
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        empty_gpu_cache()
+
+        # Make a defensive copy to avoid mutating the original
+        # This prevents issues where shuffle or other operations affect subsequent epochs
+        epoch_data = list(self.dataloader.train_data)
 
         # Seed the shuffle per-epoch for reproducibility
         if self.config.seed is not None:
             epoch_seed = self.config.seed + epoch
             random.seed(epoch_seed)
 
-        random.shuffle(self.dataloader.train_data)
-        theorems_to_process = self.dataloader.train_data[: self.config.num_theorems]
+        random.shuffle(epoch_data)
+        theorems_to_process = epoch_data[: self.config.num_theorems]
 
+        theorems_queued = 0
         for thm in theorems_to_process:
             self.theorem_queue.put(thm)
+            theorems_queued += 1
 
         # Update progress display for this epoch
         self.progress_stats.reset_epoch(
@@ -280,8 +314,7 @@ class Trainer:
         self._stop_workers()
         self._drain_queues()
 
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        empty_gpu_cache()
 
         if not training_data_buffer:
             logger.warning("No data collected in this epoch. Skipping training.")
@@ -326,6 +359,13 @@ class Trainer:
         return epoch_metrics
 
     def _start_workers(self) -> None:
+        # Set glibc tuning env vars in the parent BEFORE spawning.
+        # Children inherit the environment; glibc in the child reads
+        # MALLOC_ARENA_MAX at C-library init (before Python’s main()).
+        # This is the only reliable way to get the env-var path working.
+        # Workers also call mallopt() directly as a belt-and-suspenders.
+        configure_glibc_env_for_children()
+
         logger.info(f"Starting {self.config.num_workers} workers")
         self.workers = []
         for i in range(self.config.num_workers):
@@ -458,8 +498,21 @@ class Trainer:
         # Clamp to a reasonable range: at least 30 min, at most 12 hours
         max_epoch_time = max(1800, min(max_epoch_time, 12 * 3600))
 
-        # How long to wait for more results after all workers die
-        drain_timeout = 60  # seconds
+        # How long to wait for more results after all workers die.
+        # Increased from 60s to allow time for worker restart and initialization,
+        # especially on systems with slower resource allocation.
+        drain_timeout = 120  # seconds
+
+        # Hard guard against apparent hangs: if no theorem result has arrived
+        # for a long time, break even if inference requests are still trickling.
+        no_result_timeout = max(
+            int(self.config.proof_timeout * 2),
+            int(self.config.inference_timeout * 6),
+            600,
+        )
+
+        # Track worker crashes to detect systemic issues
+        total_worker_crashes = 0
 
         # Stall timeout: if no activity (no results AND no inference processing)
         # for this long, assume workers are truly stuck.
@@ -488,18 +541,26 @@ class Trainer:
                 break
 
             # --- Memory pressure check ---
-            # When system memory is critically high, pause processing to
-            # let workers finish and free memory before continuing.  This
-            # avoids triggering the Linux OOM killer, which could kill the
-            # desktop environment and force the user to re-login.
-            if self._check_memory_pressure(threshold=85.0):
-                gc.collect()
-                if torch.cuda.is_available():
-                    torch.cuda.empty_cache()
+            # When system-wide available memory is low, pause briefly to
+            # let workers finish and free memory.  Uses absolute GB
+            # rather than percentage for reliability across system sizes.
+            avail = get_available_memory_gb()
+            if avail < TRAINER_MIN_AVAILABLE_GB:
+                import psutil
+
+                own_rss_gb = psutil.Process().memory_info().rss / (1024**3)
+                logger.warning(
+                    f"Main process: low memory "
+                    f"(avail={avail:.1f} GB, own RSS={own_rss_gb:.2f} GB). "
+                    f"Pausing to let workers release memory."
+                )
+                aggressive_cleanup()
+                empty_gpu_cache()
                 # Brief pause to let workers finish and release memory
                 time.sleep(2.0)
-                # Skip inference processing this iteration to reduce load
-                continue
+                # NOTE: Do NOT skip inference processing here!
+                # Skipping causes all workers to time out simultaneously,
+                # leading to response queue desync and cascading errors.
 
             # Process inference requests (keeps GPU busy)
             processed_batch = inference_server.process_requests()
@@ -521,7 +582,7 @@ class Trainer:
                             # Always collect metrics
                             collected_metrics.append(res["metrics"])
                             if self.config.use_wandb:
-                                wandb.log(res["metrics"])
+                                _safe_wandb_log(res["metrics"])
 
                             # Track per-theorem success/failure with name
                             theorem_name = res.get(
@@ -565,7 +626,7 @@ class Trainer:
                                     for item in data
                                     if item.get("value_target", 0) < 0
                                 )
-                                wandb.log(
+                                _safe_wandb_log(
                                     {
                                         "training_data/positive_samples": positive_count,
                                         "training_data/negative_samples": negative_count,
@@ -596,26 +657,44 @@ class Trainer:
             self.progress_stats.alive_workers = len(alive_workers)
             self.progress_display.refresh()
 
-            # Log dead workers and restart crashed ones (once per worker)
+            # Log dead workers and restart crashed/recycled ones (once per worker)
             for i, p in dead_workers:
                 if p.pid not in logged_dead_workers:
                     logged_dead_workers.add(p.pid)
 
-                    # Check if worker crashed (non-zero exit code)
-                    if p.exitcode not in (0, None):
-                        logger.warning(
-                            f"Worker {i} (PID: {p.pid}) crashed (exit code: {p.exitcode}). "
-                            f"Restarting worker and skipping current theorem."
-                        )
+                    # RSS watchdog kills (exit code 42) and crashes
+                    # (any non-zero) are both restartable.  Only
+                    # graceful exit (code 0) means the worker was told
+                    # to stop via the None sentinel.
+                    is_watchdog_kill = p.exitcode == RSS_WATCHDOG_EXIT_CODE
+                    is_crash = p.exitcode not in (0, None)
 
-                        # Mark the lost theorem as "completed" (failed)
-                        results_received += 1
-                        last_result_time = time.time()
-                        last_activity_time = time.time()
-                        self.progress_stats.record_theorem(
-                            name=f"worker_{i}_crash", success=False
-                        )
-                        self.progress_display.refresh()
+                    if is_crash:
+                        total_worker_crashes += 1
+                        if is_watchdog_kill:
+                            logger.warning(
+                                f"Worker {i} (PID: {p.pid}) recycled by RSS watchdog "
+                                f"(exceeded {MAX_WORKER_RSS_GB:.0f} GB). "
+                                f"Total recycles so far: {total_worker_crashes}. "
+                                f"Restarting with clean address space."
+                            )
+                            # Watchdog recycling happens AFTER the worker sends its result,
+                            # so we already counted this theorem. Don't double-count.
+                        else:
+                            logger.warning(
+                                f"Worker {i} (PID: {p.pid}) crashed (exit code: {p.exitcode}). "
+                                f"Total crashes so far: {total_worker_crashes}. "
+                                f"Restarting worker and skipping current theorem."
+                            )
+                            # True crashes happen during processing, before sending result.
+                            # Count as a failed completion to keep results_received reachable.
+                            results_received += 1
+                            last_result_time = time.time()
+                            last_activity_time = time.time()
+                            self.progress_stats.record_theorem(
+                                name=f"worker_{i}_crash", success=False
+                            )
+                            self.progress_display.refresh()
 
                         # Terminate the old process object to be safe
                         p.join(timeout=1)
@@ -634,6 +713,9 @@ class Trainer:
                         )
                         new_worker.start()
                         self.workers[i] = new_worker
+                        # Reset last_result_time to give the restarted worker time to
+                        # initialize and process its next theorem without triggering drain timeout
+                        last_result_time = time.time()
                         logger.info(f"Worker {i} restarted successfully.")
                     else:
                         # Graceful exit (exit code 0)
@@ -655,14 +737,29 @@ class Trainer:
                 )
                 break
 
+            # Independent no-result guard: catches alive-but-idle states where
+            # no theorem results are produced for an extended period.
+            time_since_last_result = time.time() - last_result_time
+            if time_since_last_result > no_result_timeout:
+                logger.warning(
+                    f"No theorem results for {time_since_last_result/60:.1f} minutes "
+                    f"(limit: {no_result_timeout/60:.0f}m). "
+                    f"Collected {results_received}/{total_theorems} results. "
+                    f"Total worker crashes in this epoch: {total_worker_crashes}. "
+                    f"Proceeding with training from partial data."
+                )
+                break
+
             # If all workers are dead, wait a bit for queue to drain, then exit
             if not alive_workers:
                 time_since_last_result = time.time() - last_result_time
                 if time_since_last_result > drain_timeout:
                     logger.warning(
                         f"All workers dead and no results for {drain_timeout}s. "
-                        f"Collected {results_received}/{total_theorems} results. "
-                        f"Proceeding with training."
+                        f"Collected {results_received}/{total_theorems} results "
+                        f"({results_received*100//total_theorems}% complete). "
+                        f"Total worker crashes in this epoch: {total_worker_crashes}. "
+                        f"Proceeding with training from partial data."
                     )
                     break
 
@@ -725,6 +822,21 @@ class Trainer:
                 logger.info(f"Theorem results saved to {results_file}")
             except Exception as e:
                 logger.error(f"Failed to save theorem results: {e}")
+
+        # Warn if collection exited significantly early
+        if results_received < total_theorems * 0.8:
+            logger.critical(
+                f"**WARNING** Epoch {epoch+1} exited with only {results_received}/{total_theorems} results ({100*results_received//total_theorems}%). "
+                f"This is likely due to worker crashes or system issues. "
+                f"Total crashes this epoch: {total_worker_crashes}. "
+                f"Value head training will use incomplete data. "
+                f"Consider investigating worker logs in logs/ directory."
+            )
+        elif results_received < total_theorems:
+            logger.warning(
+                f"Epoch {epoch+1} collected {results_received}/{total_theorems} results ({100*results_received//total_theorems}%). "
+                f"Total crashes: {total_worker_crashes}."
+            )
 
         return training_data_buffer, collected_metrics
 
@@ -870,7 +982,7 @@ class Trainer:
             balanced_train_data = train_data
 
         if use_wandb:
-            wandb.log(
+            _safe_wandb_log(
                 {
                     "value_head/avg_target": avg_target,
                     "value_head/positive_samples": positive_samples,
@@ -884,9 +996,13 @@ class Trainer:
         train_dataset = ValueHeadDataset(balanced_train_data)
         val_dataset = ValueHeadDataset(val_data) if val_data else None
 
-        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+        train_loader = DataLoader(
+            train_dataset, batch_size=batch_size, shuffle=True, pin_memory=True
+        )
         val_loader = (
-            DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+            DataLoader(
+                val_dataset, batch_size=batch_size, shuffle=False, pin_memory=True
+            )
             if val_dataset
             else None
         )
@@ -959,7 +1075,7 @@ class Trainer:
                 self.progress_display.refresh()
 
                 if use_wandb:
-                    wandb.log(
+                    _safe_wandb_log(
                         {
                             "value_head/train_loss": avg_train_loss,
                             "value_head/val_loss": avg_val_loss,
@@ -986,7 +1102,7 @@ class Trainer:
                 self.progress_display.refresh()
 
                 if use_wandb:
-                    wandb.log(
+                    _safe_wandb_log(
                         {
                             "value_head/train_loss": avg_train_loss,
                             "value_head/epoch": epoch + 1,
@@ -1008,6 +1124,5 @@ class Trainer:
         )
 
         value_head.eval()
-        gc.collect()
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        aggressive_cleanup()
+        empty_gpu_cache()

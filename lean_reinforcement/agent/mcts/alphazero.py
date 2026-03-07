@@ -9,6 +9,12 @@ from typing import List, Optional
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
 from lean_reinforcement.utilities.gym import LeanDojoEnv
+from lean_reinforcement.utilities.memory import (
+    get_available_memory_gb,
+    get_rss_gb,
+    MAX_WORKER_RSS_GB,
+    MCTS_MIN_AVAILABLE_GB,
+)
 from lean_reinforcement.agent.value_head import ValueHead
 from lean_reinforcement.agent.mcts.base_mcts import BaseMCTS, Node
 from lean_reinforcement.agent.transformer import TransformerProtocol
@@ -30,7 +36,7 @@ class MCTS_AlphaZero(BaseMCTS):
         transformer: TransformerProtocol,
         config: TrainingConfig,
         exploration_weight: float = math.sqrt(2),
-        max_tree_nodes: int = 10000,
+        max_tree_nodes: int = 1000,
         batch_size: int = 8,
         num_tactics_to_expand: int = 8,
         max_rollout_depth: int = 30,
@@ -197,11 +203,15 @@ class MCTS_AlphaZero(BaseMCTS):
             for tactic, prob in tactics_probs:
                 tasks.append((node, tactic, prob))
 
-        # Run tactics sequentially with timeout checks
+        # Run tactics sequentially with timeout + memory checks
         results = []
         assert self.env.dojo is not None, "Dojo not initialized"
         for node, tactic, prob in tasks:
             if self._is_timeout():
+                break
+            if get_available_memory_gb() < MCTS_MIN_AVAILABLE_GB:
+                break
+            if get_rss_gb() > (MAX_WORKER_RSS_GB * 0.9):
                 break
             try:
                 next_state = self.env.dojo.run_tac(node.state, tactic)

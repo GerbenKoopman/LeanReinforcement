@@ -3,8 +3,6 @@ Main agent loop for running MCTS-based proof search.
 """
 
 import time
-import gc
-import torch
 from typing import Type, Optional
 from collections import deque
 from loguru import logger
@@ -16,6 +14,11 @@ from lean_reinforcement.agent.mcts.base_mcts import Node
 from lean_reinforcement.utilities.gym import LeanDojoEnv
 from lean_reinforcement.agent.transformer import TransformerProtocol
 from lean_reinforcement.utilities.config import TrainingConfig
+from lean_reinforcement.utilities.memory import (
+    aggressive_cleanup,
+    empty_gpu_cache,
+    log_gpu_memory,
+)
 
 
 class AgentRunner:
@@ -55,15 +58,6 @@ class AgentRunner:
         self.proof_timeout = proof_timeout
 
         self.mcts_kwargs = mcts_kwargs if mcts_kwargs is not None else {}
-
-    def _log_gpu_memory(self, prefix: str = ""):
-        """Log current GPU memory usage."""
-        if torch.cuda.is_available():
-            allocated = torch.cuda.memory_allocated() / 1024**3
-            reserved = torch.cuda.memory_reserved() / 1024**3
-            logger.debug(
-                f"{prefix}GPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved"
-            )
 
     def run(
         self,
@@ -121,7 +115,7 @@ class AgentRunner:
         logger.info(
             f"Starting full-search proof search for: {self.env.theorem.full_name}"
         )
-        self._log_gpu_memory("Initial ")
+        log_gpu_memory(logger, prefix="Initial ")
 
         training_data: list[dict] = []
         mcts_instance = None
@@ -140,16 +134,13 @@ class AgentRunner:
         )
 
         # Full budget: use num_iterations directly (NOT multiplied by
-        # max_steps).  The old step-by-step mode ran num_iterations per
-        # step but discarded most of the tree between steps via move_root.
-        # Multiplying here creates a tree with up to
-        # (num_iterations * max_steps * num_tactics_to_expand) nodes that
-        # stays fully in memory — easily 10+ GB per worker and enough to
-        # OOM-kill the desktop on a 32 GB machine.
+        # max_steps — that would create too many in-memory nodes).
         total_iterations = self.num_iterations
         max_time = self.proof_timeout - (time.time() - start_time)
-        if max_time < 30:
-            logger.warning("Not enough time for full search. Skipping.")
+        if max_time < 5:
+            logger.warning(
+                f"Not enough time for full search ({max_time:.1f}s remaining). Skipping."
+            )
             return self._finalise(
                 start_time, 0, training_data, collect_value_data, use_final_reward
             )
@@ -189,6 +180,8 @@ class AgentRunner:
                         break
 
         del mcts_instance
+        aggressive_cleanup()
+        empty_gpu_cache()
         return self._finalise(
             start_time,
             proof_steps,
@@ -261,7 +254,7 @@ class AgentRunner:
         """
         start_time = time.time()
         logger.info(f"Starting proof search for: {self.env.theorem.full_name}")
-        self._log_gpu_memory("Initial ")
+        log_gpu_memory(logger, prefix="Initial ")
 
         # Timeout for entire proof search
         proof_timeout = self.proof_timeout
@@ -271,9 +264,8 @@ class AgentRunner:
         mcts_instance = None
 
         for step_num in range(1, self.max_steps + 1):
-            gc.collect()
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
+            aggressive_cleanup()
+            empty_gpu_cache()
 
             # Check proof timeout before starting new MCTS search
             elapsed = time.time() - start_time
@@ -300,7 +292,7 @@ class AgentRunner:
 
                 # Log GPU memory every 5 steps
                 if step_num % 5 == 0:
-                    self._log_gpu_memory(f"Step {step_num} - ")
+                    log_gpu_memory(logger, prefix=f"Step {step_num} - ")
 
                 # Create a new MCTS tree for the current state if needed
                 if mcts_instance is None:

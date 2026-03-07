@@ -76,6 +76,7 @@ class ProgressStats:
     last_theorem_name: str = ""
     last_theorem_success: Optional[bool] = None
     last_theorem_time: float = 0.0
+    last_result_at: float = 0.0
 
     # Workers
     alive_workers: int = 0
@@ -98,6 +99,7 @@ class ProgressStats:
         self.last_theorem_name = name
         self.last_theorem_success = success
         self.last_theorem_time = elapsed
+        self.last_result_at = time.time()
         self.recent_results.append(
             {"name": name, "ok": success, "steps": steps, "t": elapsed}
         )
@@ -114,6 +116,7 @@ class ProgressStats:
         self.recent_results = []
         self.last_theorem_name = ""
         self.last_theorem_success = None
+        self.last_result_at = 0.0
         self.phase = "collecting"
 
     # ── Computed properties ─────────────────────────────────────────────
@@ -169,6 +172,12 @@ class ProgressStats:
         per_thm = self.run_elapsed / self.cumulative_theorems_done
         remaining = self.cumulative_total_theorems - self.cumulative_theorems_done
         return per_thm * remaining
+
+    @property
+    def last_result_ago_seconds(self) -> Optional[float]:
+        if self.last_result_at <= 0:
+            return None
+        return max(0.0, time.time() - self.last_result_at)
 
 
 # ── Formatting helpers ──────────────────────────────────────────────────────
@@ -322,11 +331,13 @@ class LiveProgressDisplay:
 
             # Success / failure counts
             sr = s.epoch_success_rate * 100
+            last_result_ago = _fmt_time(s.last_result_ago_seconds)
             lines.append(
                 f"  [green]✓ {s.theorems_proved}[/] proved  "
                 f"[red]✗ {s.theorems_failed}[/] failed  "
                 f"[yellow]success rate {sr:.1f}%[/]  "
-                f"[dim]workers {s.alive_workers}/{s.total_workers}[/]"
+                f"[dim]workers {s.alive_workers}/{s.total_workers}  "
+                f"last result {last_result_ago} ago[/]"
             )
 
             # Cumulative / overall progress (if multi-epoch)
@@ -424,11 +435,13 @@ class PlainProgressDisplay:
         sr = s.epoch_success_rate * 100
         elapsed = _fmt_time(s.epoch_elapsed)
         eta = _fmt_time(s.epoch_eta_seconds)
+        last_result_ago = _fmt_time(s.last_result_ago_seconds)
         print(
             f"  Epoch {s.current_epoch}/{s.total_epochs}  "
             f"{s.theorems_done}/{s.total_theorems} ({pct:.0f}%)  "
             f"✓{s.theorems_proved} ✗{s.theorems_failed} ({sr:.0f}%)  "
-            f"elapsed {elapsed}  eta {eta}",
+            f"elapsed {elapsed}  eta {eta}  "
+            f"last result {last_result_ago} ago",
             file=sys.stderr,
         )
 
