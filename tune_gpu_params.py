@@ -31,7 +31,6 @@ Usage
 """
 
 import argparse
-import gc
 import json
 import sys
 import time
@@ -40,6 +39,8 @@ from pathlib import Path
 from typing import Optional
 
 import torch
+
+from lean_reinforcement.utilities.memory import aggressive_cleanup, empty_gpu_cache
 
 # ── Parameter grid ──────────────────────────────────────────────────────────
 
@@ -112,9 +113,9 @@ def get_gpu_info() -> dict:
 
 def clear_gpu():
     """Aggressively free GPU memory."""
-    gc.collect()
+    aggressive_cleanup()
     if torch.cuda.is_available():
-        torch.cuda.empty_cache()
+        empty_gpu_cache()
         torch.cuda.reset_peak_memory_stats()
 
 
