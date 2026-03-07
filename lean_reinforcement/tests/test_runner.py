@@ -296,9 +296,10 @@ class TestFullSearchMode(unittest.TestCase):
 
         runner.run()
 
-        # Verify search was called with total_iterations = 100 * 10 = 1000
+        # Verify search was called with total_iterations = num_iterations (not multiplied by max_steps)
+        # Full search uses the full iteration budget without multiplication to avoid memory issues
         call_args = mock_mcts.search.call_args
-        self.assertEqual(call_args[0][0], num_iterations * max_steps)
+        self.assertEqual(call_args[0][0], num_iterations)
 
     @patch("lean_reinforcement.agent.runner.MCTS_GuidedRollout")
     def test_full_search_collects_tree_data(self, MockMCTS):
@@ -370,22 +371,26 @@ class TestFullSearchMode(unittest.TestCase):
             self.env,
             self.transformer,
             self.config,
-            mcts_class=MagicMock(),
+            mcts_class=MagicMock(),  # type: ignore[arg-type]
             num_iterations=10,
             max_steps=5,
         )
 
         # Patch both methods to track which is called
-        with patch.object(runner, "_run_full_search") as mock_full, \
-             patch.object(runner, "_run_step_by_step") as mock_step:
+        with (
+            patch.object(runner, "_run_full_search") as mock_full,
+            patch.object(runner, "_run_step_by_step") as mock_step,
+        ):
             mock_full.return_value = ({}, [])
             runner.run()
             mock_full.assert_called_once()
             mock_step.assert_not_called()
 
         self.config.full_search = False
-        with patch.object(runner, "_run_full_search") as mock_full, \
-             patch.object(runner, "_run_step_by_step") as mock_step:
+        with (
+            patch.object(runner, "_run_full_search") as mock_full,
+            patch.object(runner, "_run_step_by_step") as mock_step,
+        ):
             mock_step.return_value = ({}, [])
             runner.run()
             mock_step.assert_called_once()

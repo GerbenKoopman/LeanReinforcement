@@ -26,9 +26,9 @@ class TestHyperparameterConfig(unittest.TestCase):
         """Test that default values are set correctly."""
         config = HyperparameterConfig()
 
-        self.assertEqual(config.num_workers, 10)
-        self.assertEqual(config.batch_size, 16)
-        self.assertEqual(config.num_tactics_to_expand, 12)
+        self.assertEqual(config.num_workers, 1)
+        self.assertEqual(config.batch_size, 4)
+        self.assertEqual(config.num_tactics_to_expand, 8)
         self.assertEqual(config.num_iterations, 100)
         self.assertEqual(config.mcts_type, "guided_rollout")
 
@@ -155,9 +155,9 @@ class TestHardwareProfiles(unittest.TestCase):
 
     def test_laptop_defaults(self):
         """Test laptop profile has reasonable defaults."""
-        self.assertEqual(LAPTOP_DEFAULTS.num_workers, 10)
-        self.assertEqual(LAPTOP_DEFAULTS.batch_size, 16)
-        self.assertLessEqual(LAPTOP_DEFAULTS.num_workers, 16)  # Laptop constraint
+        self.assertEqual(LAPTOP_DEFAULTS.num_workers, 1)
+        self.assertEqual(LAPTOP_DEFAULTS.batch_size, 4)
+        self.assertLessEqual(LAPTOP_DEFAULTS.num_workers, 4)  # Single-worker profile
 
     def test_hpc_defaults(self):
         """Test HPC profile has reasonable defaults."""
@@ -261,8 +261,8 @@ class TestHyperparameterSearcher(unittest.TestCase):
         )
 
         laptop_config = HyperparameterConfig(
-            num_workers=10,
-            batch_size=16,
+            num_workers=1,
+            batch_size=4,
             num_iterations=100,
         )
 

@@ -14,8 +14,16 @@ from lean_reinforcement.utilities.config import TrainingConfig
 
 
 class TestNodeCy(unittest.TestCase):
+
+    @staticmethod
+    def _tactic_state_mock(pp: str = "mock_state") -> Mock:
+        """Create a TacticState mock with the required ``pp`` attribute."""
+        m = Mock(spec=TacticState)
+        m.pp = pp
+        return m
+
     def test_node_initialization(self) -> None:
-        state = Mock(spec=TacticState)
+        state = self._tactic_state_mock()
         node = Node(state)
         self.assertEqual(node.state, state)
         self.assertIsNone(node.parent)
@@ -26,14 +34,14 @@ class TestNodeCy(unittest.TestCase):
         self.assertIsNone(node.untried_actions)
 
     def test_node_value(self) -> None:
-        node = Node(Mock(spec=TacticState))
+        node = Node(self._tactic_state_mock())
         self.assertEqual(node.value(), 0.0)
         node.visit_count = 10
         node.max_value = 0.8
         self.assertAlmostEqual(node.value(), 0.8, places=5)
 
     def test_is_fully_expanded(self) -> None:
-        node = Node(Mock(spec=TacticState))
+        node = Node(self._tactic_state_mock())
         self.assertFalse(node.is_fully_expanded())
         node.untried_actions = ["tactic1", "tactic2"]
         self.assertFalse(node.is_fully_expanded())
@@ -41,7 +49,7 @@ class TestNodeCy(unittest.TestCase):
         self.assertTrue(node.is_fully_expanded())
 
     def test_is_terminal(self) -> None:
-        self.assertFalse(Node(Mock(spec=TacticState)).is_terminal)
+        self.assertFalse(Node(self._tactic_state_mock()).is_terminal)
         self.assertTrue(Node(Mock(spec=ProofFinished)).is_terminal)
         self.assertTrue(Node(Mock(spec=LeanError)).is_terminal)
         self.assertTrue(Node(Mock(spec=ProofGivenUp)).is_terminal)
@@ -77,10 +85,16 @@ class TestBaseMCTSCy(unittest.TestCase):
         mcts = MCTS_GuidedRollout(
             env=self.env, transformer=self.transformer, config=self.config
         )
-        node1 = Node(Mock(spec=TacticState))
-        node2 = Node(Mock(spec=TacticState))
+        s1 = Mock(spec=TacticState)
+        s1.pp = "s1"
+        s2 = Mock(spec=TacticState)
+        s2.pp = "s2"
+        s3 = Mock(spec=TacticState)
+        s3.pp = "s3"
+        node1 = Node(s1)
+        node2 = Node(s2)
         node2.parents.append((node1, "tactic"))
-        node3 = Node(Mock(spec=TacticState))
+        node3 = Node(s3)
         node3.parents.append((node2, "tactic"))
 
         mcts._backpropagate(node3, 0.5)
@@ -141,9 +155,13 @@ class TestMCTSGuidedRolloutCy(unittest.TestCase):
         )
 
     def test_puct_score(self) -> None:
-        parent = Node(Mock(spec=TacticState))
+        ps = Mock(spec=TacticState)
+        ps.pp = "parent_state"
+        parent = Node(ps)
         parent.visit_count = 10
-        child = Node(Mock(spec=TacticState))
+        cs = Mock(spec=TacticState)
+        cs.pp = "child_state"
+        child = Node(cs)
         child.parents.append((parent, "tactic"))
         child.visit_count = 1
         child.max_value = 0.8
@@ -218,10 +236,14 @@ class TestMCTSAlphaZeroCy(unittest.TestCase):
         )
 
     def test_puct_score(self) -> None:
-        parent = Node(Mock(spec=TacticState))
+        ps = Mock(spec=TacticState)
+        ps.pp = "parent_state"
+        parent = Node(ps)
         parent.visit_count = 10
 
-        child = Node(Mock(spec=TacticState))
+        cs = Mock(spec=TacticState)
+        cs.pp = "child_state"
+        child = Node(cs)
         child.parents.append((parent, "tactic"))
         child.visit_count = 1
         child.max_value = 0.8
@@ -232,7 +254,9 @@ class TestMCTSAlphaZeroCy(unittest.TestCase):
         expected_score = 0.8 + self.mcts.exploration_weight * 0.8 * ((10) ** 0.5 / 2)
         self.assertAlmostEqual(score, expected_score, places=5)
 
-        child_unvisited = Node(Mock(spec=TacticState))
+        cus = Mock(spec=TacticState)
+        cus.pp = "child_unvisited_state"
+        child_unvisited = Node(cus)
         child_unvisited.parents.append((parent, "tactic"))
         child_unvisited.visit_count = 0
         child_unvisited.max_value = float("-inf")

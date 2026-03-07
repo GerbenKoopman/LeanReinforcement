@@ -13,8 +13,16 @@ from lean_reinforcement.utilities.config import TrainingConfig
 
 
 class TestNode(unittest.TestCase):
+
+    @staticmethod
+    def _tactic_state_mock(pp: str = "mock_state") -> Mock:
+        """Create a TacticState mock with the required ``pp`` attribute."""
+        m = Mock(spec=TacticState)
+        m.pp = pp
+        return m
+
     def test_node_initialization(self) -> None:
-        state = Mock(spec=TacticState)
+        state = self._tactic_state_mock()
         node = Node(state)
         self.assertEqual(node.state, state)
         self.assertIsNone(node.parent)
@@ -25,14 +33,14 @@ class TestNode(unittest.TestCase):
         self.assertIsNone(node.untried_actions)
 
     def test_node_value(self) -> None:
-        node = Node(Mock(spec=TacticState))
+        node = Node(self._tactic_state_mock())
         self.assertEqual(node.value(), 0.0)
         node.visit_count = 10
         node.max_value = 0.8
         self.assertEqual(node.value(), 0.8)
 
     def test_is_fully_expanded(self) -> None:
-        node = Node(Mock(spec=TacticState))
+        node = Node(self._tactic_state_mock())
         self.assertFalse(node.is_fully_expanded())
         node.untried_actions = ["tactic1", "tactic2"]
         self.assertFalse(node.is_fully_expanded())
@@ -40,7 +48,7 @@ class TestNode(unittest.TestCase):
         self.assertTrue(node.is_fully_expanded())
 
     def test_is_terminal(self) -> None:
-        self.assertFalse(Node(Mock(spec=TacticState)).is_terminal)
+        self.assertFalse(Node(self._tactic_state_mock()).is_terminal)
         self.assertTrue(Node(Mock(spec=ProofFinished)).is_terminal)
         self.assertTrue(Node(Mock(spec=LeanError)).is_terminal)
         self.assertTrue(Node(Mock(spec=ProofGivenUp)).is_terminal)
@@ -76,9 +84,15 @@ class TestBaseMCTS(unittest.TestCase):
         mcts = MCTS_GuidedRollout(
             env=self.env, transformer=self.transformer, config=self.config
         )
-        node1 = Node(Mock(spec=TacticState))
-        node2 = Node(Mock(spec=TacticState), parent=node1)
-        node3 = Node(Mock(spec=TacticState), parent=node2)
+        s1 = Mock(spec=TacticState)
+        s1.pp = "s1"
+        s2 = Mock(spec=TacticState)
+        s2.pp = "s2"
+        s3 = Mock(spec=TacticState)
+        s3.pp = "s3"
+        node1 = Node(s1)
+        node2 = Node(s2, parent=node1)
+        node3 = Node(s3, parent=node2)
 
         mcts._backpropagate(node3, 0.5)
 
@@ -140,9 +154,13 @@ class TestMCTSGuidedRollout(unittest.TestCase):
         )
 
     def test_puct_score(self) -> None:
-        parent = Node(Mock(spec=TacticState))
+        ps = Mock(spec=TacticState)
+        ps.pp = "parent_s"
+        cs = Mock(spec=TacticState)
+        cs.pp = "child_s"
+        parent = Node(ps)
         parent.visit_count = 10
-        child = Node(Mock(spec=TacticState), parent=parent)
+        child = Node(cs, parent=parent)
         child.visit_count = 1
         child.max_value = 0.8
         child.prior_p = 0.5
@@ -214,10 +232,14 @@ class TestMCTSAlphaZero(unittest.TestCase):
         )
 
     def test_puct_score(self) -> None:
-        parent = Node(Mock(spec=TacticState))
+        ps = Mock(spec=TacticState)
+        ps.pp = "az_parent_s"
+        parent = Node(ps)
         parent.visit_count = 10
 
-        child = Node(Mock(spec=TacticState), parent=parent)
+        cs = Mock(spec=TacticState)
+        cs.pp = "az_child_s"
+        child = Node(cs, parent=parent)
         child.visit_count = 1
         child.max_value = 0.8
         child.prior_p = 0.8
@@ -227,7 +249,9 @@ class TestMCTSAlphaZero(unittest.TestCase):
         expected_score = 0.8 + self.mcts.exploration_weight * 0.8 * ((10) ** 0.5 / 2)
         self.assertAlmostEqual(score, expected_score, places=5)
 
-        child_unvisited = Node(Mock(spec=TacticState), parent=parent)
+        cu = Mock(spec=TacticState)
+        cu.pp = "az_unvisited_s"
+        child_unvisited = Node(cu, parent=parent)
         child_unvisited.visit_count = 0
         child_unvisited.max_value = float("-inf")
         child_unvisited.prior_p = 0.5

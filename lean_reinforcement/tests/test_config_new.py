@@ -37,6 +37,8 @@ class TestTrainingConfig(unittest.TestCase):
             use_caching=False,
             seed=None,
             full_search=True,
+            max_tree_nodes=1000,
+            use_onnx=False,
         )
 
         config = TrainingConfig.from_args(args)
