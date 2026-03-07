@@ -9,7 +9,6 @@ Produces a JSON results file and per-run theorem-level results.
 """
 
 import argparse
-import gc
 import json
 import pickle
 import queue
@@ -23,6 +22,10 @@ from dotenv import load_dotenv
 from loguru import logger
 
 from lean_reinforcement.agent.transformer import Transformer
+from lean_reinforcement.agent.onnx_transformer import (
+    ONNXTransformer,
+    is_onnx_available,
+)
 from lean_reinforcement.agent.value_head import ValueHead
 from lean_reinforcement.training.trainer import Trainer
 from lean_reinforcement.training.worker import worker_loop
@@ -32,6 +35,11 @@ from lean_reinforcement.training.progress import (
 )
 from lean_reinforcement.utilities.checkpoint import load_checkpoint
 from lean_reinforcement.utilities.config import TrainingConfig
+from lean_reinforcement.utilities.memory import (
+    aggressive_cleanup,
+    empty_gpu_cache,
+    log_gpu_memory,
+)
 from lean_reinforcement.utilities.dataloader import LeanDataLoader
 from ReProver.common import Corpus
 
@@ -86,12 +94,23 @@ class TestEvaluator(Trainer):
         # No wandb during evaluation
         self._setup_models_for_eval(run_dir)
 
-        # Use shared corpus/dataloader to avoid repeated GitHub API calls
-        if shared_corpus is not None and shared_dataloader is not None:
-            self.corpus = shared_corpus
+        # Use shared dataloader if provided, otherwise set up from scratch.
+        # IMPORTANT: We do NOT keep the Corpus object alive in the main
+        # process — it's 5+ GB in memory and is never needed during
+        # evaluation (workers create their own lightweight dataloaders).
+        if shared_dataloader is not None:
             self.dataloader = shared_dataloader
+        elif shared_corpus is not None:
+            self.dataloader = LeanDataLoader(
+                shared_corpus,
+                dataset_path="leandojo_benchmark_4",
+                data_type=self.config.data_type,
+            )
         else:
             self._setup_data()
+
+        # Release Corpus reference — workers don't need it and it's huge
+        self.corpus = None
 
         self._setup_multiprocessing()
 
@@ -99,7 +118,20 @@ class TestEvaluator(Trainer):
         """Set up models and load the best checkpoint."""
 
         logger.info(f"Loading models for evaluation from {run_dir}")
-        self.transformer = Transformer(model_name=self.config.model_name)
+        if self.config.use_onnx:
+            if is_onnx_available():
+                logger.info("Using ONNX Runtime for inference")
+                self.transformer = cast(
+                    Transformer, ONNXTransformer(model_name=self.config.model_name)
+                )
+            else:
+                logger.warning(
+                    "ONNX requested but optimum/onnxruntime not installed. "
+                    "Falling back to PyTorch."
+                )
+                self.transformer = Transformer(model_name=self.config.model_name)
+        else:
+            self.transformer = Transformer(model_name=self.config.model_name)
         self.value_head = None
         self.start_epoch = 0
 
@@ -124,7 +156,7 @@ class TestEvaluator(Trainer):
                 f"No checkpoint found at {checkpoint_path}, using untrained value head"
             )
 
-        self._log_gpu_memory("After model initialization - ")
+        log_gpu_memory(prefix="After model initialization - ")
 
     def _run_epoch(self, epoch: int, inference_server) -> List[Dict[str, Any]]:
         """
@@ -151,7 +183,7 @@ class TestEvaluator(Trainer):
         logger.info(f"Evaluating on {self.dataset_split} split ({total} theorems)")
 
         if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+            empty_gpu_cache()
 
         # ── Progress display ─────────────────────────────────────────────────
         self.progress_stats.reset_epoch(epoch=epoch + 1, total_theorems=total)
@@ -377,8 +409,8 @@ class TestEvaluator(Trainer):
             self._stop_workers()
             self._drain_queues()
             if torch.cuda.is_available():
-                torch.cuda.empty_cache()
-            gc.collect()
+                empty_gpu_cache()
+            aggressive_cleanup()
 
         # ── Persist results and build metrics list ────────────────────────────
         total_attempted = len(all_theorem_results)
@@ -444,8 +476,8 @@ def build_eval_config(
         num_theorems=num_theorems,
         num_iterations=num_iterations_val,
         max_steps=max_steps_val,
-        batch_size=8,  # Reduced for evaluation memory efficiency
-        num_workers=12,
+        batch_size=4,  # Single-worker evaluation profile
+        num_workers=1,
         mcts_type=algorithm,
         indexed_corpus_path=indexed_corpus_val,  # type: ignore[arg-type]
         train_epochs=0,  # No training during evaluation

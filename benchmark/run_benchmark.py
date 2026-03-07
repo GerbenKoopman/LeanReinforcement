@@ -20,13 +20,17 @@ import os
 import time
 from dataclasses import asdict
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, cast
 import wandb
 
 from loguru import logger
 from dotenv import load_dotenv
 
 from lean_reinforcement.agent.transformer import Transformer
+from lean_reinforcement.agent.onnx_transformer import (
+    ONNXTransformer,
+    is_onnx_available,
+)
 from lean_reinforcement.agent.value_head import ValueHead
 from lean_reinforcement.utilities.checkpoint import load_checkpoint
 from lean_reinforcement.training.progress import (
@@ -34,6 +38,7 @@ from lean_reinforcement.training.progress import (
     make_progress_display,
 )
 from lean_reinforcement.utilities.config import TrainingConfig
+from lean_reinforcement.utilities.memory import log_gpu_memory
 from lean_reinforcement.training.trainer import Trainer
 from lean_reinforcement.training.inference_server import InferenceServer
 
@@ -377,7 +382,20 @@ class BenchmarkTrainer(Trainer):
         """Override to handle resume with the benchmark's flat directory structure."""
         logger.info(f"Using checkpoint directory: {self.checkpoint_dir}")
 
-        self.transformer = Transformer(model_name=self.config.model_name)
+        if self.config.use_onnx:
+            if is_onnx_available():
+                logger.info("Using ONNX Runtime for inference")
+                self.transformer = cast(
+                    Transformer, ONNXTransformer(model_name=self.config.model_name)
+                )
+            else:
+                logger.warning(
+                    "ONNX requested but optimum/onnxruntime not installed. "
+                    "Falling back to PyTorch."
+                )
+                self.transformer = Transformer(model_name=self.config.model_name)
+        else:
+            self.transformer = Transformer(model_name=self.config.model_name)
 
         self.value_head = None
         self.start_epoch = self._start_epoch_override
@@ -399,7 +417,7 @@ class BenchmarkTrainer(Trainer):
                     logger.info("No checkpoint found, starting from scratch")
                     self.start_epoch = 0
 
-        self._log_gpu_memory("After model initialization - ")
+        log_gpu_memory(prefix="After model initialization - ")
 
     def train(self) -> List[Dict[str, Any]]:
         """Override train to use absolute epoch numbers."""
