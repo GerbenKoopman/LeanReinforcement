@@ -7,13 +7,17 @@ import re
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Union
 from loguru import logger
 from dotenv import load_dotenv
 
 
 from lean_reinforcement.agent.value_head import ValueHead
+from lean_reinforcement.agent.hyperbolic_adapter import HyperbolicValueHead
 from lean_reinforcement.utilities.config import TrainingConfig
+
+#: Any value head implementation (standard MLP or hyperbolic).
+AnyValueHead = Union[ValueHead, HyperbolicValueHead]
 
 # Load environment variables
 load_dotenv()
@@ -84,7 +88,7 @@ def get_iteration_checkpoint_dir(
 
 
 def save_checkpoint(
-    value_head: ValueHead,
+    value_head: AnyValueHead,
     epoch: int,
     checkpoint_dir: Path,
     args: TrainingConfig,
@@ -94,7 +98,7 @@ def save_checkpoint(
     Save a checkpoint for the value head with metadata.
 
     Args:
-        value_head: The ValueHead model to save
+        value_head: The ValueHead or HyperbolicValueHead model to save
         epoch: Current epoch number
         checkpoint_dir: Directory to save checkpoints
         args: Training arguments
@@ -128,13 +132,13 @@ def save_checkpoint(
 
 
 def load_checkpoint(
-    value_head: ValueHead, checkpoint_dir: Path, prefix: str = "value_head"
+    value_head: AnyValueHead, checkpoint_dir: Path, prefix: str = "value_head"
 ) -> int:
     """
     Load the latest checkpoint if it exists.
 
     Args:
-        value_head: The ValueHead model to load into
+        value_head: The ValueHead or HyperbolicValueHead model to load into
         checkpoint_dir: Directory containing checkpoints
         prefix: Prefix for checkpoint filename
 

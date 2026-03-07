@@ -23,6 +23,7 @@ class TrainingConfig:
     value_head_batch_size: int
     value_head_hidden_dims: List[int] = field(default_factory=lambda: [256])
     train_value_head: bool = True
+    use_hyperbolic: bool = False  # Use hyperbolic (Poincaré ball) value head
     use_final_reward: bool = False
     save_training_data: bool = True
     use_caching: bool = False
@@ -90,6 +91,7 @@ class TrainingConfig:
             value_head_batch_size=args.value_head_batch_size,
             value_head_hidden_dims=args.value_head_hidden_dims,
             train_value_head=args.train_value_head,
+            use_hyperbolic=getattr(args, "use_hyperbolic", False),
             use_final_reward=args.use_final_reward,
             save_training_data=args.save_training_data,
             use_caching=args.use_caching,
@@ -267,6 +269,14 @@ def get_config() -> TrainingConfig:
         action=argparse.BooleanOptionalAction,
         default=True,
         help="Train the value head after each epoch.",
+    )
+    parser.add_argument(
+        "--use-hyperbolic",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Use a hyperbolic (Poincaré ball) value head instead of the default MLP. "
+        "Projects encoder features through a learned adapter into the Poincaré ball "
+        "before the linear critic.",
     )
     parser.add_argument(
         "--use-final-reward",

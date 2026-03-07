@@ -18,6 +18,7 @@ def mock_config() -> MagicMock:
     config.batch_size = 4
     config.value_head_batch_size = 4
     config.value_head_hidden_dims = [256]
+    config.use_hyperbolic = False
     config.num_epochs = 1
     config.num_theorems = 2
     config.save_training_data = False

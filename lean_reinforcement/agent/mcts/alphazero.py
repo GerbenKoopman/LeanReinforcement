@@ -4,7 +4,7 @@ AlphaZero MCTS implementation.
 
 import math
 import torch
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
@@ -16,6 +16,7 @@ from lean_reinforcement.utilities.memory import (
     MCTS_MIN_AVAILABLE_GB,
 )
 from lean_reinforcement.agent.value_head import ValueHead
+from lean_reinforcement.agent.hyperbolic_adapter import HyperbolicValueHead
 from lean_reinforcement.agent.mcts.base_mcts import BaseMCTS, Node
 from lean_reinforcement.agent.transformer import TransformerProtocol
 from lean_reinforcement.utilities.config import TrainingConfig
@@ -24,14 +25,14 @@ from lean_reinforcement.utilities.config import TrainingConfig
 class MCTS_AlphaZero(BaseMCTS):
     """
     Implements Part 2.
-    Requires a ValueHead to be passed in.
+    Requires a ValueHead (or HyperbolicValueHead) to be passed in.
     The _simulate method is replaced by a single call
     to the ValueHead for evaluation.
     """
 
     def __init__(
         self,
-        value_head: ValueHead,
+        value_head: Union[ValueHead, HyperbolicValueHead],
         env: LeanDojoEnv,
         transformer: TransformerProtocol,
         config: TrainingConfig,

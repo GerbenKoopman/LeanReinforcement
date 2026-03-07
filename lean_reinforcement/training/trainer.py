@@ -7,7 +7,7 @@ import pickle
 import random
 import queue
 import numpy as np
-from typing import List, Dict, Any, Optional, cast
+from typing import List, Dict, Any, Optional, cast, Union
 from dataclasses import asdict
 import torch
 import torch.optim as optim
@@ -32,6 +32,7 @@ from lean_reinforcement.utilities.analyze_training_data import (
 )
 from lean_reinforcement.agent.transformer import Transformer
 from lean_reinforcement.agent.value_head import ValueHead
+from lean_reinforcement.agent.hyperbolic_adapter import HyperbolicValueHead
 from lean_reinforcement.training.datasets import ValueHeadDataset
 from lean_reinforcement.training.inference_server import InferenceServer
 from lean_reinforcement.training.progress import (
@@ -149,15 +150,22 @@ class Trainer:
         else:
             self.transformer = Transformer(model_name=self.config.model_name)
 
-        self.value_head: Optional[ValueHead] = None
+        self.value_head: Optional[ValueHead | HyperbolicValueHead] = None
         self.start_epoch = 0
 
         if self.config.mcts_type == "alpha_zero" or self.config.train_value_head:
             transformer_for_value_head = cast(Transformer, self.transformer)
-            self.value_head = ValueHead(
-                transformer_for_value_head,
-                hidden_dims=self.config.value_head_hidden_dims,
-            )
+
+            if self.config.use_hyperbolic:
+                logger.info("Using hyperbolic (Poincaré ball) value head")
+                self.value_head = HyperbolicValueHead(
+                    transformer_for_value_head,
+                )
+            else:
+                self.value_head = ValueHead(
+                    transformer_for_value_head,
+                    hidden_dims=self.config.value_head_hidden_dims,
+                )
 
             if self.config.resume or self.config.use_test_value_head:
                 if self.config.use_test_value_head:
@@ -921,7 +929,7 @@ class Trainer:
 
     def _train_value_head_model(
         self,
-        value_head: ValueHead,
+        value_head: Union[ValueHead, HyperbolicValueHead],
         data_buffer: List[Dict[str, Any]],
         epochs: int = 50,
         batch_size: int = 32,
