@@ -1,12 +1,5 @@
 """
-HYPER++ Hyperbolic Adapter for ReProver encoder embeddings.
-
-Projects Euclidean encoder outputs into the Poincaré ball via a learned
-linear projection, RMSNorm, bounded scaling, and the origin-centred
-exponential map.  A lightweight value head on top produces a scalar
-heuristic estimate suitable for MCTS node evaluation.
-
-Reference architecture: HYPER++ (Desai et al., 2023).
+Hyperbolic Adapter for ReProver encoder embeddings.
 """
 
 from __future__ import annotations
@@ -29,7 +22,7 @@ ENCODER_OUTPUT_DIM = 1472
 class HyperbolicAdapter(nn.Module):
     """
     Trainable adapter that maps a Euclidean feature vector into the
-    Poincaré ball following the HYPER++ recipe:
+    Poincaré ball:
 
         x_E  = Linear(encoder_out)          [1472 → latent_dim]
         x_E  = RMSNorm(x_E)

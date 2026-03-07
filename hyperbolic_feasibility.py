@@ -95,7 +95,7 @@ class FrozenReProverEncoder(nn.Module):
 
 
 # ---------------------------------------------------------------------------
-# 2. HYPER++ Adapter  (trainable)
+# 2. Hyperbolic Adapter  (trainable)
 # ---------------------------------------------------------------------------
 class HyperbolicAdapter(nn.Module):
     """
