@@ -51,13 +51,13 @@ class HyperparameterConfig:
 
     # Timeout parameters (all in seconds)
     # Hierarchy: env_timeout < max_time < proof_timeout
-    max_time: float = 300.0  # Max time per MCTS search step
+    max_time: float = 100.0  # Max time per MCTS search step
     max_steps: int = 40  # Max proof depth (not a timeout)
     proof_timeout: float = 1200.0  # Max time for entire proof
-    env_timeout: int = 180  # Max time per tactic execution
+    env_timeout: int = 80  # Max time per tactic execution
 
     # Search behavior
-    max_rollout_depth: int = 30
+    max_rollout_depth: int = 10
     mcts_type: str = "guided_rollout"
 
     # Fixed parameters (rarely tuned)
@@ -185,7 +185,7 @@ HPC_DEFAULTS = HyperparameterConfig(
 LAPTOP_SEARCH_SPACE: Dict[str, List[Any]] = {
     # "num_workers": [6, 8, 10, 12],
     "batch_size": [8, 16, 24],
-    "num_tactics_to_expand": [8, 12, 16],
+    "num_tactics_to_expand": [32, 64, 128],
     "num_iterations": [200, 300, 400],
     "max_time": [60.0, 120.0, 180.0],
     "max_steps": [20, 40, 60],
@@ -236,8 +236,8 @@ LAPTOP_PARAMETER_RANGES: List[ParameterRange] = [
     ),
     ParameterRange(
         name="batch_size",
-        min_val=2,
-        max_val=16,
+        min_val=4,
+        max_val=32,
         is_integer=True,
         description="Inference batch size for GPU",
         depends_on=[],
@@ -245,8 +245,8 @@ LAPTOP_PARAMETER_RANGES: List[ParameterRange] = [
     # === TIER 2: Search Behavior (depend on resources) ===
     ParameterRange(
         name="num_tactics_to_expand",
-        min_val=4,
-        max_val=16,
+        min_val=32,
+        max_val=128,
         is_integer=True,
         description="Tactics expanded per MCTS node",
         depends_on=["batch_size"],  # Should be <= batch_size for efficiency
@@ -780,6 +780,7 @@ class HyperparameterSearcher:
         tolerance: float = 0.1,
         params_to_search: Optional[List[str]] = None,
         num_rounds: int = 1,
+        resume_from_intermediate: bool = True,
     ) -> Tuple[HyperparameterConfig, List[TrialResult]]:
         """
         Coordinate descent optimization: binary search each dimension sequentially.
@@ -800,6 +801,9 @@ class HyperparameterSearcher:
             num_rounds: Number of full passes over all parameters.
                        More rounds can refine results if independence assumption
                        is imperfect.
+            resume_from_intermediate: If True, load
+                       coordinate_descent_intermediate.json and continue from the
+                       last saved configuration.
 
         Returns:
             Tuple of (best_config, all_results).
@@ -846,24 +850,72 @@ class HyperparameterSearcher:
             deps = f" (depends on: {p.depends_on})" if p.depends_on else ""
             logger.info(f"  {i+1}. {p.name}: [{p.min_val}, {p.max_val}]{deps}")
 
-        # Run baseline with default config
-        logger.info("\n--- Running baseline with default config ---")
-        baseline_result = self._run_single_trial(
-            HyperparameterConfig(**asdict(current_config)), num_theorems
-        )
-        all_results.append(baseline_result)
-        best_score = baseline_result.score
-        logger.info(f"Baseline: {baseline_result.proofs_per_hour:.1f} proofs/hour")
+        # Optionally resume from previously saved intermediate results.
+        best_score = 0.0
+        start_round = 0
+        start_param_index = 0
+        if resume_from_intermediate:
+            resumed_config, resumed_results = (
+                self._load_coordinate_descent_resume_state(
+                    "coordinate_descent_intermediate.json"
+                )
+            )
+            if resumed_config is not None and resumed_results:
+                all_results = resumed_results
+                best_score = max(r.score for r in all_results)
 
+                (
+                    current_config,
+                    start_round,
+                    start_param_index,
+                ) = self._infer_coordinate_resume_progress(all_results, param_ranges)
+
+                logger.info(
+                    "Resuming from coordinate_descent_intermediate.json "
+                    f"with {len(all_results)} saved trials"
+                )
+                logger.info(
+                    "Resumed configuration: "
+                    + ", ".join(
+                        f"{p.name}={getattr(current_config, p.name)}"
+                        for p in param_ranges
+                    )
+                )
+                if start_round < num_rounds:
+                    logger.info(
+                        "Resume point: "
+                        f"round {start_round + 1}, "
+                        f"parameter {start_param_index + 1}/{len(param_ranges)} "
+                        f"({param_ranges[start_param_index].name})"
+                    )
+                else:
+                    logger.info(
+                        "All requested rounds appear complete in intermediate file"
+                    )
+
+        # If no resume state is available, run baseline from defaults.
+        if not all_results:
+            logger.info("\n--- Running baseline with default config ---")
+            baseline_result = self._run_single_trial(
+                HyperparameterConfig(**asdict(current_config)), num_theorems
+            )
+            all_results.append(baseline_result)
+            best_score = baseline_result.score
+            logger.info(f"Baseline: {baseline_result.proofs_per_hour:.1f} proofs/hour")
         # Multiple rounds of coordinate descent
-        for round_num in range(num_rounds):
+        for round_num in range(start_round, num_rounds):
             logger.info(f"\n{'='*60}")
             logger.info(f"ROUND {round_num + 1}/{num_rounds}")
             logger.info(f"{'='*60}")
 
             round_improvements = 0
 
-            for param in param_ranges:
+            if round_num == start_round:
+                params_this_round = param_ranges[start_param_index:]
+            else:
+                params_this_round = param_ranges
+
+            for param in params_this_round:
                 logger.info(f"\n--- Optimizing {param.name} ---")
                 logger.info(f"Range: [{param.min_val}, {param.max_val}]")
                 logger.info(f"Current value: {getattr(current_config, param.name)}")
@@ -941,6 +993,96 @@ class HyperparameterSearcher:
             wandb.finish()
 
         return current_config, all_results
+
+    def _load_coordinate_descent_resume_state(
+        self, filename: str
+    ) -> Tuple[Optional[HyperparameterConfig], List[TrialResult]]:
+        """Load coordinate-descent intermediate results and last config."""
+        try:
+            results = self.load_results(filename)
+        except FileNotFoundError:
+            return None, []
+        except json.JSONDecodeError as e:
+            logger.warning(
+                f"Could not parse {filename}: {e}. Starting fresh coordinate descent."
+            )
+            return None, []
+
+        if not results:
+            return None, []
+
+        # Resume from the latest saved trial configuration.
+        last_config = HyperparameterConfig(**asdict(results[-1].config))
+        return last_config, results
+
+    def _configs_match_except(
+        self,
+        candidate: HyperparameterConfig,
+        reference: HyperparameterConfig,
+        excluded_param: str,
+    ) -> bool:
+        """Check config equality while ignoring a single parameter."""
+        candidate_dict = asdict(candidate)
+        reference_dict = asdict(reference)
+        for key, ref_val in reference_dict.items():
+            if key == excluded_param:
+                continue
+            cand_val = candidate_dict[key]
+            if isinstance(ref_val, float):
+                if abs(cand_val - ref_val) > 1e-9:
+                    return False
+            elif cand_val != ref_val:
+                return False
+        return True
+
+    def _infer_coordinate_resume_progress(
+        self,
+        results: List[TrialResult],
+        param_ranges: List[ParameterRange],
+    ) -> Tuple[HyperparameterConfig, int, int]:
+        """
+        Infer the next (round, parameter) to optimize from saved results.
+
+        Intermediate results are saved only after each parameter completes, so
+        we can replay completed parameter blocks and recover the next step.
+        """
+        if not results or not param_ranges:
+            return HyperparameterConfig(**asdict(self.default_config)), 0, 0
+
+        current_config = HyperparameterConfig(**asdict(results[0].config))
+        idx = 1
+        completed_steps = 0
+        num_params = len(param_ranges)
+
+        while idx < len(results):
+            param_name = param_ranges[completed_steps % num_params].name
+            start_idx = idx
+
+            while idx < len(results) and self._configs_match_except(
+                results[idx].config, current_config, param_name
+            ):
+                idx += 1
+
+            if start_idx == idx:
+                logger.warning(
+                    "Could not fully infer resume progress; falling back to next round "
+                    "from last saved configuration"
+                )
+                fallback_config = HyperparameterConfig(**asdict(results[-1].config))
+                return fallback_config, 0, 0
+
+            segment = results[start_idx:idx]
+            best_segment_result = max(segment, key=lambda r: r.score)
+            setattr(
+                current_config,
+                param_name,
+                getattr(best_segment_result.config, param_name),
+            )
+            completed_steps += 1
+
+        start_round = completed_steps // num_params
+        start_param_index = completed_steps % num_params
+        return current_config, start_round, start_param_index
 
     def _binary_search_single_param(
         self,
@@ -1188,6 +1330,7 @@ def run_coordinate_descent(
     num_theorems: int = 50,
     params: Optional[List[str]] = None,
     num_rounds: int = 2,
+    resume_from_intermediate: bool = True,
 ):
     """
     Run coordinate descent hyperparameter search.
@@ -1201,6 +1344,7 @@ def run_coordinate_descent(
         num_theorems=num_theorems,
         params_to_search=params,
         num_rounds=num_rounds,
+        resume_from_intermediate=resume_from_intermediate,
     )
 
     searcher.print_summary(results)
@@ -1254,6 +1398,11 @@ if __name__ == "__main__":
         help="Number of rounds for coordinate descent",
     )
     parser.add_argument(
+        "--no-resume",
+        action="store_true",
+        help="Disable resuming from coordinate_descent_intermediate.json",
+    )
+    parser.add_argument(
         "--use-wandb",
         action="store_true",
         help="Log to WandB",
@@ -1279,6 +1428,7 @@ if __name__ == "__main__":
             num_theorems=args.num_theorems,
             params_to_search=args.params,
             num_rounds=args.num_rounds,
+            resume_from_intermediate=not args.no_resume,
         )
         searcher.print_summary(results)
         print("\nOptimal config saved to hyperparam_results/optimal_config.json")
