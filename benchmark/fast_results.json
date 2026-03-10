@@ -1,0 +1,35 @@
+{
+  "description": "--fast benchmark results (seed 42, light size, 5 epochs)",
+  "methods": {
+    "euclidean_mcts": {
+      "training_epochs": [
+        {"epoch": 1, "proved": 12, "total": 42, "pct": 28.571428571428573},
+        {"epoch": 2, "proved": 7, "total": 39, "pct": 17.94871794871795},
+        {"epoch": 3, "proved": 6, "total": 39, "pct": 15.384615384615385},
+        {"epoch": 4, "proved": 5, "total": 30, "pct": 16.666666666666668},
+        {"epoch": 5, "proved": 7, "total": 41, "pct": 17.07317073170732}
+      ],
+      "test_eval": {"proved": 20, "total": 100, "pct": 20.0}
+    },
+    "hyperbolic_mcts": {
+      "training_epochs": [
+        {"epoch": 1, "proved": 4, "total": 42, "pct": 9.523809523809524},
+        {"epoch": 2, "proved": 6, "total": 42, "pct": 14.285714285714286},
+        {"epoch": 3, "proved": 8, "total": 39, "pct": 20.512820512820516},
+        {"epoch": 4, "proved": 4, "total": 28, "pct": 14.285714285714286},
+        {"epoch": 5, "proved": 7, "total": 44, "pct": 15.909090909090908}
+      ],
+      "test_eval": {"proved": 21, "total": 100, "pct": 21.0}
+    },
+    "hyperbolic_ppo": {
+      "training_epochs": [
+        {"epoch": 1, "proved": 9, "total": 46, "pct": 19.565217391304348},
+        {"epoch": 2, "proved": 9, "total": 42, "pct": 21.428571428571427},
+        {"epoch": 3, "proved": 7, "total": 37, "pct": 18.91891891891892},
+        {"epoch": 4, "proved": 9, "total": 36, "pct": 25.0},
+        {"epoch": 5, "proved": 7, "total": 43, "pct": 16.27906976744186}
+      ],
+      "test_eval": {"proved": 10, "total": 100, "pct": 10.0}
+    }
+  }
+}

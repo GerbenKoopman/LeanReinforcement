@@ -3,6 +3,53 @@ import argparse
 import os
 import shutil
 from typing import List, Optional
+import json
+from pathlib import Path
+
+
+def _load_optimal_defaults() -> dict:
+    """Load default hyperparameters from hyperparam_results/optimal_config.json.
+
+    Falls back to legacy defaults if the file is missing or malformed.
+    """
+    root = Path(__file__).resolve().parents[2]
+    cfg_path = root / "hyperparam_results" / "optimal_config.json"
+
+    defaults = {
+        "data_type": "novel_premises",
+        "num_epochs": 1,
+        "num_theorems": 50,
+        "num_iterations": 328,
+        "max_steps": 50,
+        "batch_size": 12,
+        "num_workers": 3,
+        "mcts_type": "guided_rollout",
+        "train_epochs": 50,
+        "train_value_head": True,
+        "use_final_reward": True,
+        "save_training_data": True,
+        "save_checkpoints": True,
+        "use_wandb": True,
+        "model_name": "kaiyuy/leandojo-lean4-tacgen-byt5-small",
+        "num_tactics_to_expand": 93,
+        "max_rollout_depth": 46,
+        "max_time": 173.31262919989905,
+        "env_timeout": 76,
+        "proof_timeout": 346.6252583997981,
+    }
+
+    try:
+        with open(cfg_path) as f:
+            loaded = json.load(f)
+        if isinstance(loaded, dict):
+            defaults.update(loaded)
+    except (OSError, json.JSONDecodeError):
+        pass
+
+    return defaults
+
+
+OPTIMAL_DEFAULTS = _load_optimal_defaults()
 
 
 @dataclass
@@ -42,9 +89,9 @@ class TrainingConfig:
     inference_timeout: float = 600.0
 
     # Model Args
-    model_name: str = "kaiyuy/leandojo-lean4-tacgen-byt5-small"
-    num_tactics_to_expand: int = 32
-    max_rollout_depth: int = 30
+    model_name: str = str(OPTIMAL_DEFAULTS["model_name"])
+    num_tactics_to_expand: int = int(OPTIMAL_DEFAULTS["num_tactics_to_expand"])
+    max_rollout_depth: int = int(OPTIMAL_DEFAULTS["max_rollout_depth"])
     use_onnx: bool = False  # Use ONNX Runtime for faster inference (requires optimum)
 
     # Search mode
@@ -59,9 +106,15 @@ class TrainingConfig:
     # Timeout parameters (all in seconds)
     # Note: These form a hierarchy - each level should be larger than the one below
     # env_timeout < max_time < proof_timeout
-    max_time: float = 300.0  # Max time per MCTS search step
-    env_timeout: int = 180  # Max time per tactic execution
-    proof_timeout: float = 1200.0  # Max time for entire proof search
+    max_time: float = float(
+        OPTIMAL_DEFAULTS["max_time"]
+    )  # Max time per MCTS search step
+    env_timeout: int = int(
+        OPTIMAL_DEFAULTS["env_timeout"]
+    )  # Max time per tactic execution
+    proof_timeout: float = float(
+        OPTIMAL_DEFAULTS["proof_timeout"]
+    )  # Max time for entire proof search
 
     # Hard memory limit (GiB) for each Lean 4 REPL subprocess.
     # Passed as --memory to the Lean runtime; exceeding it produces a
@@ -71,40 +124,74 @@ class TrainingConfig:
     @classmethod
     def from_args(cls, args: argparse.Namespace) -> "TrainingConfig":
         return cls(
-            data_type=getattr(args, "data_type", "novel_premises"),
-            num_epochs=getattr(args, "num_epochs", 10),
-            num_theorems=getattr(args, "num_theorems", 100),
-            num_iterations=getattr(args, "num_iterations", 200),
-            max_steps=getattr(args, "max_steps", 10),
-            batch_size=getattr(args, "batch_size", 16),
-            num_workers=getattr(args, "num_workers", 1),
-            mcts_type=getattr(args, "mcts_type", "guided_rollout"),
+            data_type=getattr(args, "data_type", OPTIMAL_DEFAULTS["data_type"]),
+            num_epochs=getattr(args, "num_epochs", OPTIMAL_DEFAULTS["num_epochs"]),
+            num_theorems=getattr(
+                args, "num_theorems", OPTIMAL_DEFAULTS["num_theorems"]
+            ),
+            num_iterations=getattr(
+                args, "num_iterations", OPTIMAL_DEFAULTS["num_iterations"]
+            ),
+            max_steps=getattr(args, "max_steps", OPTIMAL_DEFAULTS["max_steps"]),
+            batch_size=getattr(args, "batch_size", OPTIMAL_DEFAULTS["batch_size"]),
+            num_workers=getattr(args, "num_workers", OPTIMAL_DEFAULTS["num_workers"]),
+            mcts_type=getattr(args, "mcts_type", OPTIMAL_DEFAULTS["mcts_type"]),
             indexed_corpus_path=getattr(args, "indexed_corpus_path", None),
             model_name=getattr(
                 args,
                 "model_name",
-                "kaiyuy/leandojo-lean4-tacgen-byt5-small",
+                OPTIMAL_DEFAULTS["model_name"],
             ),
-            num_tactics_to_expand=getattr(args, "num_tactics_to_expand", 16),
-            max_rollout_depth=getattr(args, "max_rollout_depth", 30),
+            num_tactics_to_expand=getattr(
+                args,
+                "num_tactics_to_expand",
+                OPTIMAL_DEFAULTS["num_tactics_to_expand"],
+            ),
+            max_rollout_depth=getattr(
+                args,
+                "max_rollout_depth",
+                OPTIMAL_DEFAULTS["max_rollout_depth"],
+            ),
             use_onnx=getattr(args, "use_onnx", False),
-            max_time=getattr(args, "max_time", 300.0),
-            env_timeout=getattr(args, "env_timeout", 180),
-            proof_timeout=getattr(args, "proof_timeout", 1200.0),
-            train_epochs=getattr(args, "train_epochs", 1),
-            value_head_batch_size=getattr(args, "value_head_batch_size", 32),
+            max_time=getattr(args, "max_time", OPTIMAL_DEFAULTS["max_time"]),
+            env_timeout=getattr(args, "env_timeout", OPTIMAL_DEFAULTS["env_timeout"]),
+            proof_timeout=getattr(
+                args,
+                "proof_timeout",
+                OPTIMAL_DEFAULTS["proof_timeout"],
+            ),
+            train_epochs=getattr(
+                args, "train_epochs", OPTIMAL_DEFAULTS["train_epochs"]
+            ),
+            value_head_batch_size=getattr(args, "value_head_batch_size", 4),
             value_head_hidden_dims=getattr(args, "value_head_hidden_dims", [256]),
-            train_value_head=getattr(args, "train_value_head", True),
+            train_value_head=getattr(
+                args,
+                "train_value_head",
+                OPTIMAL_DEFAULTS["train_value_head"],
+            ),
             use_hyperbolic=getattr(args, "use_hyperbolic", False),
-            use_final_reward=getattr(args, "use_final_reward", False),
-            save_training_data=getattr(args, "save_training_data", True),
+            use_final_reward=getattr(
+                args,
+                "use_final_reward",
+                OPTIMAL_DEFAULTS["use_final_reward"],
+            ),
+            save_training_data=getattr(
+                args,
+                "save_training_data",
+                OPTIMAL_DEFAULTS["save_training_data"],
+            ),
             use_caching=getattr(args, "use_caching", False),
             seed=getattr(args, "seed", None),
-            save_checkpoints=getattr(args, "save_checkpoints", True),
+            save_checkpoints=getattr(
+                args,
+                "save_checkpoints",
+                OPTIMAL_DEFAULTS["save_checkpoints"],
+            ),
             resume=getattr(args, "resume", False),
             use_test_value_head=getattr(args, "use_test_value_head", False),
             checkpoint_dir=getattr(args, "checkpoint_dir", None),
-            use_wandb=getattr(args, "use_wandb", True),
+            use_wandb=getattr(args, "use_wandb", OPTIMAL_DEFAULTS["use_wandb"]),
             inference_timeout=getattr(args, "inference_timeout", 600.0),
             full_search=getattr(args, "full_search", True),
             max_tree_nodes=getattr(args, "max_tree_nodes", 1000),
@@ -127,44 +214,44 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--num-epochs",
         type=int,
-        default=10,
+        default=int(OPTIMAL_DEFAULTS["num_epochs"]),
         help="Number of self-play/training epochs.",
     )
     parser.add_argument(
         "--num-theorems",
         type=int,
-        default=100,
+        default=int(OPTIMAL_DEFAULTS["num_theorems"]),
         help="Number of theorems to attempt per epoch.",
     )
     parser.add_argument(
         "--num-iterations",
         type=int,
-        default=200,
+        default=int(OPTIMAL_DEFAULTS["num_iterations"]),
         help="Number of MCTS iterations per step (reduced default for memory efficiency).",
     )
     parser.add_argument(
         "--max-steps",
         type=int,
-        default=10,
+        default=int(OPTIMAL_DEFAULTS["max_steps"]),
         help="Max steps per proof (reduced default for memory efficiency).",
     )
     parser.add_argument(
         "--batch-size",
         type=int,
-        default=16,
+        default=int(OPTIMAL_DEFAULTS["batch_size"]),
         help="Batch size for MCTS search.",
     )
     parser.add_argument(
         "--num-workers",
         type=int,
-        default=1,
+        default=int(OPTIMAL_DEFAULTS["num_workers"]),
         help="Number of parallel workers for processing theorems.",
     )
     parser.add_argument(
         "--mcts-type",
         type=str,
         choices=["guided_rollout", "alpha_zero"],
-        default="guided_rollout",
+        default=str(OPTIMAL_DEFAULTS["mcts_type"]),
         help="Which MCTS algorithm to use for self-play.",
     )
     parser.add_argument(
@@ -182,13 +269,13 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--num-tactics-to-expand",
         type=int,
-        default=16,
+        default=int(OPTIMAL_DEFAULTS["num_tactics_to_expand"]),
         help="Number of tactics to expand in MCTS.",
     )
     parser.add_argument(
         "--max-rollout-depth",
         type=int,
-        default=30,
+        default=int(OPTIMAL_DEFAULTS["max_rollout_depth"]),
         help="Max depth for MCTS rollout.",
     )
     parser.add_argument(
@@ -206,19 +293,19 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--max-time",
         type=float,
-        default=300.0,
+        default=float(OPTIMAL_DEFAULTS["max_time"]),
         help="Max time (seconds) per MCTS search step. Should be > env-timeout.",
     )
     parser.add_argument(
         "--env-timeout",
         type=int,
-        default=180,
+        default=int(OPTIMAL_DEFAULTS["env_timeout"]),
         help="Max time (seconds) per single tactic execution. Should be < max-time.",
     )
     parser.add_argument(
         "--proof-timeout",
         type=float,
-        default=1200.0,
+        default=float(OPTIMAL_DEFAULTS["proof_timeout"]),
         help="Max time (seconds) for entire proof search per theorem. Should be > max-time.",
     )
     parser.add_argument(
@@ -252,7 +339,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--train-epochs",
         type=int,
-        default=1,
+        default=int(OPTIMAL_DEFAULTS["train_epochs"]),
         help="Number of training epochs to run on collected data *per* self-play epoch.",
     )
     parser.add_argument(
@@ -271,7 +358,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--train-value-head",
         action=argparse.BooleanOptionalAction,
-        default=True,
+        default=bool(OPTIMAL_DEFAULTS["train_value_head"]),
         help="Train the value head after each epoch.",
     )
     parser.add_argument(
@@ -285,13 +372,13 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--use-final-reward",
         action=argparse.BooleanOptionalAction,
-        default=False,
+        default=bool(OPTIMAL_DEFAULTS["use_final_reward"]),
         help="Use the final reward (1.0 or -1.0) for all steps in the proof.",
     )
     parser.add_argument(
         "--save-training-data",
         action=argparse.BooleanOptionalAction,
-        default=True,
+        default=bool(OPTIMAL_DEFAULTS["save_training_data"]),
         help="Save raw training data to JSON files for offline analysis.",
     )
     parser.add_argument(
@@ -313,7 +400,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--save-checkpoints",
         action=argparse.BooleanOptionalAction,
-        default=True,
+        default=bool(OPTIMAL_DEFAULTS["save_checkpoints"]),
         help="Save model checkpoints after each epoch (default: True).",
     )
     parser.add_argument(
@@ -336,7 +423,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--use-wandb",
         action="store_true",
-        default=True,
+        default=bool(OPTIMAL_DEFAULTS["use_wandb"]),
         help="Use wandb for logging.",
     )
 

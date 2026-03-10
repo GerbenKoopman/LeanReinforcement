@@ -38,6 +38,7 @@ from lean_reinforcement.training.progress import (
     make_progress_display,
 )
 from lean_reinforcement.utilities.config import TrainingConfig
+from lean_reinforcement.utilities.config import OPTIMAL_DEFAULTS
 from lean_reinforcement.utilities.memory import log_gpu_memory
 from lean_reinforcement.training.trainer import Trainer
 from lean_reinforcement.training.inference_server import InferenceServer
@@ -48,25 +49,25 @@ load_dotenv()
 # ── Base hyperparameters (from training job files) ──────────────────────────
 
 BASE_PARAMS = {
-    "data_type": "novel_premises",
+    "data_type": str(OPTIMAL_DEFAULTS["data_type"]),
     "indexed_corpus_path": (
         os.environ.get("CORPUS_DIR", "") + "/indexed_corpus.pkl"
         if os.environ.get("CORPUS_DIR")
         else None
     ),
     "value_head_hidden_dims": [1024, 512, 256, 128, 64],
-    "num_theorems": 100,
-    "batch_size": 16,
-    "num_tactics_to_expand": 32,
-    "num_workers": 12,
-    "train_epochs": 50,
-    "train_value_head": True,
-    "use_final_reward": True,
-    "save_training_data": True,
-    "save_checkpoints": True,
-    "model_name": "kaiyuy/leandojo-lean4-tacgen-byt5-small",
-    "max_steps": 10,
-    "max_rollout_depth": 30,
+    "num_theorems": int(OPTIMAL_DEFAULTS["num_theorems"]),
+    "batch_size": int(OPTIMAL_DEFAULTS["batch_size"]),
+    "num_tactics_to_expand": int(OPTIMAL_DEFAULTS["num_tactics_to_expand"]),
+    "num_workers": int(OPTIMAL_DEFAULTS["num_workers"]),
+    "train_epochs": int(OPTIMAL_DEFAULTS["train_epochs"]),
+    "train_value_head": bool(OPTIMAL_DEFAULTS["train_value_head"]),
+    "use_final_reward": bool(OPTIMAL_DEFAULTS["use_final_reward"]),
+    "save_training_data": bool(OPTIMAL_DEFAULTS["save_training_data"]),
+    "save_checkpoints": bool(OPTIMAL_DEFAULTS["save_checkpoints"]),
+    "model_name": str(OPTIMAL_DEFAULTS["model_name"]),
+    "max_steps": int(OPTIMAL_DEFAULTS["max_steps"]),
+    "max_rollout_depth": int(OPTIMAL_DEFAULTS["max_rollout_depth"]),
     "value_head_batch_size": 4,
     "use_caching": False,
     "inference_timeout": 600.0,
@@ -75,22 +76,22 @@ BASE_PARAMS = {
 # Size-specific overrides: scaling num_iterations and time parameters
 SIZE_CONFIGS = {
     "light": {
-        "num_iterations": 200,
-        "max_time": 40.0,
-        "env_timeout": 72,
-        "proof_timeout": 300.0,
+        "num_iterations": int(OPTIMAL_DEFAULTS["num_iterations"]),
+        "max_time": float(OPTIMAL_DEFAULTS["max_time"]),
+        "env_timeout": int(OPTIMAL_DEFAULTS["env_timeout"]),
+        "proof_timeout": float(OPTIMAL_DEFAULTS["proof_timeout"]),
     },
     "medium": {
-        "num_iterations": 300,  # 200 * 1.5
-        "max_time": 60.0,  # 40 * 1.5
-        "env_timeout": 108,  # 72 * 1.5
-        "proof_timeout": 450.0,  # 300 * 1.5
+        "num_iterations": int(float(OPTIMAL_DEFAULTS["num_iterations"]) * 1.5),
+        "max_time": float(OPTIMAL_DEFAULTS["max_time"]) * 1.5,
+        "env_timeout": int(float(OPTIMAL_DEFAULTS["env_timeout"]) * 1.5),
+        "proof_timeout": float(OPTIMAL_DEFAULTS["proof_timeout"]) * 1.5,
     },
     "heavy": {
-        "num_iterations": 400,  # 200 * 2
-        "max_time": 80.0,  # 40 * 2
-        "env_timeout": 144,  # 72 * 2
-        "proof_timeout": 600.0,  # 300 * 2
+        "num_iterations": int(float(OPTIMAL_DEFAULTS["num_iterations"]) * 2.0),
+        "max_time": float(OPTIMAL_DEFAULTS["max_time"]) * 2.0,
+        "env_timeout": int(float(OPTIMAL_DEFAULTS["env_timeout"]) * 2.0),
+        "proof_timeout": float(OPTIMAL_DEFAULTS["proof_timeout"]) * 2.0,
     },
 }
 

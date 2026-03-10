@@ -1,7 +1,11 @@
 import unittest
 from unittest.mock import patch
 import sys
-from lean_reinforcement.utilities.config import get_config, TrainingConfig
+from lean_reinforcement.utilities.config import (
+    get_config,
+    TrainingConfig,
+    OPTIMAL_DEFAULTS,
+)
 
 
 class TestConfig(unittest.TestCase):
@@ -10,10 +14,13 @@ class TestConfig(unittest.TestCase):
         with patch.object(sys, "argv", ["prog"]):
             config = get_config()
             self.assertIsInstance(config, TrainingConfig)
-            self.assertEqual(config.data_type, "novel_premises")
-            self.assertEqual(config.num_epochs, 10)
-            self.assertEqual(config.mcts_type, "guided_rollout")
-            self.assertTrue(config.train_value_head)
+            self.assertEqual(config.data_type, OPTIMAL_DEFAULTS["data_type"])
+            self.assertEqual(config.num_epochs, OPTIMAL_DEFAULTS["num_epochs"])
+            self.assertEqual(config.mcts_type, OPTIMAL_DEFAULTS["mcts_type"])
+            self.assertEqual(
+                config.train_value_head,
+                OPTIMAL_DEFAULTS["train_value_head"],
+            )
             self.assertEqual(config.value_head_hidden_dims, [256])
 
     def test_custom_args(self) -> None:

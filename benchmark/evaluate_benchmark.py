@@ -27,6 +27,7 @@ from lean_reinforcement.agent.onnx_transformer import (
     is_onnx_available,
 )
 from lean_reinforcement.agent.value_head import ValueHead
+from lean_reinforcement.agent.hyperbolic_adapter import HyperbolicValueHead
 from lean_reinforcement.training.trainer import Trainer
 from lean_reinforcement.training.worker import worker_loop
 from lean_reinforcement.training.progress import (
@@ -70,10 +71,12 @@ class TestEvaluator(Trainer):
         checkpoint_prefix_override: str | None = None,
         shared_corpus: Optional[Corpus] = None,
         shared_dataloader: Optional[LeanDataLoader] = None,
+        use_hyperbolic: bool = False,
     ):
         self.config = config
         self.dataset_split = dataset_split
         self._checkpoint_prefix_override = checkpoint_prefix_override
+        self._use_hyperbolic = use_hyperbolic
 
         # Initialize progress tracking (required by parent train() and _collect_data())
         self.progress_stats = ProgressStats(
@@ -142,16 +145,22 @@ class TestEvaluator(Trainer):
         )
         checkpoint_path = run_dir / f"{prefix}_latest.pth"
         if checkpoint_path.exists():
-            self.value_head = ValueHead(
-                self.transformer, hidden_dims=self.config.value_head_hidden_dims
-            )
+            if self._use_hyperbolic:
+                self.value_head = HyperbolicValueHead(self.transformer)
+            else:
+                self.value_head = ValueHead(
+                    self.transformer, hidden_dims=self.config.value_head_hidden_dims
+                )
             loaded_epoch = load_checkpoint(self.value_head, run_dir, prefix=prefix)
             logger.info(f"Loaded checkpoint from epoch {loaded_epoch}")
         elif self.config.mcts_type == "alpha_zero":
             # Alpha zero requires a value head even without checkpoint
-            self.value_head = ValueHead(
-                self.transformer, hidden_dims=self.config.value_head_hidden_dims
-            )
+            if self._use_hyperbolic:
+                self.value_head = HyperbolicValueHead(self.transformer)
+            else:
+                self.value_head = ValueHead(
+                    self.transformer, hidden_dims=self.config.value_head_hidden_dims
+                )
             logger.warning(
                 f"No checkpoint found at {checkpoint_path}, using untrained value head"
             )
@@ -476,8 +485,8 @@ def build_eval_config(
         num_theorems=num_theorems,
         num_iterations=num_iterations_val,
         max_steps=max_steps_val,
-        batch_size=4,  # Single-worker evaluation profile
-        num_workers=1,
+        batch_size=12,  # Single-worker evaluation profile
+        num_workers=3,
         mcts_type=algorithm,
         indexed_corpus_path=indexed_corpus_val,  # type: ignore[arg-type]
         train_epochs=0,  # No training during evaluation
