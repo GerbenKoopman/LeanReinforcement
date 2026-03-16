@@ -11,6 +11,7 @@ requires-python = ">=3.10"
 dependencies = [
     "lean-dojo",
     "wandb",
+    "rich",
     "pytorch-lightning[extra]",
     "transformers",
     "gymnasium",
@@ -33,13 +34,9 @@ dependencies = [
     "types-tqdm",
     "types-setuptools",
     "cython",
-    "psutil",
-]
-
-[project.optional-dependencies]
-onnx = [
     "optimum",
     "onnxruntime-gpu",
+    "hypll",
 ]
 
 [tool.setuptools]

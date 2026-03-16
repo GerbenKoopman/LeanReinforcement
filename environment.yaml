@@ -38,4 +38,4 @@ dependencies:
     - cython
     - optimum
     - onnxruntime-gpu
-    
+    - hypll
