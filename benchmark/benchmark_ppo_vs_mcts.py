@@ -59,6 +59,7 @@ from lean_reinforcement.agent.onnx_transformer import (
     ONNXTransformer,
     is_onnx_available,
 )
+from lean_reinforcement.agent.ppo import HyperbolicPPO
 from lean_reinforcement.agent.value_head import ValueHead, HyperbolicValueHead
 from lean_reinforcement.utilities.checkpoint import load_checkpoint
 from lean_reinforcement.utilities.config import TrainingConfig
@@ -238,7 +239,10 @@ def build_config(
         batch_size=batch_size_val,
         num_workers=num_workers_val,
         mcts_type=mcfg["mcts_type"],
-        indexed_corpus_path=BASE_PARAMS.get("indexed_corpus_path"),  # type: ignore[arg-type]
+        indexed_corpus_path=cast(
+            str | None,
+            BASE_PARAMS.get("indexed_corpus_path"),
+        ),
         # Training
         train_epochs=train_epochs_val,
         value_head_batch_size=value_head_batch_size_val,
@@ -452,14 +456,6 @@ class PPOBenchmarkTrainer(Trainer):
 
     def _setup_models(self) -> None:
         """Set up LoRA-wrapped ByT5 + PoincareCritic + MCTS value proxy."""
-        import torch
-        from peft import LoraConfig, get_peft_model, TaskType
-        from hyperbolic_ppo_v0 import HyperboloidCritic
-
-        # The implementation is Poincare-based; HyperboloidCritic is kept
-        # as a backwards-compatible public alias in hyperbolic_ppo_v0.
-        PoincareCritic = HyperboloidCritic
-
         logger.info("[hyperbolic_ppo] Setting up LoRA actor + Poincare critic")
 
         # Load the base transformer (used for MCTS proof search by workers)
@@ -470,39 +466,7 @@ class PPOBenchmarkTrainer(Trainer):
         else:
             self.transformer = Transformer(model_name=self.config.model_name)
 
-        # --- Build LoRA-adapted model for PPO policy updates ---
-        from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
-
-        self.ppo_tokenizer = AutoTokenizer.from_pretrained(self.config.model_name)
-        ppo_base = AutoModelForSeq2SeqLM.from_pretrained(self.config.model_name)
-        for param in ppo_base.parameters():
-            param.requires_grad = False
-
-        lora_config = LoraConfig(  # type: ignore[call-arg]
-            task_type=TaskType.SEQ_2_SEQ_LM,
-            r=8,
-            lora_alpha=16,
-            lora_dropout=0.05,
-            target_modules=["q", "k", "v", "o"],
-        )
-        self.ppo_model = get_peft_model(ppo_base, lora_config)
-        if torch.cuda.is_available():
-            self.ppo_model.to("cuda")
-        self.ppo_model.print_trainable_parameters()
-
-        # --- Poincare Critic ---
-        self.critic = PoincareCritic().to(
-            "cuda" if torch.cuda.is_available() else "cpu"
-        )
-
-        # --- PPO optimiser (LoRA + critic) ---
-        trainable_actor = [p for p in self.ppo_model.parameters() if p.requires_grad]
-        self.ppo_optimizer = torch.optim.AdamW(
-            [
-                {"params": trainable_actor, "lr": 3e-4},
-                {"params": self.critic.parameters(), "lr": 3e-4},
-            ]
-        )
+        self.hyperbolic_ppo = HyperbolicPPO(model_name=self.config.model_name)
 
         # --- Standard value head for MCTS data collection ---
         # (workers don't run PPO — they use the frozen value head for MCTS)
@@ -522,104 +486,9 @@ class PPOBenchmarkTrainer(Trainer):
         Uses states and value targets from MCTS rollouts to update the
         LoRA actor and Poincare critic.
         """
-        import torch
-        from hyperbolic_ppo_v0 import (
-            get_action_log_probs,
-            compute_ppo_actor_loss,
-            compute_critic_loss,
-            returns_to_bin_targets,
-        )
-
-        device = next(self.ppo_model.parameters()).device
-
-        # Filter to value training samples with states
-        samples = [
-            d for d in training_data if d.get("type") == "value" and d.get("state")
-        ]
-        if len(samples) < 2:
-            logger.warning("Not enough PPO training samples, skipping update")
-            return {"ppo_actor_loss": 0.0, "ppo_critic_loss": 0.0}
-
-        # Encode states using the frozen encoder
-        states = [s["state"] for s in samples]
-
-        # Map value_target ∈ [-1, 1] to [0, 1] for the categorical critic
-        raw_targets = [s.get("value_target", 0.0) for s in samples]
-        returns = torch.tensor(
-            [(t + 1.0) / 2.0 for t in raw_targets], device=device
-        ).clamp(0.0, 1.0)
-
-        # Tokenize states for the LoRA actor (encoder input)
-        enc_tok = self.ppo_tokenizer(
-            states,
-            return_tensors="pt",
-            padding=True,
-            truncation=True,
-            max_length=2300,
-        ).to(device)
-
-        # Create dummy decoder inputs (we don't have real actions in MCTS data,
-        # so we use the model's own greedy decode as the "action")
-        with torch.no_grad():
-            dec_ids = self.ppo_model.generate(
-                enc_tok.input_ids,
-                max_new_tokens=64,
-                do_sample=False,
-            )
-            # Compute old log-probs under current policy (before update)
-            old_log_probs = get_action_log_probs(
-                self.ppo_model,
-                enc_tok.input_ids,
-                dec_ids,
-            ).detach()
-
-        # PPO update iterations
-        num_ppo_epochs = 3
-        total_actor_loss = 0.0
-        total_critic_loss = 0.0
-        values = torch.zeros(1, device=device)  # placeholder for logging
-
-        for _ in range(num_ppo_epochs):
-            self.ppo_optimizer.zero_grad()
-
-            # Actor: new log-probs
-            new_log_probs = get_action_log_probs(
-                self.ppo_model,
-                enc_tok.input_ids,
-                dec_ids,
-            )
-
-            # Critic: encode via the MCTS encoder (frozen, shared)
-            with torch.no_grad():
-                encoder = self.ppo_model.get_encoder()  # type: ignore[operator]
-                enc_out = encoder(enc_tok.input_ids).last_hidden_state
-                enc_features = enc_out.mean(dim=1)
-
-            values, bin_logits, _ = self.critic(enc_features)
-
-            # Advantages
-            advantages = returns - values.detach()
-
-            # Actor loss (PPO clipped surrogate)
-            actor_loss = compute_ppo_actor_loss(
-                new_log_probs,
-                old_log_probs,
-                advantages,
-            )
-
-            # Critic loss (categorical cross-entropy)
-            target_bins = returns_to_bin_targets(returns)
-            critic_loss = compute_critic_loss(bin_logits, target_bins)
-
-            loss = actor_loss + 0.5 * critic_loss
-            loss.backward()
-            self.ppo_optimizer.step()
-
-            total_actor_loss += actor_loss.item()
-            total_critic_loss += critic_loss.item()
-
-        avg_actor = total_actor_loss / num_ppo_epochs
-        avg_critic = total_critic_loss / num_ppo_epochs
+        metrics = self.hyperbolic_ppo.update_from_training_data(training_data)
+        avg_actor = metrics["ppo_actor_loss"]
+        avg_critic = metrics["ppo_critic_loss"]
         logger.info(
             f"PPO update: actor_loss={avg_actor:.4f}, critic_loss={avg_critic:.4f}"
         )
@@ -629,63 +498,30 @@ class PPOBenchmarkTrainer(Trainer):
                 {
                     "ppo/actor_loss": avg_actor,
                     "ppo/critic_loss": avg_critic,
-                    "ppo/value_mean": values.mean().item(),
+                    "ppo/value_mean": metrics.get("ppo_value_mean", 0.0),
                 }
             )
 
-        return {"ppo_actor_loss": avg_actor, "ppo_critic_loss": avg_critic}
+        return {
+            "ppo_actor_loss": avg_actor,
+            "ppo_critic_loss": avg_critic,
+            "ppo_value_mean": metrics.get("ppo_value_mean", 0.0),
+        }
 
     def _save_ppo_checkpoint(self, epoch: int) -> None:
         """Save LoRA adapter and critic weights."""
-        import torch
-
-        lora_path = self.checkpoint_dir / f"ppo_actor_epoch_{epoch}.pth"
-        self.ppo_model.save_pretrained(str(lora_path))
-
-        critic_path = self.checkpoint_dir / f"ppo_critic_epoch_{epoch}.pth"
-        torch.save(
-            {
-                "critic_state_dict": self.critic.state_dict(),
-                "optimizer_state_dict": self.ppo_optimizer.state_dict(),
-                "epoch": epoch,
-            },
-            str(critic_path),
-        )
+        self.hyperbolic_ppo.save_checkpoint(self.checkpoint_dir, epoch, prefix="ppo")
         logger.info(f"PPO checkpoint saved: epoch {epoch}")
 
     def _load_ppo_checkpoint(self) -> None:
         """Resume from the latest PPO checkpoint."""
-        import torch
-        from peft import PeftModel
-
-        max_epoch = 0
-        for f in self.checkpoint_dir.glob("ppo_critic_epoch_*.pth"):
-            try:
-                e = int(f.stem.split("_")[-1])
-                max_epoch = max(max_epoch, e)
-            except ValueError:
-                continue
-
-        if max_epoch > 0:
-            critic_path = self.checkpoint_dir / f"ppo_critic_epoch_{max_epoch}.pth"
-            ckpt = torch.load(
-                str(critic_path),
-                map_location="cuda" if torch.cuda.is_available() else "cpu",
-            )
-            self.critic.load_state_dict(ckpt["critic_state_dict"])
-            self.ppo_optimizer.load_state_dict(ckpt["optimizer_state_dict"])
-
-            lora_path = self.checkpoint_dir / f"ppo_actor_epoch_{max_epoch}.pth"
-            if lora_path.exists():
-                self.ppo_model = PeftModel.from_pretrained(
-                    self.ppo_model.base_model.model,
-                    str(lora_path),
-                )
-                if torch.cuda.is_available():
-                    self.ppo_model.to("cuda")
-
-            self.start_epoch = max_epoch
-            logger.info(f"Resumed PPO from epoch {max_epoch}")
+        loaded_epoch = self.hyperbolic_ppo.load_latest_checkpoint(
+            self.checkpoint_dir,
+            prefix="ppo",
+        )
+        if loaded_epoch > 0:
+            self.start_epoch = loaded_epoch
+            logger.info(f"Resumed PPO from epoch {loaded_epoch}")
 
     def train(self) -> List[Dict[str, Any]]:
         """Training loop: MCTS data collection → value head + PPO updates."""
