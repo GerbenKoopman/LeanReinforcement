@@ -177,7 +177,7 @@ def test_value_head(
     device: str,
     batch_size: int,
     num_tactics: int,
-    hidden_dims: list[int],
+    latent_dim: int,
 ) -> Optional[float]:
     """
     Test generate + value head forward pass (alpha_zero overhead).
@@ -212,14 +212,10 @@ def test_value_head(
             features = encoder_out.last_hidden_state.mean(dim=1)  # (batch, hidden)
             hidden_size = features.shape[-1]
 
-            # Simulate MLP forward with the configured hidden dims
-            x = features
-            in_dim = hidden_size
-            for h_dim in hidden_dims:
-                w = torch.randn(in_dim, h_dim, device=device)
-                x = torch.relu(x @ w)
-                in_dim = h_dim
-            w_out = torch.randn(in_dim, 1, device=device)
+            # Simulate MLP forward: hidden_size -> latent_dim -> 1
+            w_in = torch.randn(hidden_size, latent_dim, device=device)
+            x = torch.relu(features @ w_in)
+            w_out = torch.randn(latent_dim, 1, device=device)
             _ = torch.tanh(x @ w_out)
 
         value_peak = torch.cuda.max_memory_allocated() / 1024**3
@@ -242,7 +238,7 @@ def test_value_head(
 def run_tuning(
     model_name: str,
     reserve_gb: float,
-    value_head_hidden_dims: list[int],
+    value_head_latent_dim: int,
 ) -> dict:
     """Run the full auto-tuning process. Returns the results dict."""
     gpu_info = get_gpu_info()
@@ -343,7 +339,7 @@ def run_tuning(
         )
 
         peak = test_value_head(
-            model, tokenizer, device, batch_size, num_tactics, value_head_hidden_dims
+            model, tokenizer, device, batch_size, num_tactics, value_head_latent_dim
         )
         if peak is None:
             print(f"{label} → OOM ✗")
@@ -421,11 +417,10 @@ def main():
         help="GB of VRAM to keep free as headroom (default: 1.0)",
     )
     parser.add_argument(
-        "--value-head-hidden-dims",
+        "--value-head-latent-dim",
         type=int,
-        nargs="*",
-        default=[1024, 512, 256, 128, 64],
-        help="Hidden dims for value head MLP (matches training config)",
+        default=1024,
+        help="Latent dim for value head MLP (matches training config)",
     )
     parser.add_argument(
         "--output",
@@ -437,7 +432,7 @@ def main():
     results = run_tuning(
         model_name=args.model,
         reserve_gb=args.reserve_gb,
-        value_head_hidden_dims=args.value_head_hidden_dims,
+        value_head_latent_dim=args.value_head_latent_dim,
     )
 
     # Save

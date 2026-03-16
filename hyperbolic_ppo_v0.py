@@ -5,11 +5,11 @@ Hyperbolic PPO v0 Feasibility Script
 Standalone benchmark for a Hyperbolic PPO update step on top of a frozen
 ByT5-small backbone.  The design follows the HYPER++ protocol:
 
-  * **Actor** – Frozen ByT5 with LoRA adapters injected into the decoder's
-    self-attention and cross-attention layers (via HuggingFace ``peft``).
-  * **Critic** – HYPER++ adapter (Linear → RMSNorm → Learned Scaling)
-    projecting frozen encoder features onto the **Hyperboloid** manifold,
-    followed by a 51-bin Categorical Value Head.
+    * **Actor** – Frozen ByT5 with LoRA adapters injected into the decoder's
+        self-attention and cross-attention layers (via HuggingFace ``peft``).
+    * **Critic** – HYPER++ adapter (Linear → RMSNorm → Learned Scaling)
+        projecting frozen encoder features onto the **Poincare ball** manifold,
+        followed by a 51-bin Categorical Value Head.
   * **Loss** – PPO clipped surrogate for the actor; cross-entropy
     categorical loss for the critic (no MSE).
 
@@ -28,6 +28,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from peft import LoraConfig, get_peft_model, TaskType
+from hypll.manifolds.poincare_ball import (
+    Curvature,
+    PoincareBall,
+)
+from hypll.tensors import TangentTensor
+from hypll import nn as hnn
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -118,17 +124,17 @@ def get_action_log_probs(
 
 
 # ===================================================================
-# Phase 2 & 3: Hyperboloid Critic with Categorical Value Head
+# Phase 2 & 3: Poincare Critic with Categorical Value Head
 # ===================================================================
 
 
-class HyperboloidCritic(nn.Module):
-    """HYPER++ critic: Euclidean → Hyperboloid → Categorical value.
+class PoincareCritic(nn.Module):
+    """HYPER++ critic: Euclidean -> Poincare ball -> Categorical value.
 
     Architecture:
         1. Linear(1472 → 64) → RMSNorm → Learned scaling
-        2. Hyperboloid projection  (output dim = 65)
-        3. Linear(65 → 51)  →  softmax  →  categorical value
+        2. Poincare expmap at origin
+        3. Hyperbolic Linear(64 -> 51) -> logmap -> softmax -> categorical value
     """
 
     def __init__(
@@ -142,33 +148,24 @@ class HyperboloidCritic(nn.Module):
         super().__init__()
         self.latent_dim = latent_dim
         self.rho_max = rho_max
+        self.manifold = PoincareBall(Curvature(1.0))
 
         # --- HYPER++ adapter ---
         self.linear = nn.Linear(input_dim, latent_dim)
         self.rms_norm = nn.RMSNorm(latent_dim)
         self.xi = nn.Parameter(torch.tensor(xi_init))
 
-        # --- Categorical value head ---
-        # Input is hyperboloid vector of dim (latent_dim + 1) = 65
-        self.value_linear = nn.Linear(latent_dim + 1, num_bins)
+        # --- Categorical value head in hyperbolic space ---
+        self.value_linear = hnn.HLinear(latent_dim, num_bins, self.manifold)
 
         # Support vector: evenly spaced bins [0, 1]
         self.register_buffer("support", torch.linspace(0.0, 1.0, num_bins))
 
-    # ----- Hyperboloid projection (tangent space at origin) -----
-    @staticmethod
-    def project_to_hyperboloid(
-        x_e: torch.Tensor,
-        eps: float = 1e-7,
-    ) -> torch.Tensor:
-        """Map Euclidean vector x_E to the Hyperboloid H^n.
-
-        x_H = [cosh(||x_E||),  sinh(||x_E||) * x_E / ||x_E||]
-        """
-        norm_x = torch.norm(x_e, p=2, dim=-1, keepdim=True)  # (B, 1)
-        x_0 = torch.cosh(norm_x)  # (B, 1)
-        x_space = torch.sinh(norm_x) * (x_e / (norm_x + eps))  # (B, D)
-        return torch.cat([x_0, x_space], dim=-1)  # (B, D+1)
+    def project_to_poincare_ball(self, x_e: torch.Tensor) -> torch.Tensor:
+        """Map Euclidean tangent vectors at the origin to Poincare-ball coordinates."""
+        tangent = TangentTensor(data=x_e, man_dim=1, manifold=self.manifold)
+        x_h = self.manifold.expmap(tangent)
+        return cast(torch.Tensor, x_h.tensor)
 
     def forward(
         self,
@@ -189,11 +186,13 @@ class HyperboloidCritic(nn.Module):
         x = self.rms_norm(x)
         x = self.rho_max * torch.sigmoid(self.xi) * x
 
-        # Hyperboloid projection
-        x_h = self.project_to_hyperboloid(x)  # (B, latent_dim + 1)
+        # Poincare projection via expmap at origin
+        tangent = TangentTensor(data=x, man_dim=1, manifold=self.manifold)
+        x_h = self.manifold.expmap(tangent)
 
-        # Categorical value head
-        bin_logits = self.value_linear(x_h)  # (B, num_bins)
+        # Hyperbolic linear map, then logmap back to Euclidean logits.
+        bin_logits_h = self.value_linear(x_h)  # (B, num_bins) manifold points
+        bin_logits = self.manifold.logmap(x=None, y=bin_logits_h).tensor
         bin_probs = F.softmax(bin_logits, dim=-1)  # (B, num_bins)
 
         # Expected value = Σ p_i * z_i
@@ -201,6 +200,10 @@ class HyperboloidCritic(nn.Module):
         value = (bin_probs * support).sum(dim=-1)  # (B,)
 
         return value, bin_logits, bin_probs
+
+
+class HyperboloidCritic(PoincareCritic):
+    """Backward-compatible alias; implementation now uses Poincare-ball geometry."""
 
 
 # ===================================================================
@@ -272,7 +275,7 @@ def compute_critic_loss(
 
 def report_gradient_norms(
     peft_model: nn.Module,
-    critic: HyperboloidCritic,
+    critic: PoincareCritic,
 ) -> None:
     """Print gradient norms for key parameter groups."""
     # LoRA parameters
@@ -291,21 +294,17 @@ def report_gradient_norms(
     else:
         print("  xi grad                 : None (no grad)")
 
-    # Critic linear layers
+    # Critic layer grad norms
     for layer_name in ("linear", "value_linear"):
         layer = getattr(critic, layer_name)
-        w_norm = (
-            layer.weight.grad.data.norm(2).item()
-            if layer.weight.grad is not None
-            else float("nan")
-        )
-        b_norm = (
-            layer.bias.grad.data.norm(2).item()
-            if layer.bias is not None and layer.bias.grad is not None
-            else float("nan")
-        )
-        print(f"  {layer_name}.weight grad : {w_norm:.6f}")
-        print(f"  {layer_name}.bias grad   : {b_norm:.6f}")
+        layer_sq = 0.0
+        layer_count = 0
+        for param in layer.parameters():
+            if param.grad is not None:
+                layer_sq += param.grad.data.norm(2).item() ** 2
+                layer_count += 1
+        layer_norm = math.sqrt(layer_sq) if layer_count > 0 else float("nan")
+        print(f"  {layer_name} grad norm    : {layer_norm:.6f} ({layer_count} tensors)")
 
 
 def assert_base_frozen(peft_model: nn.Module) -> None:
@@ -338,12 +337,12 @@ def main() -> None:  # noqa: C901
     peft_model.to(device)
 
     # ------------------------------------------------------------------
-    # 2. Build Hyperboloid Critic
+    # 2. Build Poincare Critic
     # ------------------------------------------------------------------
     print("\n" + "=" * 60)
-    print("Phase 2–3: Building Hyperboloid Critic (Categorical Value Head)")
+    print("Phase 2-3: Building Poincare Critic (Categorical Value Head)")
     print("=" * 60)
-    critic = HyperboloidCritic().to(device)
+    critic = PoincareCritic().to(device)
     print(f"  Critic parameters: {sum(p.numel() for p in critic.parameters()):,}")
 
     # ------------------------------------------------------------------
