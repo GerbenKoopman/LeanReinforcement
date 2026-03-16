@@ -23,7 +23,7 @@ class TestTrainingConfig(unittest.TestCase):
             proof_timeout=1200.0,
             train_epochs=2,
             value_head_batch_size=4,
-            value_head_hidden_dims=[512, 256],
+            value_head_latent_dim=512,
             train_value_head=False,
             use_final_reward=True,
             save_training_data=False,
@@ -49,7 +49,7 @@ class TestTrainingConfig(unittest.TestCase):
         self.assertEqual(config.num_tactics_to_expand, 4)
         self.assertEqual(config.max_rollout_depth, 10)
         self.assertEqual(config.checkpoint_dir, "/tmp/ckpt")
-        self.assertEqual(config.value_head_hidden_dims, [512, 256])
+        self.assertEqual(config.value_head_latent_dim, 512)
 
     def test_defaults(self) -> None:
         # This test assumes we can run get_config with empty args,

@@ -21,7 +21,7 @@ class TestConfig(unittest.TestCase):
                 config.train_value_head,
                 OPTIMAL_DEFAULTS["train_value_head"],
             )
-            self.assertEqual(config.value_head_hidden_dims, [256])
+            self.assertEqual(config.value_head_latent_dim, 1024)
 
     def test_custom_args(self) -> None:
         """Test that command line arguments override defaults."""
@@ -46,36 +46,33 @@ class TestConfig(unittest.TestCase):
             self.assertFalse(config.save_training_data)
             self.assertFalse(config.save_checkpoints)
 
-    def test_value_head_hidden_dims_custom(self) -> None:
-        """Test custom value head hidden dimensions."""
+    def test_value_head_latent_dim_custom(self) -> None:
+        """Test custom value head latent dimension."""
         test_args = [
             "prog",
-            "--value-head-hidden-dims",
+            "--value-head-latent-dim",
             "512",
-            "256",
-            "128",
         ]
         with patch.object(sys, "argv", test_args):
             config = get_config()
-            self.assertEqual(config.value_head_hidden_dims, [512, 256, 128])
+            self.assertEqual(config.value_head_latent_dim, 512)
 
-    def test_value_head_hidden_dims_empty(self) -> None:
-        """Test empty value head hidden dimensions (direct projection)."""
+    def test_value_head_latent_dim_default(self) -> None:
+        """Test default value head latent dimension."""
         test_args = [
             "prog",
-            "--value-head-hidden-dims",
         ]
         with patch.object(sys, "argv", test_args):
             config = get_config()
-            self.assertEqual(config.value_head_hidden_dims, [])
+            self.assertEqual(config.value_head_latent_dim, 1024)
 
-    def test_value_head_hidden_dims_single(self) -> None:
-        """Test single value head hidden dimension."""
+    def test_value_head_latent_dim_single(self) -> None:
+        """Test single value head latent dimension."""
         test_args = [
             "prog",
-            "--value-head-hidden-dims",
+            "--value-head-latent-dim",
             "1024",
         ]
         with patch.object(sys, "argv", test_args):
             config = get_config()
-            self.assertEqual(config.value_head_hidden_dims, [1024])
+            self.assertEqual(config.value_head_latent_dim, 1024)

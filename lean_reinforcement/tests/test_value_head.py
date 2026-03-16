@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import patch, MagicMock
+from typing import Any, cast
 import torch
 import torch.nn as nn
 
@@ -122,8 +123,8 @@ class TestValueHead(unittest.TestCase):
             self.assertLessEqual(value, 1.0)
 
 
-class TestValueHeadHiddenDims(unittest.TestCase):
-    """Test suite for configurable hidden dimensions."""
+class TestValueHeadLatentDim(unittest.TestCase):
+    """Test suite for latent-dimension ValueHead behavior."""
 
     @patch("lean_reinforcement.agent.transformer.AutoModelForSeq2SeqLM.from_pretrained")
     @patch("lean_reinforcement.agent.transformer.AutoTokenizer.from_pretrained")
@@ -143,73 +144,47 @@ class TestValueHeadHiddenDims(unittest.TestCase):
         self.mock_transformer.tokenizer = self.mock_tokenizer
         self.mock_transformer.model = self.mock_transformer_model
 
-    def test_default_hidden_dims(self) -> None:
-        """Test that default hidden dims is [256]."""
+    def test_default_latent_dim(self) -> None:
+        """Test that default latent dim is used."""
         value_head = ValueHead(self.mock_transformer)
-        self.assertEqual(value_head.hidden_dims, [256])
+        self.assertEqual(value_head.latent_dim, 1024)
         self.assertEqual(value_head.input_dim, ENCODER_OUTPUT_DIM)
 
-    def test_empty_hidden_dims(self) -> None:
-        """Test direct linear projection with empty hidden dims."""
-        value_head = ValueHead(self.mock_transformer, hidden_dims=[])
-        self.assertEqual(value_head.hidden_dims, [])
+    def test_custom_latent_dim(self) -> None:
+        """Test custom latent dim projection."""
+        value_head = ValueHead(self.mock_transformer, latent_dim=512)
+        reg = cast(Any, value_head.value_head)
 
-        # Check architecture: should be just one linear layer
-        layers = list(value_head.value_head.children())
-        self.assertEqual(len(layers), 1)
-        self.assertIsInstance(layers[0], nn.Linear)
-        self.assertEqual(layers[0].in_features, ENCODER_OUTPUT_DIM)
-        self.assertEqual(layers[0].out_features, 1)
+        self.assertIsInstance(value_head.value_head, nn.Module)
+        self.assertEqual(reg.in_linear.in_features, ENCODER_OUTPUT_DIM)
+        self.assertEqual(reg.in_linear.out_features, 512)
+        self.assertEqual(reg.out_linear.in_features, 512)
+        self.assertEqual(reg.out_linear.out_features, 1)
 
-    def test_single_hidden_layer(self) -> None:
-        """Test single hidden layer configuration."""
-        value_head = ValueHead(self.mock_transformer, hidden_dims=[512])
-        self.assertEqual(value_head.hidden_dims, [512])
+    def test_latent_dim_controls_projection(self) -> None:
+        """Latent dim controls projection dimension."""
+        value_head = ValueHead(self.mock_transformer, latent_dim=384)
+        reg = cast(Any, value_head.value_head)
+        self.assertEqual(value_head.latent_dim, 384)
+        self.assertEqual(reg.in_linear.in_features, ENCODER_OUTPUT_DIM)
+        self.assertEqual(reg.in_linear.out_features, 384)
+        self.assertEqual(reg.out_linear.in_features, 384)
+        self.assertEqual(reg.out_linear.out_features, 1)
 
-        # Check architecture: Linear -> ReLU -> Linear
-        layers = list(value_head.value_head.children())
-        self.assertEqual(len(layers), 3)
-        self.assertIsInstance(layers[0], nn.Linear)
-        self.assertEqual(layers[0].in_features, ENCODER_OUTPUT_DIM)
-        self.assertEqual(layers[0].out_features, 512)
-        self.assertIsInstance(layers[1], nn.ReLU)
-        self.assertIsInstance(layers[2], nn.Linear)
-        self.assertEqual(layers[2].in_features, 512)
-        self.assertEqual(layers[2].out_features, 1)
-
-    def test_multiple_hidden_layers(self) -> None:
-        """Test multiple hidden layers configuration."""
-        hidden_dims = [512, 256, 128]
-        value_head = ValueHead(self.mock_transformer, hidden_dims=hidden_dims)
-        self.assertEqual(value_head.hidden_dims, hidden_dims)
-
-        # Check architecture: Linear -> ReLU -> Linear -> ReLU -> Linear -> ReLU -> Linear
-        layers = list(value_head.value_head.children())
-        self.assertEqual(len(layers), 7)  # 3 Linear + 3 ReLU + 1 final Linear
-
-        # First hidden layer
-        self.assertEqual(layers[0].in_features, ENCODER_OUTPUT_DIM)
-        self.assertEqual(layers[0].out_features, 512)
-
-        # Second hidden layer
-        self.assertEqual(layers[2].in_features, 512)
-        self.assertEqual(layers[2].out_features, 256)
-
-        # Third hidden layer
-        self.assertEqual(layers[4].in_features, 256)
-        self.assertEqual(layers[4].out_features, 128)
-
-        # Output layer
-        self.assertEqual(layers[6].in_features, 128)
-        self.assertEqual(layers[6].out_features, 1)
+    def test_explicit_latent_dim(self) -> None:
+        """Explicit latent dim should be used as configured."""
+        value_head = ValueHead(self.mock_transformer, latent_dim=384)
+        reg = cast(Any, value_head.value_head)
+        self.assertEqual(value_head.latent_dim, 384)
+        self.assertEqual(reg.in_linear.out_features, 384)
+        self.assertEqual(reg.out_linear.in_features, 384)
 
     def test_custom_input_dim(self) -> None:
         """Test custom input dimension."""
-        value_head = ValueHead(self.mock_transformer, hidden_dims=[256], input_dim=768)
+        value_head = ValueHead(self.mock_transformer, latent_dim=1024, input_dim=768)
+        reg = cast(Any, value_head.value_head)
         self.assertEqual(value_head.input_dim, 768)
-
-        layers = list(value_head.value_head.children())
-        self.assertEqual(layers[0].in_features, 768)
+        self.assertEqual(reg.in_linear.in_features, 768)
 
     def test_forward_pass_default(self) -> None:
         """Test forward pass with default configuration."""
@@ -219,17 +194,17 @@ class TestValueHeadHiddenDims(unittest.TestCase):
         output = value_head.value_head(features)
         self.assertEqual(output.shape, (2, 1))
 
-    def test_forward_pass_empty_hidden(self) -> None:
-        """Test forward pass with empty hidden dims."""
-        value_head = ValueHead(self.mock_transformer, hidden_dims=[])
+    def test_forward_pass_custom_latent(self) -> None:
+        """Test forward pass with custom latent dim."""
+        value_head = ValueHead(self.mock_transformer, latent_dim=512)
         device = next(value_head.value_head.parameters()).device
         features = torch.randn(2, ENCODER_OUTPUT_DIM, device=device)
         output = value_head.value_head(features)
         self.assertEqual(output.shape, (2, 1))
 
-    def test_forward_pass_deep_network(self) -> None:
-        """Test forward pass with deep network."""
-        value_head = ValueHead(self.mock_transformer, hidden_dims=[1024, 512, 256, 128])
+    def test_forward_pass_large_latent(self) -> None:
+        """Test forward pass remains valid with large latent dim."""
+        value_head = ValueHead(self.mock_transformer, latent_dim=1024)
         device = next(value_head.value_head.parameters()).device
         features = torch.randn(2, ENCODER_OUTPUT_DIM, device=device)
         output = value_head.value_head(features)
@@ -237,7 +212,7 @@ class TestValueHeadHiddenDims(unittest.TestCase):
 
     def test_parameters_require_grad(self) -> None:
         """Test that value head parameters require gradients."""
-        value_head = ValueHead(self.mock_transformer, hidden_dims=[512, 256])
+        value_head = ValueHead(self.mock_transformer, latent_dim=512)
         for param in value_head.value_head.parameters():
             self.assertTrue(param.requires_grad)
 
