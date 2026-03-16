@@ -26,8 +26,7 @@ from lean_reinforcement.agent.onnx_transformer import (
     ONNXTransformer,
     is_onnx_available,
 )
-from lean_reinforcement.agent.value_head import ValueHead
-from lean_reinforcement.agent.hyperbolic_adapter import HyperbolicValueHead
+from lean_reinforcement.agent.value_head import ValueHead, HyperbolicValueHead
 from lean_reinforcement.training.trainer import Trainer
 from lean_reinforcement.training.worker import worker_loop
 from lean_reinforcement.training.progress import (
@@ -149,7 +148,7 @@ class TestEvaluator(Trainer):
                 self.value_head = HyperbolicValueHead(self.transformer)
             else:
                 self.value_head = ValueHead(
-                    self.transformer, hidden_dims=self.config.value_head_hidden_dims
+                    self.transformer, latent_dim=self.config.value_head_latent_dim
                 )
             loaded_epoch = load_checkpoint(self.value_head, run_dir, prefix=prefix)
             logger.info(f"Loaded checkpoint from epoch {loaded_epoch}")
@@ -159,7 +158,7 @@ class TestEvaluator(Trainer):
                 self.value_head = HyperbolicValueHead(self.transformer)
             else:
                 self.value_head = ValueHead(
-                    self.transformer, hidden_dims=self.config.value_head_hidden_dims
+                    self.transformer, latent_dim=self.config.value_head_latent_dim
                 )
             logger.warning(
                 f"No checkpoint found at {checkpoint_path}, using untrained value head"
@@ -468,7 +467,7 @@ def build_eval_config(
     data_type_val: str = BASE_PARAMS["data_type"]  # type: ignore[assignment]
     max_steps_val: int = BASE_PARAMS["max_steps"]  # type: ignore[assignment]
     indexed_corpus_val = BASE_PARAMS["indexed_corpus_path"]
-    value_head_hidden_dims_val: list = BASE_PARAMS["value_head_hidden_dims"]  # type: ignore[assignment]
+    value_head_latent_dim_val: int = BASE_PARAMS["value_head_latent_dim"]  # type: ignore[assignment]
     use_final_reward_val: bool = BASE_PARAMS["use_final_reward"]  # type: ignore[assignment]
     inference_timeout_val: float = BASE_PARAMS["inference_timeout"]  # type: ignore[assignment]
     model_name_val: str = BASE_PARAMS["model_name"]  # type: ignore[assignment]
@@ -491,7 +490,7 @@ def build_eval_config(
         indexed_corpus_path=indexed_corpus_val,  # type: ignore[arg-type]
         train_epochs=0,  # No training during evaluation
         value_head_batch_size=2,
-        value_head_hidden_dims=value_head_hidden_dims_val,  # type: ignore[arg-type]
+        value_head_latent_dim=value_head_latent_dim_val,
         train_value_head=True,  # Load value head for both algorithms
         use_final_reward=use_final_reward_val,
         save_training_data=False,

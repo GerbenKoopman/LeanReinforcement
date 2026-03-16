@@ -7,8 +7,8 @@ This script runs a controlled three-way comparison across:
   1. **Euclidean MCTS** — AlphaZero MCTS with standard ``ValueHead`` (MLP critic).
   2. **Hyperbolic MCTS** — AlphaZero MCTS with ``HyperbolicValueHead``
      (Poincaré ball critic).
-  3. **Hyperbolic PPO**  — Frozen ByT5 + LoRA actor + ``HyperboloidCritic``
-     (Hyperboloid manifold + categorical value head).
+  3. **Hyperbolic PPO**  — Frozen ByT5 + LoRA actor + ``PoincareCritic``
+      (Poincare-ball manifold + categorical value head).
 
 Training and Evaluation:
   - Training runs on the **train split** using self-play MCTS data collection
@@ -59,8 +59,7 @@ from lean_reinforcement.agent.onnx_transformer import (
     ONNXTransformer,
     is_onnx_available,
 )
-from lean_reinforcement.agent.value_head import ValueHead
-from lean_reinforcement.agent.hyperbolic_adapter import HyperbolicValueHead
+from lean_reinforcement.agent.value_head import ValueHead, HyperbolicValueHead
 from lean_reinforcement.utilities.checkpoint import load_checkpoint
 from lean_reinforcement.utilities.config import TrainingConfig
 from lean_reinforcement.utilities.memory import log_gpu_memory
@@ -118,7 +117,7 @@ METHOD_CONFIG: Dict[str, MethodSettings] = {
 METHOD_LABELS = {
     "euclidean_mcts": "Euclidean MCTS (ValueHead)",
     "hyperbolic_mcts": "Hyperbolic MCTS (Poincaré)",
-    "hyperbolic_ppo": "Hyperbolic PPO (Hyperboloid + LoRA)",
+    "hyperbolic_ppo": "Hyperbolic PPO (Poincare + LoRA)",
 }
 
 METHOD_COLORS = {
@@ -212,7 +211,7 @@ def build_config(
     # Force value-head training epochs to 50 for the three-way benchmark
     train_epochs_val = 50
     value_head_batch_size_val = int(cast(int, BASE_PARAMS["value_head_batch_size"]))
-    value_head_hidden_dims_val = cast(List[int], BASE_PARAMS["value_head_hidden_dims"])
+    value_head_latent_dim_val = int(cast(int, BASE_PARAMS["value_head_latent_dim"]))
     # Always train value head for the three-way benchmark so checkpoints exist
     # for resuming and post-training evaluation.
     train_value_head_val = True
@@ -243,7 +242,7 @@ def build_config(
         # Training
         train_epochs=train_epochs_val,
         value_head_batch_size=value_head_batch_size_val,
-        value_head_hidden_dims=value_head_hidden_dims_val,
+        value_head_latent_dim=value_head_latent_dim_val,
         train_value_head=train_value_head_val,
         use_hyperbolic=mcfg["use_hyperbolic"],
         use_final_reward=use_final_reward_val,
@@ -360,7 +359,7 @@ class MCTSBenchmarkTrainer(Trainer):
             logger.info("Using Euclidean (MLP) value head")
             self.value_head = ValueHead(
                 transformer_for_vh,
-                hidden_dims=self.config.value_head_hidden_dims,
+                latent_dim=self.config.value_head_latent_dim,
             )
 
         if self.config.resume:
@@ -408,11 +407,11 @@ class PPOBenchmarkTrainer(Trainer):
     """Trainer for the Hyperbolic PPO approach.
 
     During data collection the PPO trainer still uses AlphaZero MCTS
-    (with a HyperboloidCritic-backed value head) to explore the proof
+    (with a PoincareCritic-backed value head) to explore the proof
     tree — just like the MCTS baselines.  The key difference is that
     after each epoch's data collection, the **decoder policy** is also
     updated via PPO (using LoRA weights), and the critic uses the
-    Hyperboloid manifold with categorical value loss.
+    Poincare-ball manifold with categorical value loss.
     """
 
     def __init__(
@@ -452,12 +451,16 @@ class PPOBenchmarkTrainer(Trainer):
         self._setup_multiprocessing()
 
     def _setup_models(self) -> None:
-        """Set up LoRA-wrapped ByT5 + HyperboloidCritic + MCTS value proxy."""
+        """Set up LoRA-wrapped ByT5 + PoincareCritic + MCTS value proxy."""
         import torch
         from peft import LoraConfig, get_peft_model, TaskType
         from hyperbolic_ppo_v0 import HyperboloidCritic
 
-        logger.info("[hyperbolic_ppo] Setting up LoRA actor + Hyperboloid critic")
+        # The implementation is Poincare-based; HyperboloidCritic is kept
+        # as a backwards-compatible public alias in hyperbolic_ppo_v0.
+        PoincareCritic = HyperboloidCritic
+
+        logger.info("[hyperbolic_ppo] Setting up LoRA actor + Poincare critic")
 
         # Load the base transformer (used for MCTS proof search by workers)
         if self.config.use_onnx and is_onnx_available():
@@ -487,8 +490,8 @@ class PPOBenchmarkTrainer(Trainer):
             self.ppo_model.to("cuda")
         self.ppo_model.print_trainable_parameters()
 
-        # --- Hyperboloid Critic ---
-        self.critic = HyperboloidCritic().to(
+        # --- Poincare Critic ---
+        self.critic = PoincareCritic().to(
             "cuda" if torch.cuda.is_available() else "cpu"
         )
 
@@ -517,7 +520,7 @@ class PPOBenchmarkTrainer(Trainer):
         """Run PPO update steps on collected MCTS data.
 
         Uses states and value targets from MCTS rollouts to update the
-        LoRA actor and Hyperboloid critic.
+        LoRA actor and Poincare critic.
         """
         import torch
         from hyperbolic_ppo_v0 import (

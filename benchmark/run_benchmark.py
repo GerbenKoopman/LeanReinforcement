@@ -55,7 +55,7 @@ BASE_PARAMS = {
         if os.environ.get("CORPUS_DIR")
         else None
     ),
-    "value_head_hidden_dims": [1024, 512, 256, 128, 64],
+    "value_head_latent_dim": 1024,
     "num_theorems": int(OPTIMAL_DEFAULTS["num_theorems"]),
     "batch_size": int(OPTIMAL_DEFAULTS["batch_size"]),
     "num_tactics_to_expand": int(OPTIMAL_DEFAULTS["num_tactics_to_expand"]),
@@ -179,9 +179,7 @@ def build_config(
     value_head_batch_size_val: int = BASE_PARAMS[  # type: ignore[assignment]
         "value_head_batch_size"
     ]
-    value_head_hidden_dims_val: list = BASE_PARAMS[  # type: ignore[assignment]
-        "value_head_hidden_dims"
-    ]
+    value_head_latent_dim_val: int = BASE_PARAMS["value_head_latent_dim"]  # type: ignore[assignment]
     train_value_head_val: bool = BASE_PARAMS["train_value_head"]  # type: ignore[assignment]
     use_final_reward_val: bool = BASE_PARAMS["use_final_reward"]  # type: ignore[assignment]
     save_training_data_val: bool = BASE_PARAMS["save_training_data"]  # type: ignore[assignment]
@@ -209,7 +207,7 @@ def build_config(
         # Training
         train_epochs=train_epochs_val,
         value_head_batch_size=value_head_batch_size_val,
-        value_head_hidden_dims=value_head_hidden_dims_val,  # type: ignore[arg-type]
+        value_head_latent_dim=value_head_latent_dim_val,
         train_value_head=train_value_head_val,
         use_final_reward=use_final_reward_val,
         save_training_data=save_training_data_val,
@@ -403,7 +401,7 @@ class BenchmarkTrainer(Trainer):
 
         if self.config.mcts_type == "alpha_zero" or self.config.train_value_head:
             self.value_head = ValueHead(
-                self.transformer, hidden_dims=self.config.value_head_hidden_dims
+                self.transformer, latent_dim=self.config.value_head_latent_dim
             )
 
             if self.config.resume:
