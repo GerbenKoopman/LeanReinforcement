@@ -31,8 +31,7 @@ from lean_reinforcement.utilities.analyze_training_data import (
     save_training_data,
 )
 from lean_reinforcement.agent.transformer import Transformer
-from lean_reinforcement.agent.value_head import ValueHead
-from lean_reinforcement.agent.hyperbolic_adapter import HyperbolicValueHead
+from lean_reinforcement.agent.value_head import ValueHead, HyperbolicValueHead
 from lean_reinforcement.training.datasets import ValueHeadDataset
 from lean_reinforcement.training.inference_server import InferenceServer
 from lean_reinforcement.training.progress import (
@@ -164,7 +163,7 @@ class Trainer:
             else:
                 self.value_head = ValueHead(
                     transformer_for_value_head,
-                    hidden_dims=self.config.value_head_hidden_dims,
+                    latent_dim=self.config.value_head_latent_dim,
                 )
 
             if self.config.resume or self.config.use_test_value_head:

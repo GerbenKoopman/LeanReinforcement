@@ -1,8 +1,8 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import argparse
 import os
 import shutil
-from typing import List, Optional
+from typing import Optional
 import json
 from pathlib import Path
 
@@ -68,7 +68,7 @@ class TrainingConfig:
     # Training Args
     train_epochs: int
     value_head_batch_size: int
-    value_head_hidden_dims: List[int] = field(default_factory=lambda: [256])
+    value_head_latent_dim: int = 1024
     train_value_head: bool = True
     use_hyperbolic: bool = False  # Use hyperbolic (Poincaré ball) value head
     use_final_reward: bool = False
@@ -164,7 +164,7 @@ class TrainingConfig:
                 args, "train_epochs", OPTIMAL_DEFAULTS["train_epochs"]
             ),
             value_head_batch_size=getattr(args, "value_head_batch_size", 4),
-            value_head_hidden_dims=getattr(args, "value_head_hidden_dims", [256]),
+            value_head_latent_dim=getattr(args, "value_head_latent_dim", 1024),
             train_value_head=getattr(
                 args,
                 "train_value_head",
@@ -349,11 +349,10 @@ def get_config() -> TrainingConfig:
         help="Batch size for training the value head.",
     )
     parser.add_argument(
-        "--value-head-hidden-dims",
+        "--value-head-latent-dim",
         type=int,
-        nargs="*",
-        default=[256],
-        help="Hidden dimensions for the value head MLP. Empty list means direct linear projection. Default: [256].",
+        default=1024,
+        help="Hidden dimension for the value head MLP. Default: 1024.",
     )
     parser.add_argument(
         "--train-value-head",

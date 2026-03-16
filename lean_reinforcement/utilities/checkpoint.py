@@ -12,8 +12,7 @@ from loguru import logger
 from dotenv import load_dotenv
 
 
-from lean_reinforcement.agent.value_head import ValueHead
-from lean_reinforcement.agent.hyperbolic_adapter import HyperbolicValueHead
+from lean_reinforcement.agent.value_head import ValueHead, HyperbolicValueHead
 from lean_reinforcement.utilities.config import TrainingConfig
 
 #: Any value head implementation (standard MLP or hyperbolic).

@@ -15,8 +15,7 @@ from lean_reinforcement.utilities.memory import (
     MAX_WORKER_RSS_GB,
     MCTS_MIN_AVAILABLE_GB,
 )
-from lean_reinforcement.agent.value_head import ValueHead
-from lean_reinforcement.agent.hyperbolic_adapter import HyperbolicValueHead
+from lean_reinforcement.agent.value_head import ValueHead, HyperbolicValueHead
 from lean_reinforcement.agent.mcts.base_mcts import BaseMCTS, Node
 from lean_reinforcement.agent.transformer import TransformerProtocol
 from lean_reinforcement.utilities.config import TrainingConfig
