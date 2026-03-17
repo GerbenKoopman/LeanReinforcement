@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """
-Benchmark: LeanReinforcement (Euclidean MCTS) vs Hyperbolic MCTS vs Hyperbolic PPO.
+Benchmark: LeanReinforcement vs Euclidean/Hyperbolic MCTS vs Euclidean/Hyperbolic PPO.
 
-This script runs a controlled three-way comparison across:
+This script runs a controlled four-way comparison across:
 
   1. **Euclidean MCTS** — AlphaZero MCTS with standard ``ValueHead`` (MLP critic).
   2. **Hyperbolic MCTS** — AlphaZero MCTS with ``HyperbolicValueHead``
      (Poincaré ball critic).
   3. **Hyperbolic PPO**  — Frozen ByT5 + LoRA actor + ``PoincareCritic``
-      (Poincare-ball manifold + categorical value head).
+     (Poincare-ball manifold + categorical value head).
+  4. **Euclidean PPO**   — Frozen ByT5 + LoRA actor + ``EuclideanCritic``
+     (Euclidean manifold + categorical value head).
 
 Training and Evaluation:
   - Training runs on the **train split** using self-play MCTS data collection
@@ -18,11 +20,11 @@ Training and Evaluation:
 
 Usage::
 
-    # Full benchmark (all 3 methods × 2 seeds × 3 sizes)
+    # Full benchmark (all 4 methods × 2 seeds × 3 sizes)
     python -m benchmark.benchmark_ppo_vs_mcts
 
     # Only specific methods
-    python -m benchmark.benchmark_ppo_vs_mcts --methods euclidean_mcts hyperbolic_ppo
+    python -m benchmark.benchmark_ppo_vs_mcts --methods euclidean_mcts euclidean_ppo
 
     # With test evaluation after training
     python -m benchmark.benchmark_ppo_vs_mcts --run-test-eval
@@ -36,7 +38,7 @@ Usage::
     # Plot results
     python -m benchmark.benchmark_ppo_vs_mcts --plot-only
 
-    # Fast benchmark (all 3 methods, only seed 42 and light size)
+    # Fast benchmark (all 4 methods, only seed 42 and light size)
     python -m benchmark.benchmark_ppo_vs_mcts --fast
 """
 
@@ -59,7 +61,7 @@ from lean_reinforcement.agent.onnx_transformer import (
     ONNXTransformer,
     is_onnx_available,
 )
-from lean_reinforcement.agent.ppo import HyperbolicPPO
+from lean_reinforcement.agent.ppo import HyperbolicPPO, EuclideanPPO
 from lean_reinforcement.agent.value_head import ValueHead, HyperbolicValueHead
 from lean_reinforcement.utilities.checkpoint import load_checkpoint
 from lean_reinforcement.utilities.config import TrainingConfig
@@ -79,7 +81,7 @@ from benchmark.run_benchmark import (
 load_dotenv()
 
 
-# ── Three benchmark methods ─────────────────────────────────────────────────
+# ── Four benchmark methods ──────────────────────────────────────────────────
 
 
 class MethodSettings(TypedDict):
@@ -88,7 +90,7 @@ class MethodSettings(TypedDict):
     is_ppo: bool
 
 
-METHODS = ["euclidean_mcts", "hyperbolic_mcts", "hyperbolic_ppo"]
+METHODS = ["euclidean_mcts", "hyperbolic_mcts", "hyperbolic_ppo", "euclidean_ppo"]
 SEEDS = [42, 43]
 SIZES = ["light", "medium", "heavy"]
 FAST_SEEDS = [42]
@@ -109,6 +111,11 @@ METHOD_CONFIG: Dict[str, MethodSettings] = {
     },
     "hyperbolic_ppo": {
         "mcts_type": "alpha_zero",
+        "use_hyperbolic": True,
+        "is_ppo": True,
+    },
+    "euclidean_ppo": {
+        "mcts_type": "alpha_zero",
         "use_hyperbolic": False,
         "is_ppo": True,
     },
@@ -119,12 +126,14 @@ METHOD_LABELS = {
     "euclidean_mcts": "Euclidean MCTS (ValueHead)",
     "hyperbolic_mcts": "Hyperbolic MCTS (Poincaré)",
     "hyperbolic_ppo": "Hyperbolic PPO (Poincare + LoRA)",
+    "euclidean_ppo": "Euclidean PPO (MLP + LoRA)",
 }
 
 METHOD_COLORS = {
     "euclidean_mcts": "tab:blue",
     "hyperbolic_mcts": "tab:orange",
     "hyperbolic_ppo": "tab:green",
+    "euclidean_ppo": "tab:red",
 }
 
 
@@ -132,12 +141,12 @@ METHOD_COLORS = {
 
 
 def get_benchmark_dir() -> Path:
-    """Get or create the three-way benchmark cache directory."""
+    """Get or create the four-way benchmark cache directory."""
     checkpoint_dir = os.getenv("CHECKPOINT_DIR")
     if checkpoint_dir:
-        base = Path(checkpoint_dir) / "benchmark_3way"
+        base = Path(checkpoint_dir) / "benchmark_4way"
     else:
-        base = Path("checkpoints") / "benchmark_3way"
+        base = Path("checkpoints") / "benchmark_4way"
     base.mkdir(parents=True, exist_ok=True)
     return base
 
@@ -209,11 +218,11 @@ def build_config(
     max_steps_val = int(cast(int, BASE_PARAMS["max_steps"]))
     batch_size_val = int(cast(int, BASE_PARAMS["batch_size"]))
     num_workers_val = int(cast(int, BASE_PARAMS["num_workers"]))
-    # Force value-head training epochs to 50 for the three-way benchmark
+    # Force value-head training epochs to 50 for the four-way benchmark
     train_epochs_val = 50
     value_head_batch_size_val = int(cast(int, BASE_PARAMS["value_head_batch_size"]))
     value_head_latent_dim_val = int(cast(int, BASE_PARAMS["value_head_latent_dim"]))
-    # Always train value head for the three-way benchmark so checkpoints exist
+    # Always train value head for the four-way benchmark so checkpoints exist
     # for resuming and post-training evaluation.
     train_value_head_val = True
     use_final_reward_val = bool(cast(bool, BASE_PARAMS["use_final_reward"]))
@@ -330,7 +339,7 @@ class MCTSBenchmarkTrainer(Trainer):
         if self.config.use_wandb:
             wandb.init(
                 entity="gerbennkoopman-university-of-amsterdam",
-                project="lean-reinforcement-benchmark-3way",
+                project="lean-reinforcement-benchmark-4way",
                 name=run_dir.name,
                 config=asdict(self.config),
                 tags=[method],
@@ -408,14 +417,14 @@ class MCTSBenchmarkTrainer(Trainer):
 
 
 class PPOBenchmarkTrainer(Trainer):
-    """Trainer for the Hyperbolic PPO approach.
+    """Trainer for the Hyperbolic and Euclidean PPO approaches.
 
     During data collection the PPO trainer still uses AlphaZero MCTS
-    (with a PoincareCritic-backed value head) to explore the proof
-    tree — just like the MCTS baselines.  The key difference is that
+    (with a critic-backed value head) to explore the proof
+    tree — just like the MCTS baselines. The key difference is that
     after each epoch's data collection, the **decoder policy** is also
-    updated via PPO (using LoRA weights), and the critic uses the
-    Poincare-ball manifold with categorical value loss.
+    updated via PPO (using LoRA weights), and the critic uses either
+    a Euclidean or Poincare-ball manifold with categorical value loss.
     """
 
     def __init__(
@@ -443,10 +452,10 @@ class PPOBenchmarkTrainer(Trainer):
         if self.config.use_wandb:
             wandb.init(
                 entity="gerbennkoopman-university-of-amsterdam",
-                project="lean-reinforcement-benchmark-3way",
+                project="lean-reinforcement-benchmark-4way",
                 name=run_dir.name,
                 config=asdict(self.config),
-                tags=["hyperbolic_ppo"],
+                tags=["hyperbolic_ppo" if config.use_hyperbolic else "euclidean_ppo"],
                 resume="allow",
             )
 
@@ -455,8 +464,11 @@ class PPOBenchmarkTrainer(Trainer):
         self._setup_multiprocessing()
 
     def _setup_models(self) -> None:
-        """Set up LoRA-wrapped ByT5 + PoincareCritic + MCTS value proxy."""
-        logger.info("[hyperbolic_ppo] Setting up LoRA actor + Poincare critic")
+        """Set up LoRA-wrapped ByT5 + Critic + MCTS value proxy."""
+        if self.config.use_hyperbolic:
+            logger.info("[hyperbolic_ppo] Setting up LoRA actor + Poincare critic")
+        else:
+            logger.info("[euclidean_ppo] Setting up LoRA actor + MLP critic")
 
         # Load the base transformer (used for MCTS proof search by workers)
         if self.config.use_onnx and is_onnx_available():
@@ -466,12 +478,25 @@ class PPOBenchmarkTrainer(Trainer):
         else:
             self.transformer = Transformer(model_name=self.config.model_name)
 
-        self.hyperbolic_ppo = HyperbolicPPO(model_name=self.config.model_name)
+        # Use a generic Any-typed holder for the PPO model to avoid mypy
+        # inferring a concrete subtype when we switch implementations.
+        self.ppo_model: Any = None
+        if self.config.use_hyperbolic:
+            self.ppo_model = HyperbolicPPO(model_name=self.config.model_name)
+        else:
+            self.ppo_model = EuclideanPPO(model_name=self.config.model_name)
 
-        # --- Standard value head for MCTS data collection ---
-        # (workers don't run PPO — they use the frozen value head for MCTS)
+        # --- Value head for MCTS data collection ---
+        # The MCTS workers in PPO still need a value function for rollouts.
+        # This is a standard value head (not the PPO critic).
         transformer_for_vh = cast(Transformer, self.transformer)
-        self.value_head = HyperbolicValueHead(transformer_for_vh)
+        if self.config.use_hyperbolic:
+            self.value_head = HyperbolicValueHead(transformer_for_vh)
+        else:
+            self.value_head = ValueHead(
+                transformer_for_vh,
+                latent_dim=self.config.value_head_latent_dim,
+            )
 
         self.start_epoch = self._start_epoch_override
 
@@ -481,12 +506,8 @@ class PPOBenchmarkTrainer(Trainer):
         log_gpu_memory(prefix="After PPO model init - ")
 
     def _run_ppo_update(self, training_data: List[Dict[str, Any]]) -> Dict[str, float]:
-        """Run PPO update steps on collected MCTS data.
-
-        Uses states and value targets from MCTS rollouts to update the
-        LoRA actor and Poincare critic.
-        """
-        metrics = self.hyperbolic_ppo.update_from_training_data(training_data)
+        """Run PPO update steps on collected MCTS data."""
+        metrics = self.ppo_model.update_from_training_data(training_data)
         avg_actor = metrics["ppo_actor_loss"]
         avg_critic = metrics["ppo_critic_loss"]
         logger.info(
@@ -510,12 +531,12 @@ class PPOBenchmarkTrainer(Trainer):
 
     def _save_ppo_checkpoint(self, epoch: int) -> None:
         """Save LoRA adapter and critic weights."""
-        self.hyperbolic_ppo.save_checkpoint(self.checkpoint_dir, epoch, prefix="ppo")
+        self.ppo_model.save_checkpoint(self.checkpoint_dir, epoch, prefix="ppo")
         logger.info(f"PPO checkpoint saved: epoch {epoch}")
 
     def _load_ppo_checkpoint(self) -> None:
         """Resume from the latest PPO checkpoint."""
-        loaded_epoch = self.hyperbolic_ppo.load_latest_checkpoint(
+        loaded_epoch = self.ppo_model.load_latest_checkpoint(
             self.checkpoint_dir,
             prefix="ppo",
         )
@@ -584,6 +605,7 @@ def run_single(
     run_test_eval: bool = False,
     test_num_theorems: int = 500,
     test_split: str = "test",
+    log_search_tree: bool = False,
 ) -> Dict[str, Any]:
     """Run a single benchmark configuration."""
     run_dir = get_run_dir(benchmark_dir, method, seed, size)
@@ -633,6 +655,7 @@ def run_single(
     config = build_config(
         method, seed, size, run_dir, num_epochs=num_epochs, resume=resume
     )
+    config.log_search_tree = log_search_tree
 
     # Skip training if already complete
     if not training_complete:
@@ -814,7 +837,7 @@ def print_status(
 ) -> None:
     runs = get_all_runs(methods=methods, seeds=seeds, sizes=sizes)
     print(f"\n{'=' * 90}")
-    print(f"THREE-WAY BENCHMARK STATUS — {benchmark_dir}")
+    print(f"FOUR-WAY BENCHMARK STATUS — {benchmark_dir}")
     print(f"{'=' * 90}")
     print(f"{'Run Name':<45} {'Status':<12} {'Epochs':<10} {'Complete'}")
     print(f"{'-' * 90}")
@@ -885,7 +908,7 @@ def collect_epoch_data(run_dir: Path) -> Dict[str, Any]:
 
 
 def plot_results(benchmark_dir: Path, output_dir: Path) -> None:
-    """Generate comparison plots for the three-way benchmark."""
+    """Generate comparison plots for the four-way benchmark."""
     import matplotlib
 
     matplotlib.use("Agg")
@@ -949,17 +972,17 @@ def plot_results(benchmark_dir: Path, output_dir: Path) -> None:
         ax.set_xlim(0.5, NUM_EPOCHS + 0.5)
 
     plt.suptitle(
-        "Three-Way Comparison: Euclidean MCTS vs Hyperbolic MCTS vs Hyperbolic PPO",
+        "Four-Way Comparison: Euclidean vs Hyperbolic MCTS & PPO",
         fontsize=16,
         y=1.02,
     )
     plt.tight_layout()
     plt.savefig(
-        output_dir / "3way_success_rate_per_epoch.png", dpi=150, bbox_inches="tight"
+        output_dir / "4way_success_rate_per_epoch.png", dpi=150, bbox_inches="tight"
     )
-    plt.savefig(output_dir / "3way_success_rate_per_epoch.pdf", bbox_inches="tight")
+    plt.savefig(output_dir / "4way_success_rate_per_epoch.pdf", bbox_inches="tight")
     plt.close()
-    print(f"Saved: {output_dir / '3way_success_rate_per_epoch.png'}")
+    print(f"Saved: {output_dir / '4way_success_rate_per_epoch.png'}")
 
     # ── 2. Combined comparison: all sizes per method ─────────────────────
     fig, axes = plt.subplots(1, len(METHODS), figsize=(8 * len(METHODS), 6))
@@ -1016,10 +1039,10 @@ def plot_results(benchmark_dir: Path, output_dir: Path) -> None:
         ax.set_xlim(0.5, NUM_EPOCHS + 0.5)
 
     plt.tight_layout()
-    plt.savefig(output_dir / "3way_size_comparison.png", dpi=150, bbox_inches="tight")
-    plt.savefig(output_dir / "3way_size_comparison.pdf", bbox_inches="tight")
+    plt.savefig(output_dir / "4way_size_comparison.png", dpi=150, bbox_inches="tight")
+    plt.savefig(output_dir / "4way_size_comparison.pdf", bbox_inches="tight")
     plt.close()
-    print(f"Saved: {output_dir / '3way_size_comparison.png'}")
+    print(f"Saved: {output_dir / '4way_size_comparison.png'}")
 
     # ── 3. Final epoch bar chart ─────────────────────────────────────────
     fig, axes = plt.subplots(1, 3, figsize=(24, 7), sharey=True)
@@ -1031,7 +1054,7 @@ def plot_results(benchmark_dir: Path, output_dir: Path) -> None:
             ax.set_ylabel("Success Rate (%)")
 
         x = np.arange(len(SEEDS))
-        width = 0.25
+        width = 0.20
 
         for m_idx, method in enumerate(METHODS):
             rates = []
@@ -1044,7 +1067,7 @@ def plot_results(benchmark_dir: Path, output_dir: Path) -> None:
                     rates.append(0.0)
 
             bars = ax.bar(
-                x[: len(rates)] + m_idx * width - width,
+                x[: len(rates)] + m_idx * width - width * 1.5,
                 rates,
                 width,
                 label=METHOD_LABELS[method],
@@ -1066,12 +1089,12 @@ def plot_results(benchmark_dir: Path, output_dir: Path) -> None:
         ax.legend(loc="upper left", fontsize=7)
         ax.grid(True, axis="y", alpha=0.3)
 
-    plt.suptitle("Final-Epoch Proof Success: 3-Way Comparison", fontsize=16, y=1.02)
+    plt.suptitle("Final-Epoch Proof Success: 4-Way Comparison", fontsize=16, y=1.02)
     plt.tight_layout()
-    plt.savefig(output_dir / "3way_final_bar.png", dpi=150, bbox_inches="tight")
-    plt.savefig(output_dir / "3way_final_bar.pdf", bbox_inches="tight")
+    plt.savefig(output_dir / "4way_final_bar.png", dpi=150, bbox_inches="tight")
+    plt.savefig(output_dir / "4way_final_bar.pdf", bbox_inches="tight")
     plt.close()
-    print(f"Saved: {output_dir / '3way_final_bar.png'}")
+    print(f"Saved: {output_dir / '4way_final_bar.png'}")
 
     # ── 4. Summary table (JSON) ──────────────────────────────────────────
     summary: Dict[str, Any] = {}
@@ -1091,7 +1114,7 @@ def plot_results(benchmark_dir: Path, output_dir: Path) -> None:
                     "per_seed": final_rates,
                 }
 
-    summary_file = output_dir / "3way_summary.json"
+    summary_file = output_dir / "4way_summary.json"
     with open(summary_file, "w") as f:
         json.dump(summary, f, indent=2)
     print(f"Saved: {summary_file}")
@@ -1102,7 +1125,7 @@ def plot_results(benchmark_dir: Path, output_dir: Path) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Three-way benchmark: Euclidean MCTS vs Hyperbolic MCTS vs Hyperbolic PPO"
+        description="Four-way benchmark: Euclidean vs Hyperbolic MCTS and PPO"
     )
     parser.add_argument("--status", action="store_true", help="Print status and exit.")
     parser.add_argument(
@@ -1128,7 +1151,7 @@ def main() -> None:
     parser.add_argument(
         "--output-dir",
         type=str,
-        default="plots/benchmark_3way",
+        default="plots/benchmark_4way",
         help="Directory for output plots.",
     )
     parser.add_argument(
