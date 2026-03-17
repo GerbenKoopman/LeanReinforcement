@@ -24,25 +24,10 @@ mkdir -p "${CACHE_DIR}"
 
 # Preferred commit (used in this project)
 COMMIT=29dcec074de168ac2bf835a77ef68bbe069194c5
-TARBALL=leanprover-community-mathlib4-${COMMIT}.tar.gz
-TARBALL_URL=https://dl.fbaipublicfiles.com/lean-dojo/${TARBALL}
-TARBALL_PATH="${CACHE_DIR}/${TARBALL}"
 
 cd $HOME/lean_reinforcement || exit 1
 
-# Try to download the prepackaged tarball first (if network allowed)
-if command -v wget >/dev/null 2>&1; then
-  echo "Attempting to download prebuilt mathlib tarball to ${TARBALL_PATH}..."
-  if wget "${TARBALL_URL}" -O "${TARBALL_PATH}"; then
-    echo "Downloaded tarball successfully."
-  else
-    echo "Couldn't download tarball (wget failed); continuing — LeanDojo will attempt to fetch or trace." >&2
-  fi
-else
-  echo "wget not available; skipping tarball download." >&2
-fi
-
-# Run LeanDojo trace to populate the cache (this will use the tarball if present)
+# Run LeanDojo trace to populate the cache
 srun python3 - <<PY
 from lean_dojo import LeanGitRepo, trace
 repo = LeanGitRepo("https://github.com/leanprover-community/mathlib4", "${COMMIT}")
