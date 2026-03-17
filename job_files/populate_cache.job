@@ -33,6 +33,9 @@ fi
 
 cd $HOME/lean_reinforcement || exit 1
 
+# Disable remote caching to force a local build.
+export DISABLE_REMOTE_CACHE=1
+
 # Run LeanDojo trace to populate the cache
 srun python3 - <<PY
 from lean_dojo import LeanGitRepo, trace
