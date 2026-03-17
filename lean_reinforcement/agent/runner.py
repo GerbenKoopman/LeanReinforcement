@@ -64,6 +64,7 @@ class AgentRunner:
         collect_value_data: bool = False,
         use_final_reward: bool = True,
         use_wandb: bool = True,
+        checkpoint_dir: Optional[str] = None,
     ) -> tuple[dict, list[dict]]:
         """
         Run the proof search loop and collect lightweight training data.
@@ -75,6 +76,7 @@ class AgentRunner:
             collect_value_data: Whether to collect data for value head training.
             use_final_reward: Whether to use the final reward for training.
             use_wandb: Whether to log metrics to wandb.
+            checkpoint_dir: The directory to save checkpoints and logs.
 
         Returns:
             A tuple containing:
@@ -87,11 +89,13 @@ class AgentRunner:
                 collect_value_data=collect_value_data,
                 use_final_reward=use_final_reward,
                 use_wandb=use_wandb,
+                checkpoint_dir=checkpoint_dir,
             )
         return self._run_step_by_step(
             collect_value_data=collect_value_data,
             use_final_reward=use_final_reward,
             use_wandb=use_wandb,
+            checkpoint_dir=checkpoint_dir,
         )
 
     # ------------------------------------------------------------------
@@ -103,6 +107,7 @@ class AgentRunner:
         collect_value_data: bool = False,
         use_final_reward: bool = True,
         use_wandb: bool = True,
+        checkpoint_dir: Optional[str] = None,
     ) -> tuple[dict, list[dict]]:
         """
         Run MCTS from the initial state with the full iteration and time
@@ -151,7 +156,11 @@ class AgentRunner:
         )
 
         try:
-            mcts_instance.search(total_iterations, max_time=max_time)
+            mcts_instance.search(
+                total_iterations,
+                max_time=max_time,
+                search_tree_log_dir=checkpoint_dir,
+            )
         except Exception as e:
             logger.error(f"MCTS search failed with error: {e}")
             return self._finalise(
@@ -247,6 +256,7 @@ class AgentRunner:
         collect_value_data: bool = False,
         use_final_reward: bool = True,
         use_wandb: bool = True,
+        checkpoint_dir: Optional[str] = None,
     ) -> tuple[dict, list[dict]]:
         """
         Original step-by-step proof search: run MCTS, commit to best
@@ -311,7 +321,11 @@ class AgentRunner:
                 )
 
                 try:
-                    mcts_instance.search(self.num_iterations, max_time=step_max_time)
+                    mcts_instance.search(
+                        self.num_iterations,
+                        max_time=step_max_time,
+                        search_tree_log_dir=checkpoint_dir,
+                    )
                 except Exception as e:
                     logger.error(f"MCTS search failed with error: {e}")
                     break

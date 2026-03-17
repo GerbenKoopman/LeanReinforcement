@@ -385,6 +385,7 @@ class Trainer:
                     self.theorem_queue,
                     self.result_queue,
                     self.config,
+                    self.checkpoint_dir,
                 ),
             )
             p.start()

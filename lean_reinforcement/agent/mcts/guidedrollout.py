@@ -63,6 +63,7 @@ class MCTS_GuidedRollout(BaseMCTS):
             num_tactics_to_expand=num_tactics_to_expand,
             max_rollout_depth=max_rollout_depth,
             max_time=max_time,
+            **kwargs,
         )
 
     def _puct_score(self, node: Node) -> float:

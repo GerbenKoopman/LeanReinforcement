@@ -6,9 +6,11 @@ simulation, AlphaZero MCTS calls a trained value network for evaluation.
 import heapq
 import math
 import torch
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 from loguru import logger
 import time
+import json
+from pathlib import Path
 
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
@@ -132,6 +134,8 @@ class BaseMCTS:
         num_tactics_to_expand: int = 8,
         max_rollout_depth: int = 30,
         max_time: float = 300.0,  # Max time per MCTS search step (seconds)
+        log_search_tree: bool = False,
+        **kwargs,
     ):
         self.env = env
         self.transformer = transformer
@@ -143,6 +147,7 @@ class BaseMCTS:
         self.max_time = max_time
         self.node_count = 0
         self.virtual_losses: Dict[Node, int] = {}
+        self.log_search_tree = log_search_tree
 
         # Timeout tracking for search operations
         self._search_deadline: Optional[float] = None
@@ -326,6 +331,7 @@ class BaseMCTS:
         num_iterations: int,
         batch_size: Optional[int] = None,
         max_time: Optional[float] = None,
+        search_tree_log_dir: Optional[str] = None,
     ) -> None:
         """
         Run the MCTS search for a given number of iterations with batching.
@@ -334,6 +340,7 @@ class BaseMCTS:
             num_iterations: Number of MCTS iterations to run.
             batch_size: Batch size for parallel expansion/simulation.
             max_time: Maximum time in seconds for this search. If None, uses self.max_time.
+            search_tree_log_dir: Directory to save search tree logs.
         """
         if batch_size is None:
             batch_size = self.batch_size
@@ -480,6 +487,55 @@ class BaseMCTS:
                         break
 
                 batch_count += 1
+
+        if self.log_search_tree and search_tree_log_dir:
+            self._save_search_tree(Path(search_tree_log_dir))
+
+    def _serialize_node(self, node: Node) -> Dict[str, Any]:
+        return {
+            "state": node._pp,
+            "action": node.action,
+            "visit_count": node.visit_count,
+            "max_value": node.max_value,
+            "prior_p": node.prior_p,
+            "depth": node.depth,
+            "children": [child._pp for child in node.children if child._pp],
+        }
+
+    def _save_search_tree(self, log_dir: Path):
+        """Saves the serialized search tree to a JSON file."""
+        log_dir.mkdir(parents=True, exist_ok=True)
+        # Create a subdirectory for the search trees
+        search_tree_dir = log_dir / "search_trees"
+        search_tree_dir.mkdir(parents=True, exist_ok=True)
+
+        def _sanitize(s: str) -> str:
+            return "".join(c if c.isalnum() or c in "-_" else "_" for c in s)
+
+        th_name = getattr(self.theorem, "full_name", "theorem")
+        pos_str = str(self.theorem_pos)
+        safe_name = _sanitize(th_name)[:120]
+        safe_pos = _sanitize(pos_str)[:40]
+        tree_file = search_tree_dir / f"search_tree_{safe_name}_{safe_pos}.json"
+
+        nodes_to_visit = [self.root]
+        visited_nodes = set()
+        serialized_nodes = {}
+
+        while nodes_to_visit:
+            node = nodes_to_visit.pop(0)
+            if node._pp and node._pp not in visited_nodes:
+                visited_nodes.add(node._pp)
+                serialized_nodes[node._pp] = self._serialize_node(node)
+                nodes_to_visit.extend(node.children)
+
+        tree_data = {
+            "root": self.root._pp,
+            "nodes": serialized_nodes,
+        }
+
+        with open(tree_file, "w") as f:
+            json.dump(tree_data, f, indent=2)
 
     def _select(self, node: Node) -> Node:
         """

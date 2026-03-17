@@ -3,6 +3,7 @@ Worker module for parallel theorem proving.
 """
 
 from typing import Dict, Any, Optional, Type
+from pathlib import Path
 from loguru import logger
 import torch.multiprocessing as mp
 import queue
@@ -54,6 +55,7 @@ def process_theorem(
     transformer: QueueProxyTransformer,
     value_head: Optional[QueueProxyValueHead],
     args: TrainingConfig,
+    checkpoint_dir: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """
     Process a single theorem: initialize env, run agent, collect data.
@@ -155,6 +157,7 @@ def process_theorem(
     mcts_kwargs["max_rollout_depth"] = args.max_rollout_depth
     mcts_kwargs["max_time"] = args.max_time
     mcts_kwargs["max_tree_nodes"] = getattr(args, "max_tree_nodes", 1000)
+    mcts_kwargs["log_search_tree"] = getattr(args, "log_search_tree", False)
 
     runner = AgentRunner(
         env=env,
@@ -172,6 +175,7 @@ def process_theorem(
             collect_value_data=args.train_value_head,
             use_final_reward=args.use_final_reward,
             use_wandb=args.use_wandb,
+            checkpoint_dir=str(checkpoint_dir) if checkpoint_dir is not None else None,
         )
         logger.debug(
             f"Collected {len(theorem_training_data)} training "
@@ -249,6 +253,7 @@ def worker_loop(
     theorem_queue: mp.Queue,
     result_queue: mp.Queue,
     args: TrainingConfig,
+    checkpoint_dir: "Path",
 ):
     """
     Worker process loop.
@@ -398,6 +403,7 @@ def worker_loop(
             transformer_proxy,
             value_head_proxy,
             args,
+            checkpoint_dir,
         )
 
         # Send result back
