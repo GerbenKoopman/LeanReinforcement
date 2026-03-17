@@ -5,7 +5,7 @@
 #SBATCH --job-name=populate_cache
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
-#SBATCH --time=01:00:00
+#SBATCH --time=04:00:00
 #SBATCH --output=logs/populate_cache_%A.out
 
 module purge
@@ -13,6 +13,16 @@ module load 2024
 module load Anaconda3/2024.06-1
 
 source activate lean-reinforcement
+
+# ---------------------------------------------------------
+# ADDED FIXES: Resolve TSyntax mismatch & corrupted toolchain
+# ---------------------------------------------------------
+echo "Upgrading lean-dojo to ensure compatibility with Lean 4.10+..."
+pip install --upgrade lean-dojo
+
+echo "Clearing elan update hashes for v4.10.0-rc1 to force a clean toolchain installation..."
+rm -rf ~/.elan/update-hashes/leanprover--lean4---v4.10.0-rc1
+# ---------------------------------------------------------
 
 # Source environment variables from the repo's .env (match other jobs)
 set -a
