@@ -42,7 +42,9 @@ def _load_optimal_defaults() -> dict:
         with open(cfg_path) as f:
             loaded = json.load(f)
         if isinstance(loaded, dict):
-            defaults.update(loaded)
+            for k, v in loaded.items():
+                if k not in defaults:
+                    defaults[k] = v
     except (OSError, json.JSONDecodeError):
         pass
 
@@ -115,6 +117,9 @@ class TrainingConfig:
     proof_timeout: float = float(
         OPTIMAL_DEFAULTS["proof_timeout"]
     )  # Max time for entire proof search
+
+    # Log MCTS search trees for qualitative analysis
+    log_search_tree: bool = False
 
     # Hard memory limit (GiB) for each Lean 4 REPL subprocess.
     # Passed as --memory to the Lean runtime; exceeding it produces a
@@ -196,6 +201,7 @@ class TrainingConfig:
             full_search=getattr(args, "full_search", True),
             max_tree_nodes=getattr(args, "max_tree_nodes", 1000),
             lean_memory_limit_gb=getattr(args, "lean_memory_limit_gb", 4),
+            log_search_tree=getattr(args, "log_search_tree", False),
         )
 
 
@@ -424,6 +430,12 @@ def get_config() -> TrainingConfig:
         action="store_true",
         default=bool(OPTIMAL_DEFAULTS["use_wandb"]),
         help="Use wandb for logging.",
+    )
+    parser.add_argument(
+        "--log-search-tree",
+        action="store_true",
+        default=False,
+        help="Log MCTS search trees for qualitative analysis.",
     )
 
     args = parser.parse_args()
