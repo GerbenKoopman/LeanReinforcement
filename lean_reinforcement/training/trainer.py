@@ -2,7 +2,6 @@ import os
 import time
 import json
 import glob
-import copy
 import pickle
 import random
 import queue
@@ -51,6 +50,7 @@ from lean_reinforcement.utilities.memory import (
     RSS_WATCHDOG_EXIT_CODE,
     TRAINER_MIN_AVAILABLE_GB,
 )
+from lean_reinforcement.utilities.optimizer import unwrap_optimizer_params
 
 
 def _safe_wandb_log(data: Dict[str, Any]) -> None:
@@ -65,6 +65,14 @@ def _safe_wandb_log(data: Dict[str, Any]) -> None:
         logger.warning(f"wandb.log() failed (connection lost): {exc}")
     except Exception as exc:
         logger.warning(f"wandb.log() failed unexpectedly: {exc}")
+
+
+def _state_value_to_plain_tensor(value: Any) -> torch.Tensor:
+    """Unwrap state_dict values that may be manifold-backed tensors."""
+    raw = getattr(value, "tensor", value)
+    if not isinstance(raw, torch.Tensor):
+        raise TypeError(f"Expected tensor-like state value, got {type(raw)!r}")
+    return raw
 
 
 class Trainer:
@@ -717,6 +725,7 @@ class Trainer:
                                 self.theorem_queue,
                                 self.result_queue,
                                 self.config,
+                                self.checkpoint_dir,
                             ),
                         )
                         new_worker.start()
@@ -1015,7 +1024,10 @@ class Trainer:
             else None
         )
 
-        optimizer = optim.AdamW(value_head.value_head.parameters(), lr=1e-4)
+        optimizer = optim.AdamW(
+            unwrap_optimizer_params(value_head.value_head.parameters()),
+            lr=1e-4,
+        )
         loss_fn = torch.nn.MSELoss()
 
         best_val_loss = float("inf")
@@ -1094,7 +1106,13 @@ class Trainer:
                 if avg_val_loss < best_val_loss:
                     best_val_loss = avg_val_loss
                     patience_counter = 0
-                    best_model_state = copy.deepcopy(value_head.value_head.state_dict())
+                    # Hyperbolic layers can expose manifold-backed tensors that
+                    # fail under deepcopy due to torch function interception.
+                    # Snapshot as plain cloned tensors for robust restore.
+                    best_model_state = {
+                        k: _state_value_to_plain_tensor(v).detach().clone()
+                        for k, v in value_head.value_head.state_dict().items()
+                    }
                     ps.value_head_best_val_loss = best_val_loss
                 else:
                     patience_counter += 1

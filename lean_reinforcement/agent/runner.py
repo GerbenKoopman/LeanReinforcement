@@ -2,6 +2,7 @@
 Main agent loop for running MCTS-based proof search.
 """
 
+import inspect
 import time
 from typing import Type, Optional
 from collections import deque
@@ -156,11 +157,22 @@ class AgentRunner:
         )
 
         try:
-            mcts_instance.search(
-                total_iterations,
-                max_time=max_time,
-                search_tree_log_dir=checkpoint_dir,
-            )
+            # Cython MCTS variants may not expose search_tree_log_dir.
+            supports_tree_log_dir = False
+            try:
+                sig = inspect.signature(mcts_instance.search)
+                supports_tree_log_dir = "search_tree_log_dir" in sig.parameters
+            except (TypeError, ValueError):
+                pass
+
+            if supports_tree_log_dir:
+                mcts_instance.search(
+                    total_iterations,
+                    max_time=max_time,
+                    search_tree_log_dir=checkpoint_dir,
+                )
+            else:
+                mcts_instance.search(total_iterations, max_time=max_time)
         except Exception as e:
             logger.error(f"MCTS search failed with error: {e}")
             return self._finalise(
@@ -321,11 +333,25 @@ class AgentRunner:
                 )
 
                 try:
-                    mcts_instance.search(
-                        self.num_iterations,
-                        max_time=step_max_time,
-                        search_tree_log_dir=checkpoint_dir,
-                    )
+                    # Cython MCTS variants may not expose search_tree_log_dir.
+                    supports_tree_log_dir = False
+                    try:
+                        sig = inspect.signature(mcts_instance.search)
+                        supports_tree_log_dir = "search_tree_log_dir" in sig.parameters
+                    except (TypeError, ValueError):
+                        pass
+
+                    if supports_tree_log_dir:
+                        mcts_instance.search(
+                            self.num_iterations,
+                            max_time=step_max_time,
+                            search_tree_log_dir=checkpoint_dir,
+                        )
+                    else:
+                        mcts_instance.search(
+                            self.num_iterations,
+                            max_time=step_max_time,
+                        )
                 except Exception as e:
                     logger.error(f"MCTS search failed with error: {e}")
                     break

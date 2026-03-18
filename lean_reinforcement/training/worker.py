@@ -95,7 +95,16 @@ def process_theorem(
             f"Failed to initialize environment for theorem {theorem.full_name}: {e}"
         )
         aggressive_cleanup()  # Clean up any partially created objects
-        return {}
+        return {
+            "metrics": {
+                "proof_search/success": False,
+                "proof_search/steps": 0,
+                "proof_search/time": 0.0,
+                "proof_search/env_init_error": True,
+            },
+            "data": [],
+            "theorem_name": theorem.full_name,
+        }
     except Exception as e:
         logger.error(
             f"Unexpected error initializing environment for theorem {theorem.full_name}: {e}"
