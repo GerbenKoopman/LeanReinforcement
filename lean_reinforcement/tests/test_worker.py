@@ -99,8 +99,21 @@ class TestWorker(unittest.TestCase):
             self.args,
         )
 
-        # Should return empty dict on error
-        self.assertEqual(result, {})
+        # Env init failures should still return structured failure metrics
+        # so trainer-level logging and aggregation can include this theorem.
+        self.assertEqual(
+            result,
+            {
+                "metrics": {
+                    "proof_search/success": False,
+                    "proof_search/steps": 0,
+                    "proof_search/time": 0.0,
+                    "proof_search/env_init_error": True,
+                },
+                "data": [],
+                "theorem_name": "TestTheorem",
+            },
+        )
 
     @patch("lean_reinforcement.training.worker.LeanDojoEnv")
     @patch("lean_reinforcement.training.worker.AgentRunner")
