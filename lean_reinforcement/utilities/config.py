@@ -1,57 +1,7 @@
 from dataclasses import dataclass
 import argparse
 import os
-import shutil
 from typing import Optional
-import json
-from pathlib import Path
-
-
-def _load_optimal_defaults() -> dict:
-    """Load default hyperparameters from hyperparam_results/optimal_config.json.
-
-    Falls back to legacy defaults if the file is missing or malformed.
-    """
-    root = Path(__file__).resolve().parents[2]
-    cfg_path = root / "hyperparam_results" / "optimal_config.json"
-
-    defaults = {
-        "data_type": "novel_premises",
-        "num_epochs": 1,
-        "num_theorems": 50,
-        "num_iterations": 328,
-        "max_steps": 50,
-        "batch_size": 12,
-        "num_workers": 3,
-        "mcts_type": "guided_rollout",
-        "train_epochs": 50,
-        "train_value_head": True,
-        "use_final_reward": True,
-        "save_training_data": True,
-        "save_checkpoints": True,
-        "use_wandb": True,
-        "model_name": "kaiyuy/leandojo-lean4-tacgen-byt5-small",
-        "num_tactics_to_expand": 93,
-        "max_rollout_depth": 46,
-        "max_time": 173.31262919989905,
-        "env_timeout": 76,
-        "proof_timeout": 346.6252583997981,
-    }
-
-    try:
-        with open(cfg_path) as f:
-            loaded = json.load(f)
-        if isinstance(loaded, dict):
-            for k, v in loaded.items():
-                if k not in defaults:
-                    defaults[k] = v
-    except (OSError, json.JSONDecodeError):
-        pass
-
-    return defaults
-
-
-OPTIMAL_DEFAULTS = _load_optimal_defaults()
 
 
 @dataclass
@@ -91,9 +41,9 @@ class TrainingConfig:
     inference_timeout: float = 600.0
 
     # Model Args
-    model_name: str = str(OPTIMAL_DEFAULTS["model_name"])
-    num_tactics_to_expand: int = int(OPTIMAL_DEFAULTS["num_tactics_to_expand"])
-    max_rollout_depth: int = int(OPTIMAL_DEFAULTS["max_rollout_depth"])
+    model_name: str = "kaiyuy/leandojo-lean4-tacgen-byt5-small"
+    num_tactics_to_expand: int = 64
+    max_rollout_depth: int = 40
     use_onnx: bool = False  # Use ONNX Runtime for faster inference (requires optimum)
 
     # Search mode
@@ -108,15 +58,9 @@ class TrainingConfig:
     # Timeout parameters (all in seconds)
     # Note: These form a hierarchy - each level should be larger than the one below
     # env_timeout < max_time < proof_timeout
-    max_time: float = float(
-        OPTIMAL_DEFAULTS["max_time"]
-    )  # Max time per MCTS search step
-    env_timeout: int = int(
-        OPTIMAL_DEFAULTS["env_timeout"]
-    )  # Max time per tactic execution
-    proof_timeout: float = float(
-        OPTIMAL_DEFAULTS["proof_timeout"]
-    )  # Max time for entire proof search
+    max_time: float = 175  # Max time per MCTS search step
+    env_timeout: int = 75  # Max time per tactic execution
+    proof_timeout: float = 360  # Max time for entire proof search
 
     # Log MCTS search trees for qualitative analysis
     log_search_tree: bool = False
@@ -124,83 +68,49 @@ class TrainingConfig:
     # Hard memory limit (GiB) for each Lean 4 REPL subprocess.
     # Passed as --memory to the Lean runtime; exceeding it produces a
     # catchable DojoCrashError instead of triggering the OOM killer.
-    lean_memory_limit_gb: int = 4
+    lean_memory_limit_gb: int = 8
 
     @classmethod
     def from_args(cls, args: argparse.Namespace) -> "TrainingConfig":
         return cls(
-            data_type=getattr(args, "data_type", OPTIMAL_DEFAULTS["data_type"]),
-            num_epochs=getattr(args, "num_epochs", OPTIMAL_DEFAULTS["num_epochs"]),
-            num_theorems=getattr(
-                args, "num_theorems", OPTIMAL_DEFAULTS["num_theorems"]
-            ),
-            num_iterations=getattr(
-                args, "num_iterations", OPTIMAL_DEFAULTS["num_iterations"]
-            ),
-            max_steps=getattr(args, "max_steps", OPTIMAL_DEFAULTS["max_steps"]),
-            batch_size=getattr(args, "batch_size", OPTIMAL_DEFAULTS["batch_size"]),
-            num_workers=getattr(args, "num_workers", OPTIMAL_DEFAULTS["num_workers"]),
-            mcts_type=getattr(args, "mcts_type", OPTIMAL_DEFAULTS["mcts_type"]),
+            data_type=getattr(args, "data_type", "novel_premises"),
+            num_epochs=getattr(args, "num_epochs", 1),
+            num_theorems=getattr(args, "num_theorems", 100),
+            num_iterations=getattr(args, "num_iterations", 300),
+            max_steps=getattr(args, "max_steps", 20),
+            batch_size=getattr(args, "batch_size", 16),
+            num_workers=getattr(args, "num_workers", 12),
+            mcts_type=getattr(args, "mcts_type", "guided_rollout"),
             indexed_corpus_path=getattr(args, "indexed_corpus_path", None),
             model_name=getattr(
                 args,
                 "model_name",
-                OPTIMAL_DEFAULTS["model_name"],
+                "kaiyuy/leandojo-lean4-tacgen-byt5-small",
             ),
-            num_tactics_to_expand=getattr(
-                args,
-                "num_tactics_to_expand",
-                OPTIMAL_DEFAULTS["num_tactics_to_expand"],
-            ),
-            max_rollout_depth=getattr(
-                args,
-                "max_rollout_depth",
-                OPTIMAL_DEFAULTS["max_rollout_depth"],
-            ),
+            num_tactics_to_expand=getattr(args, "num_tactics_to_expand", 64),
+            max_rollout_depth=getattr(args, "max_rollout_depth", 40),
             use_onnx=getattr(args, "use_onnx", False),
-            max_time=getattr(args, "max_time", OPTIMAL_DEFAULTS["max_time"]),
-            env_timeout=getattr(args, "env_timeout", OPTIMAL_DEFAULTS["env_timeout"]),
-            proof_timeout=getattr(
-                args,
-                "proof_timeout",
-                OPTIMAL_DEFAULTS["proof_timeout"],
-            ),
-            train_epochs=getattr(
-                args, "train_epochs", OPTIMAL_DEFAULTS["train_epochs"]
-            ),
+            max_time=getattr(args, "max_time", 175),
+            env_timeout=getattr(args, "env_timeout", 75),
+            proof_timeout=getattr(args, "proof_timeout", 360),
+            train_epochs=getattr(args, "train_epochs", 50),
             value_head_batch_size=getattr(args, "value_head_batch_size", 4),
             value_head_latent_dim=getattr(args, "value_head_latent_dim", 1024),
-            train_value_head=getattr(
-                args,
-                "train_value_head",
-                OPTIMAL_DEFAULTS["train_value_head"],
-            ),
+            train_value_head=getattr(args, "train_value_head", True),
             use_hyperbolic=getattr(args, "use_hyperbolic", False),
-            use_final_reward=getattr(
-                args,
-                "use_final_reward",
-                OPTIMAL_DEFAULTS["use_final_reward"],
-            ),
-            save_training_data=getattr(
-                args,
-                "save_training_data",
-                OPTIMAL_DEFAULTS["save_training_data"],
-            ),
+            use_final_reward=getattr(args, "use_final_reward", True),
+            save_training_data=getattr(args, "save_training_data", True),
             use_caching=getattr(args, "use_caching", False),
             seed=getattr(args, "seed", None),
-            save_checkpoints=getattr(
-                args,
-                "save_checkpoints",
-                OPTIMAL_DEFAULTS["save_checkpoints"],
-            ),
+            save_checkpoints=getattr(args, "save_checkpoints", True),
             resume=getattr(args, "resume", False),
             use_test_value_head=getattr(args, "use_test_value_head", False),
             checkpoint_dir=getattr(args, "checkpoint_dir", None),
-            use_wandb=getattr(args, "use_wandb", OPTIMAL_DEFAULTS["use_wandb"]),
+            use_wandb=getattr(args, "use_wandb", True),
             inference_timeout=getattr(args, "inference_timeout", 600.0),
             full_search=getattr(args, "full_search", True),
             max_tree_nodes=getattr(args, "max_tree_nodes", 1000),
-            lean_memory_limit_gb=getattr(args, "lean_memory_limit_gb", 4),
+            lean_memory_limit_gb=getattr(args, "lean_memory_limit_gb", 8),
             log_search_tree=getattr(args, "log_search_tree", False),
         )
 
@@ -220,44 +130,44 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--num-epochs",
         type=int,
-        default=int(OPTIMAL_DEFAULTS["num_epochs"]),
+        default=25,
         help="Number of self-play/training epochs.",
     )
     parser.add_argument(
         "--num-theorems",
         type=int,
-        default=int(OPTIMAL_DEFAULTS["num_theorems"]),
+        default=100,
         help="Number of theorems to attempt per epoch.",
     )
     parser.add_argument(
         "--num-iterations",
         type=int,
-        default=int(OPTIMAL_DEFAULTS["num_iterations"]),
+        default=300,
         help="Number of MCTS iterations per step (reduced default for memory efficiency).",
     )
     parser.add_argument(
         "--max-steps",
         type=int,
-        default=int(OPTIMAL_DEFAULTS["max_steps"]),
+        default=20,
         help="Max steps per proof (reduced default for memory efficiency).",
     )
     parser.add_argument(
         "--batch-size",
         type=int,
-        default=int(OPTIMAL_DEFAULTS["batch_size"]),
+        default=16,
         help="Batch size for MCTS search.",
     )
     parser.add_argument(
         "--num-workers",
         type=int,
-        default=int(OPTIMAL_DEFAULTS["num_workers"]),
+        default=12,
         help="Number of parallel workers for processing theorems.",
     )
     parser.add_argument(
         "--mcts-type",
         type=str,
         choices=["guided_rollout", "alpha_zero"],
-        default=str(OPTIMAL_DEFAULTS["mcts_type"]),
+        default="guided_rollout",
         help="Which MCTS algorithm to use for self-play.",
     )
     parser.add_argument(
@@ -275,13 +185,13 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--num-tactics-to-expand",
         type=int,
-        default=int(OPTIMAL_DEFAULTS["num_tactics_to_expand"]),
+        default=64,
         help="Number of tactics to expand in MCTS.",
     )
     parser.add_argument(
         "--max-rollout-depth",
         type=int,
-        default=int(OPTIMAL_DEFAULTS["max_rollout_depth"]),
+        default=40,
         help="Max depth for MCTS rollout.",
     )
     parser.add_argument(
@@ -299,29 +209,29 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--max-time",
         type=float,
-        default=float(OPTIMAL_DEFAULTS["max_time"]),
+        default=173.175,
         help="Max time (seconds) per MCTS search step. Should be > env-timeout.",
     )
     parser.add_argument(
         "--env-timeout",
         type=int,
-        default=int(OPTIMAL_DEFAULTS["env_timeout"]),
+        default=75,
         help="Max time (seconds) per single tactic execution. Should be < max-time.",
     )
     parser.add_argument(
         "--proof-timeout",
         type=float,
-        default=float(OPTIMAL_DEFAULTS["proof_timeout"]),
+        default=360,
         help="Max time (seconds) for entire proof search per theorem. Should be > max-time.",
     )
     parser.add_argument(
         "--lean-memory-limit-gb",
         type=int,
-        default=4,
+        default=8,
         help="Hard memory limit (GiB) for each Lean 4 REPL subprocess. "
         "Passed as --memory to the Lean runtime. When exceeded, Lean "
         "exits cleanly instead of triggering the OS OOM killer. "
-        "Rule of thumb: total_ram / (num_workers + 2). Default: 4.",
+        "Rule of thumb: total_ram / (num_workers + 2). Default: 8.",
     )
 
     # --- Search mode ---
@@ -345,7 +255,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--train-epochs",
         type=int,
-        default=int(OPTIMAL_DEFAULTS["train_epochs"]),
+        default=50,
         help="Number of training epochs to run on collected data *per* self-play epoch.",
     )
     parser.add_argument(
@@ -363,7 +273,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--train-value-head",
         action=argparse.BooleanOptionalAction,
-        default=bool(OPTIMAL_DEFAULTS["train_value_head"]),
+        default=True,
         help="Train the value head after each epoch.",
     )
     parser.add_argument(
@@ -377,13 +287,13 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--use-final-reward",
         action=argparse.BooleanOptionalAction,
-        default=bool(OPTIMAL_DEFAULTS["use_final_reward"]),
+        default=True,
         help="Use the final reward (1.0 or -1.0) for all steps in the proof.",
     )
     parser.add_argument(
         "--save-training-data",
         action=argparse.BooleanOptionalAction,
-        default=bool(OPTIMAL_DEFAULTS["save_training_data"]),
+        default=True,
         help="Save raw training data to JSON files for offline analysis.",
     )
     parser.add_argument(
@@ -405,7 +315,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--save-checkpoints",
         action=argparse.BooleanOptionalAction,
-        default=bool(OPTIMAL_DEFAULTS["save_checkpoints"]),
+        default=True,
         help="Save model checkpoints after each epoch (default: True).",
     )
     parser.add_argument(
@@ -428,7 +338,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--use-wandb",
         action="store_true",
-        default=bool(OPTIMAL_DEFAULTS["use_wandb"]),
+        default=True,
         help="Use wandb for logging.",
     )
     parser.add_argument(
@@ -444,73 +354,4 @@ def get_config() -> TrainingConfig:
     if args.checkpoint_dir:
         os.environ["CHECKPOINT_DIR"] = args.checkpoint_dir
 
-    # Auto-load GPU params if gpu_params.json exists and user didn't
-    # explicitly set batch-size / num-tactics-to-expand on the CLI.
-    _apply_gpu_params(args, parser)
-
-    # Warn if worker count may exceed available memory
-    _warn_worker_memory(args)
-
     return TrainingConfig.from_args(args)
-
-
-def _apply_gpu_params(
-    args: argparse.Namespace, parser: argparse.ArgumentParser
-) -> None:
-    """Override batch_size/num_tactics_to_expand from gpu_params.json when not set explicitly."""
-    import json
-    from pathlib import Path
-
-    gpu_params_path = Path("gpu_params.json")
-    if not gpu_params_path.exists():
-        return
-
-    try:
-        with open(gpu_params_path) as f:
-            gpu_params = json.load(f)
-    except (json.JSONDecodeError, OSError):
-        return
-
-    algo = args.mcts_type
-    algo_params = gpu_params.get(algo)
-    if algo_params is None:
-        return
-
-    # Only apply if user used the default values (didn't pass them explicitly)
-    defaults = parser.parse_args([])  # get defaults
-
-    if args.batch_size == defaults.batch_size:
-        args.batch_size = algo_params["batch_size"]
-
-    if args.num_tactics_to_expand == defaults.num_tactics_to_expand:
-        args.num_tactics_to_expand = algo_params["num_tactics_to_expand"]
-
-
-def _warn_worker_memory(args: argparse.Namespace) -> None:
-    """Warn if the requested worker count risks OOM on this machine."""
-    try:
-        import psutil
-
-        total_gb = psutil.virtual_memory().total / (1024**3)
-    except ImportError:
-        # psutil not available – can't check
-        return
-
-    # ~10 GB reserved for OS/desktop/model; ~3 GB per worker (Python + Lean).
-    reserved_gb = 10.0
-    per_worker_gb = 3.0
-    safe_workers = max(1, int((total_gb - reserved_gb) / per_worker_gb))
-
-    if args.num_workers > safe_workers:
-        terminal_width = shutil.get_terminal_size((80, 24)).columns
-        border = "=" * min(terminal_width, 72)
-        print(f"\n{border}")
-        print("  WARNING: High worker count may trigger the Linux OOM killer")
-        print(f"{border}")
-        print(f"  System RAM:       {total_gb:.0f} GB")
-        print(f"  Requested workers: {args.num_workers}")
-        print(f"  Safe estimate:     {safe_workers} workers")
-        print(f"\n  With {args.num_workers} workers the training may exhaust memory,")
-        print("  causing the desktop environment to crash (forced re-login).")
-        print(f"  Consider using --num-workers {safe_workers} or fewer.")
-        print(f"{border}\n")
