@@ -44,9 +44,11 @@ Usage::
 
 from __future__ import annotations
 
-import argparse
-import json
 import os
+import argparse
+import gc
+import json
+import shutil
 import time
 from dataclasses import asdict
 from pathlib import Path
@@ -55,6 +57,12 @@ from typing import Any, Dict, List, TypedDict, cast
 import wandb
 from dotenv import load_dotenv
 from loguru import logger
+
+import traceback
+
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
 
 from lean_reinforcement.agent.transformer import Transformer
 from lean_reinforcement.agent.onnx_transformer import (
@@ -65,7 +73,11 @@ from lean_reinforcement.agent.ppo import HyperbolicPPO, EuclideanPPO
 from lean_reinforcement.agent.value_head import ValueHead, HyperbolicValueHead
 from lean_reinforcement.utilities.checkpoint import load_checkpoint
 from lean_reinforcement.utilities.config import TrainingConfig
-from lean_reinforcement.utilities.memory import log_gpu_memory
+from lean_reinforcement.utilities.memory import (
+    aggressive_cleanup,
+    empty_gpu_cache,
+    log_gpu_memory,
+)
 from lean_reinforcement.training.trainer import Trainer
 from lean_reinforcement.training.inference_server import InferenceServer
 from lean_reinforcement.training.progress import (
@@ -78,7 +90,37 @@ from benchmark.run_benchmark import (
     NUM_EPOCHS,
 )
 
+from benchmark.evaluate_benchmark import (
+    build_eval_config,
+    load_or_init_corpus,
+    TestEvaluator,
+)
+
+# Set allocator config early so PyTorch can pick it up before CUDA init.
+_alloc_conf = os.environ.get("PYTORCH_ALLOC_CONF", "")
+if "expandable_segments:True" not in _alloc_conf:
+    os.environ["PYTORCH_ALLOC_CONF"] = (
+        f"{_alloc_conf},expandable_segments:True"
+        if _alloc_conf
+        else "expandable_segments:True"
+    )
+
 load_dotenv()
+
+
+def _post_run_memory_cleanup(run_name: str) -> None:
+    """Best-effort cleanup to avoid VRAM accumulation across benchmark runs."""
+    gc.collect()
+    aggressive_cleanup()
+    empty_gpu_cache()
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            torch.cuda.ipc_collect()
+    except Exception:
+        pass
+    log_gpu_memory(prefix=f"After cleanup ({run_name}) - ")
 
 
 # ── Four benchmark methods ──────────────────────────────────────────────────
@@ -95,7 +137,8 @@ SEEDS = [42, 43]
 SIZES = ["light", "medium", "heavy"]
 FAST_SEEDS = [42]
 FAST_SIZES = ["light"]
-FAST_NUM_EPOCHS = 5
+FAST_NUM_EPOCHS = 2
+FAST_TRAIN_EPOCHS = 5
 
 # Method → (mcts_type, use_hyperbolic, is_ppo)
 METHOD_CONFIG: Dict[str, MethodSettings] = {
@@ -158,13 +201,59 @@ def get_run_dir(benchmark_dir: Path, method: str, seed: int, size: str) -> Path:
 def is_run_complete(run_dir: Path, num_epochs: int) -> bool:
     marker = run_dir / "benchmark_complete.json"
     if marker.exists():
-        return True
+        try:
+            with open(marker) as f:
+                marker_data = json.load(f)
+            marker_epochs = int(marker_data.get("num_epochs", -1))
+            if marker_epochs == num_epochs:
+                return True
+            logger.warning(
+                f"Ignoring stale completion marker in {run_dir.name}: "
+                f"marker num_epochs={marker_epochs}, requested={num_epochs}"
+            )
+        except Exception:
+            logger.warning(
+                f"Ignoring unreadable completion marker in {run_dir.name}: {marker}"
+            )
     # Check for final epoch checkpoint
     for prefix in ["value_head_alpha_zero", "ppo_actor", "ppo_critic"]:
         final_ckpt = run_dir / f"{prefix}_epoch_{num_epochs}.pth"
         if final_ckpt.exists():
             return True
     return False
+
+
+def purge_run_artifacts(run_dir: Path) -> None:
+    """Remove stale artifacts so a forced fresh run truly starts clean."""
+    if not run_dir.exists():
+        return
+
+    patterns = [
+        "benchmark_complete.json",
+        "benchmark_config.json",
+        "benchmark_progress.json",
+        "theorem_results_epoch_*.json",
+        "training_data_epoch_*.json",
+        "temp_data_epoch_*.jsonl",
+        "val_loss_epoch_*.json",
+        "value_head_*_epoch_*.pth",
+        "value_head_*_latest.pth",
+        "ppo_*_epoch_*.pth",
+        "ppo_*_latest.pth",
+    ]
+
+    removed = 0
+    for pattern in patterns:
+        for path in run_dir.glob(pattern):
+            if path.is_file():
+                path.unlink(missing_ok=True)
+                removed += 1
+
+    eval_dir = run_dir / "eval"
+    if eval_dir.exists() and eval_dir.is_dir():
+        shutil.rmtree(eval_dir)
+
+    logger.info(f"Purged {removed} stale artifacts in {run_dir}")
 
 
 def get_completed_epochs(run_dir: Path) -> int:
@@ -202,6 +291,7 @@ def build_config(
     run_dir: Path,
     num_epochs: int = NUM_EPOCHS,
     resume: bool = False,
+    train_epochs_override: int | None = None,
 ) -> TrainingConfig:
     """Build a TrainingConfig for a specific benchmark run."""
     size_params = cast(Dict[str, float | int], SIZE_CONFIGS[size])
@@ -218,8 +308,10 @@ def build_config(
     max_steps_val = int(cast(int, BASE_PARAMS["max_steps"]))
     batch_size_val = int(cast(int, BASE_PARAMS["batch_size"]))
     num_workers_val = int(cast(int, BASE_PARAMS["num_workers"]))
-    # Force value-head training epochs to 50 for the four-way benchmark
-    train_epochs_val = 50
+    # Default to 50 value-head epochs unless overridden (e.g. fast smoke mode)
+    train_epochs_val = (
+        train_epochs_override if train_epochs_override is not None else 50
+    )
     value_head_batch_size_val = int(cast(int, BASE_PARAMS["value_head_batch_size"]))
     value_head_latent_dim_val = int(cast(int, BASE_PARAMS["value_head_latent_dim"]))
     # Always train value head for the four-way benchmark so checkpoints exist
@@ -606,6 +698,7 @@ def run_single(
     test_num_theorems: int = 500,
     test_split: str = "test",
     log_search_tree: bool = False,
+    train_epochs_override: int | None = None,
 ) -> Dict[str, Any]:
     """Run a single benchmark configuration."""
     run_dir = get_run_dir(benchmark_dir, method, seed, size)
@@ -627,7 +720,7 @@ def run_single(
             )
             force_fresh_training = True
             training_complete = False
-            (run_dir / "benchmark_complete.json").unlink(missing_ok=True)
+            purge_run_artifacts(run_dir)
 
     # Check if test evaluation has already been done
     eval_results_file = run_dir / "eval" / "theorem_results_epoch_1.json"
@@ -653,7 +746,13 @@ def run_single(
 
     run_dir.mkdir(parents=True, exist_ok=True)
     config = build_config(
-        method, seed, size, run_dir, num_epochs=num_epochs, resume=resume
+        method,
+        seed,
+        size,
+        run_dir,
+        num_epochs=num_epochs,
+        resume=resume,
+        train_epochs_override=train_epochs_override,
     )
     config.log_search_tree = log_search_tree
 
@@ -735,12 +834,6 @@ def run_single(
             # Both MCTS and PPO methods save a value head checkpoint
             # (value_head_alpha_zero_latest.pth) during training.
             # PPO and hyperbolic_mcts use HyperbolicValueHead; euclidean uses ValueHead.
-            from benchmark.evaluate_benchmark import (
-                build_eval_config,
-                load_or_init_corpus,
-                TestEvaluator,
-            )
-
             is_ppo = METHOD_CONFIG[method]["is_ppo"]
             use_hyperbolic_eval = is_ppo or METHOD_CONFIG[method]["use_hyperbolic"]
 
@@ -801,7 +894,6 @@ def run_single(
 
         except Exception as e:
             logger.error(f"[TEST EVAL FAILED] {run_name}: {e}")
-            import traceback
 
             logger.error(traceback.format_exc())
             result["test_eval"] = {"status": "failed", "error": str(e)}
@@ -909,11 +1001,7 @@ def collect_epoch_data(run_dir: Path) -> Dict[str, Any]:
 
 def plot_results(benchmark_dir: Path, output_dir: Path) -> None:
     """Generate comparison plots for the four-way benchmark."""
-    import matplotlib
-
     matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-    import numpy as np
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -968,7 +1056,9 @@ def plot_results(benchmark_dir: Path, output_dir: Path) -> None:
             for i, (epochs, rates) in enumerate(all_rates):
                 ax.plot(epochs, rates, "--", alpha=0.3, color=color, linewidth=0.8)
 
-        ax.legend(loc="lower right", fontsize=8)
+        handles, labels = ax.get_legend_handles_labels()
+        if labels:
+            ax.legend(loc="lower right", fontsize=8)
         ax.set_xlim(0.5, NUM_EPOCHS + 0.5)
 
     plt.suptitle(
@@ -1035,7 +1125,9 @@ def plot_results(benchmark_dir: Path, output_dir: Path) -> None:
                 epochs_grid, mean - std, mean + std, alpha=0.15, color=size_colors[size]
             )
 
-        ax.legend(loc="lower right")
+        handles, labels = ax.get_legend_handles_labels()
+        if labels:
+            ax.legend(loc="lower right")
         ax.set_xlim(0.5, NUM_EPOCHS + 0.5)
 
     plt.tight_layout()
@@ -1086,7 +1178,9 @@ def plot_results(benchmark_dir: Path, output_dir: Path) -> None:
 
         ax.set_xticks(x)
         ax.set_xticklabels([f"Seed {s}" for s in SEEDS])
-        ax.legend(loc="upper left", fontsize=7)
+        handles, labels = ax.get_legend_handles_labels()
+        if labels:
+            ax.legend(loc="upper left", fontsize=7)
         ax.grid(True, axis="y", alpha=0.3)
 
     plt.suptitle("Final-Epoch Proof Success: 4-Way Comparison", fontsize=16, y=1.02)
@@ -1183,6 +1277,17 @@ def main() -> None:
     seeds = FAST_SEEDS if args.fast else args.seeds
     sizes = FAST_SIZES if args.fast else args.sizes
     num_epochs = FAST_NUM_EPOCHS if args.fast else NUM_EPOCHS
+    train_epochs_override = FAST_TRAIN_EPOCHS if args.fast else None
+
+    # Fast mode overrides: reduce number of theorems to make smoke runs quicker
+    if args.fast:
+        try:
+            BASE_PARAMS["num_theorems"] = 25
+            logger.info("Fast mode: setting BASE_PARAMS['num_theorems']=25")
+        except Exception:
+            logger.warning(
+                "Failed to override BASE_PARAMS['num_theorems'] for fast mode"
+            )
 
     if args.status:
         print_status(
@@ -1204,7 +1309,9 @@ def main() -> None:
     logger.info(f"Total runs: {len(runs)}")
     if args.fast:
         logger.info(
-            f"Fast mode enabled: using seed=42, size=light, epochs={FAST_NUM_EPOCHS}"
+            "Fast mode enabled: "
+            f"seed=42, size=light, epochs={FAST_NUM_EPOCHS}, "
+            f"theorems=25, value_head_train_epochs={train_epochs_override}"
         )
     print_status(
         benchmark_dir,
@@ -1216,10 +1323,9 @@ def main() -> None:
 
     results = []
     for i, run in enumerate(runs, 1):
+        run_name = f"{run['method']}_{run['seed']}_{run['size']}"
         logger.info(
-            f"\n{'#' * 60}\n"
-            f"# RUN {i}/{len(runs)}: {run['method']}_{run['seed']}_{run['size']}\n"
-            f"{'#' * 60}"
+            f"\n{'#' * 60}\n" f"# RUN {i}/{len(runs)}: {run_name}\n" f"{'#' * 60}"
         )
         result = run_single(
             run["method"],
@@ -1232,8 +1338,10 @@ def main() -> None:
             run_test_eval=args.run_test_eval,
             test_num_theorems=args.test_num_theorems,
             test_split=args.test_split,
+            train_epochs_override=train_epochs_override,
         )
         results.append(result)
+        _post_run_memory_cleanup(run_name)
 
         # Incremental progress
         progress_file = benchmark_dir / "benchmark_progress.json"
