@@ -11,11 +11,14 @@ from unittest.mock import Mock, MagicMock
 from lean_dojo import TacticState
 
 from lean_reinforcement.utilities.config import TrainingConfig
-from lean_reinforcement.utilities.config import OPTIMAL_DEFAULTS
 from lean_reinforcement.agent.runner import AgentRunner
 from lean_reinforcement.agent.mcts.guidedrollout import MCTS_GuidedRollout
 from lean_reinforcement.utilities.gym import LeanDojoEnv
 from lean_reinforcement.agent.transformer import TransformerProtocol
+
+
+DEFAULT_MAX_TIME = 175
+DEFAULT_ENV_TIMEOUT = 75
 
 
 class MockLeanDojoEnv:  # type: ignore[misc]
@@ -63,7 +66,7 @@ class TestTimeConfigurationPropagation(unittest.TestCase):
             use_wandb=False,
             use_caching=False,
         )
-        self.assertEqual(config.max_time, OPTIMAL_DEFAULTS["max_time"])
+        self.assertEqual(config.max_time, DEFAULT_MAX_TIME)
 
     def test_config_max_time_custom_value(self):
         """Test that TrainingConfig can be set with custom max_time."""
@@ -116,7 +119,7 @@ class TestTimeConfigurationPropagation(unittest.TestCase):
             use_wandb=False,
             use_caching=False,
         )
-        self.assertEqual(config.env_timeout, OPTIMAL_DEFAULTS["env_timeout"])
+        self.assertEqual(config.env_timeout, DEFAULT_ENV_TIMEOUT)
 
     def test_config_env_timeout_custom_value(self):
         """Test that TrainingConfig can be set with custom env_timeout."""

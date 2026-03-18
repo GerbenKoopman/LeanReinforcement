@@ -4,8 +4,13 @@ import sys
 from lean_reinforcement.utilities.config import (
     get_config,
     TrainingConfig,
-    OPTIMAL_DEFAULTS,
 )
+
+
+DEFAULT_DATA_TYPE = "novel_premises"
+DEFAULT_NUM_EPOCHS = 32
+DEFAULT_MCTS_TYPE = "alpha_zero"
+DEFAULT_TRAIN_VALUE_HEAD = True
 
 
 class TestConfig(unittest.TestCase):
@@ -14,13 +19,10 @@ class TestConfig(unittest.TestCase):
         with patch.object(sys, "argv", ["prog"]):
             config = get_config()
             self.assertIsInstance(config, TrainingConfig)
-            self.assertEqual(config.data_type, OPTIMAL_DEFAULTS["data_type"])
-            self.assertEqual(config.num_epochs, OPTIMAL_DEFAULTS["num_epochs"])
-            self.assertEqual(config.mcts_type, OPTIMAL_DEFAULTS["mcts_type"])
-            self.assertEqual(
-                config.train_value_head,
-                OPTIMAL_DEFAULTS["train_value_head"],
-            )
+            self.assertEqual(config.data_type, DEFAULT_DATA_TYPE)
+            self.assertEqual(config.num_epochs, DEFAULT_NUM_EPOCHS)
+            self.assertEqual(config.mcts_type, DEFAULT_MCTS_TYPE)
+            self.assertEqual(config.train_value_head, DEFAULT_TRAIN_VALUE_HEAD)
             self.assertEqual(config.value_head_latent_dim, 1024)
 
     def test_custom_args(self) -> None:
