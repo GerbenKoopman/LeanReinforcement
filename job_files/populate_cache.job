@@ -20,6 +20,9 @@ source activate lean-reinforcement
 echo "Upgrading lean-dojo to ensure compatibility with Lean 4.10+..."
 pip install --upgrade lean-dojo
 
+echo "Patching ExtractData.lean for Lean 4.10 compatibility..."
+sed -i 's/def getImports (header: TSyntax `Lean.Parser.Module.header)/def getImports (header: Syntax)/g' /home/gkoopman/.conda/envs/lean-reinforcement/lib/python3.10/site-packages/lean_dojo/data_extraction/ExtractData.lean
+
 echo "Clearing elan update hashes for v4.10.0-rc1 to force a clean toolchain installation..."
 rm -rf ~/.elan/update-hashes/leanprover--lean4---v4.10.0-rc1
 # ---------------------------------------------------------
