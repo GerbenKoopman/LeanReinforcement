@@ -40,7 +40,13 @@ echo "Starting Experiment: Euclidean MCTS"
 echo "======================================================"
 
 # Execute the training script
-srun python3 -m lean_reinforcement.training.train 
-    --training-mode value_head 
-    --no-use-hyperbolic 
+export BASE_DIR="checkpoints/mcts_euclidean"
+
+srun python3 -m lean_reinforcement.training.train \
+    --training-mode value_head \
+    --no-use-hyperbolic \
+    --checkpoint-dir "$BASE_DIR" \
     --indexed-corpus-path "$CORPUS_DIR/indexed_corpus.pkl"
+
+echo "Running automatic evaluation on the trained weights..."
+srun python3 evaluate_run.py --base-dir "$BASE_DIR"
