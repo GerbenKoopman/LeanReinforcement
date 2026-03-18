@@ -218,3 +218,6 @@ logs/
 
 # One-off measurement / stress test scripts
 _measure_corpus_mem.py
+
+# Smoke-test checkpoints
+checkpoints/
