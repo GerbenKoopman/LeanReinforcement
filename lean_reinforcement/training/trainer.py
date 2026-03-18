@@ -31,6 +31,7 @@ from lean_reinforcement.utilities.analyze_training_data import (
 )
 from lean_reinforcement.agent.transformer import Transformer
 from lean_reinforcement.agent.value_head import ValueHead, HyperbolicValueHead
+from lean_reinforcement.agent.ppo_agent import PPOAgent
 from lean_reinforcement.training.datasets import ValueHeadDataset
 from lean_reinforcement.training.inference_server import InferenceServer
 from lean_reinforcement.training.progress import (
@@ -122,79 +123,6 @@ class Trainer:
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
-    def _setup_models(self) -> None:
-        logger.info(f"Using checkpoint directory: {self.checkpoint_dir}")
-
-        # Use ONNX Runtime if requested and available
-        use_onnx = getattr(self.config, "use_onnx", False)
-        needs_value_head = (
-            self.config.mcts_type == "alpha_zero" or self.config.train_value_head
-        )
-        if use_onnx and needs_value_head:
-            logger.warning(
-                "ONNX is not compatible with value head training. "
-                "Falling back to PyTorch."
-            )
-            use_onnx = False
-
-        if use_onnx:
-            from lean_reinforcement.agent.onnx_transformer import (
-                ONNXTransformer,
-                is_onnx_available,
-            )
-
-            if is_onnx_available():
-                logger.info("Using ONNX Runtime for inference")
-                self.transformer = cast(
-                    Transformer, ONNXTransformer(model_name=self.config.model_name)
-                )
-            else:
-                logger.warning(
-                    "ONNX requested but optimum/onnxruntime not installed. "
-                    "Falling back to PyTorch."
-                )
-                self.transformer = Transformer(model_name=self.config.model_name)
-        else:
-            self.transformer = Transformer(model_name=self.config.model_name)
-
-        self.value_head: Optional[ValueHead | HyperbolicValueHead] = None
-        self.start_epoch = 0
-
-        if self.config.mcts_type == "alpha_zero" or self.config.train_value_head:
-            transformer_for_value_head = cast(Transformer, self.transformer)
-
-            if self.config.use_hyperbolic:
-                logger.info("Using hyperbolic (Poincaré ball) value head")
-                self.value_head = HyperbolicValueHead(
-                    transformer_for_value_head,
-                )
-            else:
-                self.value_head = ValueHead(
-                    transformer_for_value_head,
-                    latent_dim=self.config.value_head_latent_dim,
-                )
-
-            if self.config.resume or self.config.use_test_value_head:
-                if self.config.use_test_value_head:
-                    prefix = "value_head_test"
-                else:
-                    prefix = f"value_head_{self.config.mcts_type}"
-
-                loaded_epoch = load_checkpoint(
-                    self.value_head, self.checkpoint_dir, prefix=prefix
-                )
-
-                if self.config.resume:
-                    self.start_epoch = loaded_epoch
-                    logger.info(f"Resuming training from epoch {self.start_epoch}")
-                else:
-                    logger.info(
-                        f"Initialized value head from {prefix} (epoch {loaded_epoch})"
-                    )
-                    self.start_epoch = 0
-
-        log_gpu_memory(logger, prefix="After model initialization - ", level=20)
-
     def _setup_data(self) -> None:
         logger.info(f"Loading data from 'leandojo_benchmark_4/{self.config.data_type}'")
 
@@ -284,6 +212,92 @@ class Trainer:
             self._drain_queues()
             self._cleanup_workers()
 
+    def _setup_models(self) -> None:
+        logger.info(f"Using checkpoint directory: {self.checkpoint_dir}")
+
+        # Use ONNX Runtime if requested and available
+        use_onnx = getattr(self.config, "use_onnx", False)
+        needs_value_head = (
+            self.config.mcts_type == "alpha_zero" or self.config.train_value_head
+        )
+        if use_onnx and needs_value_head:
+            logger.warning(
+                "ONNX is not compatible with value head training. "
+                "Falling back to PyTorch."
+            )
+            use_onnx = False
+
+        if use_onnx:
+            from lean_reinforcement.agent.onnx_transformer import (
+                ONNXTransformer,
+                is_onnx_available,
+            )
+
+            if is_onnx_available():
+                logger.info("Using ONNX Runtime for inference")
+                self.transformer = cast(
+                    Transformer, ONNXTransformer(model_name=self.config.model_name)
+                )
+            else:
+                logger.warning(
+                    "ONNX requested but optimum/onnxruntime not installed. "
+                    "Falling back to PyTorch."
+                )
+                self.transformer = Transformer(model_name=self.config.model_name)
+        else:
+            self.transformer = Transformer(model_name=self.config.model_name)
+
+        self.value_head: Optional[ValueHead | HyperbolicValueHead] = None
+        self.ppo_agent: Optional[PPOAgent] = None
+        self.start_epoch = 0
+
+        if self.config.training_mode == "ppo":
+            logger.info("Initializing PPO agent")
+            self.ppo_agent = PPOAgent(
+                model_name=self.config.model_name,
+                use_hyperbolic=self.config.use_hyperbolic,
+            )
+            if self.config.resume:
+                self.start_epoch = self.ppo_agent.load_latest_checkpoint(
+                    self.checkpoint_dir
+                )
+                logger.info(f"Resuming PPO training from epoch {self.start_epoch}")
+
+        elif self.config.mcts_type == "alpha_zero" or self.config.train_value_head:
+            transformer_for_value_head = cast(Transformer, self.transformer)
+
+            if self.config.use_hyperbolic:
+                logger.info("Using hyperbolic (Poincaré ball) value head")
+                self.value_head = HyperbolicValueHead(
+                    transformer_for_value_head,
+                )
+            else:
+                self.value_head = ValueHead(
+                    transformer_for_value_head,
+                    latent_dim=self.config.value_head_latent_dim,
+                )
+
+            if self.config.resume or self.config.use_test_value_head:
+                if self.config.use_test_value_head:
+                    prefix = "value_head_test"
+                else:
+                    prefix = f"value_head_{self.config.mcts_type}"
+
+                loaded_epoch = load_checkpoint(
+                    self.value_head, self.checkpoint_dir, prefix=prefix
+                )
+
+                if self.config.resume:
+                    self.start_epoch = loaded_epoch
+                    logger.info(f"Resuming training from epoch {self.start_epoch}")
+                else:
+                    logger.info(
+                        f"Initialized value head from {prefix} (epoch {loaded_epoch})"
+                    )
+                    self.start_epoch = 0
+
+        log_gpu_memory(logger, prefix="After model initialization - ", level=20)
+
     def _run_epoch(
         self, epoch: int, inference_server: InferenceServer
     ) -> List[Dict[str, Any]]:
@@ -339,7 +353,12 @@ class Trainer:
         self.progress_display.refresh()
         self._analyze_and_save_data(training_data_buffer, epoch)
 
-        if self.config.train_value_head:
+        if self.config.training_mode == "ppo":
+            self.progress_stats.phase = "training_ppo"
+            self.progress_display.refresh()
+            self._train_ppo_epoch(training_data_buffer, epoch)
+
+        elif self.config.train_value_head:
             self.progress_stats.phase = "training_value_head"
             self.progress_display.refresh()
             self._train_value_head_epoch(training_data_buffer)
@@ -356,22 +375,30 @@ class Trainer:
                 except Exception as e:
                     logger.error(f"Failed to save val loss: {e}")
 
-        if (
-            self.config.train_value_head
-            and self.value_head is not None
-            and self.config.save_checkpoints
-        ):
-            prefix = f"value_head_{self.config.mcts_type}"
-            save_checkpoint(
-                self.value_head,
-                epoch + 1,
-                self.checkpoint_dir,
-                self.config,
-                prefix=prefix,
-            )
-            logger.info(f"Checkpoint saved for epoch {epoch + 1}")
+        if self.config.save_checkpoints:
+            if self.config.training_mode == "ppo" and self.ppo_agent:
+                self.ppo_agent.save_checkpoint(self.checkpoint_dir, epoch + 1)
+                logger.info(f"PPO checkpoint saved for epoch {epoch + 1}")
+            elif self.config.train_value_head and self.value_head:
+                prefix = f"value_head_{self.config.mcts_type}"
+                save_checkpoint(
+                    self.value_head,
+                    epoch + 1,
+                    self.checkpoint_dir,
+                    self.config,
+                    prefix=prefix,
+                )
+                logger.info(f"Value head checkpoint saved for epoch {epoch + 1}")
 
         return epoch_metrics
+
+    def _train_ppo_epoch(self, training_data_buffer: List[Dict[str, Any]], epoch: int):
+        assert self.ppo_agent is not None, "PPO agent must be initialized"
+        logger.info("Updating PPO agent...")
+        ppo_metrics = self.ppo_agent.update(training_data_buffer)
+        logger.info(f"PPO update complete. Metrics: {ppo_metrics}")
+        if self.config.use_wandb:
+            _safe_wandb_log(ppo_metrics)
 
     def _start_workers(self) -> None:
         # Set glibc tuning env vars in the parent BEFORE spawning.

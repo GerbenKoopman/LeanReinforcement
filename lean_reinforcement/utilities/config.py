@@ -20,6 +20,7 @@ class TrainingConfig:
     # Training Args
     train_epochs: int
     value_head_batch_size: int
+    training_mode: str = "value_head"
     value_head_latent_dim: int = 1024
     train_value_head: bool = True
     use_hyperbolic: bool = False  # Use hyperbolic (Poincaré ball) value head
@@ -75,12 +76,12 @@ class TrainingConfig:
         return cls(
             data_type=getattr(args, "data_type", "novel_premises"),
             num_epochs=getattr(args, "num_epochs", 1),
-            num_theorems=getattr(args, "num_theorems", 100),
+            num_theorems=getattr(args, "num_theorems", 128),
             num_iterations=getattr(args, "num_iterations", 300),
             max_steps=getattr(args, "max_steps", 20),
             batch_size=getattr(args, "batch_size", 16),
             num_workers=getattr(args, "num_workers", 12),
-            mcts_type=getattr(args, "mcts_type", "guided_rollout"),
+            mcts_type=getattr(args, "mcts_type", "alpha_zero"),
             indexed_corpus_path=getattr(args, "indexed_corpus_path", None),
             model_name=getattr(
                 args,
@@ -93,7 +94,8 @@ class TrainingConfig:
             max_time=getattr(args, "max_time", 175),
             env_timeout=getattr(args, "env_timeout", 75),
             proof_timeout=getattr(args, "proof_timeout", 360),
-            train_epochs=getattr(args, "train_epochs", 50),
+            training_mode=getattr(args, "training_mode", "value_head"),
+            train_epochs=getattr(args, "train_epochs", 32),
             value_head_batch_size=getattr(args, "value_head_batch_size", 4),
             value_head_latent_dim=getattr(args, "value_head_latent_dim", 1024),
             train_value_head=getattr(args, "train_value_head", True),
@@ -130,13 +132,13 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--num-epochs",
         type=int,
-        default=25,
+        default=32,
         help="Number of self-play/training epochs.",
     )
     parser.add_argument(
         "--num-theorems",
         type=int,
-        default=100,
+        default=128,
         help="Number of theorems to attempt per epoch.",
     )
     parser.add_argument(
@@ -167,7 +169,7 @@ def get_config() -> TrainingConfig:
         "--mcts-type",
         type=str,
         choices=["guided_rollout", "alpha_zero"],
-        default="guided_rollout",
+        default="alpha_zero",
         help="Which MCTS algorithm to use for self-play.",
     )
     parser.add_argument(
@@ -252,6 +254,13 @@ def get_config() -> TrainingConfig:
     )
 
     # --- Training Args ---
+    parser.add_argument(
+        "--training-mode",
+        type=str,
+        choices=["value_head", "ppo"],
+        default="value_head",
+        help="Training mode to use.",
+    )
     parser.add_argument(
         "--train-epochs",
         type=int,
