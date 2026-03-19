@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# JOB_ID_1=$(sbatch --parsable cython.job)
-# echo "Submitted Cython Job: $JOB_ID_1"
+JOB_ID_1=$(sbatch --parsable cython.job)
+echo "Submitted Cython Job: $JOB_ID_1"
 
 # 2. Submit the training jobs with a dependency on Job 1
 
