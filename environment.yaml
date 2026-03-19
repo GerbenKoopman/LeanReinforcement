@@ -39,3 +39,4 @@ dependencies:
     - optimum
     - onnxruntime-gpu
     - hypll
+    - peft
