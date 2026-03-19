@@ -31,10 +31,6 @@ set +a
 
 cd "$HOME/lean_reinforcement"
 
-# --- Build and Run ---
-echo "Building Cython extensions..."
-python3 setup.py build_ext --inplace
-
 echo "======================================================"
 echo "Starting Experiment: Hyperbolic MCTS"
 echo "======================================================"
