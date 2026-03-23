@@ -5,7 +5,7 @@
 #SBATCH --job-name=populate_cache
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=18
-#SBATCH --time=04:00:00
+#SBATCH --time=12:00:00
 #SBATCH --output=logs/populate_cache_%A.out
 
 module purge
@@ -19,8 +19,16 @@ set -a
 source $HOME/lean_reinforcement/.env
 set +a
 
+# Cache population must run online at least once to fetch/build complete
+# traced artifacts. Training can still run offline afterwards.
+export LEANDOJO_OFFLINE=0
+
 # Ensure the cache dir exists
 mkdir -p "${CACHE_DIR}"
+
+echo "LEANDOJO_OFFLINE=${LEANDOJO_OFFLINE}"
+echo "LEANDOJO_CACHE_DIR=${LEANDOJO_CACHE_DIR}"
+echo "CACHE_DIR=${CACHE_DIR}"
 
 # Preferred commit (used in this project)
 COMMIT=29dcec074de168ac2bf835a77ef68bbe069194c5
@@ -33,8 +41,9 @@ fi
 
 cd $HOME/lean_reinforcement || exit 1
 
-# Disable remote caching to force a local build.
-export DISABLE_REMOTE_CACHE=1
+# Allow remote cache usage if available. Forcing local-only tracing can leave
+# an incomplete cache when the job times out.
+unset DISABLE_REMOTE_CACHE
 
 # Run LeanDojo trace to populate the cache
 srun python3 - <<PY
@@ -45,3 +54,30 @@ PY
 
 echo "Cache directory contents (top-level):"
 ls -la "${CACHE_DIR}" | head -n 50
+
+TARGET_DIR="${CACHE_DIR}/leanprover-community-mathlib4-${COMMIT}/mathlib4"
+echo "Verifying AST artifacts under: ${TARGET_DIR}"
+AST_COUNT=$(find "${TARGET_DIR}" -name "*.ast.json" 2>/dev/null | wc -l)
+echo "AST_COUNT=${AST_COUNT}"
+
+# Mathlib trace should contain far more than a few hundred AST files.
+# A very low count indicates a partial/incomplete trace.
+MIN_AST_COUNT=20000
+
+if [ "${AST_COUNT}" -lt "${MIN_AST_COUNT}" ]; then
+  echo "ERROR: AST count too low (${AST_COUNT} < ${MIN_AST_COUNT})."
+  echo "The trace is incomplete; do not use this cache for training."
+  exit 1
+fi
+
+# Guard against the specific failure seen in workers.
+if ! find "${TARGET_DIR}/Mathlib/Analysis/SpecialFunctions/Complex" \
+  -name "*LogBounds*.ast.json" -print -quit | grep -q .; then
+  echo "ERROR: Missing LogBounds AST file in traced cache."
+  exit 1
+fi
+
+if [ "${AST_COUNT}" -le 0 ]; then
+  echo "ERROR: No AST files found. Cache population is incomplete."
+  exit 1
+fi
