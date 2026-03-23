@@ -40,3 +40,4 @@ dependencies:
     - onnxruntime-gpu
     - hypll
     - peft
+    - memray
