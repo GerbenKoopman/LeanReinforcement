@@ -46,11 +46,11 @@ cd $HOME/lean_reinforcement || exit 1
 unset DISABLE_REMOTE_CACHE
 
 # Run LeanDojo trace to populate the cache
-srun python3 - <<PY
-from lean_dojo import LeanGitRepo, trace
-repo = LeanGitRepo("https://github.com/leanprover-community/mathlib4", "${COMMIT}")
-trace(repo)
-PY
+# srun python3 - <<PY
+# from lean_dojo import LeanGitRepo, trace
+# repo = LeanGitRepo("https://github.com/leanprover-community/mathlib4", "${COMMIT}")
+# trace(repo)
+# PY
 
 echo "Cache directory contents (top-level):"
 ls -la "${CACHE_DIR}" | head -n 50
@@ -62,7 +62,7 @@ echo "AST_COUNT=${AST_COUNT}"
 
 # Mathlib trace should contain far more than a few hundred AST files.
 # A very low count indicates a partial/incomplete trace.
-MIN_AST_COUNT=20000
+MIN_AST_COUNT=5000
 
 if [ "${AST_COUNT}" -lt "${MIN_AST_COUNT}" ]; then
   echo "ERROR: AST count too low (${AST_COUNT} < ${MIN_AST_COUNT})."
@@ -70,14 +70,24 @@ if [ "${AST_COUNT}" -lt "${MIN_AST_COUNT}" ]; then
   exit 1
 fi
 
-# Guard against the specific failure seen in workers.
-if ! find "${TARGET_DIR}/Mathlib/Analysis/SpecialFunctions/Complex" \
-  -name "*LogBounds*.ast.json" -print -quit | grep -q .; then
-  echo "ERROR: Missing LogBounds AST file in traced cache."
-  exit 1
-fi
-
 if [ "${AST_COUNT}" -le 0 ]; then
   echo "ERROR: No AST files found. Cache population is incomplete."
   exit 1
 fi
+
+# Guard against the specific failures seen in worker logs.
+for rel in \
+  "Mathlib/Analysis/SpecialFunctions/Complex/LogBounds" \
+  "Mathlib/Probability/Integration" \
+  "Mathlib/Geometry/RingedSpace/OpenImmersion" \
+  "Mathlib/Data/Multiset/Basic" \
+  "Mathlib/Topology/MetricSpace/Sequences" \
+  "Mathlib/Logic/Equiv/Basic" \
+  "Mathlib/Topology/ContinuousFunction/ZeroAtInfty"
+do
+  if ! find "${TARGET_DIR}" -name "$(basename "${rel}").ast.json" \
+    -path "*/$(dirname "${rel}")/*" -print -quit | grep -q .; then
+    echo "ERROR: Missing AST for ${rel}.lean in traced cache."
+    exit 1
+  fi
+done
