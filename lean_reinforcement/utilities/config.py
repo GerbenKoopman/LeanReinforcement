@@ -75,7 +75,7 @@ class TrainingConfig:
     def from_args(cls, args: argparse.Namespace) -> "TrainingConfig":
         return cls(
             data_type=getattr(args, "data_type", "novel_premises"),
-            num_epochs=getattr(args, "num_epochs", 1),
+            num_epochs=getattr(args, "num_epochs", 16),
             num_theorems=getattr(args, "num_theorems", 128),
             num_iterations=getattr(args, "num_iterations", 300),
             max_steps=getattr(args, "max_steps", 20),
@@ -95,7 +95,7 @@ class TrainingConfig:
             env_timeout=getattr(args, "env_timeout", 75),
             proof_timeout=getattr(args, "proof_timeout", 360),
             training_mode=getattr(args, "training_mode", "value_head"),
-            train_epochs=getattr(args, "train_epochs", 32),
+            train_epochs=getattr(args, "train_epochs", 50),
             value_head_batch_size=getattr(args, "value_head_batch_size", 4),
             value_head_latent_dim=getattr(args, "value_head_latent_dim", 1024),
             train_value_head=getattr(args, "train_value_head", True),
@@ -132,7 +132,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--num-epochs",
         type=int,
-        default=32,
+        default=16,
         help="Number of self-play/training epochs.",
     )
     parser.add_argument(
