@@ -8,7 +8,7 @@ from lean_reinforcement.utilities.config import (
 
 
 DEFAULT_DATA_TYPE = "novel_premises"
-DEFAULT_NUM_EPOCHS = 32
+DEFAULT_NUM_EPOCHS = 16
 DEFAULT_MCTS_TYPE = "alpha_zero"
 DEFAULT_TRAIN_VALUE_HEAD = True
 
@@ -78,3 +78,13 @@ class TestConfig(unittest.TestCase):
         with patch.object(sys, "argv", test_args):
             config = get_config()
             self.assertEqual(config.value_head_latent_dim, 1024)
+
+    def test_debugging_flag_default_false(self) -> None:
+        with patch.object(sys, "argv", ["prog"]):
+            config = get_config()
+            self.assertFalse(config.debugging)
+
+    def test_debugging_flag_enabled(self) -> None:
+        with patch.object(sys, "argv", ["prog", "--debugging"]):
+            config = get_config()
+            self.assertTrue(config.debugging)
