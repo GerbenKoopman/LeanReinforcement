@@ -17,6 +17,7 @@ from loguru import logger
 import wandb
 
 from ReProver.common import Corpus
+from ReProver.common import Pos
 
 from lean_reinforcement.utilities.dataloader import LeanDataLoader
 from lean_reinforcement.utilities.checkpoint import (
@@ -53,6 +54,10 @@ from lean_reinforcement.utilities.memory import (
     TRAINER_MIN_AVAILABLE_GB,
 )
 from lean_reinforcement.utilities.optimizer import unwrap_optimizer_params
+from lean_reinforcement.utilities.gym import (
+    LeanDojoEnv,
+    is_outdated_traced_repo_error,
+)
 
 
 def _safe_wandb_log(data: Dict[str, Any]) -> None:
@@ -144,6 +149,15 @@ class Trainer:
     def _setup_data(self) -> None:
         logger.info(f"Loading data from 'leandojo_benchmark_4/{self.config.data_type}'")
 
+        # Fast fail for stale LeanDojo traces (common on shared HPC caches).
+        # We probe one theorem before constructing the heavy Corpus object.
+        probe_loader = LeanDataLoader(
+            corpus=None,
+            dataset_path="leandojo_benchmark_4",
+            data_type=self.config.data_type,
+        )
+        self._preflight_lean_dojo_trace(probe_loader)
+
         if self.config.indexed_corpus_path and os.path.exists(
             self.config.indexed_corpus_path
         ):
@@ -162,6 +176,45 @@ class Trainer:
             dataset_path="leandojo_benchmark_4",
             data_type=self.config.data_type,
         )
+
+    def _preflight_lean_dojo_trace(self, dataloader: LeanDataLoader) -> None:
+        """Validate that LeanDojo traced repo cache is compatible before training."""
+        if not dataloader.train_data:
+            return
+
+        sample = dataloader.train_data[0]
+        theorem = dataloader.extract_theorem(sample)
+        if theorem is None:
+            logger.warning("Preflight skipped: could not extract theorem from dataset.")
+            return
+
+        try:
+            theorem_pos = Pos(*sample["start"])
+        except Exception:
+            logger.warning(
+                f"Preflight skipped: invalid theorem position for {theorem.full_name}."
+            )
+            return
+
+        env: Optional[LeanDojoEnv] = None
+        try:
+            env = LeanDojoEnv(theorem, theorem_pos, self.config.env_timeout)
+            logger.info("LeanDojo preflight check passed.")
+        except Exception as exc:
+            if is_outdated_traced_repo_error(exc):
+                raise RuntimeError(
+                    "LeanDojo traced repo cache is incompatible with the installed "
+                    "LeanDojo version (missing Lean4Repl.lean). "
+                    "Clear/rebuild LeanDojo traces in this environment and rerun. "
+                    "For details, run: python3 -m "
+                    "lean_reinforcement.utilities.lean_cache_diagnostics"
+                ) from exc
+            raise RuntimeError(
+                f"LeanDojo preflight failed for theorem {theorem.full_name}: {exc}"
+            ) from exc
+        finally:
+            if env is not None:
+                env.close()
 
     def _setup_multiprocessing(self) -> None:
         mp.set_start_method("spawn", force=True)

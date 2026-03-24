@@ -41,16 +41,22 @@ fi
 
 cd $HOME/lean_reinforcement || exit 1
 
+echo "=== Pre-population Lean/cache diagnostics ==="
+srun python3 -m lean_reinforcement.utilities.lean_cache_diagnostics \
+  --project-root "$HOME/lean_reinforcement" \
+  --cache-dir "${CACHE_DIR}" \
+  --commit "${COMMIT}"
+
 # Allow remote cache usage if available. Forcing local-only tracing can leave
 # an incomplete cache when the job times out.
 unset DISABLE_REMOTE_CACHE
 
 # Run LeanDojo trace to populate the cache
-# srun python3 - <<PY
-# from lean_dojo import LeanGitRepo, trace
-# repo = LeanGitRepo("https://github.com/leanprover-community/mathlib4", "${COMMIT}")
-# trace(repo)
-# PY
+srun python3 -c "
+from lean_dojo import LeanGitRepo, trace
+repo = LeanGitRepo('https://github.com/leanprover-community/mathlib4', '${COMMIT}')
+trace(repo)
+"
 
 echo "Cache directory contents (top-level):"
 ls -la "${CACHE_DIR}" | head -n 50
@@ -91,3 +97,9 @@ do
     exit 1
   fi
 done
+
+echo "=== Post-population Lean/cache diagnostics ==="
+srun python3 -m lean_reinforcement.utilities.lean_cache_diagnostics \
+  --project-root "$HOME/lean_reinforcement" \
+  --cache-dir "${CACHE_DIR}" \
+  --commit "${COMMIT}"

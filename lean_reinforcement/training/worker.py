@@ -33,7 +33,10 @@ from lean_reinforcement.utilities.memory import (
     WORKER_MIN_AVAILABLE_GB,
 )
 from lean_reinforcement.utilities.dataloader import LeanDataLoader
-from lean_reinforcement.utilities.gym import LeanDojoEnv
+from lean_reinforcement.utilities.gym import (
+    LeanDojoEnv,
+    is_outdated_traced_repo_error,
+)
 from lean_reinforcement.utilities.config import TrainingConfig
 from lean_reinforcement.agent.runner import AgentRunner
 from lean_reinforcement.agent.mcts import BaseMCTS, MCTS_GuidedRollout, MCTS_AlphaZero
@@ -124,6 +127,7 @@ def process_theorem(
         logger.exception(
             f"Unexpected error initializing environment for theorem {theorem.full_name}: {e}"
         )
+        outdated_trace = is_outdated_traced_repo_error(e)
         aggressive_cleanup()  # Clean up any partially created objects
         return {
             "metrics": {
@@ -131,6 +135,7 @@ def process_theorem(
                 "proof_search/steps": 0,
                 "proof_search/time": time.time() - theorem_start,
                 "proof_search/env_init_unexpected_error": True,
+                "proof_search/outdated_trace_cache": outdated_trace,
             },
             "data": [],
             "theorem_name": theorem.full_name,

@@ -24,6 +24,13 @@ import os
 
 DOJO_RESET_INTERVAL: int = int(os.environ.get("LEAN_RL_DOJO_RESET_INTERVAL", "500"))
 
+OUTDATED_TRACE_CACHE_MARKER = "Unable to find Lean4Repl.lean in the traced repo"
+
+
+def is_outdated_traced_repo_error(exc: BaseException) -> bool:
+    """Return True when LeanDojo reports an outdated traced repo cache."""
+    return OUTDATED_TRACE_CACHE_MARKER in str(exc)
+
 
 class LeanDojoEnv:
     def __init__(
