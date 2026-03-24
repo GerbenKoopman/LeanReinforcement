@@ -1,0 +1,144 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=1
+#SBATCH --job-name=hyperparam_search
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=18
+#SBATCH --time=24:00:00
+#SBATCH --output=logs/hyperparam_search_%A.out
+
+# Fail early on errors.
+set -euo pipefail
+
+# --- Environment Setup ---
+module purge
+module load 2024
+module load Anaconda3/2024.06-1
+module load CUDA/12.6.0
+
+export CUDA_HOME=$CUDA_ROOT
+export CUDA_PATH=$CUDA_ROOT
+
+source activate lean-reinforcement
+
+# Source environment variables from .env if available.
+set -a
+if [ -f "$HOME/lean_reinforcement/.env" ]; then
+    source "$HOME/lean_reinforcement/.env"
+fi
+set +a
+
+cd "$HOME/lean_reinforcement"
+
+mkdir -p logs hyperparam_results
+
+# --- Hyperparameter Search Settings (override via sbatch --export=...) ---
+# Allowed commands: benchmark | grid | binary | coordinate | train
+SEARCH_COMMAND="${SEARCH_COMMAND:-coordinate}"
+
+# Runtime overrides for search modes.
+export NUM_THEOREMS="${NUM_THEOREMS:-50}"
+export NUM_ROUNDS="${NUM_ROUNDS:-2}"
+export BINARY_PARAM="${BINARY_PARAM:-num_workers}"
+export USE_WANDB="${USE_WANDB:-false}"
+export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0}"
+
+# Always use the HPC profile on Snellius unless explicitly overridden.
+export HARDWARE="${HARDWARE:-hpc}"
+
+# Determine how to run Python.
+if [[ -n "${CONDA_DEFAULT_ENV:-}" ]]; then
+    PYTHON_CMD="python"
+else
+    if command -v mamba &> /dev/null; then
+        PYTHON_CMD="mamba run -n lean-reinforcement python"
+    elif command -v conda &> /dev/null; then
+        PYTHON_CMD="conda run -n lean-reinforcement python"
+    else
+        PYTHON_CMD="python3"
+    fi
+fi
+
+WANDB_FLAG=""
+case "${USE_WANDB,,}" in
+    1|true|yes|y)
+        WANDB_FLAG="--use-wandb"
+        ;;
+esac
+
+echo "======================================================"
+echo "Starting Hyperparameter Search on Snellius"
+echo "======================================================"
+echo "Date: $(date)"
+echo "Command: ${SEARCH_COMMAND}"
+echo "Hardware: ${HARDWARE}"
+echo "NUM_THEOREMS: ${NUM_THEOREMS}"
+echo "NUM_ROUNDS: ${NUM_ROUNDS}"
+echo "BINARY_PARAM: ${BINARY_PARAM}"
+echo "USE_WANDB: ${USE_WANDB}"
+echo "CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES}"
+echo "======================================================"
+
+# Execute hyperparameter search mode directly.
+case "${SEARCH_COMMAND}" in
+    benchmark)
+        srun ${PYTHON_CMD} -m lean_reinforcement.training.hyperparam_search \
+            --mode benchmark \
+            --hardware "${HARDWARE}" \
+            --num-theorems "${NUM_THEOREMS}" \
+            ${WANDB_FLAG}
+        ;;
+    grid)
+        srun ${PYTHON_CMD} -m lean_reinforcement.training.hyperparam_search \
+            --mode grid \
+            --hardware "${HARDWARE}" \
+            --num-theorems "${NUM_THEOREMS}" \
+            ${WANDB_FLAG}
+        ;;
+    binary)
+        srun ${PYTHON_CMD} -m lean_reinforcement.training.hyperparam_search \
+            --mode binary \
+            --hardware "${HARDWARE}" \
+            --num-theorems "${NUM_THEOREMS}" \
+            --param "${BINARY_PARAM}" \
+            ${WANDB_FLAG}
+        ;;
+    coordinate)
+        srun ${PYTHON_CMD} -m lean_reinforcement.training.hyperparam_search \
+            --mode coordinate \
+            --hardware "${HARDWARE}" \
+            --num-theorems "${NUM_THEOREMS}" \
+            --num-rounds "${NUM_ROUNDS}" \
+            ${WANDB_FLAG}
+        ;;
+    train)
+        srun ${PYTHON_CMD} -m lean_reinforcement.training.train \
+            --data-type novel_premises \
+            --model-name "kaiyuy/leandojo-lean4-tacgen-byt5-small" \
+            --num-epochs 5 \
+            --num-theorems 50 \
+            --num-workers 10 \
+            --mcts-type guided_rollout \
+            --num-iterations 100 \
+            --batch-size 16 \
+            --num-tactics-to-expand 12 \
+            --max-steps 40 \
+            --max-time 300.0 \
+            --env-timeout 180 \
+            --proof-timeout 1200 \
+            --train-epochs 1 \
+            --save-checkpoints \
+            ${WANDB_FLAG}
+        ;;
+    *)
+        echo "Unsupported SEARCH_COMMAND='${SEARCH_COMMAND}'."
+        echo "Allowed values: benchmark, grid, binary, coordinate, train"
+        exit 2
+        ;;
+esac
+
+echo "======================================================"
+echo "Hyperparameter Search Finished"
+echo "Date: $(date)"
+echo "======================================================"
