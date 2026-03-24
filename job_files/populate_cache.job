@@ -1,10 +1,10 @@
 #!/bin/bash
 
-#SBATCH --partition=gpu_a100
+#SBATCH --partition=gpu_mig
 #SBATCH --gpus=1
 #SBATCH --job-name=populate_cache
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=18
+#SBATCH --cpus-per-task=9
 #SBATCH --time=04:00:00
 #SBATCH --output=logs/populate_cache_%A.out
 
