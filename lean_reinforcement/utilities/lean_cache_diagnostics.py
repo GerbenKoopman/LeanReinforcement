@@ -141,9 +141,9 @@ def main() -> int:
     print(f"lean_dojo_version={lean_dojo_ver}")
     print(f"lean_dojo_module_path={lean_dojo_path}")
 
-    # Active Lean toolchain/binaries in environment
-    print(f"lean_version={_run_cmd(['lean', '--version'])}")
-    print(f"lake_version={_run_cmd(['lake', '--version'])}")
+    # Active Lean/Lake as resolved in project context.
+    print(f"lean_version={_run_cmd(['lean', '--version'], cwd=project_root)}")
+    print(f"lake_version={_run_cmd(['lake', '--version'], cwd=project_root)}")
     print(f"which_lean={_run_cmd(['which', 'lean'])}")
     print(f"which_lake={_run_cmd(['which', 'lake'])}")
 
@@ -207,8 +207,25 @@ def main() -> int:
     )
     print(f"cache_lean_toolchain={cache_toolchain or '<missing>'}")
 
+    cache_mathlib_root = cache_repo_dir / "mathlib4"
+    cache_context_lean_version = _run_cmd(["lean", "--version"], cwd=cache_mathlib_root)
+    cache_context_lake_version = _run_cmd(["lake", "--version"], cwd=cache_mathlib_root)
+    print(f"cache_context_lean_version={cache_context_lean_version}")
+    print(f"cache_context_lake_version={cache_context_lake_version}")
+
     if project_toolchain and cache_toolchain and project_toolchain != cache_toolchain:
-        print("potential_clash=toolchain_mismatch_between_project_and_cache")
+        print(
+            "compat_note=project_toolchain_differs_from_cache_toolchain "
+            "(often expected for historical mathlib commits)"
+        )
+
+    if (
+        "<failed" in cache_context_lean_version
+        or "<not found>" in cache_context_lean_version
+        or "<failed" in cache_context_lake_version
+        or "<not found>" in cache_context_lake_version
+    ):
+        print("potential_clash=unable_to_resolve_lean_or_lake_in_cache_context")
 
     repl_hits = _find_lean4repl(cache_repo_dir)
     print(f"lean4repl_present={'yes' if repl_hits else 'no'}")
