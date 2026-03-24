@@ -83,7 +83,9 @@ class TestEvaluator(Trainer):
             total_workers=config.num_workers,
             cumulative_total_theorems=config.num_epochs * config.num_theorems,
         )
-        self.progress_display = make_progress_display(self.progress_stats)
+        self.progress_display = make_progress_display(
+            self.progress_stats, enable_live=not config.debugging
+        )
 
         # Set seeds for reproducibility during evaluation
         if config.seed is not None:

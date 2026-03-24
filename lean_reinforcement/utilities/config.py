@@ -27,6 +27,7 @@ class TrainingConfig:
     use_final_reward: bool = False
     save_training_data: bool = True
     use_caching: bool = False
+    debugging: bool = False
 
     # Reproducibility
     seed: Optional[int] = None
@@ -103,6 +104,7 @@ class TrainingConfig:
             use_final_reward=getattr(args, "use_final_reward", True),
             save_training_data=getattr(args, "save_training_data", True),
             use_caching=getattr(args, "use_caching", False),
+            debugging=getattr(args, "debugging", False),
             seed=getattr(args, "seed", None),
             save_checkpoints=getattr(args, "save_checkpoints", True),
             resume=getattr(args, "resume", False),
@@ -310,6 +312,12 @@ def get_config() -> TrainingConfig:
         action=argparse.BooleanOptionalAction,
         default=False,
         help="Cache encoded node features whenever possible (memory intensive).",
+    )
+    parser.add_argument(
+        "--debugging",
+        action="store_true",
+        default=False,
+        help="Disable rich live progress rendering so logger.info/error output stays visible.",
     )
 
     # --- Reproducibility ---

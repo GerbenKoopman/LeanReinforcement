@@ -451,7 +451,8 @@ class PlainProgressDisplay:
 
 def make_progress_display(
     stats: ProgressStats,
+    enable_live: bool = True,
 ) -> "LiveProgressDisplay | PlainProgressDisplay":
-    if HAS_RICH:
+    if HAS_RICH and enable_live:
         return LiveProgressDisplay(stats)
     return PlainProgressDisplay(stats)
