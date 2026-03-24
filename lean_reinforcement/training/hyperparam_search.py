@@ -20,6 +20,7 @@ Search strategies:
 - Coordinate descent: Iterative per-dimension binary search
 """
 
+import argparse
 import time
 import json
 import random
@@ -28,6 +29,7 @@ from pathlib import Path
 from dataclasses import dataclass, asdict, field
 from typing import Dict, List, Any, Optional, Tuple
 from loguru import logger
+from lean_reinforcement.utilities.config import TrainingConfig
 
 # Try to import wandb but make it optional
 try:
@@ -40,78 +42,10 @@ except ImportError:
 
 
 @dataclass
-class HyperparameterConfig:
-    """Configuration for a single hyperparameter search trial."""
-
-    # Core search parameters (most impactful)
-    num_workers: int = 1
-    batch_size: int = 4
-    num_tactics_to_expand: int = 8
-    num_iterations: int = 100
-
-    # Timeout parameters (all in seconds)
-    # Hierarchy: env_timeout < max_time < proof_timeout
-    max_time: float = 100.0  # Max time per MCTS search step
-    max_steps: int = 40  # Max proof depth (not a timeout)
-    proof_timeout: float = 1200.0  # Max time for entire proof
-    env_timeout: int = 80  # Max time per tactic execution
-
-    # Search behavior
-    max_rollout_depth: int = 10
-    mcts_type: str = "guided_rollout"
-
-    # Fixed parameters (rarely tuned)
-    model_name: str = "kaiyuy/leandojo-lean4-tacgen-byt5-small"
-    data_type: str = "novel_premises"
-
-    # Training parameters (for full training runs)
-    num_epochs: int = 1
-    num_theorems: int = 50
-    train_epochs: int = 1
-    train_value_head: bool = False
-    use_final_reward: bool = True
-
-    # Evaluation mode
-    save_training_data: bool = False
-    save_checkpoints: bool = False
-    use_wandb: bool = False
-
-    def to_args_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary suitable for TrainingConfig."""
-        return {
-            "num_workers": self.num_workers,
-            "batch_size": self.batch_size,
-            "num_tactics_to_expand": self.num_tactics_to_expand,
-            "num_iterations": self.num_iterations,
-            "max_time": self.max_time,
-            "max_steps": self.max_steps,
-            "proof_timeout": self.proof_timeout,
-            "env_timeout": self.env_timeout,
-            "max_rollout_depth": self.max_rollout_depth,
-            "mcts_type": self.mcts_type,
-            "model_name": self.model_name,
-            "data_type": self.data_type,
-            "num_epochs": self.num_epochs,
-            "num_theorems": self.num_theorems,
-            "train_epochs": self.train_epochs,
-            "train_value_head": self.train_value_head,
-            "use_final_reward": self.use_final_reward,
-            "save_training_data": self.save_training_data,
-            "save_checkpoints": self.save_checkpoints,
-            "use_wandb": self.use_wandb,
-            "indexed_corpus_path": None,
-            "resume": False,
-            "use_test_value_head": False,
-            "checkpoint_dir": None,
-            "inference_timeout": 600.0,
-        }
-
-
-@dataclass
 class TrialResult:
     """Results from a single hyperparameter trial."""
 
-    config: HyperparameterConfig
+    config: TrainingConfig
     total_time: float
     num_proofs_attempted: int
     num_proofs_succeeded: int
@@ -153,32 +87,50 @@ class TrialResult:
         }
 
 
-# Hardware-specific default configurations
+# Hardware-specific default overrides
 # NOTE: For hyperparameter search, we use shorter timeouts than production
 # to allow faster iteration. Production runs can use longer timeouts.
-LAPTOP_DEFAULTS = HyperparameterConfig(
-    num_workers=1,  # Single-worker baseline
-    batch_size=4,  # Conservative single-worker inference for local hardware
-    num_tactics_to_expand=8,  # Balanced expansion for 1 worker
-    num_iterations=100,  # Minimum viable for AlphaZero
-    max_time=120.0,  # 2 minutes per MCTS step (reduced for search)
-    max_steps=40,  # Reasonable depth
-    proof_timeout=300.0,  # 5 minutes per theorem (reduced for search)
-    env_timeout=60,  # 1 minute per tactic (reduced for search)
-    max_rollout_depth=30,
-)
+LAPTOP_DEFAULTS: Dict[str, Any] = {
+    "num_workers": 1,  # Single-worker baseline
+    "batch_size": 4,  # Conservative single-worker inference for local hardware
+    "num_tactics_to_expand": 8,  # Balanced expansion for 1 worker
+    "num_iterations": 100,  # Minimum viable for AlphaZero
+    "max_time": 120.0,  # 2 minutes per MCTS step (reduced for search)
+    "max_steps": 40,  # Reasonable depth
+    "proof_timeout": 300.0,  # 5 minutes per theorem (reduced for search)
+    "env_timeout": 60,  # 1 minute per tactic (reduced for search)
+    "max_rollout_depth": 30,
+    "mcts_type": "guided_rollout",
+    "num_epochs": 1,
+    "num_theorems": 50,
+    "train_epochs": 1,
+    "train_value_head": False,
+    "use_final_reward": True,
+    "save_training_data": False,
+    "save_checkpoints": False,
+    "use_wandb": False,
+}
 
-HPC_DEFAULTS = HyperparameterConfig(
-    num_workers=32,  # Utilize full node
-    batch_size=32,  # Larger batches for A100
-    num_tactics_to_expand=32,  # Full expansion
-    num_iterations=400,  # Deeper search
-    max_time=180.0,  # 3 minutes per MCTS step (reduced for search)
-    max_steps=50,  # Allow longer proofs
-    proof_timeout=600.0,  # 10 minutes per theorem (reduced for search)
-    env_timeout=120,  # 2 minutes per tactic (reduced for search)
-    max_rollout_depth=50,
-)
+HPC_DEFAULTS: Dict[str, Any] = {
+    "num_workers": 16,  # Utilize full node
+    "batch_size": 32,  # Larger batches for A100
+    "num_tactics_to_expand": 32,  # Full expansion
+    "num_iterations": 400,  # Deeper search
+    "max_time": 180.0,  # 3 minutes per MCTS step (reduced for search)
+    "max_steps": 50,  # Allow longer proofs
+    "proof_timeout": 600.0,  # 10 minutes per theorem (reduced for search)
+    "env_timeout": 120,  # 2 minutes per tactic (reduced for search)
+    "max_rollout_depth": 50,
+    "mcts_type": "guided_rollout",
+    "num_epochs": 1,
+    "num_theorems": 50,
+    "train_epochs": 1,
+    "train_value_head": False,
+    "use_final_reward": True,
+    "save_training_data": False,
+    "save_checkpoints": False,
+    "use_wandb": False,
+}
 
 
 # Search spaces for grid search
@@ -194,9 +146,9 @@ LAPTOP_SEARCH_SPACE: Dict[str, List[Any]] = {
 }
 
 HPC_SEARCH_SPACE: Dict[str, List[Any]] = {
-    "num_workers": [16, 24, 32, 48],
-    "batch_size": [16, 32, 48],
-    "num_tactics_to_expand": [16, 24, 32],
+    "num_workers": [4, 8, 16],
+    "batch_size": [1, 2, 4, 8, 16, 32, 48],
+    "num_tactics_to_expand": [16, 32, 64, 128],
     "num_iterations": [200, 300, 400],
 }
 
@@ -245,8 +197,8 @@ LAPTOP_PARAMETER_RANGES: List[ParameterRange] = [
     # === TIER 2: Search Behavior (depend on resources) ===
     ParameterRange(
         name="num_tactics_to_expand",
-        min_val=32,
-        max_val=128,
+        min_val=4,
+        max_val=64,
         is_integer=True,
         description="Tactics expanded per MCTS node",
         depends_on=["batch_size"],  # Should be <= batch_size for efficiency
@@ -280,7 +232,7 @@ LAPTOP_PARAMETER_RANGES: List[ParameterRange] = [
     ParameterRange(
         name="proof_timeout",
         min_val=120.0,
-        max_val=600.0,
+        max_val=18000.0,
         is_integer=False,
         description="Max seconds for entire proof search",
         depends_on=["max_time"],  # Should be > max_time * max_steps
@@ -309,16 +261,16 @@ HPC_PARAMETER_RANGES: List[ParameterRange] = [
     # === TIER 1: Resource/Capacity Parameters ===
     ParameterRange(
         name="num_workers",
-        min_val=16,
-        max_val=64,
+        min_val=4,
+        max_val=16,
         is_integer=True,
         description="Number of parallel Lean workers",
         depends_on=[],
     ),
     ParameterRange(
         name="batch_size",
-        min_val=16,
-        max_val=64,
+        min_val=1,
+        max_val=48,
         is_integer=True,
         description="Inference batch size for GPU",
         depends_on=[],
@@ -327,7 +279,7 @@ HPC_PARAMETER_RANGES: List[ParameterRange] = [
     ParameterRange(
         name="num_tactics_to_expand",
         min_val=8,
-        max_val=48,
+        max_val=64,
         is_integer=True,
         description="Tactics expanded per MCTS node",
         depends_on=["batch_size"],
@@ -361,7 +313,7 @@ HPC_PARAMETER_RANGES: List[ParameterRange] = [
     ParameterRange(
         name="proof_timeout",
         min_val=180.0,
-        max_val=900.0,
+        max_val=28800.0,
         is_integer=False,
         description="Max seconds for entire proof search",
         depends_on=["max_time"],
@@ -447,28 +399,50 @@ class HyperparameterSearcher:
         self.wandb_project = wandb_project
 
         # Typed attributes for static checkers
-        self.default_config: HyperparameterConfig
+        self.default_config: TrainingConfig
         self.search_space: Dict[str, List[Any]]
         self.parameter_ranges: List[ParameterRange]
 
+        # Create base TrainingConfig from parser defaults and apply profile overrides.
+        self.default_config = TrainingConfig.from_args(argparse.Namespace())
+
         # Set defaults based on hardware profile
         if hardware_profile == "laptop":
-            self.default_config = LAPTOP_DEFAULTS
+            default_overrides = LAPTOP_DEFAULTS
             self.search_space = LAPTOP_SEARCH_SPACE
             self.parameter_ranges = topological_sort_parameters(LAPTOP_PARAMETER_RANGES)
         else:
-            self.default_config = HPC_DEFAULTS
+            default_overrides = HPC_DEFAULTS
             self.search_space = HPC_SEARCH_SPACE
             self.parameter_ranges = topological_sort_parameters(HPC_PARAMETER_RANGES)
+
+        for key, value in default_overrides.items():
+            # Use typed assignment to avoid mismatched types (e.g., float -> int)
+            ann = getattr(TrainingConfig, "__annotations__", {})
+            expected = ann.get(key)
+            cast_val: Any
+            if expected is int:
+                try:
+                    cast_val = int(value)
+                except Exception:
+                    cast_val = int(round(float(value)))
+            elif expected is float:
+                cast_val = float(value)
+            elif expected is bool:
+                cast_val = bool(value)
+            else:
+                cast_val = value
+            self._assign_config_value(self.default_config, key, cast_val)
 
         self.results: List[TrialResult] = []
 
         # Cache for coordinate descent - stores best values found so far
         self.best_config_cache: Dict[str, Any] = {}
+        self.coordinate_wandb_run_id: Optional[str] = None
 
     def _run_single_trial(
         self,
-        config: HyperparameterConfig,
+        config: TrainingConfig,
         num_theorems: int = 50,
         timeout_per_theorem: float = 600.0,
     ) -> TrialResult:
@@ -482,9 +456,7 @@ class HyperparameterSearcher:
 
         Returns metrics with proofs_per_hour as the primary optimization target.
         """
-        from lean_reinforcement.utilities.config import TrainingConfig
         from lean_reinforcement.training.trainer import Trainer
-        import argparse
 
         logger.info(f"Starting trial with config: {asdict(config)}")
 
@@ -495,23 +467,20 @@ class HyperparameterSearcher:
         config.save_checkpoints = False
         config.train_value_head = False
 
-        # Convert to TrainingConfig
-        args_dict = config.to_args_dict()
-        args = argparse.Namespace(**args_dict)
-        training_config = TrainingConfig.from_args(args)
-
-        start_time = time.time()
+        start_time: Optional[float] = None
         total_steps = 0
         num_succeeded = 0
         error_msg = None
 
         try:
-            trainer = Trainer(training_config)
+            trainer = Trainer(config)
 
             # Run for 1 epoch with limited theorems
-            training_config.num_epochs = 1
+            config.num_epochs = 1
 
             # Get metrics from trainer (now returns List[Dict])
+            # Measure only training/proof execution time, not trainer init/load time.
+            start_time = time.time()
             metrics_list = trainer.train()
 
             # Aggregate metrics from all workers
@@ -526,7 +495,7 @@ class HyperparameterSearcher:
             error_msg = str(e)
             logger.error(f"Trial failed: {e}")
 
-        total_time = time.time() - start_time
+        total_time = (time.time() - start_time) if start_time is not None else 0.0
         num_attempted = num_theorems
 
         # Calculate metrics - proofs_per_hour is derived from proofs_per_second
@@ -555,6 +524,26 @@ class HyperparameterSearcher:
 
         self.results.append(result)
         return result
+
+    def _assign_config_value(
+        self, config: TrainingConfig, name: str, value: Any
+    ) -> None:
+        """Assign `value` to `config.name` with a best-effort cast to the
+        annotated type on `TrainingConfig` to satisfy static type checks.
+        """
+        ann = getattr(TrainingConfig, "__annotations__", {})
+        expected = ann.get(name)
+        cast_val: Any = value
+        if expected is int:
+            try:
+                cast_val = int(value)
+            except Exception:
+                cast_val = int(round(float(value)))
+        elif expected is float:
+            cast_val = float(value)
+        elif expected is bool:
+            cast_val = bool(value)
+        setattr(config, name, cast_val)
 
     def grid_search(
         self,
@@ -611,11 +600,11 @@ class HyperparameterSearcher:
 
         results = []
         for i, values in enumerate(all_combinations):
-            config = HyperparameterConfig(**asdict(self.default_config))
+            config = TrainingConfig(**asdict(self.default_config))
 
             # Override with trial values
             for name, value in zip(param_names, values):
-                setattr(config, name, value)
+                self._assign_config_value(config, name, value)
 
             logger.info(f"Trial {i + 1}/{len(all_combinations)}")
             result = self._run_single_trial(config, num_theorems)
@@ -708,8 +697,10 @@ class HyperparameterSearcher:
             mid = (low + high) / 2
 
             # Create configs for mid point
-            config = HyperparameterConfig(**asdict(self.default_config))
-            setattr(config, param_name, int(mid) if isinstance(min_val, int) else mid)
+            config = TrainingConfig(**asdict(self.default_config))
+            self._assign_config_value(
+                config, param_name, int(mid) if isinstance(min_val, int) else mid
+            )
 
             result = self._run_single_trial(config, num_theorems)
 
@@ -743,16 +734,16 @@ class HyperparameterSearcher:
             test_low = (low + mid) / 2
             test_high = (mid + high) / 2
 
-            config_low = HyperparameterConfig(**asdict(self.default_config))
-            setattr(
+            config_low = TrainingConfig(**asdict(self.default_config))
+            self._assign_config_value(
                 config_low,
                 param_name,
                 int(test_low) if isinstance(min_val, int) else test_low,
             )
             result_low = self._run_single_trial(config_low, num_theorems)
 
-            config_high = HyperparameterConfig(**asdict(self.default_config))
-            setattr(
+            config_high = TrainingConfig(**asdict(self.default_config))
+            self._assign_config_value(
                 config_high,
                 param_name,
                 int(test_high) if isinstance(min_val, int) else test_high,
@@ -781,7 +772,7 @@ class HyperparameterSearcher:
         params_to_search: Optional[List[str]] = None,
         num_rounds: int = 1,
         resume_from_intermediate: bool = True,
-    ) -> Tuple[HyperparameterConfig, List[TrialResult]]:
+    ) -> Tuple[TrainingConfig, List[TrialResult]]:
         """
         Coordinate descent optimization: binary search each dimension sequentially.
 
@@ -817,24 +808,8 @@ class HyperparameterSearcher:
         logger.info(f"Number of rounds: {num_rounds}")
         logger.info("=" * 60)
 
-        if self.use_wandb and WANDB_AVAILABLE and wandb is not None:
-            try:
-                wandb.init(
-                    project=self.wandb_project,
-                    config={
-                        "search_type": "coordinate_descent",
-                        "hardware_profile": self.hardware_profile,
-                        "num_theorems": num_theorems,
-                        "max_iterations_per_param": max_iterations_per_param,
-                        "num_rounds": num_rounds,
-                    },
-                )
-            except Exception as e:
-                logger.warning(f"Failed to initialize WandB: {e}")
-                self.use_wandb = False
-
         # Start with default config
-        current_config = HyperparameterConfig(**asdict(self.default_config))
+        current_config = TrainingConfig(**asdict(self.default_config))
         all_results: List[TrialResult] = []
 
         # Filter parameters if specified
@@ -854,8 +829,9 @@ class HyperparameterSearcher:
         best_score = 0.0
         start_round = 0
         start_param_index = 0
+        resumed_run_id: Optional[str] = None
         if resume_from_intermediate:
-            resumed_config, resumed_results = (
+            resumed_config, resumed_results, resumed_run_id = (
                 self._load_coordinate_descent_resume_state(
                     "coordinate_descent_intermediate.json"
                 )
@@ -893,11 +869,38 @@ class HyperparameterSearcher:
                         "All requested rounds appear complete in intermediate file"
                     )
 
+        self.coordinate_wandb_run_id = resumed_run_id
+
+        if self.use_wandb and WANDB_AVAILABLE and wandb is not None:
+            try:
+                wandb_init_kwargs: Dict[str, Any] = {
+                    "project": self.wandb_project,
+                    "config": {
+                        "search_type": "coordinate_descent",
+                        "hardware_profile": self.hardware_profile,
+                        "num_theorems": num_theorems,
+                        "max_iterations_per_param": max_iterations_per_param,
+                        "num_rounds": num_rounds,
+                    },
+                }
+                if self.coordinate_wandb_run_id is not None:
+                    wandb_init_kwargs["id"] = self.coordinate_wandb_run_id
+                    wandb_init_kwargs["resume"] = "allow"
+
+                wandb.init(**wandb_init_kwargs)
+
+                # Persist generated ID so future resumes continue on the same chart.
+                if self.coordinate_wandb_run_id is None and wandb.run is not None:
+                    self.coordinate_wandb_run_id = wandb.run.id
+            except Exception as e:
+                logger.warning(f"Failed to initialize WandB: {e}")
+                self.use_wandb = False
+
         # If no resume state is available, run baseline from defaults.
         if not all_results:
             logger.info("\n--- Running baseline with default config ---")
             baseline_result = self._run_single_trial(
-                HyperparameterConfig(**asdict(current_config)), num_theorems
+                TrainingConfig(**asdict(current_config)), num_theorems
             )
             all_results.append(baseline_result)
             best_score = baseline_result.score
@@ -935,7 +938,7 @@ class HyperparameterSearcher:
                 old_val = getattr(current_config, param.name)
                 if param.is_integer:
                     best_val = int(round(best_val))
-                setattr(current_config, param.name, best_val)
+                self._assign_config_value(current_config, param.name, best_val)
 
                 # Check improvement
                 best_param_result = max(param_results, key=lambda r: r.score)
@@ -951,7 +954,11 @@ class HyperparameterSearcher:
                     logger.info(f"  {param.name}: kept at {best_val} (no improvement)")
 
                 # Save intermediate results
-                self._save_results(all_results, "coordinate_descent_intermediate.json")
+                self._save_results(
+                    all_results,
+                    "coordinate_descent_intermediate.json",
+                    wandb_run_id=self.coordinate_wandb_run_id,
+                )
 
                 # Log to WandB
                 if self.use_wandb and wandb is not None:
@@ -996,29 +1003,47 @@ class HyperparameterSearcher:
 
     def _load_coordinate_descent_resume_state(
         self, filename: str
-    ) -> Tuple[Optional[HyperparameterConfig], List[TrialResult]]:
+    ) -> Tuple[Optional[TrainingConfig], List[TrialResult], Optional[str]]:
         """Load coordinate-descent intermediate results and last config."""
+        wandb_run_id: Optional[str] = None
+        filepath = self.output_dir / filename
+
         try:
-            results = self.load_results(filename)
+            with open(filepath, "r") as f:
+                raw_data = json.load(f)
+            if isinstance(raw_data, dict):
+                run_id = raw_data.get("wandb_run_id")
+                if isinstance(run_id, str) and run_id:
+                    wandb_run_id = run_id
         except FileNotFoundError:
-            return None, []
+            return None, [], None
         except json.JSONDecodeError as e:
             logger.warning(
                 f"Could not parse {filename}: {e}. Starting fresh coordinate descent."
             )
-            return None, []
+            return None, [], None
+
+        try:
+            results = self.load_results(filename)
+        except FileNotFoundError:
+            return None, [], wandb_run_id
+        except json.JSONDecodeError as e:
+            logger.warning(
+                f"Could not parse {filename}: {e}. Starting fresh coordinate descent."
+            )
+            return None, [], wandb_run_id
 
         if not results:
-            return None, []
+            return None, [], wandb_run_id
 
         # Resume from the latest saved trial configuration.
-        last_config = HyperparameterConfig(**asdict(results[-1].config))
-        return last_config, results
+        last_config = TrainingConfig(**asdict(results[-1].config))
+        return last_config, results, wandb_run_id
 
     def _configs_match_except(
         self,
-        candidate: HyperparameterConfig,
-        reference: HyperparameterConfig,
+        candidate: TrainingConfig,
+        reference: TrainingConfig,
         excluded_param: str,
     ) -> bool:
         """Check config equality while ignoring a single parameter."""
@@ -1039,7 +1064,7 @@ class HyperparameterSearcher:
         self,
         results: List[TrialResult],
         param_ranges: List[ParameterRange],
-    ) -> Tuple[HyperparameterConfig, int, int]:
+    ) -> Tuple[TrainingConfig, int, int]:
         """
         Infer the next (round, parameter) to optimize from saved results.
 
@@ -1047,9 +1072,9 @@ class HyperparameterSearcher:
         we can replay completed parameter blocks and recover the next step.
         """
         if not results or not param_ranges:
-            return HyperparameterConfig(**asdict(self.default_config)), 0, 0
+            return TrainingConfig(**asdict(self.default_config)), 0, 0
 
-        current_config = HyperparameterConfig(**asdict(results[0].config))
+        current_config = TrainingConfig(**asdict(results[0].config))
         idx = 1
         completed_steps = 0
         num_params = len(param_ranges)
@@ -1068,12 +1093,12 @@ class HyperparameterSearcher:
                     "Could not fully infer resume progress; falling back to next round "
                     "from last saved configuration"
                 )
-                fallback_config = HyperparameterConfig(**asdict(results[-1].config))
+                fallback_config = TrainingConfig(**asdict(results[-1].config))
                 return fallback_config, 0, 0
 
             segment = results[start_idx:idx]
             best_segment_result = max(segment, key=lambda r: r.score)
-            setattr(
+            self._assign_config_value(
                 current_config,
                 param_name,
                 getattr(best_segment_result.config, param_name),
@@ -1087,72 +1112,72 @@ class HyperparameterSearcher:
     def _binary_search_single_param(
         self,
         param: ParameterRange,
-        base_config: HyperparameterConfig,
+        base_config: TrainingConfig,
         num_theorems: int,
         max_iterations: int,
         tolerance: float,
     ) -> Tuple[float, List[TrialResult]]:
         """
-        Binary search for optimal value of a single parameter.
+        Discrete 1D search for a single parameter.
 
-        Uses golden section search for unimodal optimization.
+        Samples up to ``max_iterations`` evenly spaced points in the configured
+        range and returns the best-performing trial.
 
         Returns:
             Tuple of (best_value, list_of_results).
         """
         results: List[TrialResult] = []
+        _ = tolerance  # Kept for API compatibility; not used in discrete search.
 
-        low = param.min_val
-        high = param.max_val
+        if max_iterations < 1:
+            raise ValueError("max_iterations must be at least 1")
 
-        # Golden ratio for golden section search
-        phi = (1 + 5**0.5) / 2
+        test_points: List[float]
+        if param.is_integer:
+            min_int = int(round(param.min_val))
+            max_int = int(round(param.max_val))
+            if max_int < min_int:
+                min_int, max_int = max_int, min_int
 
-        # Initial test points using golden section
-        x1 = high - (high - low) / phi
-        x2 = low + (high - low) / phi
+            total_values = (max_int - min_int) + 1
+            num_points = min(max_iterations, total_values)
 
-        # Evaluate initial points
-        def evaluate(val: float) -> TrialResult:
-            config = HyperparameterConfig(**asdict(base_config))
-            actual_val = int(round(val)) if param.is_integer else val
-            setattr(config, param.name, actual_val)
+            if num_points == 1:
+                int_points = [min_int]
+            else:
+                int_points = []
+                seen = set()
+                for i in range(num_points):
+                    idx = int(round(i * (total_values - 1) / (num_points - 1)))
+                    candidate_point = min_int + idx
+                    if candidate_point not in seen:
+                        int_points.append(candidate_point)
+                        seen.add(candidate_point)
+
+            test_points = [float(p) for p in int_points]
+        else:
+            num_points = max_iterations
+            if num_points == 1:
+                test_points = [param.min_val]
+            else:
+                step = (param.max_val - param.min_val) / (num_points - 1)
+                test_points = [param.min_val + (i * step) for i in range(num_points)]
+
+        logger.debug(
+            f"  Testing {len(test_points)} points for {param.name}: {test_points}"
+        )
+
+        for point in test_points:
+            config = TrainingConfig(**asdict(base_config))
+            actual_val: Any
+            if param.is_integer:
+                actual_val = int(round(point))
+            else:
+                actual_val = float(point)
+
+            self._assign_config_value(config, param.name, actual_val)
             result = self._run_single_trial(config, num_theorems)
             results.append(result)
-            return result
-
-        result1 = evaluate(x1)
-        result2 = evaluate(x2)
-
-        for iteration in range(max_iterations - 2):  # Already did 2 evaluations
-            # Check convergence
-            range_size = high - low
-            if range_size / param.max_val < tolerance:
-                break
-
-            # For integer parameters, stop if range is too small
-            if param.is_integer and range_size < 2:
-                break
-
-            if result1.score < result2.score:
-                # Best is in [x1, high]
-                low = x1
-                x1 = x2
-                result1 = result2
-                x2 = low + (high - low) / phi
-                result2 = evaluate(x2)
-            else:
-                # Best is in [low, x2]
-                high = x2
-                x2 = x1
-                result2 = result1
-                x1 = high - (high - low) / phi
-                result1 = evaluate(x1)
-
-            logger.debug(
-                f"  Iteration {iteration + 3}: range=[{low:.1f}, {high:.1f}], "
-                f"best_score={max(r.score for r in results):.1f}"
-            )
 
         # Return best value found
         best_result = max(results, key=lambda r: r.score)
@@ -1160,7 +1185,7 @@ class HyperparameterSearcher:
 
         return best_val, results
 
-    def _save_config(self, config: HyperparameterConfig, filename: str) -> None:
+    def _save_config(self, config: TrainingConfig, filename: str) -> None:
         """Save configuration to JSON file."""
         filepath = self.output_dir / filename
         with open(filepath, "w") as f:
@@ -1169,7 +1194,7 @@ class HyperparameterSearcher:
 
     def quick_benchmark(
         self,
-        config: Optional[HyperparameterConfig] = None,
+        config: Optional[TrainingConfig] = None,
         num_theorems: int = 50,
     ) -> TrialResult:
         """
@@ -1186,12 +1211,25 @@ class HyperparameterSearcher:
         logger.info("Running quick benchmark...")
         return self._run_single_trial(config, num_theorems)
 
-    def _save_results(self, results: List[TrialResult], filename: str) -> None:
+    def _save_results(
+        self,
+        results: List[TrialResult],
+        filename: str,
+        wandb_run_id: Optional[str] = None,
+    ) -> None:
         """Save results to JSON file."""
         filepath = self.output_dir / filename
         data = [r.to_dict() for r in results]
+
+        payload: Any = data
+        if wandb_run_id is not None:
+            payload = {
+                "wandb_run_id": wandb_run_id,
+                "results": data,
+            }
+
         with open(filepath, "w") as f:
-            json.dump(data, f, indent=2)
+            json.dump(payload, f, indent=2)
         logger.info(f"Results saved to {filepath}")
 
     def load_results(self, filename: str) -> List[TrialResult]:
@@ -1200,9 +1238,12 @@ class HyperparameterSearcher:
         with open(filepath, "r") as f:
             data = json.load(f)
 
+        if isinstance(data, dict):
+            data = data.get("results", [])
+
         results = []
         for item in data:
-            config = HyperparameterConfig(**item["config"])
+            config = TrainingConfig(**item["config"])
             result = TrialResult(
                 config=config,
                 total_time=item["total_time"],
@@ -1275,9 +1316,7 @@ class HyperparameterSearcher:
 
         print("=" * 80)
 
-    def generate_config_for_hpc(
-        self, best_config: HyperparameterConfig
-    ) -> Dict[str, Any]:
+    def generate_config_for_hpc(self, best_config: TrainingConfig) -> Dict[str, Any]:
         """
         Generate HPC-translated configuration from laptop benchmark results.
 
@@ -1286,7 +1325,7 @@ class HyperparameterSearcher:
         - Larger batches (more VRAM)
         - Higher iteration counts (more compute)
         """
-        hpc_config = HyperparameterConfig(**asdict(best_config))
+        hpc_config = TrainingConfig(**asdict(best_config))
 
         # Scaling factors for A100 vs RTX 4060 laptop
         worker_scale = 3.0  # ~3x more workers feasible
@@ -1352,8 +1391,6 @@ def run_coordinate_descent(
 
 
 if __name__ == "__main__":
-    import argparse
-
     parser = argparse.ArgumentParser(
         description="Hyperparameter search for theorem proving (optimizes proofs/hour)"
     )
