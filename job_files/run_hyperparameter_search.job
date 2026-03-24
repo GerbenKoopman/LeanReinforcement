@@ -20,7 +20,9 @@ module load CUDA/12.6.0
 export CUDA_HOME=$CUDA_ROOT
 export CUDA_PATH=$CUDA_ROOT
 
+set +u
 source activate lean-reinforcement
+set -u
 
 # Source environment variables from .env if available.
 set -a
