@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import json
 import glob
@@ -79,6 +80,21 @@ def _state_value_to_plain_tensor(value: Any) -> torch.Tensor:
 class Trainer:
     def __init__(self, config: TrainingConfig):
         self.config = config
+
+        if config.debugging:
+            # Make logs maximally informative for troubleshooting runs.
+            logger.remove()
+            logger.add(
+                sys.stderr,
+                level="DEBUG",
+                format=(
+                    "{time:YYYY-MM-DD HH:mm:ss.SSS} | {level:<8} | "
+                    "pid={process.id} | {name}:{function}:{line} - {message}"
+                ),
+                backtrace=True,
+                diagnose=True,
+            )
+            logger.debug("Debugging mode enabled: verbose logging active")
 
         # Live progress display
         self.progress_stats = ProgressStats(
@@ -654,6 +670,37 @@ class Trainer:
                                 elapsed=res["metrics"].get("proof_search/time", 0.0),
                             )
                             self.progress_display.refresh()
+
+                            if self.config.debugging:
+                                steps = res["metrics"].get("proof_search/steps", 0)
+                                elapsed_s = res["metrics"].get("proof_search/time", 0.0)
+                                worker_id = res.get("worker_id", "?")
+                                failure_reasons = [
+                                    k.replace("proof_search/", "")
+                                    for k, v in res["metrics"].items()
+                                    if k.startswith("proof_search/")
+                                    and k
+                                    not in {
+                                        "proof_search/success",
+                                        "proof_search/steps",
+                                        "proof_search/time",
+                                    }
+                                    and bool(v)
+                                ]
+                                reason_str = (
+                                    f" | reasons={','.join(failure_reasons)}"
+                                    if failure_reasons
+                                    else ""
+                                )
+                                msg = (
+                                    f"Theorem {results_received}/{total_theorems}: "
+                                    f"{theorem_name} | worker={worker_id} | "
+                                    f"steps={steps} | time={elapsed_s:.2f}s{reason_str}"
+                                )
+                                if success:
+                                    logger.info(f"[SUCCESS] {msg}")
+                                else:
+                                    logger.warning(f"[FAILED] {msg}")
 
                         if "data" in res:
                             data = res["data"]

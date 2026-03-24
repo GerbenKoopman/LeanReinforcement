@@ -56,42 +56,56 @@ def process_theorem(
     value_head: Optional[QueueProxyValueHead],
     args: TrainingConfig,
     checkpoint_dir: Optional[Path] = None,
+    worker_id: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
     Process a single theorem: initialize env, run agent, collect data.
     """
+    theorem_start = time.time()
     theorem = dataloader.extract_theorem(thm_data)
     if not theorem:
-        logger.error("Failed to extract theorem from data")
+        logger.error(
+            f"Worker {worker_id}: Failed to extract theorem from data; keys={list(thm_data.keys())}"
+        )
         return {
             "metrics": {
                 "proof_search/success": False,
                 "proof_search/steps": 0,
-                "proof_search/time": 0.0,
+                "proof_search/time": time.time() - theorem_start,
                 "proof_search/extraction_error": True,
             },
             "data": [],
             "theorem_name": "unknown_extraction_failed",
+            "worker_id": worker_id,
         }
 
     theorem_pos = Pos(*thm_data["start"])
     if not theorem_pos:
-        logger.error(f"Failed to create position for theorem {theorem.full_name}")
+        logger.error(
+            f"Worker {worker_id}: Failed to create position for theorem {theorem.full_name}"
+        )
         return {
             "metrics": {
                 "proof_search/success": False,
                 "proof_search/steps": 0,
-                "proof_search/time": 0.0,
+                "proof_search/time": time.time() - theorem_start,
                 "proof_search/position_error": True,
             },
             "data": [],
             "theorem_name": theorem.full_name,
+            "worker_id": worker_id,
         }
+
+    logger.debug(
+        f"Worker {worker_id}: Starting theorem {theorem.full_name} "
+        f"(env_timeout={args.env_timeout}s, proof_timeout={args.proof_timeout}s, "
+        f"mcts={args.mcts_type}, iterations={args.num_iterations}, steps={args.max_steps})"
+    )
 
     try:
         env = LeanDojoEnv(theorem, theorem_pos, args.env_timeout)
     except DojoInitError as e:
-        logger.error(
+        logger.exception(
             f"Failed to initialize environment for theorem {theorem.full_name}: {e}"
         )
         aggressive_cleanup()  # Clean up any partially created objects
@@ -99,14 +113,15 @@ def process_theorem(
             "metrics": {
                 "proof_search/success": False,
                 "proof_search/steps": 0,
-                "proof_search/time": 0.0,
+                "proof_search/time": time.time() - theorem_start,
                 "proof_search/env_init_error": True,
             },
             "data": [],
             "theorem_name": theorem.full_name,
+            "worker_id": worker_id,
         }
     except Exception as e:
-        logger.error(
+        logger.exception(
             f"Unexpected error initializing environment for theorem {theorem.full_name}: {e}"
         )
         aggressive_cleanup()  # Clean up any partially created objects
@@ -114,11 +129,12 @@ def process_theorem(
             "metrics": {
                 "proof_search/success": False,
                 "proof_search/steps": 0,
-                "proof_search/time": 0.0,
+                "proof_search/time": time.time() - theorem_start,
                 "proof_search/env_init_unexpected_error": True,
             },
             "data": [],
             "theorem_name": theorem.full_name,
+            "worker_id": worker_id,
         }
 
     # --- Mid-theorem RSS check ---
@@ -144,11 +160,12 @@ def process_theorem(
             "metrics": {
                 "proof_search/success": False,
                 "proof_search/steps": 0,
-                "proof_search/time": 0.0,
+                "proof_search/time": time.time() - theorem_start,
                 "proof_search/rss_abort": True,
             },
             "data": [],
             "theorem_name": theorem.full_name,
+            "worker_id": worker_id,
         }
 
     mcts_class: Type[BaseMCTS]
@@ -194,23 +211,25 @@ def process_theorem(
             "metrics": metrics,
             "data": theorem_training_data,
             "theorem_name": theorem.full_name,
+            "worker_id": worker_id,
         }
     except InferenceTimeoutError as e:
-        logger.error(
+        logger.exception(
             f"Inference timeout during proof search for theorem {theorem.full_name}: {e}"
         )
         return {
             "metrics": {
                 "proof_search/success": False,
                 "proof_search/steps": 0,
-                "proof_search/time": 0.0,
+                "proof_search/time": time.time() - theorem_start,
                 "proof_search/inference_timeout": True,
             },
             "data": [],
             "theorem_name": theorem.full_name,
+            "worker_id": worker_id,
         }
     except MemoryLimitExceeded as e:
-        logger.error(
+        logger.exception(
             f"Memory limit exceeded during proof search for theorem "
             f"{theorem.full_name}: {e}"
         )
@@ -218,23 +237,28 @@ def process_theorem(
             "metrics": {
                 "proof_search/success": False,
                 "proof_search/steps": 0,
-                "proof_search/time": 0.0,
+                "proof_search/time": time.time() - theorem_start,
                 "proof_search/memory_limit_exceeded": True,
             },
             "data": [],
             "theorem_name": theorem.full_name,
+            "worker_id": worker_id,
         }
     except Exception as e:
-        logger.error(f"Error during proof search for theorem {theorem.full_name}: {e}")
+        logger.exception(
+            f"Error during proof search for theorem {theorem.full_name}: {e}"
+        )
         # Return partial metrics if possible - at minimum we want to track that this failed
         return {
             "metrics": {
                 "proof_search/success": False,
                 "proof_search/steps": 0,
-                "proof_search/time": 0.0,
+                "proof_search/time": time.time() - theorem_start,
+                "proof_search/unexpected_error": True,
             },
             "data": [],
             "theorem_name": theorem.full_name,
+            "worker_id": worker_id,
         }
     finally:
         if env:
@@ -289,7 +313,21 @@ def worker_loop(
     # to stderr (which clobbers the Rich progress display).
     os.makedirs("logs", exist_ok=True)
     logger.remove()
-    logger.add(f"logs/worker_{worker_id}.log", rotation="10 MB")
+    logger.add(
+        f"logs/worker_{worker_id}.log",
+        rotation="10 MB",
+        level="DEBUG" if args.debugging else "INFO",
+        backtrace=args.debugging,
+        diagnose=args.debugging,
+    )
+    if args.debugging:
+        # Mirror worker logs to stderr for live cluster debugging.
+        logger.add(
+            sys.stderr,
+            level="DEBUG",
+            backtrace=True,
+            diagnose=False,
+        )
 
     # --- RSS watchdog (daemon thread, checks every 1s) ---
     start_rss_watchdog(hard_cap_gb=MAX_WORKER_RSS_GB, check_interval=1.0)
@@ -413,6 +451,7 @@ def worker_loop(
             value_head_proxy,
             args,
             checkpoint_dir,
+            worker_id=worker_id,
         )
 
         # Send result back

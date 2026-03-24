@@ -317,7 +317,8 @@ def get_config() -> TrainingConfig:
         "--debugging",
         action="store_true",
         default=False,
-        help="Disable rich live progress rendering so logger.info/error output stays visible.",
+        help="Enable maximum verbosity for troubleshooting: disable progress dashboard, "
+        "set DEBUG-level logs, mirror worker logs to stderr, and emit per-theorem failure reasons.",
     )
 
     # --- Reproducibility ---

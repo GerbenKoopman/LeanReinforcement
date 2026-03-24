@@ -446,13 +446,34 @@ class PlainProgressDisplay:
         )
 
 
+class NullProgressDisplay:
+    """No-op display used when debugging via logger output."""
+
+    def __init__(self, stats: ProgressStats):
+        self._stats = stats
+
+    def start(self) -> None:
+        pass
+
+    def stop(self) -> None:
+        pass
+
+    def refresh(self) -> None:
+        pass
+
+    def print_line(self, text: str) -> None:
+        pass
+
+
 # ── Factory ─────────────────────────────────────────────────────────────────
 
 
 def make_progress_display(
     stats: ProgressStats,
     enable_live: bool = True,
-) -> "LiveProgressDisplay | PlainProgressDisplay":
+) -> "LiveProgressDisplay | PlainProgressDisplay | NullProgressDisplay":
+    if not enable_live:
+        return NullProgressDisplay(stats)
     if HAS_RICH and enable_live:
         return LiveProgressDisplay(stats)
     return PlainProgressDisplay(stats)
