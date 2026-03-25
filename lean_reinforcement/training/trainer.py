@@ -649,12 +649,9 @@ class Trainer:
         drain_timeout = 120  # seconds
 
         # Hard guard against apparent hangs: if no theorem result has arrived
-        # for a long time, break even if inference requests are still trickling.
-        no_result_timeout = max(
-            int(self.config.proof_timeout * 2),
-            int(self.config.inference_timeout * 6),
-            600,
-        )
+        # for a long timeim, break even if inference requests are still trickling.
+        base_no_result_timeout = max(int(self.config.proof_timeout * 2), 600)
+        endgame_no_result_timeout = max(int(self.config.proof_timeout + 120), 300)
 
         # Track worker crashes to detect systemic issues
         total_worker_crashes = 0
@@ -916,12 +913,18 @@ class Trainer:
 
             # Independent no-result guard: catches alive-but-idle states where
             # no theorem results are produced for an extended period.
+            remaining_theorems = total_theorems - results_received
+            no_result_timeout = base_no_result_timeout
+            if remaining_theorems <= max(1, self.config.num_workers // 2):
+                no_result_timeout = min(no_result_timeout, endgame_no_result_timeout)
+
             time_since_last_result = time.time() - last_result_time
             if time_since_last_result > no_result_timeout:
                 logger.warning(
                     f"No theorem results for {time_since_last_result/60:.1f} minutes "
                     f"(limit: {no_result_timeout/60:.0f}m). "
-                    f"Collected {results_received}/{total_theorems} results. "
+                    f"Collected {results_received}/{total_theorems} results "
+                    f"({remaining_theorems} remaining). "
                     f"Total worker crashes in this epoch: {total_worker_crashes}. "
                     f"Proceeding with training from partial data."
                 )
