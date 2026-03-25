@@ -7,7 +7,7 @@ import pickle
 import random
 import queue
 import numpy as np
-from typing import List, Dict, Any, Optional, cast, Union
+from typing import List, Dict, Any, Optional, Set, cast, Union
 from dataclasses import asdict
 import torch
 import torch.optim as optim
@@ -60,6 +60,11 @@ from lean_reinforcement.utilities.gym import (
 )
 
 
+# In-process caches to avoid repeating expensive data setup between trials.
+_CORPUS_CACHE: Dict[str, Corpus] = {}
+_PREFLIGHT_DONE: Set[str] = set()
+
+
 def _safe_wandb_log(data: Dict[str, Any]) -> None:
     """Log metrics to wandb, silently ignoring connection errors.
 
@@ -83,8 +88,9 @@ def _state_value_to_plain_tensor(value: Any) -> torch.Tensor:
 
 
 class Trainer:
-    def __init__(self, config: TrainingConfig):
+    def __init__(self, config: TrainingConfig, *, reuse_data_cache: bool = True):
         self.config = config
+        self.reuse_data_cache = reuse_data_cache
 
         if config.debugging:
             # Make logs maximally informative for troubleshooting runs.
@@ -149,31 +155,56 @@ class Trainer:
     def _setup_data(self) -> None:
         logger.info(f"Loading data from 'leandojo_benchmark_4/{self.config.data_type}'")
 
+        dataset_path = "leandojo_benchmark_4"
+        preflight_cache_key = (
+            f"{os.path.abspath(dataset_path)}::{self.config.data_type}"
+        )
+
         # Fast fail for stale LeanDojo traces (common on shared HPC caches).
         # We probe one theorem before constructing the heavy Corpus object.
-        probe_loader = LeanDataLoader(
-            corpus=None,
-            dataset_path="leandojo_benchmark_4",
-            data_type=self.config.data_type,
-        )
-        self._preflight_lean_dojo_trace(probe_loader)
+        if (not self.reuse_data_cache) or (preflight_cache_key not in _PREFLIGHT_DONE):
+            probe_loader = LeanDataLoader(
+                corpus=None,
+                dataset_path=dataset_path,
+                data_type=self.config.data_type,
+            )
+            self._preflight_lean_dojo_trace(probe_loader)
+            if self.reuse_data_cache:
+                _PREFLIGHT_DONE.add(preflight_cache_key)
+        else:
+            logger.debug(
+                "Skipping LeanDojo preflight (already completed for this dataset/type)."
+            )
 
         if self.config.indexed_corpus_path and os.path.exists(
             self.config.indexed_corpus_path
         ):
-            logger.info(
-                f"Loading indexed corpus from {self.config.indexed_corpus_path}"
-            )
-            with open(self.config.indexed_corpus_path, "rb") as f:
-                indexed_corpus = pickle.load(f)
-            self.corpus = indexed_corpus.corpus
+            indexed_path = os.path.abspath(self.config.indexed_corpus_path)
+            corpus_cache_key = f"indexed::{indexed_path}"
+            if self.reuse_data_cache and corpus_cache_key in _CORPUS_CACHE:
+                logger.info(f"Reusing cached indexed corpus from {indexed_path}")
+                self.corpus = _CORPUS_CACHE[corpus_cache_key]
+            else:
+                logger.info(f"Loading indexed corpus from {indexed_path}")
+                with open(indexed_path, "rb") as f:
+                    indexed_corpus = pickle.load(f)
+                self.corpus = indexed_corpus.corpus
+                if self.reuse_data_cache:
+                    _CORPUS_CACHE[corpus_cache_key] = self.corpus
         else:
-            corpus_path = os.path.join("leandojo_benchmark_4/corpus.jsonl")
-            self.corpus = Corpus(corpus_path)
+            corpus_path = os.path.abspath(os.path.join(dataset_path, "corpus.jsonl"))
+            corpus_cache_key = f"jsonl::{corpus_path}"
+            if self.reuse_data_cache and corpus_cache_key in _CORPUS_CACHE:
+                logger.info(f"Reusing cached corpus from {corpus_path}")
+                self.corpus = _CORPUS_CACHE[corpus_cache_key]
+            else:
+                self.corpus = Corpus(corpus_path)
+                if self.reuse_data_cache:
+                    _CORPUS_CACHE[corpus_cache_key] = self.corpus
 
         self.dataloader = LeanDataLoader(
             self.corpus,
-            dataset_path="leandojo_benchmark_4",
+            dataset_path=dataset_path,
             data_type=self.config.data_type,
         )
 
