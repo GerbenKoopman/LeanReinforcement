@@ -108,7 +108,7 @@ def process_theorem(
     try:
         env = LeanDojoEnv(theorem, theorem_pos, args.env_timeout)
     except DojoInitError as e:
-        logger.exception(
+        logger.error(
             f"Failed to initialize environment for theorem {theorem.full_name}: {e}"
         )
         aggressive_cleanup()  # Clean up any partially created objects

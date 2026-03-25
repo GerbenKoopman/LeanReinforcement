@@ -114,7 +114,8 @@ class TestEvaluator(Trainer):
             self._setup_data()
 
         # Release Corpus reference — workers don't need it and it's huge
-        self.corpus = None
+        if hasattr(self, "corpus"):
+            del self.corpus
 
         self._setup_multiprocessing()
 
