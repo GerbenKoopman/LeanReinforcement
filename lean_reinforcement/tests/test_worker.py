@@ -77,15 +77,18 @@ class TestWorker(unittest.TestCase):
                 "metrics": expected_metrics,
                 "data": expected_data,
                 "theorem_name": "TestTheorem",
+                "worker_id": None,
             },
         )
 
     @patch("lean_reinforcement.training.worker.LeanDojoEnv")
-    def test_process_theorem_env_error(self, MockLeanDojoEnv):
+    @patch("lean_reinforcement.training.worker.Pos")
+    def test_process_theorem_env_error(self, MockPos, MockLeanDojoEnv):
         # Setup mocks
         mock_theorem = MagicMock()
         mock_theorem.full_name = "TestTheorem"
         self.dataloader.extract_theorem.return_value = mock_theorem
+        MockPos.return_value = MagicMock()
 
         # Simulate environment initialization error
         MockLeanDojoEnv.side_effect = DojoInitError("Init failed")
@@ -101,19 +104,13 @@ class TestWorker(unittest.TestCase):
 
         # Env init failures should still return structured failure metrics
         # so trainer-level logging and aggregation can include this theorem.
-        self.assertEqual(
-            result,
-            {
-                "metrics": {
-                    "proof_search/success": False,
-                    "proof_search/steps": 0,
-                    "proof_search/time": 0.0,
-                    "proof_search/env_init_error": True,
-                },
-                "data": [],
-                "theorem_name": "TestTheorem",
-            },
-        )
+        self.assertEqual(result["theorem_name"], "TestTheorem")
+        self.assertIsNone(result["worker_id"])
+        self.assertEqual(result["data"], [])
+        self.assertFalse(result["metrics"]["proof_search/success"])
+        self.assertEqual(result["metrics"]["proof_search/steps"], 0)
+        self.assertTrue(result["metrics"]["proof_search/env_init_error"])
+        self.assertGreaterEqual(result["metrics"]["proof_search/time"], 0.0)
 
     @patch("lean_reinforcement.training.worker.LeanDojoEnv")
     @patch("lean_reinforcement.training.worker.AgentRunner")

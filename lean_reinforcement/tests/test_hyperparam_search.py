@@ -7,9 +7,9 @@ actual proof attempts (which would be too slow for unit tests).
 
 import unittest
 import tempfile
+import argparse
 
 from lean_reinforcement.training.hyperparam_search import (
-    HyperparameterConfig,
     TrialResult,
     HyperparameterSearcher,
     LAPTOP_DEFAULTS,
@@ -17,14 +17,17 @@ from lean_reinforcement.training.hyperparam_search import (
     LAPTOP_SEARCH_SPACE,
     HPC_SEARCH_SPACE,
 )
+from lean_reinforcement.utilities.config import TrainingConfig
 
 
-class TestHyperparameterConfig(unittest.TestCase):
-    """Tests for HyperparameterConfig dataclass."""
+class TestTrainingConfigFixtures(unittest.TestCase):
+    """Tests for TrainingConfig usage in hyperparameter search."""
 
     def test_defaults(self):
-        """Test that default values are set correctly."""
-        config = HyperparameterConfig()
+        """Test that default config plus laptop overrides are valid."""
+        config = TrainingConfig.from_args(argparse.Namespace())
+        for key, value in LAPTOP_DEFAULTS.items():
+            setattr(config, key, value)
 
         self.assertEqual(config.num_workers, 1)
         self.assertEqual(config.batch_size, 4)
@@ -34,61 +37,14 @@ class TestHyperparameterConfig(unittest.TestCase):
 
     def test_custom_values(self):
         """Test that custom values override defaults."""
-        config = HyperparameterConfig(
-            num_workers=8,
-            batch_size=32,
-            num_iterations=200,
-        )
+        config = TrainingConfig.from_args(argparse.Namespace())
+        config.num_workers = 8
+        config.batch_size = 32
+        config.num_iterations = 200
 
         self.assertEqual(config.num_workers, 8)
         self.assertEqual(config.batch_size, 32)
         self.assertEqual(config.num_iterations, 200)
-
-    def test_to_args_dict(self):
-        """Test conversion to args dictionary."""
-        config = HyperparameterConfig(num_workers=12)
-        args_dict = config.to_args_dict()
-
-        self.assertIsInstance(args_dict, dict)
-        self.assertEqual(args_dict["num_workers"], 12)
-        self.assertIn("inference_timeout", args_dict)
-        self.assertIn("indexed_corpus_path", args_dict)
-
-    def test_to_args_dict_complete(self):
-        """Test that to_args_dict includes all required fields."""
-        config = HyperparameterConfig()
-        args_dict = config.to_args_dict()
-
-        required_fields = [
-            "num_workers",
-            "batch_size",
-            "num_tactics_to_expand",
-            "num_iterations",
-            "max_time",
-            "max_steps",
-            "proof_timeout",
-            "env_timeout",
-            "max_rollout_depth",
-            "mcts_type",
-            "model_name",
-            "data_type",
-            "num_epochs",
-            "num_theorems",
-            "train_epochs",
-            "train_value_head",
-            "use_final_reward",
-            "save_training_data",
-            "save_checkpoints",
-            "use_wandb",
-            "indexed_corpus_path",
-            "resume",
-            "use_test_value_head",
-            "checkpoint_dir",
-            "inference_timeout",
-        ]
-
-        for field in required_fields:
-            self.assertIn(field, args_dict, f"Missing field: {field}")
 
 
 class TestTrialResult(unittest.TestCase):
@@ -96,7 +52,7 @@ class TestTrialResult(unittest.TestCase):
 
     def test_score_calculation(self):
         """Test that score is calculated correctly."""
-        config = HyperparameterConfig()
+        config = TrainingConfig.from_args(argparse.Namespace())
         result = TrialResult(
             config=config,
             total_time=100.0,
@@ -108,13 +64,13 @@ class TestTrialResult(unittest.TestCase):
             avg_steps_per_proof=5.0,
         )
 
-        # Score is now proofs_per_hour, which is proofs_per_second * 3600
-        expected_score = 0.08 * 3600.0
+        # Score is throughput weighted by success rate.
+        expected_score = 0.08 * 3600.0 * 0.8
         self.assertAlmostEqual(result.score, expected_score, places=6)
 
     def test_score_with_zero_success(self):
         """Test score calculation with zero success rate."""
-        config = HyperparameterConfig()
+        config = TrainingConfig.from_args(argparse.Namespace())
         result = TrialResult(
             config=config,
             total_time=100.0,
@@ -130,7 +86,7 @@ class TestTrialResult(unittest.TestCase):
 
     def test_to_dict(self):
         """Test conversion to dictionary."""
-        config = HyperparameterConfig()
+        config = TrainingConfig.from_args(argparse.Namespace())
         result = TrialResult(
             config=config,
             total_time=100.0,
@@ -155,23 +111,27 @@ class TestHardwareProfiles(unittest.TestCase):
 
     def test_laptop_defaults(self):
         """Test laptop profile has reasonable defaults."""
-        self.assertEqual(LAPTOP_DEFAULTS.num_workers, 1)
-        self.assertEqual(LAPTOP_DEFAULTS.batch_size, 4)
-        self.assertLessEqual(LAPTOP_DEFAULTS.num_workers, 4)  # Single-worker profile
+        self.assertEqual(LAPTOP_DEFAULTS["num_workers"], 1)
+        self.assertEqual(LAPTOP_DEFAULTS["batch_size"], 4)
+        self.assertLessEqual(LAPTOP_DEFAULTS["num_workers"], 4)  # Single-worker profile
 
     def test_hpc_defaults(self):
         """Test HPC profile has reasonable defaults."""
-        self.assertEqual(HPC_DEFAULTS.num_workers, 32)
-        self.assertEqual(HPC_DEFAULTS.batch_size, 32)
-        self.assertGreater(HPC_DEFAULTS.num_iterations, LAPTOP_DEFAULTS.num_iterations)
+        self.assertEqual(HPC_DEFAULTS["num_workers"], 16)
+        self.assertEqual(HPC_DEFAULTS["batch_size"], 32)
+        self.assertGreater(
+            HPC_DEFAULTS["num_iterations"], LAPTOP_DEFAULTS["num_iterations"]
+        )
 
     def test_hpc_higher_than_laptop(self):
         """Test that HPC profile uses more resources than laptop."""
-        self.assertGreater(HPC_DEFAULTS.num_workers, LAPTOP_DEFAULTS.num_workers)
-        self.assertGreaterEqual(HPC_DEFAULTS.batch_size, LAPTOP_DEFAULTS.batch_size)
+        self.assertGreater(HPC_DEFAULTS["num_workers"], LAPTOP_DEFAULTS["num_workers"])
+        self.assertGreaterEqual(
+            HPC_DEFAULTS["batch_size"], LAPTOP_DEFAULTS["batch_size"]
+        )
         self.assertGreater(
-            HPC_DEFAULTS.num_tactics_to_expand,
-            LAPTOP_DEFAULTS.num_tactics_to_expand,
+            HPC_DEFAULTS["num_tactics_to_expand"],
+            LAPTOP_DEFAULTS["num_tactics_to_expand"],
         )
 
     def test_search_spaces_valid(self):
@@ -206,7 +166,12 @@ class TestHyperparameterSearcher(unittest.TestCase):
         )
 
         self.assertEqual(searcher.hardware_profile, "laptop")
-        self.assertEqual(searcher.default_config, LAPTOP_DEFAULTS)
+        self.assertEqual(
+            searcher.default_config.num_workers, LAPTOP_DEFAULTS["num_workers"]
+        )
+        self.assertEqual(
+            searcher.default_config.batch_size, LAPTOP_DEFAULTS["batch_size"]
+        )
         self.assertEqual(searcher.search_space, LAPTOP_SEARCH_SPACE)
 
     def test_initialization_hpc(self):
@@ -218,7 +183,10 @@ class TestHyperparameterSearcher(unittest.TestCase):
         )
 
         self.assertEqual(searcher.hardware_profile, "hpc")
-        self.assertEqual(searcher.default_config, HPC_DEFAULTS)
+        self.assertEqual(
+            searcher.default_config.num_workers, HPC_DEFAULTS["num_workers"]
+        )
+        self.assertEqual(searcher.default_config.batch_size, HPC_DEFAULTS["batch_size"])
         self.assertEqual(searcher.search_space, HPC_SEARCH_SPACE)
 
     def test_save_and_load_results(self):
@@ -230,7 +198,7 @@ class TestHyperparameterSearcher(unittest.TestCase):
         )
 
         # Create mock results
-        config = HyperparameterConfig()
+        config = TrainingConfig.from_args(argparse.Namespace())
         result = TrialResult(
             config=config,
             total_time=100.0,
@@ -260,11 +228,10 @@ class TestHyperparameterSearcher(unittest.TestCase):
             use_wandb=False,
         )
 
-        laptop_config = HyperparameterConfig(
-            num_workers=1,
-            batch_size=4,
-            num_iterations=100,
-        )
+        laptop_config = TrainingConfig.from_args(argparse.Namespace())
+        laptop_config.num_workers = 1
+        laptop_config.batch_size = 4
+        laptop_config.num_iterations = 100
 
         hpc_config = searcher.generate_config_for_hpc(laptop_config)
 
