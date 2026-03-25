@@ -65,11 +65,10 @@ class TrialResult:
         """
         Combined score for ranking trials.
 
-        Uses proofs per hour as the primary metric.
+        Uses throughput weighted by success rate to penalize fail-fast configs.
         Higher is better.
         """
-        # Proofs per hour is our primary metric
-        return self.proofs_per_hour
+        return self.proofs_per_hour * self.success_rate
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -951,7 +950,13 @@ class HyperparameterSearcher:
                         f"(+{improvement:.1f} proofs/hour)"
                     )
                 else:
-                    logger.info(f"  {param.name}: kept at {best_val} (no improvement)")
+                    # Revert to the previous value when this parameter sweep does
+                    # not improve the global best score.
+                    self._assign_config_value(current_config, param.name, old_val)
+                    logger.info(
+                        f"  {param.name}: reverted back to {old_val} "
+                        f"(no improvement, best new grid point was {best_val})"
+                    )
 
                 # Save intermediate results
                 self._save_results(
