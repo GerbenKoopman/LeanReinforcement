@@ -35,6 +35,37 @@ cd "$HOME/lean_reinforcement"
 
 mkdir -p logs hyperparam_results
 
+# --- LeanDojo cache staging on local node storage ---
+# Snellius exposes fast node-local storage via TMPDIR. Copying LeanDojo cache
+# here avoids GPFS metadata contention from many parallel workers.
+LEANDOJO_SHARED_CACHE="${LEANDOJO_SHARED_CACHE:-/gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache}"
+if [[ -n "${TMPDIR:-}" ]]; then
+    export CACHE_DIR="${TMPDIR}/lean_dojo_cache"
+    export LEANDOJO_CACHE_DIR="${CACHE_DIR}"
+
+    echo "======================================================"
+    echo "Optimizing I/O: staging LeanDojo cache on local NVMe"
+    echo "TMPDIR: ${TMPDIR}"
+    echo "Source cache: ${LEANDOJO_SHARED_CACHE}"
+    echo "Target cache: ${CACHE_DIR}"
+
+    if [[ -d "${LEANDOJO_SHARED_CACHE}" ]]; then
+        mkdir -p "${CACHE_DIR}"
+        if command -v rsync >/dev/null 2>&1; then
+            rsync -a --delete "${LEANDOJO_SHARED_CACHE}/" "${CACHE_DIR}/"
+        else
+            cp -a "${LEANDOJO_SHARED_CACHE}/." "${CACHE_DIR}/"
+        fi
+        echo "Cache staged successfully to local NVMe."
+    else
+        echo "WARNING: source cache directory not found: ${LEANDOJO_SHARED_CACHE}"
+        echo "Continuing without local cache staging."
+    fi
+    echo "======================================================"
+else
+    echo "WARNING: TMPDIR is not set; skipping local cache staging."
+fi
+
 # --- Hyperparameter Search Settings (override via sbatch --export=...) ---
 # Allowed commands: benchmark | grid | binary | coordinate | train
 SEARCH_COMMAND="${SEARCH_COMMAND:-coordinate}"
@@ -80,6 +111,7 @@ echo "NUM_ROUNDS: ${NUM_ROUNDS}"
 echo "BINARY_PARAM: ${BINARY_PARAM}"
 echo "USE_WANDB: ${USE_WANDB}"
 echo "CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES}"
+echo "LEANDOJO_CACHE_DIR: ${LEANDOJO_CACHE_DIR:-<unset>}"
 echo "======================================================"
 
 # Execute hyperparameter search mode directly.
