@@ -40,7 +40,7 @@ mkdir -p logs hyperparam_results
 SEARCH_COMMAND="${SEARCH_COMMAND:-coordinate}"
 
 # Runtime overrides for search modes.
-export NUM_THEOREMS="${NUM_THEOREMS:-50}"
+export NUM_THEOREMS="${NUM_THEOREMS:-100}"
 export NUM_ROUNDS="${NUM_ROUNDS:-2}"
 export BINARY_PARAM="${BINARY_PARAM:-num_workers}"
 export USE_WANDB="${USE_WANDB:-false}"
