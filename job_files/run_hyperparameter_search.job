@@ -31,10 +31,32 @@ if [ -f "$HOME/lean_reinforcement/.env" ]; then
 fi
 set +a
 
-# Prefer the directory where sbatch was submitted from so code/config changes
-# in the working tree are used instead of a potentially stale clone.
-REPO_ROOT="${SLURM_SUBMIT_DIR:-$HOME/lean_reinforcement}"
+# Prefer the directory where sbatch was submitted from, but resolve to the
+# actual repository root even if submission happened from a subdirectory
+# (e.g., job_files/, logs/).
+SUBMIT_DIR="${SLURM_SUBMIT_DIR:-$HOME/lean_reinforcement}"
+probe_dir="${SUBMIT_DIR}"
+REPO_ROOT=""
+for _ in 1 2 3 4; do
+    if [[ -f "${probe_dir}/pyproject.toml" && -d "${probe_dir}/lean_reinforcement" ]]; then
+        REPO_ROOT="${probe_dir}"
+        break
+    fi
+    parent_dir="$(dirname "${probe_dir}")"
+    if [[ "${parent_dir}" == "${probe_dir}" ]]; then
+        break
+    fi
+    probe_dir="${parent_dir}"
+done
+
+if [[ -z "${REPO_ROOT}" ]]; then
+    REPO_ROOT="$HOME/lean_reinforcement"
+fi
+
 cd "${REPO_ROOT}"
+
+# Ensure local source tree is importable even if package is not installed in env.
+export PYTHONPATH="${REPO_ROOT}:${PYTHONPATH:-}"
 
 mkdir -p logs hyperparam_results
 
@@ -127,6 +149,7 @@ echo "Starting Hyperparameter Search on Snellius"
 echo "======================================================"
 echo "Date: $(date)"
 echo "Repo root: ${REPO_ROOT}"
+echo "PYTHONPATH: ${PYTHONPATH}"
 echo "Command: ${SEARCH_COMMAND}"
 echo "Hardware: ${HARDWARE}"
 echo "NUM_THEOREMS: ${NUM_THEOREMS}"
