@@ -31,7 +31,10 @@ if [ -f "$HOME/lean_reinforcement/.env" ]; then
 fi
 set +a
 
-cd "$HOME/lean_reinforcement"
+# Prefer the directory where sbatch was submitted from so code/config changes
+# in the working tree are used instead of a potentially stale clone.
+REPO_ROOT="${SLURM_SUBMIT_DIR:-$HOME/lean_reinforcement}"
+cd "${REPO_ROOT}"
 
 mkdir -p logs hyperparam_results
 
@@ -49,8 +52,31 @@ if [[ -n "${TMPDIR:-}" ]]; then
     echo "Target cache: ${CACHE_DIR}"
 
     if [[ -f "${LEANDOJO_TAR_CACHE}" ]]; then
-        # Extract the single large file directly into the local drive
+        # Ensure a clean target before extraction.
+        rm -rf "${CACHE_DIR}"
+        mkdir -p "${CACHE_DIR}"
+
+        # Extract the single large file directly into the local drive.
         tar -xf "${LEANDOJO_TAR_CACHE}" -C "${TMPDIR}"
+
+        # Some prebuilt caches may contain absolute symlinks to a previous
+        # node-local path (e.g., /gpfs/scratch1/nodespecific/.../lean_dojo_cache).
+        # Rewrite those links to the current CACHE_DIR to avoid path-mismatch
+        # failures during LeanDojo preflight.
+        rewritten_links=0
+        while IFS= read -r -d '' link_path; do
+            link_target="$(readlink "${link_path}")"
+            if [[ "${link_target}" = /* && "${link_target}" == *"/lean_dojo_cache/"* ]]; then
+                suffix="${link_target#*/lean_dojo_cache/}"
+                candidate_target="${CACHE_DIR}/${suffix}"
+                if [[ -e "${candidate_target}" ]]; then
+                    ln -snf "${candidate_target}" "${link_path}"
+                    rewritten_links=$((rewritten_links + 1))
+                fi
+            fi
+        done < <(find "${CACHE_DIR}" -type l -print0)
+
+        echo "Rewrote ${rewritten_links} stale absolute cache symlink(s)."
         echo "Cache extracted successfully to local NVMe."
     else
         echo "WARNING: source tarball not found: ${LEANDOJO_TAR_CACHE}"
@@ -100,6 +126,7 @@ echo "======================================================"
 echo "Starting Hyperparameter Search on Snellius"
 echo "======================================================"
 echo "Date: $(date)"
+echo "Repo root: ${REPO_ROOT}"
 echo "Command: ${SEARCH_COMMAND}"
 echo "Hardware: ${HARDWARE}"
 echo "NUM_THEOREMS: ${NUM_THEOREMS}"
