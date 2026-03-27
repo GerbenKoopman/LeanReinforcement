@@ -296,14 +296,6 @@ def worker_loop(
     """
     Worker process loop.
     """
-    # --- Optional memray profiling (set LEAN_RL_MEMRAY=1) ---
-    from lean_reinforcement.utilities.memray_profile import (
-        start_memray_tracker,
-        stop_memray_tracker,
-    )
-
-    _memray_tracker = start_memray_tracker(worker_id)
-
     # --- glibc malloc tuning (must be first) ---
     configure_glibc_for_workers()
 
@@ -494,9 +486,6 @@ def worker_loop(
     del transformer_proxy
     if value_head_proxy is not None:
         del value_head_proxy
-
-    # Stop memray profiling (flushes the .bin file)
-    stop_memray_tracker(_memray_tracker)
 
     # Final aggressive cleanup before exit
     aggressive_cleanup()

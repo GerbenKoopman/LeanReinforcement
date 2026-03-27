@@ -65,10 +65,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from lean_reinforcement.agent.transformer import Transformer
-from lean_reinforcement.agent.onnx_transformer import (
-    ONNXTransformer,
-    is_onnx_available,
-)
 from lean_reinforcement.agent.ppo import HyperbolicPPO, EuclideanPPO
 from lean_reinforcement.agent.value_head import ValueHead, HyperbolicValueHead
 from lean_reinforcement.utilities.checkpoint import load_checkpoint
@@ -448,12 +444,7 @@ class MCTSBenchmarkTrainer(Trainer):
         """Set up transformer + value head (Euclidean or Poincaré)."""
         logger.info(f"[{self._method}] Checkpoint dir: {self.checkpoint_dir}")
 
-        if self.config.use_onnx and is_onnx_available():
-            self.transformer = cast(
-                Transformer, ONNXTransformer(model_name=self.config.model_name)
-            )
-        else:
-            self.transformer = Transformer(model_name=self.config.model_name)
+        self.transformer = Transformer(model_name=self.config.model_name)
 
         self.value_head = None
         self.start_epoch = self._start_epoch_override
@@ -567,12 +558,7 @@ class PPOBenchmarkTrainer(Trainer):
             logger.info("[euclidean_ppo] Setting up LoRA actor + MLP critic")
 
         # Load the base transformer (used for MCTS proof search by workers)
-        if self.config.use_onnx and is_onnx_available():
-            self.transformer = cast(
-                Transformer, ONNXTransformer(model_name=self.config.model_name)
-            )
-        else:
-            self.transformer = Transformer(model_name=self.config.model_name)
+        self.transformer = Transformer(model_name=self.config.model_name)
 
         # Use a generic Any-typed holder for the PPO model to avoid mypy
         # inferring a concrete subtype when we switch implementations.

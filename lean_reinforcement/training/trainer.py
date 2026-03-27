@@ -317,37 +317,7 @@ class Trainer:
     def _setup_models(self) -> None:
         logger.info(f"Using checkpoint directory: {self.checkpoint_dir}")
 
-        # Use ONNX Runtime if requested and available
-        use_onnx = getattr(self.config, "use_onnx", False)
-        needs_value_head = (
-            self.config.mcts_type == "alpha_zero" or self.config.train_value_head
-        )
-        if use_onnx and needs_value_head:
-            logger.warning(
-                "ONNX is not compatible with value head training. "
-                "Falling back to PyTorch."
-            )
-            use_onnx = False
-
-        if use_onnx:
-            from lean_reinforcement.agent.onnx_transformer import (
-                ONNXTransformer,
-                is_onnx_available,
-            )
-
-            if is_onnx_available():
-                logger.info("Using ONNX Runtime for inference")
-                self.transformer = cast(
-                    Transformer, ONNXTransformer(model_name=self.config.model_name)
-                )
-            else:
-                logger.warning(
-                    "ONNX requested but optimum/onnxruntime not installed. "
-                    "Falling back to PyTorch."
-                )
-                self.transformer = Transformer(model_name=self.config.model_name)
-        else:
-            self.transformer = Transformer(model_name=self.config.model_name)
+        self.transformer = Transformer(model_name=self.config.model_name)
 
         self.value_head: Optional[ValueHead | HyperbolicValueHead] = None
         self.ppo_agent: Optional[PPOAgent] = None

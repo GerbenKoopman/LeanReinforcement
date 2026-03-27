@@ -20,17 +20,13 @@ import os
 import time
 from dataclasses import asdict
 from pathlib import Path
-from typing import Dict, Any, List, cast
+from typing import Dict, Any, List
 import wandb
 
 from loguru import logger
 from dotenv import load_dotenv
 
 from lean_reinforcement.agent.transformer import Transformer
-from lean_reinforcement.agent.onnx_transformer import (
-    ONNXTransformer,
-    is_onnx_available,
-)
 from lean_reinforcement.agent.value_head import ValueHead
 from lean_reinforcement.utilities.checkpoint import load_checkpoint
 from lean_reinforcement.training.progress import (
@@ -382,20 +378,7 @@ class BenchmarkTrainer(Trainer):
         """Override to handle resume with the benchmark's flat directory structure."""
         logger.info(f"Using checkpoint directory: {self.checkpoint_dir}")
 
-        if self.config.use_onnx:
-            if is_onnx_available():
-                logger.info("Using ONNX Runtime for inference")
-                self.transformer = cast(
-                    Transformer, ONNXTransformer(model_name=self.config.model_name)
-                )
-            else:
-                logger.warning(
-                    "ONNX requested but optimum/onnxruntime not installed. "
-                    "Falling back to PyTorch."
-                )
-                self.transformer = Transformer(model_name=self.config.model_name)
-        else:
-            self.transformer = Transformer(model_name=self.config.model_name)
+        self.transformer = Transformer(model_name=self.config.model_name)
 
         self.value_head = None
         self.start_epoch = self._start_epoch_override

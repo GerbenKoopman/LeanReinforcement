@@ -22,10 +22,6 @@ from dotenv import load_dotenv
 from loguru import logger
 
 from lean_reinforcement.agent.transformer import Transformer
-from lean_reinforcement.agent.onnx_transformer import (
-    ONNXTransformer,
-    is_onnx_available,
-)
 from lean_reinforcement.agent.value_head import ValueHead, HyperbolicValueHead
 from lean_reinforcement.training.trainer import Trainer
 from lean_reinforcement.training.worker import worker_loop
@@ -123,20 +119,7 @@ class TestEvaluator(Trainer):
         """Set up models and load the best checkpoint."""
 
         logger.info(f"Loading models for evaluation from {run_dir}")
-        if self.config.use_onnx:
-            if is_onnx_available():
-                logger.info("Using ONNX Runtime for inference")
-                self.transformer = cast(
-                    Transformer, ONNXTransformer(model_name=self.config.model_name)
-                )
-            else:
-                logger.warning(
-                    "ONNX requested but optimum/onnxruntime not installed. "
-                    "Falling back to PyTorch."
-                )
-                self.transformer = Transformer(model_name=self.config.model_name)
-        else:
-            self.transformer = Transformer(model_name=self.config.model_name)
+        self.transformer = Transformer(model_name=self.config.model_name)
         self.value_head = None
         self.start_epoch = 0
 

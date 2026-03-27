@@ -36,8 +36,5 @@ dependencies:
     - types-tqdm
     - types-setuptools
     - cython
-    - optimum
-    - onnxruntime-gpu
     - hypll
     - peft
-    - memray
