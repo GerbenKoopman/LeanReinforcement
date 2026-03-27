@@ -1,13 +1,5 @@
 """
 Proxy classes for remote model inference.
-
-Each proxy tags requests with a monotonically-increasing ``request_id``.
-The inference server echoes the id back as part of the response tuple
-``(request_id, payload)``.  After a timeout, ``_drain_stale`` discards any
-response whose id does not match the current expectation, preventing the
-cascading "need more than 1 value to unpack" / "unhashable type: 'list'"
-errors that previously occurred when a stale response was consumed by a
-later, unrelated request.
 """
 
 from typing import List, Tuple, Optional
