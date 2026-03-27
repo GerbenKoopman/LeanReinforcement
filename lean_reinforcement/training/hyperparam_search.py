@@ -285,8 +285,8 @@ HPC_PARAMETER_RANGES: List[ParameterRange] = [
     ),
     ParameterRange(
         name="num_iterations",
-        min_val=100,
-        max_val=800,
+        min_val=400,
+        max_val=5000,
         is_integer=True,
         description="MCTS iterations per search step",
         depends_on=["num_workers"],
@@ -320,8 +320,8 @@ HPC_PARAMETER_RANGES: List[ParameterRange] = [
     # === TIER 4: Search Depth Parameters ===
     ParameterRange(
         name="max_steps",
-        min_val=20,
-        max_val=80,
+        min_val=50,
+        max_val=1000,
         is_integer=True,
         description="Maximum proof depth (steps)",
         depends_on=["num_iterations"],
