@@ -64,50 +64,32 @@ mkdir -p logs hyperparam_results
 LEANDOJO_TAR_CACHE="/gpfs/scratch1/shared/lean-reinforcement/datasets/lean_dojo_cache.tar"
 
 if [[ -n "${TMPDIR:-}" ]]; then
-    # Keep physical files on local NVMe, but expose a GPFS-style alias path.
-    # LeanDojo preflight compares path prefixes lexically; older cached metadata
-    # can still reference /gpfs/scratch1/nodespecific/... paths.
-    LOCAL_CACHE_DIR="${TMPDIR}/lean_dojo_cache"
-    legacy_nodespecific_root="/gpfs/scratch1/nodespecific/$(hostname)/$(basename "${TMPDIR}")"
-    LEGACY_CACHE_DIR="${legacy_nodespecific_root}/lean_dojo_cache"
-
-    if mkdir -p "$(dirname "${legacy_nodespecific_root}")" 2>/dev/null; then
-        if [[ ! -e "${legacy_nodespecific_root}" ]]; then
-            ln -s "${TMPDIR}" "${legacy_nodespecific_root}" 2>/dev/null || true
-        fi
-    fi
-
-    # Prefer legacy alias when available, otherwise fall back to TMPDIR path.
-    if [[ -e "${legacy_nodespecific_root}" ]]; then
-        export CACHE_DIR="${LEGACY_CACHE_DIR}"
-    else
-        export CACHE_DIR="${LOCAL_CACHE_DIR}"
-    fi
+    # 1. Resolve TMPDIR to its true physical path immediately.
+    # This prevents the '/scratch-local/' vs '/gpfs/scratch1/nodespecific/' mismatch in Python.
+    PHYSICAL_TMPDIR=$(realpath "${TMPDIR}")
+    
+    export CACHE_DIR="${PHYSICAL_TMPDIR}/lean_dojo_cache"
     export LEANDOJO_CACHE_DIR="${CACHE_DIR}"
 
     echo "======================================================"
     echo "Optimizing I/O: Extracting LeanDojo cache to local NVMe"
-    echo "TMPDIR: ${TMPDIR}"
+    echo "Physical TMPDIR: ${PHYSICAL_TMPDIR}"
     echo "Source tar: ${LEANDOJO_TAR_CACHE}"
-    echo "Target cache (logical): ${CACHE_DIR}"
-    echo "Target cache (physical): ${LOCAL_CACHE_DIR}"
+    echo "Target cache: ${CACHE_DIR}"
 
     if [[ -f "${LEANDOJO_TAR_CACHE}" ]]; then
         # Ensure a clean target before extraction.
-        rm -rf "${LOCAL_CACHE_DIR}"
-        mkdir -p "${LOCAL_CACHE_DIR}"
+        rm -rf "${CACHE_DIR}"
+        mkdir -p "${CACHE_DIR}"
 
-        # Extract the single large file directly into the local drive.
-        tar -xf "${LEANDOJO_TAR_CACHE}" -C "${TMPDIR}"
+        # Extract the single large file directly into the physical local drive.
+        tar -xf "${LEANDOJO_TAR_CACHE}" -C "${PHYSICAL_TMPDIR}"
 
-        # Some prebuilt caches may contain absolute symlinks to a previous
-        # node-local path (e.g., /gpfs/scratch1/nodespecific/.../lean_dojo_cache).
-        # Rewrite those links to the current CACHE_DIR to avoid path-mismatch
-        # failures during LeanDojo preflight.
+        # Fix stale absolute symlinks from previous cache builds
         rewritten_links=0
         while IFS= read -r -d '' link_path; do
             link_target="$(readlink "${link_path}")"
-            if [[ "${link_target}" = /* && "${link_target}" == *"/lean_dojo_cache/"* ]]; then
+            if [[ "${link_target}" == *"/lean_dojo_cache/"* ]]; then
                 suffix="${link_target#*/lean_dojo_cache/}"
                 candidate_target="${CACHE_DIR}/${suffix}"
                 if [[ -e "${candidate_target}" ]]; then
@@ -115,13 +97,12 @@ if [[ -n "${TMPDIR:-}" ]]; then
                     rewritten_links=$((rewritten_links + 1))
                 fi
             fi
-        done < <(find "${LOCAL_CACHE_DIR}" -type l -print0)
+        done < <(find "${CACHE_DIR}" -type l -print0)
 
         echo "Rewrote ${rewritten_links} stale absolute cache symlink(s)."
         echo "Cache extracted successfully to local NVMe."
     else
         echo "WARNING: source tarball not found: ${LEANDOJO_TAR_CACHE}"
-        echo "Please run: tar -cf lean_dojo_cache.tar lean_dojo_cache in your datasets folder."
         echo "Continuing without local cache staging."
     fi
     echo "======================================================"
