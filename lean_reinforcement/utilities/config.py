@@ -46,7 +46,6 @@ class TrainingConfig:
     model_name: str = "kaiyuy/leandojo-lean4-tacgen-byt5-small"
     num_tactics_to_expand: int = 64
     max_rollout_depth: int = 40
-    use_onnx: bool = False  # Use ONNX Runtime for faster inference (requires optimum)
 
     # Search mode
     full_search: bool = (
@@ -55,7 +54,7 @@ class TrainingConfig:
 
     # Max MCTS tree nodes — limits per-worker memory.
     # The PUCT-based pruner evicts worst-scored leaves at this limit.
-    max_tree_nodes: int = 1000
+    max_tree_nodes: int = 10000
 
     # Timeout parameters (all in seconds)
     # Note: These form a hierarchy - each level should be larger than the one below
@@ -70,7 +69,7 @@ class TrainingConfig:
     # Hard memory limit (GiB) for each Lean 4 REPL subprocess.
     # Passed as --memory to the Lean runtime; exceeding it produces a
     # catchable DojoCrashError instead of triggering the OOM killer.
-    lean_memory_limit_gb: int = 6
+    lean_memory_limit_gb: int = 8
 
     @classmethod
     def from_args(cls, args: argparse.Namespace) -> "TrainingConfig":
@@ -91,7 +90,6 @@ class TrainingConfig:
             ),
             num_tactics_to_expand=getattr(args, "num_tactics_to_expand", 64),
             max_rollout_depth=getattr(args, "max_rollout_depth", 40),
-            use_onnx=getattr(args, "use_onnx", False),
             max_time=getattr(args, "max_time", 175),
             env_timeout=getattr(args, "env_timeout", 75),
             proof_timeout=getattr(args, "proof_timeout", 360),
@@ -114,7 +112,7 @@ class TrainingConfig:
             inference_timeout=getattr(args, "inference_timeout", 600.0),
             full_search=getattr(args, "full_search", True),
             max_tree_nodes=getattr(args, "max_tree_nodes", 1000),
-            lean_memory_limit_gb=getattr(args, "lean_memory_limit_gb", 6),
+            lean_memory_limit_gb=getattr(args, "lean_memory_limit_gb", 8),
             log_search_tree=getattr(args, "log_search_tree", False),
         )
 
@@ -201,14 +199,8 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--max-tree-nodes",
         type=int,
-        default=1000,
+        default=10000,
         help="Maximum number of nodes kept in the MCTS tree.",
-    )
-    parser.add_argument(
-        "--use-onnx",
-        action=argparse.BooleanOptionalAction,
-        default=False,
-        help="Use ONNX Runtime for inference (requires: pip install optimum onnxruntime-gpu).",
     )
     parser.add_argument(
         "--max-time",
@@ -231,11 +223,11 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--lean-memory-limit-gb",
         type=int,
-        default=6,
+        default=8,
         help="Hard memory limit (GiB) for each Lean 4 REPL subprocess. "
         "Passed as --memory to the Lean runtime. When exceeded, Lean "
         "exits cleanly instead of triggering the OS OOM killer. "
-        "Rule of thumb: total_ram / (num_workers + 2). Default: 6.",
+        "Rule of thumb: total_ram / (num_workers + 2). Default: 8.",
     )
 
     # --- Search mode ---
