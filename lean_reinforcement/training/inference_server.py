@@ -32,8 +32,7 @@ class InferenceServer:
         self.request_queue = request_queue
         self.response_queues = response_queues
         self.batch_size = batch_size
-        # Start with a conservative max_safe_batch_size to prevent OOM
-        self.max_safe_batch_size = min(batch_size, 4)
+        self.max_safe_batch_size = batch_size
         self._batch_count = 0
         self._batches_since_last_oom = 0  # Track batches since last OOM for recovery
 
