@@ -231,10 +231,15 @@ def _failure_reason_from_metrics(metrics: Optional[Dict[str, Any]]) -> str:
     if not metrics:
         return ""
 
+    explicit = metrics.get("proof_search/failure_reason")
+    if isinstance(explicit, str) and explicit.strip():
+        return explicit.strip()
+
     base_keys = {
         "proof_search/success",
         "proof_search/steps",
         "proof_search/time",
+        "proof_search/failure_reason",
     }
     reasons: List[str] = []
     for key, value in metrics.items():

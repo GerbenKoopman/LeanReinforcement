@@ -52,6 +52,18 @@ from lean_reinforcement.agent.proxies import (
 _RSS_RECYCLE_EXIT_CODE = RSS_WATCHDOG_EXIT_CODE
 
 
+def _summarize_error(e: Exception, max_len: int = 160) -> str:
+    """Create a compact one-line error summary suitable for progress output."""
+    msg = " ".join(str(e).split())
+    if not msg:
+        msg = e.__class__.__name__
+    else:
+        msg = f"{e.__class__.__name__}: {msg}"
+    if len(msg) > max_len:
+        return msg[: max_len - 1] + "…"
+    return msg
+
+
 def process_theorem(
     thm_data: Dict[str, Any],
     dataloader: LeanDataLoader,
@@ -76,6 +88,7 @@ def process_theorem(
                 "proof_search/steps": 0,
                 "proof_search/time": time.time() - theorem_start,
                 "proof_search/extraction_error": True,
+                "proof_search/failure_reason": "theorem extraction failed",
             },
             "data": [],
             "theorem_name": "unknown_extraction_failed",
@@ -93,6 +106,7 @@ def process_theorem(
                 "proof_search/steps": 0,
                 "proof_search/time": time.time() - theorem_start,
                 "proof_search/position_error": True,
+                "proof_search/failure_reason": "invalid theorem position",
             },
             "data": [],
             "theorem_name": theorem.full_name,
@@ -112,12 +126,14 @@ def process_theorem(
             f"Failed to initialize environment for theorem {theorem.full_name}: {e}"
         )
         aggressive_cleanup()  # Clean up any partially created objects
+        reason = _summarize_error(e)
         return {
             "metrics": {
                 "proof_search/success": False,
                 "proof_search/steps": 0,
                 "proof_search/time": time.time() - theorem_start,
                 "proof_search/env_init_error": True,
+                "proof_search/failure_reason": reason,
             },
             "data": [],
             "theorem_name": theorem.full_name,
@@ -129,6 +145,9 @@ def process_theorem(
         )
         outdated_trace = is_outdated_traced_repo_error(e)
         aggressive_cleanup()  # Clean up any partially created objects
+        reason = _summarize_error(e)
+        if outdated_trace:
+            reason = f"outdated trace cache: {reason}"
         return {
             "metrics": {
                 "proof_search/success": False,
@@ -136,6 +155,7 @@ def process_theorem(
                 "proof_search/time": time.time() - theorem_start,
                 "proof_search/env_init_unexpected_error": True,
                 "proof_search/outdated_trace_cache": outdated_trace,
+                "proof_search/failure_reason": reason,
             },
             "data": [],
             "theorem_name": theorem.full_name,
@@ -167,6 +187,9 @@ def process_theorem(
                 "proof_search/steps": 0,
                 "proof_search/time": time.time() - theorem_start,
                 "proof_search/rss_abort": True,
+                "proof_search/failure_reason": (
+                    f"rss abort: {rss_after_env:.1f} GB > {MAX_WORKER_RSS_GB:.1f} GB"
+                ),
             },
             "data": [],
             "theorem_name": theorem.full_name,
@@ -222,12 +245,14 @@ def process_theorem(
         logger.exception(
             f"Inference timeout during proof search for theorem {theorem.full_name}: {e}"
         )
+        reason = _summarize_error(e)
         return {
             "metrics": {
                 "proof_search/success": False,
                 "proof_search/steps": 0,
                 "proof_search/time": time.time() - theorem_start,
                 "proof_search/inference_timeout": True,
+                "proof_search/failure_reason": reason,
             },
             "data": [],
             "theorem_name": theorem.full_name,
@@ -238,12 +263,14 @@ def process_theorem(
             f"Memory limit exceeded during proof search for theorem "
             f"{theorem.full_name}: {e}"
         )
+        reason = _summarize_error(e)
         return {
             "metrics": {
                 "proof_search/success": False,
                 "proof_search/steps": 0,
                 "proof_search/time": time.time() - theorem_start,
                 "proof_search/memory_limit_exceeded": True,
+                "proof_search/failure_reason": reason,
             },
             "data": [],
             "theorem_name": theorem.full_name,
@@ -253,6 +280,7 @@ def process_theorem(
         logger.exception(
             f"Error during proof search for theorem {theorem.full_name}: {e}"
         )
+        reason = _summarize_error(e)
         # Return partial metrics if possible - at minimum we want to track that this failed
         return {
             "metrics": {
@@ -260,6 +288,7 @@ def process_theorem(
                 "proof_search/steps": 0,
                 "proof_search/time": time.time() - theorem_start,
                 "proof_search/unexpected_error": True,
+                "proof_search/failure_reason": reason,
             },
             "data": [],
             "theorem_name": theorem.full_name,
