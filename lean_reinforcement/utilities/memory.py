@@ -237,22 +237,19 @@ def kill_child_processes() -> None:
 
 
 def kill_lean_orphans() -> None:
-    """SIGKILL any ``lean``/``lake`` processes owned by the current user.
-
-    Catches orphaned Lean processes reparented to init after their
-    parent lake died — these escape ``kill_child_processes()``.
-    """
+    """SIGKILL orphaned ``lean``/``lake`` processes owned by the current user."""
     try:
         import psutil
         import signal
 
         my_uid = os.getuid()
         targets = []
-        for proc in psutil.process_iter(["pid", "name", "uids"]):
+        for proc in psutil.process_iter(["pid", "name", "uids", "ppid"]):
             try:
                 if proc.info["uids"] and proc.info["uids"].real == my_uid:
                     name = (proc.info["name"] or "").lower()
-                    if name in {"lean", "lake"}:
+                    ppid = int(proc.info.get("ppid", -1))
+                    if name in {"lean", "lake"} and ppid == 1:
                         targets.append(proc)
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
