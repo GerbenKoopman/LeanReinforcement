@@ -78,9 +78,9 @@ class TrainingConfig:
             num_epochs=getattr(args, "num_epochs", 16),
             num_theorems=getattr(args, "num_theorems", 128),
             num_iterations=getattr(args, "num_iterations", 300),
-            max_steps=getattr(args, "max_steps", 20),
-            batch_size=getattr(args, "batch_size", 16),
-            num_workers=getattr(args, "num_workers", 12),
+            max_steps=getattr(args, "max_steps", 40),
+            batch_size=getattr(args, "batch_size", 1),
+            num_workers=getattr(args, "num_workers", 16),
             mcts_type=getattr(args, "mcts_type", "alpha_zero"),
             indexed_corpus_path=getattr(args, "indexed_corpus_path", None),
             model_name=getattr(
@@ -111,7 +111,7 @@ class TrainingConfig:
             use_wandb=getattr(args, "use_wandb", True),
             inference_timeout=getattr(args, "inference_timeout", 600.0),
             full_search=getattr(args, "full_search", True),
-            max_tree_nodes=getattr(args, "max_tree_nodes", 1000),
+            max_tree_nodes=getattr(args, "max_tree_nodes", 10000),
             lean_memory_limit_gb=getattr(args, "lean_memory_limit_gb", 8),
             log_search_tree=getattr(args, "log_search_tree", False),
         )
@@ -150,7 +150,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--max-steps",
         type=int,
-        default=20,
+        default=40,
         help="Max steps per proof (reduced default for memory efficiency).",
     )
     parser.add_argument(
@@ -162,7 +162,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--num-workers",
         type=int,
-        default=12,
+        default=16,
         help="Number of parallel workers for processing theorems.",
     )
     parser.add_argument(
