@@ -77,7 +77,7 @@ class TrainingConfig:
             data_type=getattr(args, "data_type", "novel_premises"),
             num_epochs=getattr(args, "num_epochs", 16),
             num_theorems=getattr(args, "num_theorems", 128),
-            num_iterations=getattr(args, "num_iterations", 300),
+            num_iterations=getattr(args, "num_iterations", 1000),
             max_steps=getattr(args, "max_steps", 80),
             batch_size=getattr(args, "batch_size", 1),
             num_workers=getattr(args, "num_workers", 16),
@@ -144,7 +144,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--num-iterations",
         type=int,
-        default=300,
+        default=1000,
         help="Number of MCTS iterations per step (reduced default for memory efficiency).",
     )
     parser.add_argument(
