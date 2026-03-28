@@ -719,6 +719,7 @@ class Trainer:
                                 success=success,
                                 steps=res["metrics"].get("proof_search/steps", 0),
                                 elapsed=res["metrics"].get("proof_search/time", 0.0),
+                                metrics=res["metrics"],
                             )
                             self.progress_display.refresh()
 
@@ -835,7 +836,9 @@ class Trainer:
                             last_result_time = time.time()
                             last_activity_time = time.time()
                             self.progress_stats.record_theorem(
-                                name=f"worker_{i}_crash", success=False
+                                name=f"worker_{i}_crash",
+                                success=False,
+                                failure_reason="worker crash",
                             )
                             self.progress_display.refresh()
 

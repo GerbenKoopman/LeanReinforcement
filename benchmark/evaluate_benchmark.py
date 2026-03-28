@@ -233,7 +233,9 @@ class TestEvaluator(Trainer):
                             }
                         )
                         self.progress_stats.record_theorem(
-                            name="safety_timeout", success=False
+                            name="safety_timeout",
+                            success=False,
+                            failure_reason="safety timeout",
                         )
                     results_received += missing
                     break
@@ -274,7 +276,10 @@ class TestEvaluator(Trainer):
                             }
                         )
                         self.progress_stats.record_theorem(
-                            name=theorem_name, success=success, elapsed=elapsed_t
+                            name=theorem_name,
+                            success=success,
+                            elapsed=elapsed_t,
+                            metrics=res.get("metrics") if res else None,
                         )
                         self.progress_display.refresh()
                 except queue.Empty:
@@ -306,7 +311,9 @@ class TestEvaluator(Trainer):
                             }
                         )
                         self.progress_stats.record_theorem(
-                            name=f"worker_{idx}_crash", success=False
+                            name=f"worker_{idx}_crash",
+                            success=False,
+                            failure_reason="worker crash",
                         )
                         self.progress_display.refresh()
 
@@ -381,7 +388,9 @@ class TestEvaluator(Trainer):
                             }
                         )
                         self.progress_stats.record_theorem(
-                            name="stall_timeout", success=False
+                            name="stall_timeout",
+                            success=False,
+                            failure_reason="stall timeout",
                         )
                     self.progress_display.refresh()
                     logged_dead_workers = set()

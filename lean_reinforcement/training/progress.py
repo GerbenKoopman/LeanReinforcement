@@ -75,6 +75,7 @@ class ProgressStats:
     # Last theorem result (for the scrolling line)
     last_theorem_name: str = ""
     last_theorem_success: Optional[bool] = None
+    last_theorem_failure_reason: str = ""
     last_theorem_time: float = 0.0
     last_result_at: float = 0.0
 
@@ -87,8 +88,17 @@ class ProgressStats:
     _max_recent: int = 5
 
     def record_theorem(
-        self, name: str, success: bool, steps: int = 0, elapsed: float = 0.0
+        self,
+        name: str,
+        success: bool,
+        steps: int = 0,
+        elapsed: float = 0.0,
+        metrics: Optional[Dict[str, Any]] = None,
+        failure_reason: str = "",
     ) -> None:
+        if not success and not failure_reason:
+            failure_reason = _failure_reason_from_metrics(metrics)
+
         self.theorems_done += 1
         self.cumulative_theorems_done += 1
         if success:
@@ -98,10 +108,17 @@ class ProgressStats:
             self.theorems_failed += 1
         self.last_theorem_name = name
         self.last_theorem_success = success
+        self.last_theorem_failure_reason = failure_reason
         self.last_theorem_time = elapsed
         self.last_result_at = time.time()
         self.recent_results.append(
-            {"name": name, "ok": success, "steps": steps, "t": elapsed}
+            {
+                "name": name,
+                "ok": success,
+                "steps": steps,
+                "t": elapsed,
+                "reason": failure_reason,
+            }
         )
         if len(self.recent_results) > self._max_recent:
             self.recent_results.pop(0)
@@ -116,6 +133,7 @@ class ProgressStats:
         self.recent_results = []
         self.last_theorem_name = ""
         self.last_theorem_success = None
+        self.last_theorem_failure_reason = ""
         self.last_result_at = 0.0
         self.phase = "collecting"
 
@@ -206,6 +224,31 @@ def _bar(frac: float, width: int = 30) -> str:
     """ASCII progress bar."""
     filled = int(frac * width)
     return "█" * filled + "░" * (width - filled)
+
+
+def _failure_reason_from_metrics(metrics: Optional[Dict[str, Any]]) -> str:
+    """Derive a concise failure reason from theorem metrics."""
+    if not metrics:
+        return ""
+
+    base_keys = {
+        "proof_search/success",
+        "proof_search/steps",
+        "proof_search/time",
+    }
+    reasons: List[str] = []
+    for key, value in metrics.items():
+        if key in base_keys or not key.startswith("proof_search/"):
+            continue
+        if not bool(value):
+            continue
+        reason = key.replace("proof_search/", "")
+        reason = reason.replace("_", " ")
+        reasons.append(reason)
+
+    if not reasons:
+        return ""
+    return ", ".join(reasons)
 
 
 # ── Rich live display ───────────────────────────────────────────────────────
@@ -362,7 +405,10 @@ class LiveProgressDisplay:
                     name = r["name"]
                     if len(name) > 35:
                         name = "…" + name[-34:]
-                    parts.append(f"  {icon} {name} [dim]({r['t']:.0f}s)[/]")
+                    reason = ""
+                    if not r["ok"] and r.get("reason"):
+                        reason = f" [red]reason: {r['reason']}[/]"
+                    parts.append(f"  {icon} {name} [dim]({r['t']:.0f}s)[/]{reason}")
                 lines.append("")
                 lines.extend(parts)
 
@@ -436,12 +482,15 @@ class PlainProgressDisplay:
         elapsed = _fmt_time(s.epoch_elapsed)
         eta = _fmt_time(s.epoch_eta_seconds)
         last_result_ago = _fmt_time(s.last_result_ago_seconds)
+        reason = ""
+        if s.last_theorem_success is False and s.last_theorem_failure_reason:
+            reason = f"  reason: {s.last_theorem_failure_reason}"
         print(
             f"  Epoch {s.current_epoch}/{s.total_epochs}  "
             f"{s.theorems_done}/{s.total_theorems} ({pct:.0f}%)  "
             f"✓{s.theorems_proved} ✗{s.theorems_failed} ({sr:.0f}%)  "
             f"elapsed {elapsed}  eta {eta}  "
-            f"last result {last_result_ago} ago",
+            f"last result {last_result_ago} ago{reason}",
             file=sys.stderr,
         )
 
