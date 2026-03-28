@@ -45,7 +45,7 @@ class TrainingConfig:
     # Model Args
     model_name: str = "kaiyuy/leandojo-lean4-tacgen-byt5-small"
     num_tactics_to_expand: int = 64
-    max_rollout_depth: int = 40
+    max_rollout_depth: int = 80
 
     # Search mode
     full_search: bool = (
@@ -78,7 +78,7 @@ class TrainingConfig:
             num_epochs=getattr(args, "num_epochs", 16),
             num_theorems=getattr(args, "num_theorems", 128),
             num_iterations=getattr(args, "num_iterations", 300),
-            max_steps=getattr(args, "max_steps", 40),
+            max_steps=getattr(args, "max_steps", 80),
             batch_size=getattr(args, "batch_size", 1),
             num_workers=getattr(args, "num_workers", 16),
             mcts_type=getattr(args, "mcts_type", "alpha_zero"),
@@ -89,7 +89,7 @@ class TrainingConfig:
                 "kaiyuy/leandojo-lean4-tacgen-byt5-small",
             ),
             num_tactics_to_expand=getattr(args, "num_tactics_to_expand", 64),
-            max_rollout_depth=getattr(args, "max_rollout_depth", 40),
+            max_rollout_depth=getattr(args, "max_rollout_depth", 80),
             max_time=getattr(args, "max_time", 175),
             env_timeout=getattr(args, "env_timeout", 75),
             proof_timeout=getattr(args, "proof_timeout", 360),
@@ -150,7 +150,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--max-steps",
         type=int,
-        default=40,
+        default=80,
         help="Max steps per proof (reduced default for memory efficiency).",
     )
     parser.add_argument(
@@ -193,7 +193,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--max-rollout-depth",
         type=int,
-        default=40,
+        default=80,
         help="Max depth for MCTS rollout.",
     )
     parser.add_argument(
