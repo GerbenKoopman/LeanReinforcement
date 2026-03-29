@@ -5,7 +5,7 @@
 #SBATCH --job-name=mcts_hyperbolic
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=18
-#SBATCH --time=03:00:00
+#SBATCH --time=06:00:00
 #SBATCH --output=logs/experiment_mcts_hyperbolic_%A.out
 
 # --- Fail on error ---
@@ -38,11 +38,19 @@ echo "======================================================"
 # Execute the training script
 export BASE_DIR="checkpoints/mcts_hyperbolic"
 
+# Read curvature exported via sbatch; allow unset for compatibility
+CURV="${curvature:-}"
+if [ -n "$CURV" ]; then
+    CURV_ARG=(--curvature "$CURV")
+else
+    CURV_ARG=()
+fi
+
 srun python3 -m lean_reinforcement.training.train \
     --training-mode value_head \
     --use-hyperbolic \
     --checkpoint-dir "$BASE_DIR" \
-    --indexed-corpus-path "$CORPUS_DIR/indexed_corpus.pkl"
+    --indexed-corpus-path "$CORPUS_DIR/indexed_corpus.pkl" "${CURV_ARG[@]}"
 
 echo "Running automatic evaluation on the trained weights..."
-srun python3 evaluate_run.py --base-dir "$BASE_DIR" --use-hyperbolic
+srun python3 evaluate_run.py --base-dir "$BASE_DIR" --use-hyperbolic "${CURV_ARG[@]}"
