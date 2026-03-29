@@ -4,7 +4,7 @@ Main agent loop for running MCTS-based proof search.
 
 import inspect
 import time
-from typing import Type, Optional
+from typing import Type, Optional, Any
 from collections import deque
 from loguru import logger
 
@@ -59,6 +59,8 @@ class AgentRunner:
         self.proof_timeout = proof_timeout
 
         self.mcts_kwargs = mcts_kwargs if mcts_kwargs is not None else {}
+        self._failure_reason: Optional[str] = None
+        self._failure_flags: set[str] = set()
 
     def run(
         self,
@@ -84,6 +86,9 @@ class AgentRunner:
             - dict: Metrics about the run (success, steps, time).
             - list[dict]: Lightweight training data collected during the run
         """
+        self._failure_reason = None
+        self._failure_flags = set()
+
         full_search = getattr(self.config, "full_search", True)
         if full_search:
             return self._run_full_search(
@@ -127,6 +132,7 @@ class AgentRunner:
         mcts_instance = None
 
         if not isinstance(self.env.current_state, TacticState):
+            self._mark_failure_from_state()
             return self._finalise(
                 start_time, 0, training_data, collect_value_data, use_final_reward
             )
@@ -147,6 +153,7 @@ class AgentRunner:
             logger.warning(
                 f"Not enough time for full search ({max_time:.1f}s remaining). Skipping."
             )
+            self._mark_failure("proof timeout", "proof_timeout")
             return self._finalise(
                 start_time, 0, training_data, collect_value_data, use_final_reward
             )
@@ -175,6 +182,10 @@ class AgentRunner:
                 mcts_instance.search(total_iterations, max_time=max_time)
         except Exception as e:
             logger.error(f"MCTS search failed with error: {e}")
+            self._mark_failure(
+                f"mcts search error: {self._summarize_error_text(e)}",
+                "mcts_search_error",
+            )
             return self._finalise(
                 start_time, 0, training_data, collect_value_data, use_final_reward
             )
@@ -195,10 +206,20 @@ class AgentRunner:
                         _, _, terminated = self.env.step(tactic)
                     except Exception as e:
                         logger.error(f"Proof path application failed: {e}")
+                        self._mark_failure(
+                            f"env step error: {self._summarize_error_text(e)}",
+                            "env_step_error",
+                        )
                         break
                     proof_steps += 1
                     if terminated:
                         break
+
+        if not isinstance(self.env.current_state, ProofFinished):
+            if isinstance(self.env.current_state, (LeanError, ProofGivenUp)):
+                self._mark_failure_from_state()
+            elif self._failure_reason is None:
+                self._mark_failure("search exhausted without proof", "search_exhausted")
 
         del mcts_instance
         aggressive_cleanup()
@@ -296,6 +317,7 @@ class AgentRunner:
                 logger.warning(
                     f"Proof search exceeded {proof_timeout}s timeout after {elapsed:.1f}s. Stopping."
                 )
+                self._mark_failure("proof timeout", "proof_timeout")
                 break
 
             # Also enforce minimum remaining time (30s)
@@ -304,12 +326,14 @@ class AgentRunner:
                     f"Only {remaining_time:.1f}s remaining (< 30s minimum). "
                     "Stopping to avoid partial search."
                 )
+                self._mark_failure("proof timeout", "proof_timeout")
                 break
 
             try:
                 # Check if the proof is already finished or has failed
                 current_state = self.env.current_state
                 if not isinstance(current_state, TacticState):
+                    self._mark_failure_from_state()
                     break
 
                 # Log GPU memory every 5 steps
@@ -354,6 +378,10 @@ class AgentRunner:
                         )
                 except Exception as e:
                     logger.error(f"MCTS search failed with error: {e}")
+                    self._mark_failure(
+                        f"mcts search error: {self._summarize_error_text(e)}",
+                        "mcts_search_error",
+                    )
                     break
 
                 # Extract lightweight data immediately after search
@@ -388,6 +416,10 @@ class AgentRunner:
                                 _, _, terminated = self.env.step(tactic)
                             except Exception as e:
                                 logger.error(f"Proof path application failed: {e}")
+                                self._mark_failure(
+                                    f"env step error: {self._summarize_error_text(e)}",
+                                    "env_step_error",
+                                )
                                 break
                             if terminated:
                                 break
@@ -440,6 +472,7 @@ class AgentRunner:
 
                 if best_action is None:
                     logger.warning("MCTS search returned no action. Stopping.")
+                    self._mark_failure("no tactic selected", "no_action")
                     break
 
                 # Take the best action in the environment
@@ -449,12 +482,17 @@ class AgentRunner:
                     _, _, terminated = self.env.step(best_action)
                 except Exception as e:
                     logger.error(f"Environment step failed with error: {e}")
+                    self._mark_failure(
+                        f"env step error: {self._summarize_error_text(e)}",
+                        "env_step_error",
+                    )
                     break
 
                 if isinstance(self.env.current_state, (LeanError, ProofGivenUp)):
                     logger.warning(
                         f"Tactic resulted in error: {self.env.current_state}"
                     )
+                    self._mark_failure_from_state()
                     break
 
                 if terminated:
@@ -465,10 +503,21 @@ class AgentRunner:
 
             except Exception as e:
                 logger.error(f"Error in agent loop: {e}")
+                self._mark_failure(
+                    f"agent loop error: {self._summarize_error_text(e)}",
+                    "agent_loop_error",
+                )
                 if mcts_instance:
                     del mcts_instance
                     mcts_instance = None
                 break
+
+        if (
+            not isinstance(self.env.current_state, ProofFinished)
+            and step_num >= self.max_steps
+            and self._failure_reason is None
+        ):
+            self._mark_failure("max steps reached", "max_steps_reached")
 
         # Clean up MCTS instance after loop
         if mcts_instance is not None:
@@ -494,11 +543,17 @@ class AgentRunner:
         elapsed_time = time.time() - start_time
         success = isinstance(self.env.current_state, ProofFinished)
 
-        metrics = {
+        metrics: dict[str, Any] = {
             "proof_search/success": success,
             "proof_search/steps": step_num,
             "proof_search/time": elapsed_time,
         }
+
+        if not success:
+            if self._failure_reason:
+                metrics["proof_search/failure_reason"] = self._failure_reason
+            for flag in sorted(self._failure_flags):
+                metrics[f"proof_search/{flag}"] = True
 
         if success:
             logger.success(
@@ -527,3 +582,36 @@ class AgentRunner:
                 data_point["final_reward"] = final_reward
 
         return metrics, training_data
+
+    def _mark_failure(self, reason: str, flag: Optional[str] = None) -> None:
+        if reason and self._failure_reason is None:
+            self._failure_reason = reason
+        if flag:
+            self._failure_flags.add(flag)
+
+    def _mark_failure_from_state(self) -> None:
+        state = self.env.current_state
+        if isinstance(state, LeanError):
+            msg = str(state).strip() or "lean error"
+            self._mark_failure(
+                f"lean error: {self._summarize_text(msg)}",
+                "lean_error",
+            )
+            return
+        if isinstance(state, ProofGivenUp):
+            msg = str(state).strip() or "proof given up"
+            self._mark_failure(
+                f"proof given up: {self._summarize_text(msg)}",
+                "proof_given_up",
+            )
+            return
+        self._mark_failure("terminated without proof", "search_terminated")
+
+    def _summarize_error_text(self, e: Exception, max_len: int = 160) -> str:
+        return self._summarize_text(f"{e.__class__.__name__}: {e}", max_len=max_len)
+
+    def _summarize_text(self, text: str, max_len: int = 160) -> str:
+        compact = " ".join(str(text).split())
+        if len(compact) <= max_len:
+            return compact
+        return compact[: max_len - 1] + "…"

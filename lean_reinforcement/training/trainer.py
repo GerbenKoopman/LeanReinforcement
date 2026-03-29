@@ -736,8 +736,10 @@ class Trainer:
                                         "proof_search/success",
                                         "proof_search/steps",
                                         "proof_search/time",
+                                        "proof_search/failure_reason",
                                     }
-                                    and bool(v)
+                                    and isinstance(v, bool)
+                                    and v
                                 ]
                                 reason_str = (
                                     f" | reasons={','.join(failure_reasons)}"
