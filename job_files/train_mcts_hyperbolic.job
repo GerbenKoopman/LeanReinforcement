@@ -46,6 +46,8 @@ else
     CURV_ARG=()
 fi
 
+echo "Training with curvature: ${CURV}"
+
 srun python3 -m lean_reinforcement.training.train \
     --training-mode value_head \
     --use-hyperbolic \
