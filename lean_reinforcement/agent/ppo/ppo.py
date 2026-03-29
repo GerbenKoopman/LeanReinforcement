@@ -40,6 +40,8 @@ class PPOConfig:
     max_action_tokens: int = MAX_ACTION_TOKENS
     # Keep this conservative because PPO runs alongside other GPU-heavy components.
     minibatch_size: int = 1
+    # Latent projection width for PPO critics.
+    value_head_latent_dim: int = 1024
     # Hyperbolic critic curvature (only used when use_hyperbolic=True).
     curvature: float = 1.0
 
@@ -323,11 +325,14 @@ class EuclideanPPO(_BasePPO):
     """PPO with Euclidean categorical critic."""
 
     def _build_critic(self) -> nn.Module:
-        return EuclideanCritic()
+        return EuclideanCritic(latent_dim=self.config.value_head_latent_dim)
 
 
 class HyperbolicPPO(_BasePPO):
     """PPO with Poincare-ball categorical critic."""
 
     def _build_critic(self) -> nn.Module:
-        return HyperbolicCritic(curvature=self.config.curvature)
+        return HyperbolicCritic(
+            latent_dim=self.config.value_head_latent_dim,
+            curvature=self.config.curvature,
+        )

@@ -132,7 +132,9 @@ class TestEvaluator(Trainer):
         if checkpoint_path.exists():
             if self._use_hyperbolic:
                 self.value_head = HyperbolicValueHead(
-                    self.transformer, curvature=self.config.curvature
+                    self.transformer,
+                    latent_dim=self.config.value_head_latent_dim,
+                    curvature=self.config.curvature,
                 )
             else:
                 self.value_head = ValueHead(
@@ -144,7 +146,9 @@ class TestEvaluator(Trainer):
             # Alpha zero requires a value head even without checkpoint
             if self._use_hyperbolic:
                 self.value_head = HyperbolicValueHead(
-                    self.transformer, curvature=self.config.curvature
+                    self.transformer,
+                    latent_dim=self.config.value_head_latent_dim,
+                    curvature=self.config.curvature,
                 )
             else:
                 self.value_head = ValueHead(

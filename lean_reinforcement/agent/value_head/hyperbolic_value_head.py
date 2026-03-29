@@ -69,7 +69,7 @@ class HyperbolicValueHead(BaseValueHead):
     def __init__(
         self,
         transformer: Transformer,
-        latent_dim: int = 64,
+        latent_dim: int = 1024,
         rho_max: float = 0.95,
         xi_init: float = 0.01,
         input_dim: int = ENCODER_OUTPUT_DIM,

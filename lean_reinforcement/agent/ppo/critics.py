@@ -15,7 +15,6 @@ from hypll.tensors import TangentTensor
 
 from lean_reinforcement.agent.ppo.constants import (
     ENCODER_OUTPUT_DIM,
-    LATENT_DIM,
     NUM_BINS,
     RHO_MAX,
     XI_INIT,
@@ -28,7 +27,7 @@ class BaseCategoricalCritic(nn.Module, ABC):
     def __init__(
         self,
         input_dim: int = ENCODER_OUTPUT_DIM,
-        latent_dim: int = LATENT_DIM,
+        latent_dim: int = 1024,
         num_bins: int = NUM_BINS,
         rho_max: float = RHO_MAX,
         xi_init: float = XI_INIT,
@@ -73,7 +72,7 @@ class EuclideanCritic(BaseCategoricalCritic):
     def __init__(
         self,
         input_dim: int = ENCODER_OUTPUT_DIM,
-        latent_dim: int = LATENT_DIM,
+        latent_dim: int = 1024,
         num_bins: int = NUM_BINS,
         rho_max: float = RHO_MAX,
         xi_init: float = XI_INIT,
@@ -101,7 +100,7 @@ class HyperbolicCritic(BaseCategoricalCritic):
     def __init__(
         self,
         input_dim: int = ENCODER_OUTPUT_DIM,
-        latent_dim: int = LATENT_DIM,
+        latent_dim: int = 1024,
         num_bins: int = NUM_BINS,
         rho_max: float = RHO_MAX,
         xi_init: float = XI_INIT,

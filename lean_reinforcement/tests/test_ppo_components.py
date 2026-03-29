@@ -83,6 +83,21 @@ class TestPPOAgentConfig(unittest.TestCase):
         config = kwargs["config"]
         self.assertAlmostEqual(config.curvature, 0.42)
 
+    @patch("lean_reinforcement.agent.ppo_agent.EuclideanPPO")
+    def test_euclidean_agent_passes_latent_dim(self, mock_euclidean_ppo) -> None:
+        from lean_reinforcement.agent.ppo_agent import PPOAgent
+
+        PPOAgent(
+            model_name="dummy/model",
+            use_hyperbolic=False,
+            value_head_latent_dim=256,
+        )
+
+        self.assertTrue(mock_euclidean_ppo.called)
+        _, kwargs = mock_euclidean_ppo.call_args
+        config = kwargs["config"]
+        self.assertEqual(config.value_head_latent_dim, 256)
+
 
 if __name__ == "__main__":
     unittest.main()

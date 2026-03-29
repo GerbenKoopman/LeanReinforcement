@@ -328,6 +328,7 @@ class Trainer:
             self.ppo_agent = PPOAgent(
                 model_name=self.config.model_name,
                 use_hyperbolic=self.config.use_hyperbolic,
+                value_head_latent_dim=self.config.value_head_latent_dim,
                 curvature=self.config.curvature,
             )
             if self.config.resume:
@@ -342,7 +343,9 @@ class Trainer:
             if self.config.use_hyperbolic:
                 logger.info("Using hyperbolic (Poincaré ball) value head")
                 self.value_head = HyperbolicValueHead(
-                    transformer_for_value_head, curvature=self.config.curvature
+                    transformer_for_value_head,
+                    latent_dim=self.config.value_head_latent_dim,
+                    curvature=self.config.curvature,
                 )
             else:
                 self.value_head = ValueHead(

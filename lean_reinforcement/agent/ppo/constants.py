@@ -4,7 +4,6 @@ from lean_reinforcement.agent.value_head.constants import ENCODER_OUTPUT_DIM
 
 ENCODER_HIDDEN_DIM = ENCODER_OUTPUT_DIM
 
-LATENT_DIM = 64
 NUM_BINS = 51
 RHO_MAX = 0.95
 XI_INIT = 0.01

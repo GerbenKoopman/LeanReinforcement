@@ -20,10 +20,14 @@ class PPOAgent:
         self,
         model_name: str,
         use_hyperbolic: bool = False,
+        value_head_latent_dim: int = 1024,
         curvature: float = 1.0,
     ) -> None:
         """Initialize either a Euclidean or Hyperbolic PPO agent."""
-        config = PPOConfig(curvature=curvature)
+        config = PPOConfig(
+            value_head_latent_dim=value_head_latent_dim,
+            curvature=curvature,
+        )
         if use_hyperbolic:
             self.ppo = HyperbolicPPO(model_name=model_name, config=config)
         else:

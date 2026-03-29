@@ -35,7 +35,7 @@ class TestInlineHyperbolicRegressor(unittest.TestCase):
         mock_transformer.model = mock_transformer_model
 
         value_head = HyperbolicValueHead(
-            mock_transformer, latent_dim=16, curvature=0.42
+            mock_transformer, latent_dim=1024, curvature=0.42
         )
         reg: Any = value_head.value_head
 
@@ -78,7 +78,11 @@ class TestHyperbolicValueHead(unittest.TestCase):
         self.mock_transformer.tokenizer = self.mock_tokenizer
         self.mock_transformer.model = self.mock_transformer_model
 
-        self.value_head = HyperbolicValueHead(self.mock_transformer, curvature=0.42)
+        self.value_head = HyperbolicValueHead(
+            self.mock_transformer,
+            latent_dim=1024,
+            curvature=0.42,
+        )
 
     def test_encoder_is_frozen(self) -> None:
         for param in self.value_head.encoder.parameters():

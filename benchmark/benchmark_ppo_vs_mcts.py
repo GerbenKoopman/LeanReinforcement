@@ -454,7 +454,9 @@ class MCTSBenchmarkTrainer(Trainer):
         if self.config.use_hyperbolic:
             logger.info("Using Hyperbolic (Poincaré ball) value head")
             self.value_head = HyperbolicValueHead(
-                transformer_for_vh, curvature=self.config.curvature
+                transformer_for_vh,
+                latent_dim=self.config.value_head_latent_dim,
+                curvature=self.config.curvature,
             )
         else:
             logger.info("Using Euclidean (MLP) value head")
@@ -569,7 +571,10 @@ class PPOBenchmarkTrainer(Trainer):
         if self.config.use_hyperbolic:
             self.ppo_model = HyperbolicPPO(
                 model_name=self.config.model_name,
-                config=PPOConfig(curvature=self.config.curvature),
+                config=PPOConfig(
+                    value_head_latent_dim=self.config.value_head_latent_dim,
+                    curvature=self.config.curvature,
+                ),
             )
         else:
             self.ppo_model = EuclideanPPO(model_name=self.config.model_name)
@@ -580,7 +585,9 @@ class PPOBenchmarkTrainer(Trainer):
         transformer_for_vh = cast(Transformer, self.transformer)
         if self.config.use_hyperbolic:
             self.value_head = HyperbolicValueHead(
-                transformer_for_vh, curvature=self.config.curvature
+                transformer_for_vh,
+                latent_dim=self.config.value_head_latent_dim,
+                curvature=self.config.curvature,
             )
         else:
             self.value_head = ValueHead(
