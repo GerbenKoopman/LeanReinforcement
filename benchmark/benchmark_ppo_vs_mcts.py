@@ -66,6 +66,7 @@ import numpy as np
 
 from lean_reinforcement.agent.transformer import Transformer
 from lean_reinforcement.agent.ppo import HyperbolicPPO, EuclideanPPO
+from lean_reinforcement.agent.ppo.ppo import PPOConfig
 from lean_reinforcement.agent.value_head import ValueHead, HyperbolicValueHead
 from lean_reinforcement.utilities.checkpoint import load_checkpoint
 from lean_reinforcement.utilities.config import TrainingConfig
@@ -452,7 +453,9 @@ class MCTSBenchmarkTrainer(Trainer):
         transformer_for_vh = cast(Transformer, self.transformer)
         if self.config.use_hyperbolic:
             logger.info("Using Hyperbolic (Poincaré ball) value head")
-            self.value_head = HyperbolicValueHead(transformer_for_vh)
+            self.value_head = HyperbolicValueHead(
+                transformer_for_vh, curvature=self.config.curvature
+            )
         else:
             logger.info("Using Euclidean (MLP) value head")
             self.value_head = ValueHead(
@@ -564,7 +567,10 @@ class PPOBenchmarkTrainer(Trainer):
         # inferring a concrete subtype when we switch implementations.
         self.ppo_model: Any = None
         if self.config.use_hyperbolic:
-            self.ppo_model = HyperbolicPPO(model_name=self.config.model_name)
+            self.ppo_model = HyperbolicPPO(
+                model_name=self.config.model_name,
+                config=PPOConfig(curvature=self.config.curvature),
+            )
         else:
             self.ppo_model = EuclideanPPO(model_name=self.config.model_name)
 
@@ -573,7 +579,9 @@ class PPOBenchmarkTrainer(Trainer):
         # This is a standard value head (not the PPO critic).
         transformer_for_vh = cast(Transformer, self.transformer)
         if self.config.use_hyperbolic:
-            self.value_head = HyperbolicValueHead(transformer_for_vh)
+            self.value_head = HyperbolicValueHead(
+                transformer_for_vh, curvature=self.config.curvature
+            )
         else:
             self.value_head = ValueHead(
                 transformer_for_vh,

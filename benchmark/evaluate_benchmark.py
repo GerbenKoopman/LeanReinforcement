@@ -131,7 +131,9 @@ class TestEvaluator(Trainer):
         checkpoint_path = run_dir / f"{prefix}_latest.pth"
         if checkpoint_path.exists():
             if self._use_hyperbolic:
-                self.value_head = HyperbolicValueHead(self.transformer)
+                self.value_head = HyperbolicValueHead(
+                    self.transformer, curvature=self.config.curvature
+                )
             else:
                 self.value_head = ValueHead(
                     self.transformer, latent_dim=self.config.value_head_latent_dim
@@ -141,7 +143,9 @@ class TestEvaluator(Trainer):
         elif self.config.mcts_type == "alpha_zero":
             # Alpha zero requires a value head even without checkpoint
             if self._use_hyperbolic:
-                self.value_head = HyperbolicValueHead(self.transformer)
+                self.value_head = HyperbolicValueHead(
+                    self.transformer, curvature=self.config.curvature
+                )
             else:
                 self.value_head = ValueHead(
                     self.transformer, latent_dim=self.config.value_head_latent_dim

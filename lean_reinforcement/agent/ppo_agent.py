@@ -16,9 +16,14 @@ class PPOAgent:
 
     ppo: _BasePPO
 
-    def __init__(self, model_name: str, use_hyperbolic: bool = False) -> None:
+    def __init__(
+        self,
+        model_name: str,
+        use_hyperbolic: bool = False,
+        curvature: float = 1.0,
+    ) -> None:
         """Initialize either a Euclidean or Hyperbolic PPO agent."""
-        config = PPOConfig()
+        config = PPOConfig(curvature=curvature)
         if use_hyperbolic:
             self.ppo = HyperbolicPPO(model_name=model_name, config=config)
         else:

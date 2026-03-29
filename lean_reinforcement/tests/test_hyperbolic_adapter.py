@@ -34,18 +34,27 @@ class TestInlineHyperbolicRegressor(unittest.TestCase):
         mock_transformer.tokenizer = mock_tokenizer
         mock_transformer.model = mock_transformer_model
 
-        value_head = HyperbolicValueHead(mock_transformer, latent_dim=16)
+        value_head = HyperbolicValueHead(
+            mock_transformer, latent_dim=16, curvature=0.42
+        )
         reg: Any = value_head.value_head
 
         rho_max = cast(torch.Tensor, reg.rho_max)
         xi = cast(torch.Tensor, reg.xi)
         x = torch.randn(8, ENCODER_OUTPUT_DIM, device=rho_max.device)
-        projected = rho_max * torch.sigmoid(xi) * x
+        max_tangent_norm = rho_max * torch.sigmoid(xi)
+        direction = x / x.norm(dim=-1, keepdim=True).clamp_min(1e-8)
+        projected = max_tangent_norm * direction
         tangent = TangentTensor(data=projected, man_dim=1, manifold=reg.manifold)
         x_h = reg.manifold.expmap(tangent)
 
         norms = torch.norm(x_h.tensor, p=2, dim=-1)
-        self.assertTrue((norms < 1.0).all(), "Embeddings escaped the Poincare ball")
+        # For curvature c, the Poincare ball radius is 1/sqrt(c).
+        radius = (1.0 / torch.sqrt(torch.tensor(0.42, device=norms.device))).item()
+        self.assertTrue(
+            (norms < radius).all(),
+            "Embeddings escaped the Poincare ball for the configured curvature",
+        )
 
 
 class TestHyperbolicValueHead(unittest.TestCase):
@@ -69,7 +78,7 @@ class TestHyperbolicValueHead(unittest.TestCase):
         self.mock_transformer.tokenizer = self.mock_tokenizer
         self.mock_transformer.model = self.mock_transformer_model
 
-        self.value_head = HyperbolicValueHead(self.mock_transformer)
+        self.value_head = HyperbolicValueHead(self.mock_transformer, curvature=0.42)
 
     def test_encoder_is_frozen(self) -> None:
         for param in self.value_head.encoder.parameters():

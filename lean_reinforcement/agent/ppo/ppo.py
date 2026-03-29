@@ -40,6 +40,8 @@ class PPOConfig:
     max_action_tokens: int = MAX_ACTION_TOKENS
     # Keep this conservative because PPO runs alongside other GPU-heavy components.
     minibatch_size: int = 1
+    # Hyperbolic critic curvature (only used when use_hyperbolic=True).
+    curvature: float = 1.0
 
 
 class PPOBatch(TypedDict):
@@ -328,4 +330,4 @@ class HyperbolicPPO(_BasePPO):
     """PPO with Poincare-ball categorical critic."""
 
     def _build_critic(self) -> nn.Module:
-        return HyperbolicCritic()
+        return HyperbolicCritic(curvature=self.config.curvature)

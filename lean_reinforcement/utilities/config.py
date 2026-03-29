@@ -52,6 +52,9 @@ class TrainingConfig:
         True  # Run MCTS from root with full budget (allows backtracking)
     )
 
+    # Hyperbolicity
+    curvature: float = 1.0
+
     # Max MCTS tree nodes — limits per-worker memory.
     # The PUCT-based pruner evicts worst-scored leaves at this limit.
     max_tree_nodes: int = 10000
@@ -75,7 +78,7 @@ class TrainingConfig:
     def from_args(cls, args: argparse.Namespace) -> "TrainingConfig":
         return cls(
             data_type=getattr(args, "data_type", "novel_premises"),
-            num_epochs=getattr(args, "num_epochs", 16),
+            num_epochs=getattr(args, "num_epochs", 3),
             num_theorems=getattr(args, "num_theorems", 128),
             num_iterations=getattr(args, "num_iterations", 1000),
             max_steps=getattr(args, "max_steps", 80),
@@ -110,6 +113,7 @@ class TrainingConfig:
             checkpoint_dir=getattr(args, "checkpoint_dir", None),
             use_wandb=getattr(args, "use_wandb", True),
             inference_timeout=getattr(args, "inference_timeout", 600.0),
+            curvature=getattr(args, "curvature", 1.0),
             full_search=getattr(args, "full_search", True),
             max_tree_nodes=getattr(args, "max_tree_nodes", 10000),
             lean_memory_limit_gb=getattr(args, "lean_memory_limit_gb", 8),
@@ -132,7 +136,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--num-epochs",
         type=int,
-        default=16,
+        default=3,
         help="Number of self-play/training epochs.",
     )
     parser.add_argument(
@@ -228,6 +232,14 @@ def get_config() -> TrainingConfig:
         "Passed as --memory to the Lean runtime. When exceeded, Lean "
         "exits cleanly instead of triggering the OS OOM killer. "
         "Rule of thumb: total_ram / (num_workers + 2). Default: 8.",
+    )
+
+    # --- Hyperbolicity ---
+    parser.add_argument(
+        "--curvature",
+        type=float,
+        default=1.0,
+        help="Curvature of the Poincare Disk, best kept between 0 and 1 (float).",
     )
 
     # --- Search mode ---

@@ -105,6 +105,7 @@ class HyperbolicCritic(BaseCategoricalCritic):
         num_bins: int = NUM_BINS,
         rho_max: float = RHO_MAX,
         xi_init: float = XI_INIT,
+        curvature: float = 1.0,
     ) -> None:
         super().__init__(
             input_dim=input_dim,
@@ -113,7 +114,7 @@ class HyperbolicCritic(BaseCategoricalCritic):
             rho_max=rho_max,
             xi_init=xi_init,
         )
-        self.manifold = PoincareBall(Curvature(1.0))
+        self.manifold = PoincareBall(Curvature(curvature))
         self.hidden = hnn.HLinear(latent_dim, latent_dim, self.manifold)
         self.activation = hnn.HReLU(self.manifold)
         self.out_linear = hnn.HLinear(latent_dim, num_bins, self.manifold)

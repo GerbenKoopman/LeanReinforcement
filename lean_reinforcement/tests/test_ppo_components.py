@@ -1,6 +1,7 @@
 """Unit tests for PPO critics and losses."""
 
 import unittest
+from unittest.mock import patch
 
 import torch
 
@@ -68,6 +69,19 @@ class TestPPOLosses(unittest.TestCase):
 
         self.assertTrue(torch.isfinite(actor_loss))
         self.assertTrue(torch.isfinite(critic_loss))
+
+
+class TestPPOAgentConfig(unittest.TestCase):
+    @patch("lean_reinforcement.agent.ppo_agent.HyperbolicPPO")
+    def test_hyperbolic_agent_passes_curvature(self, mock_hyperbolic_ppo) -> None:
+        from lean_reinforcement.agent.ppo_agent import PPOAgent
+
+        PPOAgent(model_name="dummy/model", use_hyperbolic=True, curvature=0.42)
+
+        self.assertTrue(mock_hyperbolic_ppo.called)
+        _, kwargs = mock_hyperbolic_ppo.call_args
+        config = kwargs["config"]
+        self.assertAlmostEqual(config.curvature, 0.42)
 
 
 if __name__ == "__main__":
