@@ -35,6 +35,12 @@ def main():
         action="store_true",
         help="Use hyperbolic value head for evaluation",
     )
+    parser.add_argument(
+        "--curvature",
+        type=float,
+        default=None,
+        help="Optional hyperbolic curvature. If omitted, config default is used.",
+    )
     parser.add_argument("--num-theorems", type=int, default=250)
     args = parser.parse_args()
 
@@ -54,6 +60,8 @@ def main():
         run_dir=run_dir,
         num_theorems=args.num_theorems,
     )
+    if args.curvature is not None:
+        eval_config.curvature = args.curvature
 
     evaluator = TestEvaluator(
         config=eval_config,
