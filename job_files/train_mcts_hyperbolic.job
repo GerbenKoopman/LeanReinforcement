@@ -67,5 +67,10 @@ fi
 
 echo "Running evaluation for run directory: ${RUN_DIR}"
 
-echo "Running automatic evaluation on the trained weights..."
-srun python3 evaluate_run.py --run-dir "$RUN_DIR" --use-hyperbolic "${CURV_ARG[@]}"
+echo "Submitting clean evaluation job..."
+if [ -n "$CURV" ]; then
+    EVAL_JOB_ID=$(sbatch --parsable --dependency=afterok:$SLURM_JOB_ID --export=ALL,RUN_DIR="$RUN_DIR",USE_HYPERBOLIC=1,CURVATURE="$CURV" job_files/evaluate.job)
+else
+    EVAL_JOB_ID=$(sbatch --parsable --dependency=afterok:$SLURM_JOB_ID --export=ALL,RUN_DIR="$RUN_DIR",USE_HYPERBOLIC=1 job_files/evaluate.job)
+fi
+echo "Submitted Eval Job: ${EVAL_JOB_ID} (depends on ${SLURM_JOB_ID})"

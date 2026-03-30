@@ -1,0 +1,54 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=1
+#SBATCH --job-name=evaluate_run
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=18
+#SBATCH --time=02:00:00
+#SBATCH --output=logs/evaluate_%A.out
+
+set -e
+set -o pipefail
+
+if [ -z "${RUN_DIR:-}" ]; then
+    echo "ERROR: RUN_DIR is required (exported by the training job)."
+    exit 1
+fi
+
+module purge
+module load 2024
+module load Anaconda3/2024.06-1
+module load CUDA/12.6.0
+
+export CUDA_HOME=$CUDA_ROOT
+export CUDA_PATH=$CUDA_ROOT
+
+source activate lean-reinforcement
+
+set -a
+if [ -f "$HOME/lean_reinforcement/.env" ]; then
+    source "$HOME/lean_reinforcement/.env"
+fi
+set +a
+
+cd "$HOME/lean_reinforcement"
+
+EVAL_ARGS=(--run-dir "$RUN_DIR")
+
+if [ "${USE_HYPERBOLIC:-0}" = "1" ]; then
+    EVAL_ARGS+=(--use-hyperbolic)
+fi
+
+if [ -n "${CURVATURE:-}" ]; then
+    EVAL_ARGS+=(--curvature "$CURVATURE")
+fi
+
+echo "======================================================"
+echo "Starting Evaluation Job"
+echo "RUN_DIR: $RUN_DIR"
+echo "USE_HYPERBOLIC: ${USE_HYPERBOLIC:-0}"
+echo "CURVATURE: ${CURVATURE:-<unset>}"
+echo "======================================================"
+
+srun python3 evaluate_run.py "${EVAL_ARGS[@]}"
