@@ -10,6 +10,7 @@
 
 # --- Fail on error ---
 set -e
+set -o pipefail
 
 # --- Environment Setup ---
 module purge
@@ -38,11 +39,23 @@ echo "======================================================"
 # Execute the training script
 export BASE_DIR="checkpoints/ppo_euclidean"
 
+TRAIN_LOG=$(mktemp)
+
 srun python3 -m lean_reinforcement.training.train \
     --training-mode ppo \
     --no-use-hyperbolic \
     --checkpoint-dir "$BASE_DIR" \
-    --indexed-corpus-path "$CORPUS_DIR/indexed_corpus.pkl"
+    --indexed-corpus-path "$CORPUS_DIR/indexed_corpus.pkl" 2>&1 | tee "$TRAIN_LOG"
+
+RUN_DIR=$(awk -F'Using iteration checkpoint directory: ' '/Using iteration checkpoint directory:/ {print $2}' "$TRAIN_LOG" | tail -n1 | tr -d '\r')
+rm -f "$TRAIN_LOG"
+
+if [ -z "$RUN_DIR" ] || [ ! -d "$RUN_DIR" ]; then
+    echo "ERROR: Could not determine exact run directory from training logs."
+    exit 1
+fi
+
+echo "Running evaluation for run directory: ${RUN_DIR}"
 
 echo "Running automatic evaluation on the trained weights..."
-srun python3 evaluate_run.py --base-dir "$BASE_DIR"
+srun python3 evaluate_run.py --run-dir "$RUN_DIR"

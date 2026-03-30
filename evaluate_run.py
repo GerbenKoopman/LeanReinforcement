@@ -24,8 +24,14 @@ def main():
     parser.add_argument(
         "--base-dir",
         type=str,
-        required=True,
-        help="Base directory containing the model checkpoint subdirectories",
+        default=None,
+        help="Base directory containing checkpoint subdirectories (used when --run-dir is not provided)",
+    )
+    parser.add_argument(
+        "--run-dir",
+        type=str,
+        default=None,
+        help="Exact run directory to evaluate (preferred for parallel runs)",
     )
     parser.add_argument(
         "--split", type=str, default="test", help="Dataset split to evaluate on"
@@ -44,11 +50,19 @@ def main():
     parser.add_argument("--num-theorems", type=int, default=250)
     args = parser.parse_args()
 
-    base_dir = Path(args.base_dir)
-    run_dir = find_latest_run(base_dir)
+    run_dir = None
+    if args.run_dir is not None:
+        run_dir = Path(args.run_dir)
+    elif args.base_dir is not None:
+        base_dir = Path(args.base_dir)
+        run_dir = find_latest_run(base_dir)
 
-    if not run_dir or not run_dir.exists():
-        print(f"Could not find run directory in {base_dir}")
+    if run_dir is None:
+        parser.error("One of --run-dir or --base-dir must be provided")
+        return
+
+    if not run_dir.exists():
+        print(f"Could not find run directory: {run_dir}")
         return
 
     print(f"Evaluating run in {run_dir}")
