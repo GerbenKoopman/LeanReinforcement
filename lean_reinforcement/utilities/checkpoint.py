@@ -22,6 +22,46 @@ AnyValueHead = Union[ValueHead, HyperbolicValueHead]
 load_dotenv()
 
 
+def _iteration_dir_pattern(mcts_type: str) -> re.Pattern[str]:
+    """Return regex matching iteration directories with optional suffix."""
+    # Matches both '{mcts_type}-7' and '{mcts_type}-7-<suffix>'.
+    return re.compile(rf"^{re.escape(mcts_type)}-(\d+)(?:-(.+))?$")
+
+
+def _find_iteration_dirs(
+    base_checkpoint_dir: Path, mcts_type: str
+) -> list[tuple[int, Path]]:
+    """Find all iteration directories for an MCTS type and return (iteration, path)."""
+    if not base_checkpoint_dir.exists():
+        return []
+
+    pattern = _iteration_dir_pattern(mcts_type)
+    matches: list[tuple[int, Path]] = []
+    for item in base_checkpoint_dir.iterdir():
+        if not item.is_dir():
+            continue
+        match = pattern.match(item.name)
+        if not match:
+            continue
+        matches.append((int(match.group(1)), item))
+    return matches
+
+
+def _scheduler_job_suffix() -> str:
+    """Return scheduler job suffix when available, otherwise an empty string."""
+    # Prefer job id because it is available for both sbatch and srun-launched steps.
+    job_id = os.getenv("SLURM_JOB_ID") or os.getenv("SBATCH_JOB_ID")
+    if job_id:
+        return job_id.strip()
+
+    # Fallback for array context where explicit task identifiers may be set.
+    array_job_id = os.getenv("SLURM_ARRAY_JOB_ID")
+    array_task_id = os.getenv("SLURM_ARRAY_TASK_ID")
+    if array_job_id and array_task_id:
+        return f"{array_job_id}_{array_task_id}"
+    return ""
+
+
 def get_next_iteration(base_checkpoint_dir: Path, mcts_type: str) -> int:
     """
     Find the next iteration number for a given mcts_type.
@@ -36,20 +76,13 @@ def get_next_iteration(base_checkpoint_dir: Path, mcts_type: str) -> int:
     Returns:
         The next iteration number to use
     """
-    if not base_checkpoint_dir.exists():
+    iterations = [
+        iteration
+        for iteration, _ in _find_iteration_dirs(base_checkpoint_dir, mcts_type)
+    ]
+    if not iterations:
         return 1
-
-    pattern = re.compile(rf"^{re.escape(mcts_type)}-(\d+)$")
-    max_iteration = 0
-
-    for item in base_checkpoint_dir.iterdir():
-        if item.is_dir():
-            match = pattern.match(item.name)
-            if match:
-                iteration = int(match.group(1))
-                max_iteration = max(max_iteration, iteration)
-
-    return max_iteration + 1
+    return max(iterations) + 1
 
 
 def get_iteration_checkpoint_dir(
@@ -70,16 +103,33 @@ def get_iteration_checkpoint_dir(
         Path to the iteration-specific checkpoint directory
     """
     if resume:
-        latest_iteration = get_next_iteration(base_checkpoint_dir, mcts_type) - 1
-        if latest_iteration < 1:
+        existing_iterations = _find_iteration_dirs(base_checkpoint_dir, mcts_type)
+        if not existing_iterations:
             logger.warning(
                 f"No existing checkpoint found for {mcts_type}. Starting new iteration 1."
             )
-            latest_iteration = 1
-        iteration_dir = base_checkpoint_dir / f"{mcts_type}-{latest_iteration}"
+            next_iteration = 1
+            job_suffix = _scheduler_job_suffix()
+            dir_name = f"{mcts_type}-{next_iteration}"
+            if job_suffix:
+                dir_name = f"{dir_name}-{job_suffix}"
+            iteration_dir = base_checkpoint_dir / dir_name
+        else:
+            # Resume from the latest indexed iteration directory, including suffix.
+            latest_iteration, latest_path = max(
+                existing_iterations, key=lambda pair: pair[0]
+            )
+            logger.debug(
+                f"Resuming from iteration {latest_iteration} at checkpoint directory {latest_path}"
+            )
+            iteration_dir = latest_path
     else:
         next_iteration = get_next_iteration(base_checkpoint_dir, mcts_type)
-        iteration_dir = base_checkpoint_dir / f"{mcts_type}-{next_iteration}"
+        job_suffix = _scheduler_job_suffix()
+        dir_name = f"{mcts_type}-{next_iteration}"
+        if job_suffix:
+            dir_name = f"{dir_name}-{job_suffix}"
+        iteration_dir = base_checkpoint_dir / dir_name
 
     iteration_dir.mkdir(parents=True, exist_ok=True)
     logger.info(f"Using iteration checkpoint directory: {iteration_dir}")
