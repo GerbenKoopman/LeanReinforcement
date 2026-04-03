@@ -83,7 +83,7 @@ class TrainingConfig:
             num_iterations=getattr(args, "num_iterations", 1000),
             max_steps=getattr(args, "max_steps", 80),
             batch_size=getattr(args, "batch_size", 1),
-            num_workers=getattr(args, "num_workers", 12),
+            num_workers=getattr(args, "num_workers", 16),
             mcts_type=getattr(args, "mcts_type", "alpha_zero"),
             indexed_corpus_path=getattr(args, "indexed_corpus_path", None),
             model_name=getattr(
@@ -166,7 +166,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--num-workers",
         type=int,
-        default=12,
+        default=16,
         help="Number of parallel workers for processing theorems.",
     )
     parser.add_argument(
