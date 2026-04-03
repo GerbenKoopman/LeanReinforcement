@@ -116,7 +116,7 @@ class TestIterationCheckpoint(unittest.TestCase):
         """Test get_next_iteration with existing iteration directories."""
         # Create some iteration directories
         (self.base_checkpoint_dir / "alpha_zero-1").mkdir()
-        (self.base_checkpoint_dir / "alpha_zero-3").mkdir()
+        (self.base_checkpoint_dir / "alpha_zero-3-12345").mkdir()
         (self.base_checkpoint_dir / "alpha_zero-5").mkdir()
         (self.base_checkpoint_dir / "guided_rollout-2").mkdir()
 
@@ -125,7 +125,7 @@ class TestIterationCheckpoint(unittest.TestCase):
 
     def test_get_next_iteration_different_mcts_types(self):
         """Test that different mcts types have independent iteration counts."""
-        (self.base_checkpoint_dir / "alpha_zero-3").mkdir()
+        (self.base_checkpoint_dir / "alpha_zero-3-12345").mkdir()
         (self.base_checkpoint_dir / "guided_rollout-7").mkdir()
 
         alpha_result = get_next_iteration(self.base_checkpoint_dir, "alpha_zero")
@@ -148,10 +148,19 @@ class TestIterationCheckpoint(unittest.TestCase):
         self.assertEqual(result, self.base_checkpoint_dir / "alpha_zero-1")
         self.assertTrue(result.exists())
 
+    @patch.dict("os.environ", {"SLURM_JOB_ID": "987654"}, clear=False)
+    def test_get_iteration_checkpoint_dir_new_with_job_suffix(self):
+        """Test new iteration directory includes scheduler job suffix when available."""
+        result = get_iteration_checkpoint_dir(
+            self.base_checkpoint_dir, "alpha_zero", resume=False
+        )
+        self.assertEqual(result, self.base_checkpoint_dir / "alpha_zero-1-987654")
+        self.assertTrue(result.exists())
+
     def test_get_iteration_checkpoint_dir_new_with_existing(self):
         """Test creating a new iteration when some already exist."""
         (self.base_checkpoint_dir / "alpha_zero-1").mkdir()
-        (self.base_checkpoint_dir / "alpha_zero-2").mkdir()
+        (self.base_checkpoint_dir / "alpha_zero-2-111").mkdir()
 
         result = get_iteration_checkpoint_dir(
             self.base_checkpoint_dir, "alpha_zero", resume=False
@@ -162,18 +171,19 @@ class TestIterationCheckpoint(unittest.TestCase):
     def test_get_iteration_checkpoint_dir_resume(self):
         """Test resuming from the latest iteration."""
         (self.base_checkpoint_dir / "alpha_zero-1").mkdir()
-        (self.base_checkpoint_dir / "alpha_zero-2").mkdir()
-        (self.base_checkpoint_dir / "alpha_zero-3").mkdir()
+        (self.base_checkpoint_dir / "alpha_zero-2-9001").mkdir()
+        (self.base_checkpoint_dir / "alpha_zero-3-777").mkdir()
 
         result = get_iteration_checkpoint_dir(
             self.base_checkpoint_dir, "alpha_zero", resume=True
         )
-        self.assertEqual(result, self.base_checkpoint_dir / "alpha_zero-3")
+        self.assertEqual(result, self.base_checkpoint_dir / "alpha_zero-3-777")
 
+    @patch.dict("os.environ", {"SLURM_JOB_ID": "4242"}, clear=False)
     def test_get_iteration_checkpoint_dir_resume_no_existing(self):
         """Test resume when no iterations exist (should create iteration 1)."""
         result = get_iteration_checkpoint_dir(
             self.base_checkpoint_dir, "alpha_zero", resume=True
         )
-        self.assertEqual(result, self.base_checkpoint_dir / "alpha_zero-1")
+        self.assertEqual(result, self.base_checkpoint_dir / "alpha_zero-1-4242")
         self.assertTrue(result.exists())
