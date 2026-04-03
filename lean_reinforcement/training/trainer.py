@@ -6,6 +6,7 @@ import glob
 import pickle
 import random
 import queue
+import re
 import numpy as np
 from typing import List, Dict, Any, Optional, Set, cast, Union
 from dataclasses import asdict
@@ -437,7 +438,7 @@ class Trainer:
         elif self.config.train_value_head:
             self.progress_stats.phase = "training_value_head"
             self.progress_display.refresh()
-            self._train_value_head_epoch(training_data_buffer)
+            self._train_value_head_epoch(training_data_buffer, current_epoch=epoch + 1)
 
             # Save the best validation loss for this epoch
             best_val_loss = getattr(self, "_last_best_val_loss", None)
@@ -1012,10 +1013,94 @@ class Trainer:
                 )
                 save_training_data(training_data_buffer, data_save_path)
 
-    def _load_experience_replay_data(self) -> List[Dict[str, Any]]:
+    def _compact_value_sample(self, sample: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Keep only fields required for value-head fitting."""
+        if sample.get("type") != "value":
+            return None
+
+        state = sample.get("state")
+        if not isinstance(state, str) or not state:
+            return None
+
+        value_target = sample.get("value_target")
+        if value_target is None:
+            return None
+
+        compact: Dict[str, Any] = {
+            "type": "value",
+            "state": state,
+            "value_target": value_target,
+        }
+
+        if "mcts_value" in sample:
+            compact["mcts_value"] = sample["mcts_value"]
+
+        return compact
+
+    def _iter_saved_training_samples(self, filepath: str):
+        """Yield training samples without materializing full epoch JSON in RAM."""
+        with open(filepath, "r") as f:
+            prefix = f.read(4096)
+            f.seek(0)
+
+            if prefix.lstrip().startswith("["):
+                decoder = json.JSONDecoder()
+                buffer = ""
+                finished_array = False
+                while True:
+                    chunk = f.read(1 << 20)
+                    if not chunk:
+                        break
+                    buffer += chunk
+                    idx = 0
+
+                    while True:
+                        while idx < len(buffer) and buffer[idx].isspace():
+                            idx += 1
+
+                        if idx >= len(buffer):
+                            break
+
+                        if buffer[idx] in "[,]":
+                            if buffer[idx] == "]":
+                                finished_array = True
+                                idx += 1
+                                break
+                            idx += 1
+                            continue
+
+                        try:
+                            obj, end = decoder.raw_decode(buffer, idx)
+                        except json.JSONDecodeError:
+                            # Incomplete object, keep tail for next chunk.
+                            break
+
+                        if isinstance(obj, dict):
+                            yield obj
+                        idx = end
+
+                    buffer = buffer[idx:]
+                    if finished_array:
+                        break
+            else:
+                # Backward/forward compatibility for JSONL dumps.
+                for line in f:
+                    stripped = line.strip()
+                    if not stripped:
+                        continue
+                    try:
+                        obj = json.loads(stripped)
+                    except json.JSONDecodeError:
+                        continue
+                    if isinstance(obj, dict):
+                        yield obj
+
+    def _load_experience_replay_data(
+        self, *, skip_epoch: Optional[int] = None
+    ) -> List[Dict[str, Any]]:
         """
         Load all training data from previous epochs for experience replay.
-        Returns a combined list of all value training samples.
+        Returns compact value samples only.
         """
         all_data: List[Dict[str, Any]] = []
         data_files = sorted(
@@ -1031,26 +1116,44 @@ class Trainer:
         )
 
         for filepath in data_files:
-            try:
-                with open(filepath, "r") as f:
-                    epoch_data = json.load(f)
-                    value_samples = [d for d in epoch_data if d.get("type") == "value"]
-                    all_data.extend(value_samples)
+            if skip_epoch is not None:
+                match = re.search(r"training_data_epoch_(\d+)\.json$", filepath)
+                if match and int(match.group(1)) == skip_epoch:
                     logger.debug(
-                        f"  Loaded {len(value_samples)} samples from {os.path.basename(filepath)}"
+                        f"  Skipping current epoch replay file: {os.path.basename(filepath)}"
                     )
+                    continue
+
+            try:
+                loaded_count = 0
+                for sample in self._iter_saved_training_samples(filepath):
+                    compact = self._compact_value_sample(sample)
+                    if compact is None:
+                        continue
+                    all_data.append(compact)
+                    loaded_count += 1
+
+                logger.debug(
+                    f"  Loaded {loaded_count} compact value samples from {os.path.basename(filepath)}"
+                )
             except Exception as e:
                 logger.error(f"Error loading {filepath}: {e}")
 
         logger.info(f"Total experience replay samples: {len(all_data)}")
         return all_data
 
-    def _train_value_head_epoch(self, training_data_buffer: List[Dict[str, Any]]):
-        current_value_data = [
-            d for d in training_data_buffer if d.get("type") == "value"
-        ]
+    def _train_value_head_epoch(
+        self,
+        training_data_buffer: List[Dict[str, Any]],
+        current_epoch: Optional[int] = None,
+    ):
+        current_value_data: List[Dict[str, Any]] = []
+        for sample in training_data_buffer:
+            compact = self._compact_value_sample(sample)
+            if compact is not None:
+                current_value_data.append(compact)
 
-        replay_data = self._load_experience_replay_data()
+        replay_data = self._load_experience_replay_data(skip_epoch=current_epoch)
 
         combined_data = replay_data + current_value_data
 
