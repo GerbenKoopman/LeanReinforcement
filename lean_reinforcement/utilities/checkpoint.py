@@ -125,7 +125,7 @@ def save_checkpoint(
     save_training_metadata(checkpoint_dir, epoch, metadata)
 
     # Clean up old checkpoints (keep last 5)
-    # cleanup_old_checkpoints(checkpoint_dir, prefix, keep_last_n=5)
+    cleanup_old_checkpoints(checkpoint_dir, prefix, keep_last_n=0)
 
     logger.info(f"Saved checkpoints: {latest_filename} and {epoch_filename}")
 
@@ -239,6 +239,9 @@ def cleanup_old_checkpoints(
         keep_last_n: Number of checkpoints to keep (excluding _latest.pth)
     """
     if not checkpoint_dir.exists():
+        return
+
+    if keep_last_n == 0:
         return
 
     # Get all epoch-specific checkpoints (exclude _latest.pth)
