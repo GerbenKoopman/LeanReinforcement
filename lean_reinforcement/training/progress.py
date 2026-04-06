@@ -272,7 +272,12 @@ class LiveProgressDisplay:
         display.stop()
     """
 
-    def __init__(self, stats: ProgressStats, refresh_rate: float = 4.0):
+    def __init__(
+        self,
+        stats: ProgressStats,
+        refresh_rate: float = 4.0,
+        suppress_loguru_during_live: bool = True,
+    ):
         self._stats = stats
         self._console = (
             Console(  # type: ignore[possibly-undefined]
@@ -285,6 +290,7 @@ class LiveProgressDisplay:
         )
         self._live: Optional[Any] = None
         self._refresh_rate = refresh_rate
+        self._suppress_loguru_during_live = suppress_loguru_during_live
 
     # ── Lifecycle ───────────────────────────────────────────────────────
 
@@ -323,13 +329,15 @@ class LiveProgressDisplay:
             redirect_stderr=False,
         )
         self._live.start()
-        self._redirect_loguru()
+        if self._suppress_loguru_during_live:
+            self._redirect_loguru()
 
     def stop(self) -> None:
         if self._live is not None:
             self._live.stop()
             self._live = None
-            self._restore_loguru()
+            if self._suppress_loguru_during_live:
+                self._restore_loguru()
             # Print a final static frame so the summary persists
             # after the transient Live panel disappears
             if self._console is not None:
@@ -525,9 +533,13 @@ class NullProgressDisplay:
 def make_progress_display(
     stats: ProgressStats,
     enable_live: bool = True,
+    suppress_loguru_during_live: bool = True,
 ) -> "LiveProgressDisplay | PlainProgressDisplay | NullProgressDisplay":
     if not enable_live:
         return NullProgressDisplay(stats)
     if HAS_RICH and enable_live:
-        return LiveProgressDisplay(stats)
+        return LiveProgressDisplay(
+            stats,
+            suppress_loguru_during_live=suppress_loguru_during_live,
+        )
     return PlainProgressDisplay(stats)

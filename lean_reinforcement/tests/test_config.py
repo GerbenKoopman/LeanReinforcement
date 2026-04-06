@@ -97,3 +97,8 @@ class TestConfig(unittest.TestCase):
         ):
             config = get_config()
             self.assertEqual(config.experience_replay_max_epochs, 2)
+
+    def test_no_suppress_live_loguru(self) -> None:
+        with patch.object(sys, "argv", ["prog", "--no-suppress-live-loguru"]):
+            config = get_config()
+            self.assertFalse(config.suppress_live_loguru)

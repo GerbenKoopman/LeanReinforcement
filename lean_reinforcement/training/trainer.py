@@ -118,7 +118,9 @@ class Trainer:
             cumulative_total_theorems=config.num_epochs * config.num_theorems,
         )
         self.progress_display = make_progress_display(
-            self.progress_stats, enable_live=not config.debugging
+            self.progress_stats,
+            enable_live=not config.debugging,
+            suppress_loguru_during_live=getattr(config, "suppress_live_loguru", True),
         )
 
         # Set global random seeds for reproducibility
@@ -168,10 +170,19 @@ class Trainer:
         except Exception:
             pass
 
-        logger.info(
+        msg = (
             f"[MEM SNAPSHOT] stage={stage} rss={rss_gb:.2f}GB "
             f"avail={avail_gb:.2f}GB gpu_alloc={gpu_pct:.1f}%{queue_note}"
         )
+        logger.info(msg)
+
+        # When the Rich live panel is active, loguru output is suppressed to
+        # keep the panel clean. Mirror memory lines via the progress display so
+        # they still appear in the terminal/SLURM stream.
+        try:
+            self.progress_display.print_line(msg)
+        except Exception:
+            pass
 
     def _maybe_dump_memory_diagnostic(self, stage: str) -> None:
         """Write a diagnostic dump when memory gets dangerously low.
@@ -196,13 +207,19 @@ class Trainer:
 
         try:
             path = dump_memory_diagnostic(str(out_path))
-            logger.warning(
-                f"[MEM DUMP] stage={stage} avail={avail_gb:.2f}GB wrote={path}"
-            )
+            msg = f"[MEM DUMP] stage={stage} avail={avail_gb:.2f}GB wrote={path}"
+            logger.warning(msg)
+            try:
+                self.progress_display.print_line(msg)
+            except Exception:
+                pass
         except Exception as exc:
-            logger.warning(
-                f"[MEM DUMP] stage={stage} failed: {exc} (avail={avail_gb:.2f}GB)"
-            )
+            msg = f"[MEM DUMP] stage={stage} failed: {exc} (avail={avail_gb:.2f}GB)"
+            logger.warning(msg)
+            try:
+                self.progress_display.print_line(msg)
+            except Exception:
+                pass
 
     @staticmethod
     def _set_seeds(seed: int) -> None:

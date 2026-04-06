@@ -27,6 +27,7 @@ class TrainingConfig:
     use_final_reward: bool = False
     save_training_data: bool = True
     experience_replay_max_epochs: Optional[int] = None
+    suppress_live_loguru: bool = True
     use_caching: bool = False
     debugging: bool = False
 
@@ -108,6 +109,7 @@ class TrainingConfig:
             experience_replay_max_epochs=getattr(
                 args, "experience_replay_max_epochs", None
             ),
+            suppress_live_loguru=getattr(args, "suppress_live_loguru", True),
             use_caching=getattr(args, "use_caching", False),
             debugging=getattr(args, "debugging", False),
             seed=getattr(args, "seed", None),
@@ -327,6 +329,13 @@ def get_config() -> TrainingConfig:
         action=argparse.BooleanOptionalAction,
         default=False,
         help="Cache encoded node features whenever possible (memory intensive).",
+    )
+    parser.add_argument(
+        "--suppress-live-loguru",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="When live progress UI is enabled, suppress loguru stderr output to keep the panel clean. "
+        "Use --no-suppress-live-loguru to keep full logs during live display.",
     )
     parser.add_argument(
         "--debugging",
