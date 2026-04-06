@@ -27,6 +27,7 @@ class TestTrainingConfig(unittest.TestCase):
             train_value_head=False,
             use_final_reward=True,
             save_training_data=False,
+            experience_replay_max_epochs=7,
             use_config=False,
             save_checkpoints=False,
             resume=True,
@@ -49,6 +50,7 @@ class TestTrainingConfig(unittest.TestCase):
         self.assertEqual(config.max_rollout_depth, 10)
         self.assertEqual(config.checkpoint_dir, "/tmp/ckpt")
         self.assertEqual(config.value_head_latent_dim, 512)
+        self.assertEqual(config.experience_replay_max_epochs, 7)
 
     def test_defaults(self) -> None:
         # This test assumes we can run get_config with empty args,

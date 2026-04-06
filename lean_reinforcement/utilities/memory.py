@@ -424,6 +424,25 @@ def start_rss_watchdog(
                     except Exception:
                         pass
 
+                    # Best effort diagnostic snapshot before forced exit.
+                    # Keep this resilient: any failure still proceeds to exit.
+                    try:
+                        os.makedirs(_DIAG_DIR, exist_ok=True)
+                        dump_path = os.path.join(
+                            _DIAG_DIR,
+                            f"rss_watchdog_pid{pid}_{int(threading.get_native_id())}.txt",
+                        )
+                        written = dump_memory_diagnostic(dump_path)
+                        try:
+                            sys.stderr.write(
+                                f"[RSS WATCHDOG] wrote memory diagnostic: {written}\n"
+                            )
+                            sys.stderr.flush()
+                        except Exception:
+                            pass
+                    except Exception:
+                        pass
+
                     os._exit(RSS_WATCHDOG_EXIT_CODE)
             except Exception:
                 pass  # /proc read failure — skip this cycle

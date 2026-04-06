@@ -46,8 +46,11 @@ from lean_reinforcement.utilities.config import TrainingConfig
 from lean_reinforcement.utilities.memory import (
     aggressive_cleanup,
     configure_glibc_env_for_children,
+    dump_memory_diagnostic,
     empty_gpu_cache,
     get_available_memory_gb,
+    get_rss_gb,
+    get_gpu_memory_usage_percent,
     log_gpu_memory,
     set_oom_score_adj,
     MAX_WORKER_RSS_GB,
@@ -140,6 +143,66 @@ class Trainer:
         self._setup_models()
         self._setup_data()
         self._setup_multiprocessing()
+
+        # Lightweight memory forensics to help diagnose OOM causes in logs.
+        self._last_mem_snapshot_time = 0.0
+        self._last_diag_dump_time = 0.0
+
+    def _log_memory_snapshot(self, stage: str, *, force: bool = False) -> None:
+        interval_s = float(os.environ.get("LEAN_RL_MEM_SNAPSHOT_INTERVAL_S", "30"))
+        now = time.time()
+        if not force and (now - self._last_mem_snapshot_time) < interval_s:
+            return
+
+        self._last_mem_snapshot_time = now
+        rss_gb = get_rss_gb()
+        avail_gb = get_available_memory_gb()
+        gpu_pct = get_gpu_memory_usage_percent()
+
+        queue_note = ""
+        try:
+            queue_note = (
+                f" | rq={self.request_queue.qsize()} "
+                f"result_q={self.result_queue.qsize()}"
+            )
+        except Exception:
+            pass
+
+        logger.info(
+            f"[MEM SNAPSHOT] stage={stage} rss={rss_gb:.2f}GB "
+            f"avail={avail_gb:.2f}GB gpu_alloc={gpu_pct:.1f}%{queue_note}"
+        )
+
+    def _maybe_dump_memory_diagnostic(self, stage: str) -> None:
+        """Write a diagnostic dump when memory gets dangerously low.
+
+        Rate-limited to avoid excessive I/O under sustained pressure.
+        """
+        dump_threshold_gb = float(os.environ.get("LEAN_RL_MEM_DUMP_AVAIL_GB", "1.5"))
+        cooldown_s = float(os.environ.get("LEAN_RL_MEM_DUMP_COOLDOWN_S", "180"))
+
+        avail_gb = get_available_memory_gb()
+        if avail_gb > dump_threshold_gb:
+            return
+
+        now = time.time()
+        if now - self._last_diag_dump_time < cooldown_s:
+            return
+
+        self._last_diag_dump_time = now
+        dump_dir = self.checkpoint_dir / "memdumps"
+        dump_dir.mkdir(parents=True, exist_ok=True)
+        out_path = dump_dir / f"trainer_{stage}_{int(now)}.txt"
+
+        try:
+            path = dump_memory_diagnostic(str(out_path))
+            logger.warning(
+                f"[MEM DUMP] stage={stage} avail={avail_gb:.2f}GB wrote={path}"
+            )
+        except Exception as exc:
+            logger.warning(
+                f"[MEM DUMP] stage={stage} failed: {exc} (avail={avail_gb:.2f}GB)"
+            )
 
     @staticmethod
     def _set_seeds(seed: int) -> None:
@@ -644,9 +707,11 @@ class Trainer:
             f"Collecting results for {total_theorems} theorems "
             f"(safety timeout: {max_epoch_time/3600:.1f}h, stall timeout: {stall_timeout/60:.0f}m)"
         )
+        self._log_memory_snapshot("collect_data_start", force=True)
 
         while results_received < total_theorems:
             elapsed = time.time() - epoch_start_time
+            self._log_memory_snapshot("collect_data_loop")
 
             # Safety net timeout
             if elapsed > max_epoch_time:
@@ -671,6 +736,7 @@ class Trainer:
                     f"(avail={avail:.1f} GB, own RSS={own_rss_gb:.2f} GB). "
                     f"Pausing to let workers release memory."
                 )
+                self._maybe_dump_memory_diagnostic("collect_low_memory")
                 aggressive_cleanup()
                 empty_gpu_cache()
                 # Brief pause to let workers finish and release memory
@@ -790,7 +856,15 @@ class Trainer:
                         if len(training_data_buffer) > 100:
                             with open(temp_data_file, "a") as f:
                                 for item in training_data_buffer:
-                                    f.write(json.dumps(item) + "\n")
+                                    try:
+                                        if item.get("type") != "value":
+                                            continue
+                                        compact = self._compact_value_sample(item)
+                                        if compact is None:
+                                            continue
+                                        f.write(json.dumps(compact) + "\n")
+                                    except Exception:
+                                        continue
                             training_data_buffer = []
 
                     # Progress is shown in the live display (updated above)
@@ -935,14 +1009,48 @@ class Trainer:
             if training_data_buffer:
                 with open(temp_data_file, "a") as f:
                     for item in training_data_buffer:
-                        f.write(json.dumps(item) + "\n")
+                        try:
+                            if item.get("type") != "value":
+                                continue
+                            compact = self._compact_value_sample(item)
+                            if compact is None:
+                                continue
+                            f.write(json.dumps(compact) + "\n")
+                        except Exception:
+                            continue
                 training_data_buffer = []
 
-            logger.info("Loading training data from temporary file...")
+            logger.info(
+                "Loading training data from temporary file (streaming compact samples)..."
+            )
+            self._log_memory_snapshot("before_tempfile_stream_load", force=True)
+
             with open(temp_data_file, "r") as f:
                 for line in f:
-                    training_data_buffer.append(json.loads(line))
-            os.remove(temp_data_file)
+                    try:
+                        obj = json.loads(line)
+                    except Exception:
+                        continue
+                    compact = self._compact_value_sample(obj)
+                    if compact is not None:
+                        training_data_buffer.append(compact)
+            try:
+                os.remove(temp_data_file)
+            except Exception:
+                pass
+            self._log_memory_snapshot("after_tempfile_stream_load", force=True)
+
+        if training_data_buffer:
+            compacted: List[Dict[str, Any]] = []
+            for item in training_data_buffer:
+                compact = self._compact_value_sample(item)
+                if compact is not None:
+                    compacted.append(compact)
+            if len(compacted) != len(training_data_buffer):
+                logger.debug(
+                    f"Compacted in-memory training data: {len(training_data_buffer)} -> {len(compacted)} samples"
+                )
+            training_data_buffer = compacted
 
         # Log and save per-theorem results summary
         if theorem_results:
@@ -1107,6 +1215,20 @@ class Trainer:
             glob.glob(str(self.checkpoint_dir / "training_data_epoch_*.json"))
         )
 
+        max_replay_epochs = getattr(self.config, "experience_replay_max_epochs", None)
+        if isinstance(max_replay_epochs, int):
+            if max_replay_epochs <= 0:
+                logger.info(
+                    "Experience replay disabled by experience_replay_max_epochs <= 0"
+                )
+                return all_data
+            if len(data_files) > max_replay_epochs:
+                logger.info(
+                    f"Limiting experience replay to last {max_replay_epochs} epoch files "
+                    f"(from {len(data_files)} total)"
+                )
+                data_files = data_files[-max_replay_epochs:]
+
         if not data_files:
             logger.info("No previous training data found for experience replay.")
             return all_data
@@ -1114,6 +1236,7 @@ class Trainer:
         logger.info(
             f"Loading experience replay data from {len(data_files)} epoch files..."
         )
+        self._log_memory_snapshot("replay_load_start", force=True)
 
         for filepath in data_files:
             if skip_epoch is not None:
@@ -1136,10 +1259,15 @@ class Trainer:
                 logger.debug(
                     f"  Loaded {loaded_count} compact value samples from {os.path.basename(filepath)}"
                 )
+                self._log_memory_snapshot(
+                    f"replay_file_loaded:{os.path.basename(filepath)}"
+                )
+                self._maybe_dump_memory_diagnostic("replay_load")
             except Exception as e:
                 logger.error(f"Error loading {filepath}: {e}")
 
         logger.info(f"Total experience replay samples: {len(all_data)}")
+        self._log_memory_snapshot("replay_load_done", force=True)
         return all_data
 
     def _train_value_head_epoch(
@@ -1154,6 +1282,7 @@ class Trainer:
                 current_value_data.append(compact)
 
         replay_data = self._load_experience_replay_data(skip_epoch=current_epoch)
+        self._log_memory_snapshot("after_replay_load", force=True)
 
         combined_data = replay_data + current_value_data
 
@@ -1163,6 +1292,8 @@ class Trainer:
             seen_states[state] = item
 
         unique_data = list(seen_states.values())
+        self._log_memory_snapshot("after_replay_dedup", force=True)
+        self._maybe_dump_memory_diagnostic("after_replay_dedup")
         logger.info(
             f"Experience replay: {len(replay_data)} replay + "
             f"{len(current_value_data)} current = "
@@ -1287,16 +1418,26 @@ class Trainer:
         self.progress_display.refresh()
 
         value_head.train()
+        params_iter = iter(value_head.value_head.parameters())
+        first_param = next(params_iter, None)
+        default_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        raw_device = (
+            getattr(first_param, "device", None) if first_param is not None else None
+        )
+        model_device = (
+            raw_device if isinstance(raw_device, torch.device) else default_device
+        )
 
         epoch = 0
         for epoch in range(epochs):
             value_head.train()
             total_train_loss = 0
+            self._log_memory_snapshot(f"value_train_epoch_{epoch+1}_start", force=True)
             for batch in train_loader:
                 states = batch["state"]
                 batch_value_targets = batch["value_target"].to(
                     dtype=torch.float32,
-                    device="cuda" if torch.cuda.is_available() else "cpu",
+                    device=model_device,
                 )
                 batch_value_targets = torch.clamp(
                     batch_value_targets, min=-0.99, max=0.99
@@ -1310,6 +1451,8 @@ class Trainer:
                 optimizer.step()
                 total_train_loss += loss.item()
 
+            self._maybe_dump_memory_diagnostic(f"value_train_epoch_{epoch+1}")
+
             avg_train_loss = total_train_loss / len(train_loader)
 
             if val_loader:
@@ -1320,7 +1463,7 @@ class Trainer:
                         states = batch["state"]
                         batch_value_targets = batch["value_target"].to(
                             dtype=torch.float32,
-                            device="cuda" if torch.cuda.is_available() else "cpu",
+                            device=model_device,
                         )
                         batch_value_targets = torch.clamp(
                             batch_value_targets, min=-0.99, max=0.99

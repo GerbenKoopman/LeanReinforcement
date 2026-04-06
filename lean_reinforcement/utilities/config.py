@@ -26,6 +26,7 @@ class TrainingConfig:
     use_hyperbolic: bool = False  # Use hyperbolic (Poincaré ball) value head
     use_final_reward: bool = False
     save_training_data: bool = True
+    experience_replay_max_epochs: Optional[int] = None
     use_caching: bool = False
     debugging: bool = False
 
@@ -104,6 +105,9 @@ class TrainingConfig:
             use_hyperbolic=getattr(args, "use_hyperbolic", False),
             use_final_reward=getattr(args, "use_final_reward", True),
             save_training_data=getattr(args, "save_training_data", True),
+            experience_replay_max_epochs=getattr(
+                args, "experience_replay_max_epochs", None
+            ),
             use_caching=getattr(args, "use_caching", False),
             debugging=getattr(args, "debugging", False),
             seed=getattr(args, "seed", None),
@@ -310,6 +314,13 @@ def get_config() -> TrainingConfig:
         action=argparse.BooleanOptionalAction,
         default=True,
         help="Save raw training data to JSON files for offline analysis.",
+    )
+    parser.add_argument(
+        "--experience-replay-max-epochs",
+        type=int,
+        default=None,
+        help="Limit experience replay to the most recent N epoch files. "
+        "Set to 0 to disable replay; default keeps all available files.",
     )
     parser.add_argument(
         "--use-caching",

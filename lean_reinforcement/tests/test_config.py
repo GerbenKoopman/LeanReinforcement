@@ -88,3 +88,12 @@ class TestConfig(unittest.TestCase):
         with patch.object(sys, "argv", ["prog", "--debugging"]):
             config = get_config()
             self.assertTrue(config.debugging)
+
+    def test_experience_replay_max_epochs(self) -> None:
+        with patch.object(
+            sys,
+            "argv",
+            ["prog", "--experience-replay-max-epochs", "2"],
+        ):
+            config = get_config()
+            self.assertEqual(config.experience_replay_max_epochs, 2)
