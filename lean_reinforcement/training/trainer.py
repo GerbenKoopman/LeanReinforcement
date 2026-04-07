@@ -83,6 +83,17 @@ def _safe_wandb_log(data: Dict[str, Any]) -> None:
         logger.warning(f"wandb.log() failed unexpectedly: {exc}")
 
 
+def _safe_wandb_finish() -> None:
+    """Finish wandb run defensively to avoid noisy atexit crashes."""
+    try:
+        if wandb.run is not None:
+            wandb.finish()
+    except (ConnectionResetError, BrokenPipeError, OSError) as exc:
+        logger.warning(f"wandb.finish() failed (connection lost): {exc}")
+    except Exception as exc:
+        logger.warning(f"wandb.finish() failed unexpectedly: {exc}")
+
+
 def _state_value_to_plain_tensor(value: Any) -> torch.Tensor:
     """Unwrap state_dict values that may be manifold-backed tensors."""
     raw = getattr(value, "tensor", value)
@@ -395,8 +406,11 @@ class Trainer:
             raise e
         finally:
             self.progress_display.stop()
-            self._drain_queues()
             self._cleanup_workers()
+            self._drain_queues()
+            self._close_ipc_queues()
+            if self.config.use_wandb:
+                _safe_wandb_finish()
 
     def _setup_models(self) -> None:
         logger.info(f"Using checkpoint directory: {self.checkpoint_dir}")
@@ -589,7 +603,10 @@ class Trainer:
     def _stop_workers(self) -> None:
         logger.info("Stopping workers for this epoch...")
         for _ in range(self.config.num_workers):
-            self.theorem_queue.put(None)
+            try:
+                self.theorem_queue.put(None, timeout=0.5)
+            except queue.Full:
+                logger.debug("theorem_queue full while enqueuing stop sentinel")
 
         for p in self.workers:
             p.join(timeout=5)
@@ -604,7 +621,41 @@ class Trainer:
         for p in self.workers:
             if p.is_alive():
                 p.terminate()
-                p.join()
+                p.join(timeout=5)
+                if p.is_alive():
+                    logger.warning(f"Worker {p.pid} still alive after terminate().")
+        self.workers = []
+
+    def _close_ipc_queues(self) -> None:
+        """Close queue pipes without deserializing queued payloads into main RAM."""
+        all_queues: List[mp.Queue] = [
+            self.theorem_queue,
+            self.request_queue,
+            self.result_queue,
+            *self.response_queues,
+        ]
+        for q in all_queues:
+            try:
+                q.cancel_join_thread()
+            except Exception:
+                pass
+            try:
+                q.close()
+            except Exception:
+                pass
+
+    @staticmethod
+    def _drain_queue_bounded(q: mp.Queue, *, max_items: int) -> int:
+        drained = 0
+        while drained < max_items:
+            try:
+                q.get_nowait()
+                drained += 1
+            except queue.Empty:
+                break
+            except Exception:
+                break
+        return drained
 
     def _drain_theorem_queue(self) -> None:
         """Drain theorem queue to ensure clean state before new epoch."""
@@ -621,31 +672,32 @@ class Trainer:
     def _drain_queues(self) -> None:
         logger.info("Draining queues...")
 
+        # Bounded draining avoids pathological RAM spikes from huge queued payloads.
+        max_per_queue = 5000
+
         # Drain theorem queue (important: prevents leftover theorems from previous epochs)
-        try:
-            while not self.theorem_queue.empty():
-                self.theorem_queue.get_nowait()
-        except Exception:
-            pass
+        drained_theorem = self._drain_queue_bounded(
+            self.theorem_queue, max_items=max_per_queue
+        )
 
-        try:
-            while not self.request_queue.empty():
-                self.request_queue.get_nowait()
-        except Exception:
-            pass
+        drained_request = self._drain_queue_bounded(
+            self.request_queue, max_items=max_per_queue
+        )
 
+        drained_response_total = 0
         for q in self.response_queues:
-            try:
-                while not q.empty():
-                    q.get_nowait()
-            except Exception:
-                pass
+            drained_response_total += self._drain_queue_bounded(
+                q, max_items=max_per_queue
+            )
 
-        try:
-            while not self.result_queue.empty():
-                self.result_queue.get_nowait()
-        except Exception:
-            pass
+        # Result queue can contain large payloads; keep the cap conservative.
+        drained_result = self._drain_queue_bounded(self.result_queue, max_items=1000)
+
+        logger.debug(
+            "Drain summary: "
+            f"theorem={drained_theorem}, request={drained_request}, "
+            f"response={drained_response_total}, result={drained_result}"
+        )
 
     def _collect_data(
         self,
