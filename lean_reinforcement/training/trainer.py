@@ -330,11 +330,14 @@ class Trainer:
 
     def _setup_multiprocessing(self) -> None:
         mp.set_start_method("spawn", force=True)
-        self.request_queue: mp.Queue = mp.Queue()
-        self.result_queue: mp.Queue = mp.Queue()
-        self.theorem_queue: mp.Queue = mp.Queue()
+        # Add maxsize to all queues to create backpressure and prevent unbounded growth
+        # This forces workers to wait when queues are full, preventing memory spikes during training
+        MAX_QUEUE_SIZE = 100
+        self.request_queue: mp.Queue = mp.Queue(maxsize=MAX_QUEUE_SIZE)
+        self.result_queue: mp.Queue = mp.Queue(maxsize=MAX_QUEUE_SIZE)
+        self.theorem_queue: mp.Queue = mp.Queue(maxsize=MAX_QUEUE_SIZE)
         self.response_queues: List[mp.Queue] = [
-            mp.Queue() for _ in range(self.config.num_workers)
+            mp.Queue(maxsize=MAX_QUEUE_SIZE) for _ in range(self.config.num_workers)
         ]
         self.workers: List[mp.Process] = []
 

@@ -57,7 +57,8 @@ cdef class MCTS_AlphaZero(BaseMCTS):
             return node
 
         if node.encoder_features is None and self.config.use_caching:
-            node.encoder_features = self.value_head.encode_states([state_str])
+            cached_features = self.value_head.encode_states([state_str])
+            node.encoder_features = cached_features.detach().cpu()
 
         tactics_with_probs = self.transformer.generate_tactics_with_probs(
             state_str, n=self.num_tactics_to_expand
@@ -69,7 +70,8 @@ cdef class MCTS_AlphaZero(BaseMCTS):
             
             # If a new node was created, encode its features
             if self.config.use_caching and child.visit_count == 0 and isinstance(child.state, TacticState):
-                child.encoder_features = self.value_head.encode_states([child.state.pp])
+                cached_features = self.value_head.encode_states([child.state.pp])
+                child.encoder_features = cached_features.detach().cpu()
 
         node.untried_actions = []
 
@@ -162,8 +164,9 @@ cdef class MCTS_AlphaZero(BaseMCTS):
                  pass
             else:
                 batch_features = self.value_head.encode_states(new_children_states)
+                batch_features_detached = batch_features.detach().cpu()
                 for i in range(len(new_children_nodes)):
-                    new_children_nodes[i].encoder_features = batch_features[i].unsqueeze(0)
+                    new_children_nodes[i].encoder_features = batch_features_detached[i].unsqueeze(0)
 
         for node in nodes_to_generate:
             node.untried_actions = []

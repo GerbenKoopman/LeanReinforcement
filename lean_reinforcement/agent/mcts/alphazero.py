@@ -102,8 +102,10 @@ class MCTS_AlphaZero(BaseMCTS):
         state_str = node.state.pp
 
         # Cache encoder features for this node if not already cached
+        # Detach and move to CPU to break PyTorch computation graph
         if node.encoder_features is None and self.config.use_caching:
-            node.encoder_features = self.value_head.encode_states([state_str])
+            cached_features = self.value_head.encode_states([state_str])
+            node.encoder_features = cached_features.detach().cpu()
 
         tactics_with_probs = self.transformer.generate_tactics_with_probs(
             state_str, n=self.num_tactics_to_expand
@@ -140,10 +142,12 @@ class MCTS_AlphaZero(BaseMCTS):
                 states_to_encode.append(next_state.pp)
 
         # Batch encode all children's states at once for efficiency
+        # Detach and move to CPU to break PyTorch computation graph
         if children_to_encode and self.config.use_caching:
             batch_features = self.value_head.encode_states(states_to_encode)
+            batch_features_detached = batch_features.detach().cpu()
             for i, child in enumerate(children_to_encode):
-                child.encoder_features = batch_features[i : i + 1]
+                child.encoder_features = batch_features_detached[i : i + 1]
 
         node.untried_actions = []
 

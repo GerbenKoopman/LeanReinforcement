@@ -221,6 +221,9 @@ class AgentRunner:
             elif self._failure_reason is None:
                 self._mark_failure("search exhausted without proof", "search_exhausted")
 
+        # Clear encoder tensors before deleting MCTS instance to prevent memory leaks
+        if mcts_instance is not None:
+            self._clear_tree_encoder_tensors(mcts_instance.root)
         del mcts_instance
         aggressive_cleanup()
         empty_gpu_cache()
@@ -279,6 +282,31 @@ class AgentRunner:
                     queue.append((child, depth + 1))
 
         return data
+
+    def _clear_tree_encoder_tensors(self, root: Node) -> None:
+        """
+        Recursively release all encoder_features tensors from the MCTS tree.
+        This breaks PyTorch computation graphs and allows the garbage collector
+        to reclaim memory from large tensor slices cached during tree expansion.
+        Must be called before deleting mcts_instance to prevent memory leaks.
+        """
+        visited: set[int] = set()
+        queue: deque[Node] = deque([root])
+
+        while queue:
+            node = queue.popleft()
+            node_id = id(node)
+            if node_id in visited:
+                continue
+            visited.add(node_id)
+
+            # Release this node's encoder features
+            node.release_encoder_features()
+
+            # Queue all children for processing
+            for child in node.children:
+                if id(child) not in visited:
+                    queue.append(child)
 
     # ------------------------------------------------------------------
     # Step-by-step mode: commit one action per step (original behaviour)
@@ -508,6 +536,8 @@ class AgentRunner:
                     "agent_loop_error",
                 )
                 if mcts_instance:
+                    # Clear encoder tensors before deleting to prevent memory leaks
+                    self._clear_tree_encoder_tensors(mcts_instance.root)
                     del mcts_instance
                     mcts_instance = None
                 break
@@ -521,6 +551,8 @@ class AgentRunner:
 
         # Clean up MCTS instance after loop
         if mcts_instance is not None:
+            # Clear encoder tensors before deleting to prevent memory leaks
+            self._clear_tree_encoder_tensors(mcts_instance.root)
             del mcts_instance
 
         return self._finalise(
