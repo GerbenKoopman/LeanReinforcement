@@ -53,6 +53,8 @@ from lean_reinforcement.utilities.memory import (
     get_gpu_memory_usage_percent,
     log_gpu_memory,
     set_oom_score_adj,
+    kill_child_processes,
+    kill_lean_orphans,
     MAX_WORKER_RSS_GB,
     RSS_WATCHDOG_EXIT_CODE,
     TRAINER_MIN_AVAILABLE_GB,
@@ -411,6 +413,9 @@ class Trainer:
             self._close_ipc_queues()
             if self.config.use_wandb:
                 _safe_wandb_finish()
+            # Final process-tree cleanup for cluster shutdown stability.
+            kill_child_processes()
+            kill_lean_orphans()
 
     def _setup_models(self) -> None:
         logger.info(f"Using checkpoint directory: {self.checkpoint_dir}")
