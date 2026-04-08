@@ -94,6 +94,36 @@ def _safe_wandb_finish() -> None:
         logger.warning(f"wandb.finish() failed unexpectedly: {exc}")
 
 
+def _log_process_tree_snapshot(stage: str) -> None:
+    """Log current process and descendant RSS to diagnose shutdown leaks."""
+    try:
+        import psutil
+
+        current = psutil.Process(os.getpid())
+        children = current.children(recursive=True)
+        current_rss_gb = current.memory_info().rss / (1024**3)
+        child_summaries = []
+        total_child_rss_gb = 0.0
+        for proc in children:
+            try:
+                rss_gb = proc.memory_info().rss / (1024**3)
+                total_child_rss_gb += rss_gb
+                child_summaries.append(
+                    f"pid={proc.pid} name={proc.name()} rss={rss_gb:.2f}GB"
+                )
+            except Exception:
+                continue
+
+        logger.info(
+            f"[PROC SNAPSHOT] stage={stage} current_rss={current_rss_gb:.2f}GB "
+            f"child_count={len(children)} child_rss={total_child_rss_gb:.2f}GB"
+        )
+        if child_summaries:
+            logger.debug("[PROC SNAPSHOT] " + " | ".join(child_summaries[:20]))
+    except Exception:
+        pass
+
+
 def _state_value_to_plain_tensor(value: Any) -> torch.Tensor:
     """Unwrap state_dict values that may be manifold-backed tensors."""
     raw = getattr(value, "tensor", value)
@@ -406,8 +436,11 @@ class Trainer:
             raise e
         finally:
             self.progress_display.stop()
+            _log_process_tree_snapshot("shutdown_before_cleanup")
             self._cleanup_workers()
+            _log_process_tree_snapshot("shutdown_after_cleanup")
             self._drain_queues()
+            _log_process_tree_snapshot("shutdown_after_drain")
             if self.config.use_wandb:
                 _safe_wandb_finish()
 
