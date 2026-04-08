@@ -53,8 +53,6 @@ from lean_reinforcement.utilities.memory import (
     get_gpu_memory_usage_percent,
     log_gpu_memory,
     set_oom_score_adj,
-    kill_child_processes,
-    kill_lean_orphans,
     MAX_WORKER_RSS_GB,
     RSS_WATCHDOG_EXIT_CODE,
     TRAINER_MIN_AVAILABLE_GB,
@@ -410,12 +408,8 @@ class Trainer:
             self.progress_display.stop()
             self._cleanup_workers()
             self._drain_queues()
-            self._close_ipc_queues()
             if self.config.use_wandb:
                 _safe_wandb_finish()
-            # Final process-tree cleanup for cluster shutdown stability.
-            kill_child_processes()
-            kill_lean_orphans()
 
     def _setup_models(self) -> None:
         logger.info(f"Using checkpoint directory: {self.checkpoint_dir}")
@@ -630,24 +624,6 @@ class Trainer:
                 if p.is_alive():
                     logger.warning(f"Worker {p.pid} still alive after terminate().")
         self.workers = []
-
-    def _close_ipc_queues(self) -> None:
-        """Close queue pipes without deserializing queued payloads into main RAM."""
-        all_queues: List[mp.Queue] = [
-            self.theorem_queue,
-            self.request_queue,
-            self.result_queue,
-            *self.response_queues,
-        ]
-        for q in all_queues:
-            try:
-                q.cancel_join_thread()
-            except Exception:
-                pass
-            try:
-                q.close()
-            except Exception:
-                pass
 
     @staticmethod
     def _drain_queue_bounded(q: mp.Queue, *, max_items: int) -> int:
