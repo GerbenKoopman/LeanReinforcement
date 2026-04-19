@@ -14,6 +14,7 @@ Key design decisions:
 
 from __future__ import annotations
 
+import os
 import sys
 import time
 from dataclasses import dataclass, field
@@ -535,9 +536,28 @@ def make_progress_display(
     enable_live: bool = True,
     suppress_loguru_during_live: bool = True,
 ) -> "LiveProgressDisplay | PlainProgressDisplay | NullProgressDisplay":
+    def _env_truthy(name: str) -> bool:
+        value = os.environ.get(name, "").strip().lower()
+        return value in {"1", "true", "yes", "on"}
+
     if not enable_live:
         return NullProgressDisplay(stats)
-    if HAS_RICH and enable_live:
+
+    force_live = _env_truthy("LEAN_RL_FORCE_LIVE_PROGRESS")
+    disable_live = _env_truthy("LEAN_RL_DISABLE_LIVE_PROGRESS")
+
+    if disable_live and not force_live:
+        return PlainProgressDisplay(stats)
+
+    # In batch jobs (e.g. SLURM logs), rich live redraw creates huge logs.
+    if not force_live:
+        try:
+            if not sys.stderr.isatty():
+                return PlainProgressDisplay(stats)
+        except Exception:
+            return PlainProgressDisplay(stats)
+
+    if HAS_RICH:
         return LiveProgressDisplay(
             stats,
             suppress_loguru_during_live=suppress_loguru_during_live,

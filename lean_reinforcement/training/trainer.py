@@ -48,6 +48,7 @@ from lean_reinforcement.utilities.memory import (
     configure_glibc_env_for_children,
     get_cgroup_memory_current_gb,
     get_cgroup_memory_limit_gb,
+    get_cgroup_memory_stat_gb,
     dump_memory_diagnostic,
     empty_gpu_cache,
     get_available_memory_gb,
@@ -235,10 +236,11 @@ class Trainer:
         # When the Rich live panel is active, loguru output is suppressed to
         # keep the panel clean. Mirror memory lines via the progress display so
         # they still appear in the terminal/SLURM stream.
-        try:
-            self.progress_display.print_line(msg)
-        except Exception:
-            pass
+        if getattr(self.progress_display, "_live", None) is not None:
+            try:
+                self.progress_display.print_line(msg)
+            except Exception:
+                pass
 
     def _maybe_dump_memory_diagnostic(self, stage: str) -> None:
         """Write a diagnostic dump when memory gets dangerously low.
@@ -276,6 +278,67 @@ class Trainer:
                 self.progress_display.print_line(msg)
             except Exception:
                 pass
+
+    def _log_shutdown_cgroup_window(self) -> None:
+        """Sample cgroup counters shortly after queue drain during teardown."""
+        duration_s = float(os.environ.get("LEAN_RL_SHUTDOWN_CGROUP_SAMPLE_SECS", "20"))
+        interval_s = float(
+            os.environ.get("LEAN_RL_SHUTDOWN_CGROUP_SAMPLE_INTERVAL_S", "1")
+        )
+
+        if duration_s <= 0 or interval_s <= 0:
+            return
+
+        try:
+            sample_count = max(1, int(duration_s / interval_s) + 1)
+            logger.info(
+                "[SHUTDOWN CGROUP] sampling "
+                f"{sample_count} points over {duration_s:.1f}s "
+                f"(interval={interval_s:.1f}s)"
+            )
+
+            start = time.monotonic()
+            for sample_idx in range(sample_count):
+                elapsed_s = time.monotonic() - start
+
+                current_gb = get_cgroup_memory_current_gb()
+                limit_gb = get_cgroup_memory_limit_gb()
+                free_gb = None
+                if current_gb is not None and limit_gb is not None and limit_gb > 0:
+                    free_gb = max(0.0, limit_gb - current_gb)
+
+                stat_gb = get_cgroup_memory_stat_gb()
+                stat_bits = []
+                for key in ("anon", "file", "shmem"):
+                    value = stat_gb.get(key)
+                    if value is not None:
+                        stat_bits.append(f"{key}={value:.2f}GB")
+                stat_note = f" {' '.join(stat_bits)}" if stat_bits else ""
+
+                current_text = (
+                    f"{current_gb:.2f}GB" if current_gb is not None else "n/a"
+                )
+                limit_text = f"{limit_gb:.2f}GB" if limit_gb is not None else "n/a"
+                free_text = f"{free_gb:.2f}GB" if free_gb is not None else "n/a"
+
+                logger.info(
+                    "[SHUTDOWN CGROUP] "
+                    f"sample={sample_idx + 1}/{sample_count} "
+                    f"t={elapsed_s:.1f}s "
+                    f"rss={get_rss_gb():.2f}GB "
+                    f"current={current_text} limit={limit_text} free={free_text}"
+                    f"{stat_note}"
+                )
+
+                if sample_idx == sample_count - 1:
+                    break
+
+                target = start + (sample_idx + 1) * interval_s
+                sleep_s = target - time.monotonic()
+                if sleep_s > 0:
+                    time.sleep(sleep_s)
+        except Exception as exc:
+            logger.warning(f"[SHUTDOWN CGROUP] sampling failed: {exc}")
 
     @staticmethod
     def _set_seeds(seed: int) -> None:
@@ -456,6 +519,8 @@ class Trainer:
             _log_process_tree_snapshot("shutdown_after_cleanup")
             self._drain_queues()
             _log_process_tree_snapshot("shutdown_after_drain")
+            self._log_shutdown_cgroup_window()
+            _log_process_tree_snapshot("shutdown_after_cgroup_window")
             if self.config.use_wandb:
                 _safe_wandb_finish()
 

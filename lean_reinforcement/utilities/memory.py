@@ -19,7 +19,8 @@ import os
 import signal
 import sys
 import threading
-from typing import Optional, TYPE_CHECKING
+from functools import lru_cache
+from typing import Dict, Optional, TYPE_CHECKING
 
 from loguru import logger
 
@@ -190,6 +191,82 @@ _PAGE_SIZE_BYTES: int = os.sysconf("SC_PAGE_SIZE") if hasattr(os, "sysconf") els
 _BYTES_PER_GIB: float = 1024.0**3
 
 
+def _join_cgroup_file(base: str, relative_group: str, filename: str) -> str:
+    rel = (relative_group or "/").strip()
+    if rel in {"", "/"}:
+        return os.path.join(base, filename)
+    return os.path.join(base, rel.lstrip("/"), filename)
+
+
+@lru_cache(maxsize=1)
+def _resolve_cgroup_memory_files() -> (
+    tuple[Optional[str], Optional[str], Optional[str]]
+):
+    """Resolve memory.current/memory.max/memory.stat for this process cgroup.
+
+    Uses /proc/self/cgroup so we inspect the active Slurm step cgroup rather than
+    assuming root-level cgroup paths.
+    """
+    rel_v2: Optional[str] = None
+    rel_v1_memory: Optional[str] = None
+
+    try:
+        with open("/proc/self/cgroup") as f:
+            for raw_line in f:
+                line = raw_line.strip()
+                if not line:
+                    continue
+                parts = line.split(":", 2)
+                if len(parts) != 3:
+                    continue
+                _, controllers, relative_group = parts
+                relative_group = relative_group or "/"
+                if controllers == "":
+                    rel_v2 = relative_group
+                else:
+                    if "memory" in controllers.split(","):
+                        rel_v1_memory = relative_group
+    except Exception:
+        pass
+
+    if rel_v2 is not None:
+        current = _join_cgroup_file("/sys/fs/cgroup", rel_v2, "memory.current")
+        limit = _join_cgroup_file("/sys/fs/cgroup", rel_v2, "memory.max")
+        stat = _join_cgroup_file("/sys/fs/cgroup", rel_v2, "memory.stat")
+        if any(os.path.exists(path) for path in (current, limit, stat)):
+            return current, limit, stat
+
+    if rel_v1_memory is not None:
+        current = _join_cgroup_file(
+            "/sys/fs/cgroup/memory", rel_v1_memory, "memory.usage_in_bytes"
+        )
+        limit = _join_cgroup_file(
+            "/sys/fs/cgroup/memory", rel_v1_memory, "memory.limit_in_bytes"
+        )
+        stat = _join_cgroup_file("/sys/fs/cgroup/memory", rel_v1_memory, "memory.stat")
+        if any(os.path.exists(path) for path in (current, limit, stat)):
+            return current, limit, stat
+
+    # Fallback for environments where /proc/self/cgroup does not map cleanly.
+    fallback_candidates = (
+        (
+            "/sys/fs/cgroup/memory.current",
+            "/sys/fs/cgroup/memory.max",
+            "/sys/fs/cgroup/memory.stat",
+        ),
+        (
+            "/sys/fs/cgroup/memory/memory.usage_in_bytes",
+            "/sys/fs/cgroup/memory/memory.limit_in_bytes",
+            "/sys/fs/cgroup/memory/memory.stat",
+        ),
+    )
+    for current, limit, stat in fallback_candidates:
+        if any(os.path.exists(path) for path in (current, limit, stat)):
+            return current, limit, stat
+
+    return None, None, None
+
+
 def _read_cgroup_bytes(path: str) -> Optional[int]:
     """Read a cgroup byte counter. Returns None for unavailable/unlimited."""
     try:
@@ -206,30 +283,75 @@ def _read_cgroup_bytes(path: str) -> Optional[int]:
         return None
 
 
+def _read_cgroup_stat(path: str) -> Dict[str, int]:
+    """Read cgroup memory.stat into a key->bytes mapping."""
+    stats: Dict[str, int] = {}
+    try:
+        with open(path) as f:
+            for raw_line in f:
+                parts = raw_line.split()
+                if len(parts) != 2:
+                    continue
+                key, value_raw = parts
+                try:
+                    stats[key] = int(value_raw)
+                except ValueError:
+                    continue
+    except Exception:
+        return {}
+    return stats
+
+
 def get_cgroup_memory_current_gb() -> Optional[float]:
     """Return current cgroup memory usage in GiB, if available."""
-    candidates = (
-        "/sys/fs/cgroup/memory.current",  # cgroup v2
-        "/sys/fs/cgroup/memory/memory.usage_in_bytes",  # cgroup v1
-    )
-    for path in candidates:
-        value = _read_cgroup_bytes(path)
-        if value is not None:
-            return value / _BYTES_PER_GIB
+    current_path, _, _ = _resolve_cgroup_memory_files()
+    if current_path is None:
+        return None
+    value = _read_cgroup_bytes(current_path)
+    if value is not None:
+        return value / _BYTES_PER_GIB
     return None
 
 
 def get_cgroup_memory_limit_gb() -> Optional[float]:
     """Return cgroup memory limit in GiB, if available and finite."""
-    candidates = (
-        "/sys/fs/cgroup/memory.max",  # cgroup v2
-        "/sys/fs/cgroup/memory/memory.limit_in_bytes",  # cgroup v1
-    )
-    for path in candidates:
-        value = _read_cgroup_bytes(path)
-        if value is not None:
-            return value / _BYTES_PER_GIB
+    _, limit_path, _ = _resolve_cgroup_memory_files()
+    if limit_path is None:
+        return None
+    value = _read_cgroup_bytes(limit_path)
+    if value is not None:
+        return value / _BYTES_PER_GIB
     return None
+
+
+def get_cgroup_memory_stat_gb() -> Dict[str, float]:
+    """Return selected cgroup memory.stat components in GiB.
+
+    Normalized keys:
+    - anon: anonymous memory (v2: anon, v1 fallback: rss)
+    - file: file-backed cache (v2: file, v1 fallback: cache)
+    - shmem: shared memory (if provided by kernel/cgroup version)
+    """
+    _, _, stat_path = _resolve_cgroup_memory_files()
+    if stat_path is None:
+        return {}
+
+    stats = _read_cgroup_stat(stat_path)
+    if not stats:
+        return {}
+
+    anon_bytes = stats.get("anon", stats.get("rss"))
+    file_bytes = stats.get("file", stats.get("cache"))
+    shmem_bytes = stats.get("shmem")
+
+    out: Dict[str, float] = {}
+    if anon_bytes is not None:
+        out["anon"] = anon_bytes / _BYTES_PER_GIB
+    if file_bytes is not None:
+        out["file"] = file_bytes / _BYTES_PER_GIB
+    if shmem_bytes is not None:
+        out["shmem"] = shmem_bytes / _BYTES_PER_GIB
+    return out
 
 
 def get_cgroup_available_memory_gb() -> Optional[float]:

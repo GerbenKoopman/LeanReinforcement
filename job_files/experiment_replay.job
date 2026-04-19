@@ -32,6 +32,11 @@ set +a
 
 cd "$HOME/lean_reinforcement"
 
+# Keep SLURM logs readable and sample cgroup counters during teardown.
+export LEAN_RL_DISABLE_LIVE_PROGRESS=1
+export LEAN_RL_SHUTDOWN_CGROUP_SAMPLE_SECS=20
+export LEAN_RL_SHUTDOWN_CGROUP_SAMPLE_INTERVAL_S=1
+
 echo "======================================================"
 echo "Starting Experiment: Replay"
 echo "======================================================"
