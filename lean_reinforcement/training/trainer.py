@@ -46,6 +46,8 @@ from lean_reinforcement.utilities.config import TrainingConfig
 from lean_reinforcement.utilities.memory import (
     aggressive_cleanup,
     configure_glibc_env_for_children,
+    get_cgroup_memory_current_gb,
+    get_cgroup_memory_limit_gb,
     dump_memory_diagnostic,
     empty_gpu_cache,
     get_available_memory_gb,
@@ -201,6 +203,18 @@ class Trainer:
         rss_gb = get_rss_gb()
         avail_gb = get_available_memory_gb()
         gpu_pct = get_gpu_memory_usage_percent()
+        cgroup_note = ""
+        cg_current = get_cgroup_memory_current_gb()
+        cg_limit = get_cgroup_memory_limit_gb()
+        if cg_current is not None:
+            if cg_limit is not None and cg_limit > 0:
+                cg_free = max(0.0, cg_limit - cg_current)
+                cgroup_note = (
+                    f" cgroup={cg_current:.2f}/{cg_limit:.2f}GB"
+                    f" cg_free={cg_free:.2f}GB"
+                )
+            else:
+                cgroup_note = f" cgroup={cg_current:.2f}GB"
 
         queue_note = ""
         try:
@@ -213,7 +227,8 @@ class Trainer:
 
         msg = (
             f"[MEM SNAPSHOT] stage={stage} rss={rss_gb:.2f}GB "
-            f"avail={avail_gb:.2f}GB gpu_alloc={gpu_pct:.1f}%{queue_note}"
+            f"avail={avail_gb:.2f}GB gpu_alloc={gpu_pct:.1f}%"
+            f"{cgroup_note}{queue_note}"
         )
         logger.info(msg)
 

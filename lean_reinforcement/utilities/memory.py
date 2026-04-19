@@ -190,6 +190,57 @@ _PAGE_SIZE_BYTES: int = os.sysconf("SC_PAGE_SIZE") if hasattr(os, "sysconf") els
 _BYTES_PER_GIB: float = 1024.0**3
 
 
+def _read_cgroup_bytes(path: str) -> Optional[int]:
+    """Read a cgroup byte counter. Returns None for unavailable/unlimited."""
+    try:
+        with open(path) as f:
+            raw = f.read().strip()
+        if not raw or raw == "max":
+            return None
+        value = int(raw)
+        # Some cgroup v1 setups use huge sentinel values for "no limit".
+        if value <= 0 or value >= (1 << 60):
+            return None
+        return value
+    except Exception:
+        return None
+
+
+def get_cgroup_memory_current_gb() -> Optional[float]:
+    """Return current cgroup memory usage in GiB, if available."""
+    candidates = (
+        "/sys/fs/cgroup/memory.current",  # cgroup v2
+        "/sys/fs/cgroup/memory/memory.usage_in_bytes",  # cgroup v1
+    )
+    for path in candidates:
+        value = _read_cgroup_bytes(path)
+        if value is not None:
+            return value / _BYTES_PER_GIB
+    return None
+
+
+def get_cgroup_memory_limit_gb() -> Optional[float]:
+    """Return cgroup memory limit in GiB, if available and finite."""
+    candidates = (
+        "/sys/fs/cgroup/memory.max",  # cgroup v2
+        "/sys/fs/cgroup/memory/memory.limit_in_bytes",  # cgroup v1
+    )
+    for path in candidates:
+        value = _read_cgroup_bytes(path)
+        if value is not None:
+            return value / _BYTES_PER_GIB
+    return None
+
+
+def get_cgroup_available_memory_gb() -> Optional[float]:
+    """Return available cgroup memory in GiB, if cgroup limits are present."""
+    current = get_cgroup_memory_current_gb()
+    limit = get_cgroup_memory_limit_gb()
+    if current is None or limit is None:
+        return None
+    return max(0.0, limit - current)
+
+
 def get_rss_gb() -> float:
     """Return the current process RSS in GiB (Linux only, fast)."""
     try:
@@ -201,15 +252,28 @@ def get_rss_gb() -> float:
 
 
 def get_available_memory_gb() -> float:
-    """Return available system memory in GiB (Linux only, fast)."""
+    """Return effective available memory in GiB.
+
+    Uses host MemAvailable and, when present, cgroup-available memory.
+    In Slurm/cgroup-limited jobs this prevents overestimating free RAM.
+    """
+    system_avail_gb: Optional[float] = None
     try:
         with open("/proc/meminfo") as f:
             for line in f:
                 if line.startswith("MemAvailable:"):
-                    return int(line.split()[1]) / (1024**2)  # kB -> GB
+                    system_avail_gb = int(line.split()[1]) / (1024**2)  # kB -> GB
+                    break
     except Exception:
         pass
-    return 0.0
+
+    cgroup_avail_gb = get_cgroup_available_memory_gb()
+
+    if system_avail_gb is None:
+        return cgroup_avail_gb if cgroup_avail_gb is not None else 0.0
+    if cgroup_avail_gb is None:
+        return system_avail_gb
+    return min(system_avail_gb, cgroup_avail_gb)
 
 
 # ---------------------------------------------------------------------------
