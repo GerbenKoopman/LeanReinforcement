@@ -1,0 +1,65 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=1
+#SBATCH --job-name=concurrency
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=18
+#SBATCH --time=06:00:00
+#SBATCH --output=logs/experiment_conc_%A.out
+
+# --- Fail on error ---
+set -e
+set -o pipefail
+
+# --- Environment Setup ---
+module purge
+module load 2024
+module load Anaconda3/2024.06-1
+module load CUDA/12.6.0
+
+export CUDA_HOME=$CUDA_ROOT
+export CUDA_PATH=$CUDA_ROOT
+
+source activate lean-reinforcement
+
+# Source environment variables from .env file
+set -a
+if [ -f "$HOME/lean_reinforcement/.env" ]; then
+    source "$HOME/lean_reinforcement/.env"
+fi
+set +a
+
+cd "$HOME/lean_reinforcement"
+
+echo "======================================================"
+echo "Starting Experiment: Concurrency"
+echo "======================================================"
+
+# Execute the training script
+export BASE_DIR="checkpoints/concurrency"
+
+TRAIN_LOG=$(mktemp)
+
+srun python3 -m lean_reinforcement.training.train \
+    --num-workers 12 \
+    --lean-memory-limit-gb 6 \
+    --training-mode value_head \
+    --no-use-hyperbolic \
+    --no-use-wandb \
+    --checkpoint-dir "$BASE_DIR" \
+    --indexed-corpus-path "$CORPUS_DIR/indexed_corpus.pkl" 2>&1 | tee "$TRAIN_LOG"
+
+RUN_DIR=$(awk -F'Using iteration checkpoint directory: ' '/Using iteration checkpoint directory:/ {print $2}' "$TRAIN_LOG" | tail -n1 | tr -d '\r')
+rm -f "$TRAIN_LOG"
+
+if [ -z "$RUN_DIR" ] || [ ! -d "$RUN_DIR" ]; then
+    echo "ERROR: Could not determine exact run directory from training logs."
+    exit 1
+fi
+
+echo "Running evaluation for run directory: ${RUN_DIR}"
+
+echo "Submitting clean evaluation job..."
+EVAL_JOB_ID=$(sbatch --parsable --dependency=afterok:$SLURM_JOB_ID --export=ALL,RUN_DIR="$RUN_DIR",USE_HYPERBOLIC=0 job_files/evaluate.job)
+echo "Submitted Eval Job: ${EVAL_JOB_ID} (depends on ${SLURM_JOB_ID})"
