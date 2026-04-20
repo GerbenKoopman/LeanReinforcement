@@ -302,6 +302,36 @@ def _read_cgroup_stat(path: str) -> Dict[str, int]:
     return stats
 
 
+def _read_effective_cgroup_v2_limit_bytes(limit_path: str) -> Optional[int]:
+    """Return the effective v2 memory.max limit across ancestor cgroups.
+
+    Some environments set memory.max="max" at the process cgroup while an
+    ancestor applies the actual limit. We walk toward /sys/fs/cgroup and take
+    the minimum finite limit encountered.
+    """
+    root = os.path.normpath("/sys/fs/cgroup")
+    current_dir = os.path.normpath(os.path.dirname(limit_path))
+    finite_limits: list[int] = []
+
+    while True:
+        path = os.path.join(current_dir, "memory.max")
+        value = _read_cgroup_bytes(path)
+        if value is not None:
+            finite_limits.append(value)
+
+        if current_dir == root:
+            break
+
+        parent = os.path.normpath(os.path.dirname(current_dir))
+        if parent == current_dir or not parent.startswith(root):
+            break
+        current_dir = parent
+
+    if not finite_limits:
+        return None
+    return min(finite_limits)
+
+
 def get_cgroup_memory_current_gb() -> Optional[float]:
     """Return current cgroup memory usage in GiB, if available."""
     current_path, _, _ = _resolve_cgroup_memory_files()
@@ -318,7 +348,12 @@ def get_cgroup_memory_limit_gb() -> Optional[float]:
     _, limit_path, _ = _resolve_cgroup_memory_files()
     if limit_path is None:
         return None
-    value = _read_cgroup_bytes(limit_path)
+
+    if os.path.basename(limit_path) == "memory.max":
+        value = _read_effective_cgroup_v2_limit_bytes(limit_path)
+    else:
+        value = _read_cgroup_bytes(limit_path)
+
     if value is not None:
         return value / _BYTES_PER_GIB
     return None
@@ -352,6 +387,19 @@ def get_cgroup_memory_stat_gb() -> Dict[str, float]:
     if shmem_bytes is not None:
         out["shmem"] = shmem_bytes / _BYTES_PER_GIB
     return out
+
+
+def get_cgroup_oom_kill_count() -> Optional[int]:
+    """Return cumulative cgroup oom_kill count from memory.events, if available."""
+    current_path, _, _ = _resolve_cgroup_memory_files()
+    if current_path is None:
+        return None
+
+    events_path = os.path.join(os.path.dirname(current_path), "memory.events")
+    events = _read_cgroup_stat(events_path)
+    if not events:
+        return None
+    return events.get("oom_kill")
 
 
 def get_cgroup_available_memory_gb() -> Optional[float]:

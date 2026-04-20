@@ -48,6 +48,7 @@ from lean_reinforcement.utilities.memory import (
     configure_glibc_env_for_children,
     get_cgroup_memory_current_gb,
     get_cgroup_memory_limit_gb,
+    get_cgroup_oom_kill_count,
     get_cgroup_memory_stat_gb,
     dump_memory_diagnostic,
     empty_gpu_cache,
@@ -217,6 +218,10 @@ class Trainer:
             else:
                 cgroup_note = f" cgroup={cg_current:.2f}GB"
 
+        cg_oom_kill = get_cgroup_oom_kill_count()
+        if cg_oom_kill is not None:
+            cgroup_note = f"{cgroup_note} oom_kill={cg_oom_kill}"
+
         queue_note = ""
         try:
             queue_note = (
@@ -320,6 +325,10 @@ class Trainer:
                 )
                 limit_text = f"{limit_gb:.2f}GB" if limit_gb is not None else "n/a"
                 free_text = f"{free_gb:.2f}GB" if free_gb is not None else "n/a"
+                oom_kill_count = get_cgroup_oom_kill_count()
+                oom_kill_note = (
+                    f" oom_kill={oom_kill_count}" if oom_kill_count is not None else ""
+                )
 
                 logger.info(
                     "[SHUTDOWN CGROUP] "
@@ -327,7 +336,7 @@ class Trainer:
                     f"t={elapsed_s:.1f}s "
                     f"rss={get_rss_gb():.2f}GB "
                     f"current={current_text} limit={limit_text} free={free_text}"
-                    f"{stat_note}"
+                    f"{stat_note}{oom_kill_note}"
                 )
 
                 if sample_idx == sample_count - 1:
@@ -859,6 +868,7 @@ class Trainer:
 
         # Track worker crashes to detect systemic issues
         total_worker_crashes = 0
+        sigkill_worker_crashes = 0
 
         # Stall timeout: if no activity (no results AND no inference processing)
         # for this long, assume workers are truly stuck.
@@ -1059,6 +1069,7 @@ class Trainer:
                     # to stop via the None sentinel.
                     is_watchdog_kill = p.exitcode == RSS_WATCHDOG_EXIT_CODE
                     is_crash = p.exitcode not in (0, None)
+                    is_sigkill = p.exitcode == -9
 
                     if is_crash:
                         total_worker_crashes += 1
@@ -1072,11 +1083,28 @@ class Trainer:
                             # Watchdog recycling happens AFTER the worker sends its result,
                             # so we already counted this theorem. Don't double-count.
                         else:
-                            logger.warning(
-                                f"Worker {i} (PID: {p.pid}) crashed (exit code: {p.exitcode}). "
-                                f"Total crashes so far: {total_worker_crashes}. "
-                                f"Restarting worker and skipping current theorem."
+                            oom_kill_count = get_cgroup_oom_kill_count()
+                            oom_kill_note = (
+                                f" cgroup_oom_kill={oom_kill_count}"
+                                if oom_kill_count is not None
+                                else ""
                             )
+
+                            if is_sigkill:
+                                sigkill_worker_crashes += 1
+                                logger.error(
+                                    f"Worker {i} (PID: {p.pid}) was SIGKILLed (exit code -9). "
+                                    f"Total crashes so far: {total_worker_crashes}. "
+                                    f"This is typically an OOM kill in cgroup-managed jobs{oom_kill_note}. "
+                                    f"Restarting worker and skipping current theorem."
+                                )
+                            else:
+                                logger.warning(
+                                    f"Worker {i} (PID: {p.pid}) crashed (exit code: {p.exitcode}). "
+                                    f"Total crashes so far: {total_worker_crashes}.{oom_kill_note} "
+                                    f"Restarting worker and skipping current theorem."
+                                )
+
                             # True crashes happen during processing, before sending result.
                             # Count as a failed completion to keep results_received reachable.
                             results_received += 1
@@ -1091,6 +1119,18 @@ class Trainer:
 
                         # Terminate the old process object to be safe
                         p.join(timeout=1)
+
+                        # Drop stale responses from the dead worker so a newly
+                        # spawned worker with the same ID doesn't consume old
+                        # inference payloads.
+                        drained_worker_responses = self._drain_queue_bounded(
+                            self.response_queues[i], max_items=1000
+                        )
+                        if drained_worker_responses:
+                            logger.warning(
+                                f"Drained {drained_worker_responses} stale response(s) "
+                                f"for worker {i} before restart."
+                            )
 
                         # Start a new worker with the same ID
                         new_worker = mp.Process(
@@ -1145,7 +1185,8 @@ class Trainer:
                     f"(limit: {no_result_timeout/60:.0f}m). "
                     f"Collected {results_received}/{total_theorems} results "
                     f"({remaining_theorems} remaining). "
-                    f"Total worker crashes in this epoch: {total_worker_crashes}. "
+                    f"Total worker crashes in this epoch: {total_worker_crashes} "
+                    f"(SIGKILL={sigkill_worker_crashes}). "
                     f"Proceeding with training from partial data."
                 )
                 break
@@ -1158,7 +1199,8 @@ class Trainer:
                         f"All workers dead and no results for {drain_timeout}s. "
                         f"Collected {results_received}/{total_theorems} results "
                         f"({results_received*100//total_theorems}% complete). "
-                        f"Total worker crashes in this epoch: {total_worker_crashes}. "
+                        f"Total worker crashes in this epoch: {total_worker_crashes} "
+                        f"(SIGKILL={sigkill_worker_crashes}). "
                         f"Proceeding with training from partial data."
                     )
                     break
@@ -1169,6 +1211,19 @@ class Trainer:
             f"Data collection complete: {results_received}/{total_theorems} "
             f"results in {elapsed/60:.1f} min"
         )
+
+        if sigkill_worker_crashes > 0:
+            oom_kill_count = get_cgroup_oom_kill_count()
+            oom_kill_note = (
+                f" cgroup_oom_kill={oom_kill_count}"
+                if oom_kill_count is not None
+                else ""
+            )
+            logger.warning(
+                f"Detected {sigkill_worker_crashes} SIGKILL worker crashes in this epoch. "
+                f"In Slurm cgroup mode this usually means OOM kills and may cause the step "
+                f"to be reported as Out Of Memory at job end.{oom_kill_note}"
+            )
 
         # Load back temp data
         if os.path.exists(temp_data_file):

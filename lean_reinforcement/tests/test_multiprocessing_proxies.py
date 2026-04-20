@@ -21,52 +21,84 @@ class TestQueueProxyTransformer(unittest.TestCase):
         state = "example_state"
         n = 5
         expected_result = ["tactic1", "tactic2"]
-        self.response_queue.get.return_value = expected_result
+        self.response_queue.get.return_value = (
+            self.proxy._stream_token,
+            0,
+            "generate_tactics",
+            expected_result,
+        )
 
         result = self.proxy.generate_tactics(state, n)
 
-        self.request_queue.put.assert_called_with(
-            (self.worker_id, "generate_tactics", (state, n))
-        )
+        call = self.request_queue.put.call_args[0][0]
+        self.assertEqual(call[0], self.worker_id)
+        self.assertIsInstance(call[1], str)
+        self.assertEqual(call[2], 0)
+        self.assertEqual(call[3], "generate_tactics")
+        self.assertEqual(call[4], (state, n))
         self.assertEqual(result, expected_result)
 
     def test_generate_tactics_with_probs(self) -> None:
         state = "example_state"
         n = 5
         expected_result = [("tactic1", 0.9), ("tactic2", 0.1)]
-        self.response_queue.get.return_value = expected_result
+        self.response_queue.get.return_value = (
+            self.proxy._stream_token,
+            0,
+            "generate_tactics_with_probs",
+            expected_result,
+        )
 
         result = self.proxy.generate_tactics_with_probs(state, n)
 
-        self.request_queue.put.assert_called_with(
-            (self.worker_id, "generate_tactics_with_probs", (state, n))
-        )
+        call = self.request_queue.put.call_args[0][0]
+        self.assertEqual(call[0], self.worker_id)
+        self.assertIsInstance(call[1], str)
+        self.assertEqual(call[2], 0)
+        self.assertEqual(call[3], "generate_tactics_with_probs")
+        self.assertEqual(call[4], (state, n))
         self.assertEqual(result, expected_result)
 
     def test_generate_tactics_batch(self) -> None:
         states = ["state1", "state2"]
         n = 2
         expected_result = [["t1", "t2"], ["t3", "t4"]]
-        self.response_queue.get.return_value = expected_result
+        self.response_queue.get.return_value = (
+            self.proxy._stream_token,
+            0,
+            "generate_tactics_batch",
+            expected_result,
+        )
 
         result = self.proxy.generate_tactics_batch(states, n)
 
-        self.request_queue.put.assert_called_with(
-            (self.worker_id, "generate_tactics_batch", (states, n))
-        )
+        call = self.request_queue.put.call_args[0][0]
+        self.assertEqual(call[0], self.worker_id)
+        self.assertIsInstance(call[1], str)
+        self.assertEqual(call[2], 0)
+        self.assertEqual(call[3], "generate_tactics_batch")
+        self.assertEqual(call[4], (states, n))
         self.assertEqual(result, expected_result)
 
     def test_generate_tactics_with_probs_batch(self) -> None:
         states = ["state1"]
         n = 1
         expected_result = [[("t1", 1.0)]]
-        self.response_queue.get.return_value = expected_result
+        self.response_queue.get.return_value = (
+            self.proxy._stream_token,
+            0,
+            "generate_tactics_with_probs_batch",
+            expected_result,
+        )
 
         result = self.proxy.generate_tactics_with_probs_batch(states, n)
 
-        self.request_queue.put.assert_called_with(
-            (self.worker_id, "generate_tactics_with_probs_batch", (states, n))
-        )
+        call = self.request_queue.put.call_args[0][0]
+        self.assertEqual(call[0], self.worker_id)
+        self.assertIsInstance(call[1], str)
+        self.assertEqual(call[2], 0)
+        self.assertEqual(call[3], "generate_tactics_with_probs_batch")
+        self.assertEqual(call[4], (states, n))
         self.assertEqual(result, expected_result)
 
 
@@ -82,61 +114,101 @@ class TestQueueProxyValueHead(unittest.TestCase):
     def test_predict(self) -> None:
         state = "state"
         expected_result = 0.5
-        self.response_queue.get.return_value = expected_result
+        self.response_queue.get.return_value = (
+            self.proxy._stream_token,
+            0,
+            "predict_value",
+            expected_result,
+        )
 
         result = self.proxy.predict(state)
 
-        self.request_queue.put.assert_called_with(
-            (self.worker_id, "predict_value", (state,))
-        )
+        call = self.request_queue.put.call_args[0][0]
+        self.assertEqual(call[0], self.worker_id)
+        self.assertIsInstance(call[1], str)
+        self.assertEqual(call[2], 0)
+        self.assertEqual(call[3], "predict_value")
+        self.assertEqual(call[4], (state,))
         self.assertEqual(result, expected_result)
 
     def test_predict_batch(self) -> None:
         states = ["s1", "s2"]
         expected_result = [0.1, 0.9]
-        self.response_queue.get.return_value = expected_result
+        self.response_queue.get.return_value = (
+            self.proxy._stream_token,
+            0,
+            "predict_batch",
+            expected_result,
+        )
 
         result = self.proxy.predict_batch(states)
 
-        self.request_queue.put.assert_called_with(
-            (self.worker_id, "predict_batch", (states,))
-        )
+        call = self.request_queue.put.call_args[0][0]
+        self.assertEqual(call[0], self.worker_id)
+        self.assertIsInstance(call[1], str)
+        self.assertEqual(call[2], 0)
+        self.assertEqual(call[3], "predict_batch")
+        self.assertEqual(call[4], (states,))
         self.assertEqual(result, expected_result)
 
     def test_encode_states(self) -> None:
         states = ["s1"]
         expected_result = torch.tensor([1.0, 2.0])
-        self.response_queue.get.return_value = expected_result
+        self.response_queue.get.return_value = (
+            self.proxy._stream_token,
+            0,
+            "encode_states",
+            expected_result,
+        )
 
         result = self.proxy.encode_states(states)
 
-        self.request_queue.put.assert_called_with(
-            (self.worker_id, "encode_states", (states,))
-        )
+        call = self.request_queue.put.call_args[0][0]
+        self.assertEqual(call[0], self.worker_id)
+        self.assertIsInstance(call[1], str)
+        self.assertEqual(call[2], 0)
+        self.assertEqual(call[3], "encode_states")
+        self.assertEqual(call[4], (states,))
         self.assertTrue(torch.equal(result, expected_result))
 
     def test_predict_from_features(self) -> None:
         features = torch.tensor([1.0])
         expected_result = 0.3
-        self.response_queue.get.return_value = expected_result
+        self.response_queue.get.return_value = (
+            self.proxy._stream_token,
+            0,
+            "predict_from_features",
+            expected_result,
+        )
 
         result = self.proxy.predict_from_features(features)
 
-        self.request_queue.put.assert_called_with(
-            (self.worker_id, "predict_from_features", (features,))
-        )
+        call = self.request_queue.put.call_args[0][0]
+        self.assertEqual(call[0], self.worker_id)
+        self.assertIsInstance(call[1], str)
+        self.assertEqual(call[2], 0)
+        self.assertEqual(call[3], "predict_from_features")
+        self.assertEqual(call[4], (features,))
         self.assertEqual(result, expected_result)
 
     def test_predict_from_features_batch(self) -> None:
         features = torch.tensor([[1.0], [2.0]])
         expected_result = [0.3, 0.4]
-        self.response_queue.get.return_value = expected_result
+        self.response_queue.get.return_value = (
+            self.proxy._stream_token,
+            0,
+            "predict_from_features_batch",
+            expected_result,
+        )
 
         result = self.proxy.predict_from_features_batch(features)
 
-        self.request_queue.put.assert_called_with(
-            (self.worker_id, "predict_from_features_batch", (features,))
-        )
+        call = self.request_queue.put.call_args[0][0]
+        self.assertEqual(call[0], self.worker_id)
+        self.assertIsInstance(call[1], str)
+        self.assertEqual(call[2], 0)
+        self.assertEqual(call[3], "predict_from_features_batch")
+        self.assertEqual(call[4], (features,))
         self.assertEqual(result, expected_result)
 
 

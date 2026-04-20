@@ -2,10 +2,11 @@
 Proxy classes for remote model inference.
 """
 
-from typing import List, Tuple, Optional
+from typing import Any, List, Tuple, Optional
 import gc
 import queue
 import time
+import uuid
 import ctypes
 import ctypes.util
 import torch
@@ -41,54 +42,42 @@ class InferenceTimeoutError(Exception):
 
 
 class _ProxyMixin:
-    """Shared helpers for request-id tracking and stale-response draining."""
+    """Shared helpers for request-id tracking and envelope-aware responses."""
 
     _next_request_id: int
+    _stream_token: str
     response_queue: mp.Queue
     worker_id: int
     timeout: float
 
     def _init_mixin(self) -> None:
         self._next_request_id = 0
-        self._timed_out = False  # set after a timeout
 
     def _new_request_id(self) -> int:
         rid = self._next_request_id
         self._next_request_id += 1
         return rid
 
-    def _drain_stale(self) -> int:
-        """Drain any stale responses left in the queue from prior timeouts.
+    def _is_response_envelope(self, message: Any) -> bool:
+        return (
+            isinstance(message, tuple)
+            and len(message) == 4
+            and isinstance(message[0], str)
+            and isinstance(message[1], int)
+            and isinstance(message[2], str)
+        )
 
-        Returns the number of discarded responses.
-        """
-        discarded = 0
-        while True:
-            try:
-                stale = self.response_queue.get_nowait()
-                discarded += 1
-                logger.debug(
-                    f"Worker {self.worker_id}: Discarded stale response: "
-                    f"{type(stale).__name__}"
-                )
-            except queue.Empty:
-                break
-        if discarded:
-            logger.warning(
-                f"Worker {self.worker_id}: Drained {discarded} stale response(s) "
-                "from queue after previous timeout"
-            )
-        return discarded
-
-    def _get_response(self, request_type: str):
+    def _get_response(self, request_type: str, request_id: int):
         """Get response with timeout, checking RSS between short polls.
+
+        Uses an envelope-aware protocol to ignore stale responses that arrive
+        after timeouts or worker restarts:
+            (stream_token, request_id, request_type, payload)
+
+        Falls back to legacy raw payload responses for backward compatibility.
 
         Raises ``MemoryLimitExceeded`` if RSS exceeds the hard cap.
         """
-        if self._timed_out:
-            self._drain_stale()
-            self._timed_out = False
-
         POLL_INTERVAL = 5.0  # seconds between RSS checks
         RSS_HARD_CAP = MAX_WORKER_RSS_GB  # absolute hard limit (GB)
         RSS_WARN = MAX_WORKER_RSS_GB * 0.75  # warn threshold (GB)
@@ -102,6 +91,24 @@ class _ProxyMixin:
             wait = min(POLL_INTERVAL, remaining)
             try:
                 result = self.response_queue.get(timeout=wait)
+                if self._is_response_envelope(result):
+                    stream_token, rid, response_type, payload = result
+                    if (
+                        stream_token == self._stream_token
+                        and rid == request_id
+                        and response_type == request_type
+                    ):
+                        return payload
+
+                    logger.debug(
+                        f"Worker {self.worker_id}: Discarded stale/mismatched "
+                        f"response (expected token={self._stream_token} "
+                        f"id={request_id} type={request_type}, got "
+                        f"token={stream_token} id={rid} type={response_type})"
+                    )
+                    continue
+
+                # Legacy response protocol (raw payload).
                 return result
             except queue.Empty:
                 pass  # poll interval expired — check RSS then retry
@@ -132,14 +139,12 @@ class _ProxyMixin:
                         f"hard cap {RSS_HARD_CAP:.1f} GB after gc+malloc_trim. "
                         f"Aborting {request_type} to prevent OOM."
                     )
-                    self._timed_out = True  # drain on next call
                     raise MemoryLimitExceeded(
                         f"Worker {self.worker_id} RSS {rss:.2f} GB > "
                         f"cap {RSS_HARD_CAP:.1f} GB"
                     )
 
         # Full timeout reached
-        self._timed_out = True
         logger.error(
             f"Worker {self.worker_id}: Timeout waiting for {request_type} "
             f"response after {self.timeout}s"
@@ -166,40 +171,75 @@ class QueueProxyTransformer(_ProxyMixin, TransformerProtocol):
         self.timeout = timeout if timeout is not None else self.DEFAULT_TIMEOUT
         # Mock tokenizer for AgentRunner if it accesses it directly
         self.tokenizer = None
+        self._stream_token = f"worker-{worker_id}-transformer-{uuid.uuid4().hex}"
         self._init_mixin()
 
     def generate_tactics_with_probs(
         self, state: str, n: int = 1
     ) -> List[Tuple[str, float]]:
+        request_id = self._new_request_id()
         self.request_queue.put(
-            (self.worker_id, "generate_tactics_with_probs", (state, n))
+            (
+                self.worker_id,
+                self._stream_token,
+                request_id,
+                "generate_tactics_with_probs",
+                (state, n),
+            )
         )
         result: List[Tuple[str, float]] = self._get_response(
-            "generate_tactics_with_probs"
+            "generate_tactics_with_probs", request_id
         )
         assert isinstance(result, list)
         return result
 
     def generate_tactics(self, state: str, n: int = 1) -> List[str]:
-        self.request_queue.put((self.worker_id, "generate_tactics", (state, n)))
-        result: List[str] = self._get_response("generate_tactics")
+        request_id = self._new_request_id()
+        self.request_queue.put(
+            (
+                self.worker_id,
+                self._stream_token,
+                request_id,
+                "generate_tactics",
+                (state, n),
+            )
+        )
+        result: List[str] = self._get_response("generate_tactics", request_id)
         assert isinstance(result, list)
         return result
 
     def generate_tactics_batch(self, states: List[str], n: int = 1) -> List[List[str]]:
-        self.request_queue.put((self.worker_id, "generate_tactics_batch", (states, n)))
-        result: List[List[str]] = self._get_response("generate_tactics_batch")
+        request_id = self._new_request_id()
+        self.request_queue.put(
+            (
+                self.worker_id,
+                self._stream_token,
+                request_id,
+                "generate_tactics_batch",
+                (states, n),
+            )
+        )
+        result: List[List[str]] = self._get_response(
+            "generate_tactics_batch", request_id
+        )
         assert isinstance(result, list)
         return result
 
     def generate_tactics_with_probs_batch(
         self, states: List[str], n: int = 1
     ) -> List[List[Tuple[str, float]]]:
+        request_id = self._new_request_id()
         self.request_queue.put(
-            (self.worker_id, "generate_tactics_with_probs_batch", (states, n))
+            (
+                self.worker_id,
+                self._stream_token,
+                request_id,
+                "generate_tactics_with_probs_batch",
+                (states, n),
+            )
         )
         result: List[List[Tuple[str, float]]] = self._get_response(
-            "generate_tactics_with_probs_batch"
+            "generate_tactics_with_probs_batch", request_id
         )
         assert isinstance(result, list)
         return result
@@ -220,36 +260,82 @@ class QueueProxyValueHead(_ProxyMixin):
         self.response_queue = response_queue
         self.worker_id = worker_id
         self.timeout = timeout if timeout is not None else self.DEFAULT_TIMEOUT
+        self._stream_token = f"worker-{worker_id}-value-head-{uuid.uuid4().hex}"
         self._init_mixin()
 
     def predict(self, state: str) -> float:
-        self.request_queue.put((self.worker_id, "predict_value", (state,)))
-        result: float = self._get_response("predict_value")
+        request_id = self._new_request_id()
+        self.request_queue.put(
+            (
+                self.worker_id,
+                self._stream_token,
+                request_id,
+                "predict_value",
+                (state,),
+            )
+        )
+        result: float = self._get_response("predict_value", request_id)
         assert isinstance(result, float)
         return result
 
     def predict_batch(self, states: List[str]) -> List[float]:
-        self.request_queue.put((self.worker_id, "predict_batch", (states,)))
-        result: List[float] = self._get_response("predict_batch")
+        request_id = self._new_request_id()
+        self.request_queue.put(
+            (
+                self.worker_id,
+                self._stream_token,
+                request_id,
+                "predict_batch",
+                (states,),
+            )
+        )
+        result: List[float] = self._get_response("predict_batch", request_id)
         assert isinstance(result, list)
         return result
 
     def encode_states(self, states: List[str]) -> torch.Tensor:
-        self.request_queue.put((self.worker_id, "encode_states", (states,)))
-        result: torch.Tensor = self._get_response("encode_states")
+        request_id = self._new_request_id()
+        self.request_queue.put(
+            (
+                self.worker_id,
+                self._stream_token,
+                request_id,
+                "encode_states",
+                (states,),
+            )
+        )
+        result: torch.Tensor = self._get_response("encode_states", request_id)
         assert isinstance(result, torch.Tensor)
         return result
 
     def predict_from_features(self, features: torch.Tensor) -> float:
-        self.request_queue.put((self.worker_id, "predict_from_features", (features,)))
-        result: float = self._get_response("predict_from_features")
+        request_id = self._new_request_id()
+        self.request_queue.put(
+            (
+                self.worker_id,
+                self._stream_token,
+                request_id,
+                "predict_from_features",
+                (features,),
+            )
+        )
+        result: float = self._get_response("predict_from_features", request_id)
         assert isinstance(result, float)
         return result
 
     def predict_from_features_batch(self, features: torch.Tensor) -> List[float]:
+        request_id = self._new_request_id()
         self.request_queue.put(
-            (self.worker_id, "predict_from_features_batch", (features,))
+            (
+                self.worker_id,
+                self._stream_token,
+                request_id,
+                "predict_from_features_batch",
+                (features,),
+            )
         )
-        result: List[float] = self._get_response("predict_from_features_batch")
+        result: List[float] = self._get_response(
+            "predict_from_features_batch", request_id
+        )
         assert isinstance(result, list)
         return result

@@ -2,7 +2,7 @@
 Inference Server for centralized model execution.
 """
 
-from typing import List, Any, Union, Sequence, Tuple
+from typing import List, Any, Optional, Union, Sequence, Tuple
 from loguru import logger
 import torch
 import torch.multiprocessing as mp
@@ -15,7 +15,10 @@ from lean_reinforcement.utilities.memory import (
     GPU_CLEANUP_THRESHOLD_PERCENT,
 )
 
-Request = Tuple[int, str, Tuple[Any, ...]]
+LegacyRequest = Tuple[int, str, Tuple[Any, ...]]
+RequestWithId = Tuple[int, int, str, Tuple[Any, ...]]
+RequestWithToken = Tuple[int, str, int, str, Tuple[Any, ...]]
+NormalizedRequest = Tuple[int, Optional[str], Optional[int], str, Tuple[Any, ...]]
 
 
 class InferenceServer:
@@ -92,7 +95,7 @@ class InferenceServer:
         Collects a batch of requests and processes them.
         Returns True if a batch was processed, False otherwise.
         """
-        batch_requests: List[Tuple[int, str, Tuple[Any, ...]]] = []
+        batch_requests: List[NormalizedRequest] = []
 
         target_size = self.batch_size
         if self.max_safe_batch_size < target_size:
@@ -105,7 +108,11 @@ class InferenceServer:
         try:
             while len(batch_requests) < target_size:
                 req = self.request_queue.get_nowait()
-                batch_requests.append(req)
+                normalized = self._normalize_request(req)
+                if normalized is None:
+                    logger.warning(f"Skipping malformed request: {req!r}")
+                    continue
+                batch_requests.append(normalized)
         except queue.Empty:
             pass
 
@@ -118,7 +125,80 @@ class InferenceServer:
         self._process_batch(batch_requests)
         return True
 
-    def _process_batch(self, batch_requests: List[Request]):
+    def _normalize_request(self, request: Any) -> Optional[NormalizedRequest]:
+        """Normalize request envelopes across protocol versions.
+
+        Supported formats:
+          1) Legacy: (worker_id, req_type, payload)
+          2) Request ID: (worker_id, request_id, req_type, payload)
+          3) Stream + ID: (worker_id, stream_token, request_id, req_type, payload)
+        """
+        if not isinstance(request, tuple):
+            return None
+
+        if len(request) == 3:
+            worker_id, req_type, payload = request
+            if (
+                isinstance(worker_id, int)
+                and isinstance(req_type, str)
+                and isinstance(payload, tuple)
+            ):
+                return (worker_id, None, None, req_type, payload)
+            return None
+
+        if len(request) == 4:
+            worker_id, request_id, req_type, payload = request
+            if (
+                isinstance(worker_id, int)
+                and isinstance(request_id, int)
+                and isinstance(req_type, str)
+                and isinstance(payload, tuple)
+            ):
+                return (worker_id, None, request_id, req_type, payload)
+            return None
+
+        if len(request) == 5:
+            worker_id, stream_token, request_id, req_type, payload = request
+            if (
+                isinstance(worker_id, int)
+                and isinstance(stream_token, str)
+                and isinstance(request_id, int)
+                and isinstance(req_type, str)
+                and isinstance(payload, tuple)
+            ):
+                return (worker_id, stream_token, request_id, req_type, payload)
+            return None
+
+        return None
+
+    def _send_response(
+        self,
+        worker_id: int,
+        stream_token: Optional[str],
+        request_id: Optional[int],
+        req_type: str,
+        payload: Any,
+    ) -> None:
+        """Send a response using the same protocol family as the request."""
+        if stream_token is not None and request_id is not None:
+            self.response_queues[worker_id].put(
+                (stream_token, request_id, req_type, payload)
+            )
+            return
+        if request_id is not None:
+            self.response_queues[worker_id].put((request_id, req_type, payload))
+            return
+        self.response_queues[worker_id].put(payload)
+
+    def _fallback_response(self, req_type: str) -> Any:
+        """Return a type-compatible fallback payload for failed requests."""
+        if req_type in {"predict_value", "predict_from_features"}:
+            return 0.0
+        if req_type == "encode_states":
+            return torch.tensor([])
+        return []
+
+    def _process_batch(self, batch_requests: List[NormalizedRequest]):
         # Helper to extract 'n' from payload safely for sorting
         def get_n(payload: Tuple[Any, ...]) -> int:
             if len(payload) >= 2 and isinstance(payload[1], int):
@@ -126,8 +206,8 @@ class InferenceServer:
             return 0
 
         # Sort by type AND parameter n to ensure safe batching
-        def sort_key(req: Request):
-            _, req_type, payload = req
+        def sort_key(req: NormalizedRequest):
+            _, _, _, req_type, payload = req
             return (req_type, get_n(payload))
 
         batch_requests.sort(key=sort_key)
@@ -136,44 +216,13 @@ class InferenceServer:
         current_n = -1
         current_batch: List[Tuple[Any, ...]] = []
         current_indices: List[int] = []
+        current_stream_tokens: List[Optional[str]] = []
+        current_request_ids: List[Optional[int]] = []
 
-        for worker_id, req_type, payload in batch_requests:
-            this_n = get_n(payload)
+        def flush_current() -> None:
+            if not current_batch:
+                return
 
-            # Flush if type changes OR if n changes
-            if req_type != current_type or this_n != current_n:
-                # Process previous batch
-                if current_batch:
-                    assert current_type is not None
-                    if len(current_batch) > self.max_safe_batch_size:
-                        # Split into smaller chunks
-                        for i in range(
-                            0, len(current_batch), int(self.max_safe_batch_size)
-                        ):
-                            chunk_batch = current_batch[
-                                i : i + int(self.max_safe_batch_size)
-                            ]
-                            chunk_indices = current_indices[
-                                i : i + int(self.max_safe_batch_size)
-                            ]
-                            self._execute_batch(
-                                current_type, chunk_batch, chunk_indices
-                            )
-                    else:
-                        self._execute_batch(
-                            current_type, current_batch, current_indices
-                        )
-
-                current_type = req_type
-                current_n = this_n
-                current_batch = []
-                current_indices = []
-
-            current_batch.append(payload)
-            current_indices.append(worker_id)
-
-        # Process last batch
-        if current_batch:
             assert current_type is not None
             if len(current_batch) > self.max_safe_batch_size:
                 for i in range(0, len(current_batch), int(self.max_safe_batch_size)):
@@ -181,9 +230,49 @@ class InferenceServer:
                     chunk_indices = current_indices[
                         i : i + int(self.max_safe_batch_size)
                     ]
-                    self._execute_batch(current_type, chunk_batch, chunk_indices)
+                    chunk_stream_tokens = current_stream_tokens[
+                        i : i + int(self.max_safe_batch_size)
+                    ]
+                    chunk_request_ids = current_request_ids[
+                        i : i + int(self.max_safe_batch_size)
+                    ]
+                    self._execute_batch(
+                        current_type,
+                        chunk_batch,
+                        chunk_indices,
+                        chunk_stream_tokens,
+                        chunk_request_ids,
+                    )
             else:
-                self._execute_batch(current_type, current_batch, current_indices)
+                self._execute_batch(
+                    current_type,
+                    current_batch,
+                    current_indices,
+                    current_stream_tokens,
+                    current_request_ids,
+                )
+
+        for worker_id, stream_token, request_id, req_type, payload in batch_requests:
+            this_n = get_n(payload)
+
+            # Flush if type changes OR if n changes
+            if req_type != current_type or this_n != current_n:
+                flush_current()
+
+                current_type = req_type
+                current_n = this_n
+                current_batch = []
+                current_indices = []
+                current_stream_tokens = []
+                current_request_ids = []
+
+            current_batch.append(payload)
+            current_indices.append(worker_id)
+            current_stream_tokens.append(stream_token)
+            current_request_ids.append(request_id)
+
+        # Process last batch
+        flush_current()
 
     def _run_transformer_batch(self, method, states, n, **kwargs):
         # Preemptive memory check
@@ -222,9 +311,18 @@ class InferenceServer:
         right = self._run_transformer_batch(method, states[mid:], n, **kwargs)
         return left + right
 
-    def _execute_batch(self, req_type: str, batch: List[Any], indices: List[int]):
+    def _execute_batch(
+        self,
+        req_type: str,
+        batch: List[Any],
+        indices: List[int],
+        stream_tokens: List[Optional[str]],
+        request_ids: List[Optional[int]],
+    ):
         try:
-            self._execute_batch_inner(req_type, batch, indices)
+            self._execute_batch_inner(
+                req_type, batch, indices, stream_tokens, request_ids
+            )
         except Exception as exc:
             # CRITICAL: On any failure, send fallback responses to ALL
             # workers in this batch.  Without this, workers hang forever
@@ -232,14 +330,27 @@ class InferenceServer:
             logger.error(
                 f"Inference failed for {req_type} " f"(workers {indices}): {exc}"
             )
-            for idx in indices:
+            fallback = self._fallback_response(req_type)
+            for i, idx in enumerate(indices):
                 try:
-                    # Send an empty list — proxy asserts isinstance(result, list)
-                    self.response_queues[idx].put([])
+                    self._send_response(
+                        idx,
+                        stream_tokens[i],
+                        request_ids[i],
+                        req_type,
+                        fallback,
+                    )
                 except Exception:
                     pass
 
-    def _execute_batch_inner(self, req_type: str, batch: List[Any], indices: List[int]):
+    def _execute_batch_inner(
+        self,
+        req_type: str,
+        batch: List[Any],
+        indices: List[int],
+        stream_tokens: List[Optional[str]],
+        request_ids: List[Optional[int]],
+    ):
         execution_results: List[Any] = []
 
         if req_type == "generate_tactics_with_probs":
@@ -440,6 +551,18 @@ class InferenceServer:
                 )
                 execution_results = [[] for _ in batch]
 
+        if len(execution_results) != len(indices):
+            raise RuntimeError(
+                f"Execution result size mismatch for {req_type}: "
+                f"results={len(execution_results)} requests={len(indices)}"
+            )
+
         # Send responses
         for i, res in enumerate(execution_results):
-            self.response_queues[indices[i]].put(res)
+            self._send_response(
+                indices[i],
+                stream_tokens[i],
+                request_ids[i],
+                req_type,
+                res,
+            )

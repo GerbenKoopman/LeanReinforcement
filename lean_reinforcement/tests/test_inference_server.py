@@ -51,6 +51,27 @@ class TestInferenceServer(unittest.TestCase):
         response = self.response_queues[worker_id].get_nowait()
         self.assertEqual(response, ["tactic1"])
 
+    def test_process_requests_enveloped_single_batch(self) -> None:
+        # New request envelope format:
+        # (worker_id, stream_token, request_id, req_type, payload)
+        worker_id = 0
+        stream_token = "stream-token-1"
+        request_id = 42
+        req_type = "generate_tactics"
+        payload = ("state1", 3)
+
+        self.request_queue.put((worker_id, stream_token, request_id, req_type, payload))
+        self.transformer.generate_tactics_batch.return_value = [["tactic1"]]
+
+        processed = self.server.process_requests()
+        self.assertTrue(processed)
+
+        response = self.response_queues[worker_id].get_nowait()
+        self.assertEqual(
+            response,
+            (stream_token, request_id, req_type, ["tactic1"]),
+        )
+
     def test_process_requests_mixed_batch(self) -> None:
         # Add requests of different types
         # 1. generate_tactics
