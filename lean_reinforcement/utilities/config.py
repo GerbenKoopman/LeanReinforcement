@@ -47,7 +47,7 @@ class TrainingConfig:
     # Model Args
     model_name: str = "kaiyuy/leandojo-lean4-tacgen-byt5-small"
     num_tactics_to_expand: int = 64
-    max_rollout_depth: int = 80
+    max_rollout_depth: int = 50
 
     # Search mode
     full_search: bool = (
@@ -80,12 +80,12 @@ class TrainingConfig:
     def from_args(cls, args: argparse.Namespace) -> "TrainingConfig":
         return cls(
             data_type=getattr(args, "data_type", "novel_premises"),
-            num_epochs=getattr(args, "num_epochs", 3),
+            num_epochs=getattr(args, "num_epochs", 2),
             num_theorems=getattr(args, "num_theorems", 128),
             num_iterations=getattr(args, "num_iterations", 1000),
-            max_steps=getattr(args, "max_steps", 80),
+            max_steps=getattr(args, "max_steps", 50),
             batch_size=getattr(args, "batch_size", 1),
-            num_workers=getattr(args, "num_workers", 16),
+            num_workers=getattr(args, "num_workers", 8),
             mcts_type=getattr(args, "mcts_type", "alpha_zero"),
             indexed_corpus_path=getattr(args, "indexed_corpus_path", None),
             model_name=getattr(
@@ -94,7 +94,7 @@ class TrainingConfig:
                 "kaiyuy/leandojo-lean4-tacgen-byt5-small",
             ),
             num_tactics_to_expand=getattr(args, "num_tactics_to_expand", 64),
-            max_rollout_depth=getattr(args, "max_rollout_depth", 80),
+            max_rollout_depth=getattr(args, "max_rollout_depth", 50),
             max_time=getattr(args, "max_time", 175),
             env_timeout=getattr(args, "env_timeout", 75),
             proof_timeout=getattr(args, "proof_timeout", 360),
@@ -142,7 +142,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--num-epochs",
         type=int,
-        default=3,
+        default=2,
         help="Number of self-play/training epochs.",
     )
     parser.add_argument(
@@ -160,7 +160,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--max-steps",
         type=int,
-        default=80,
+        default=50,
         help="Max steps per proof (reduced default for memory efficiency).",
     )
     parser.add_argument(
@@ -172,7 +172,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--num-workers",
         type=int,
-        default=16,
+        default=8,
         help="Number of parallel workers for processing theorems.",
     )
     parser.add_argument(
@@ -203,7 +203,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--max-rollout-depth",
         type=int,
-        default=80,
+        default=50,
         help="Max depth for MCTS rollout.",
     )
     parser.add_argument(

@@ -36,7 +36,7 @@ cd "$HOME/lean_reinforcement"
 export LEAN_RL_DISABLE_LIVE_PROGRESS=1
 export LEAN_RL_SHUTDOWN_CGROUP_SAMPLE_SECS=20
 export LEAN_RL_SHUTDOWN_CGROUP_SAMPLE_INTERVAL_S=1
-export LEAN_RL_MAX_RSS_GB=10.0
+export LEAN_RL_MAX_RSS_GB=8.0
 
 echo "======================================================"
 echo "Starting Experiment: Concurrency"
@@ -48,8 +48,6 @@ export BASE_DIR="checkpoints/concurrency"
 TRAIN_LOG=$(mktemp)
 
 srun python3 -m lean_reinforcement.training.train \
-    --num-workers 6 \
-    --lean-memory-limit-gb 10 \
     --training-mode value_head \
     --no-use-hyperbolic \
     --no-use-wandb \
