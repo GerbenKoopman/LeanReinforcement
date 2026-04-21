@@ -33,10 +33,16 @@ if TYPE_CHECKING:
 # ---------------------------------------------------------------------------
 
 #: Workers pause when available RAM is below this (GiB).
-WORKER_MIN_AVAILABLE_GB: float = 2.0
+#: Override via ``LEAN_RL_WORKER_MIN_AVAILABLE_GB`` env var.
+WORKER_MIN_AVAILABLE_GB: float = float(
+    os.environ.get("LEAN_RL_WORKER_MIN_AVAILABLE_GB", "2.0")
+)
 
 #: Trainer pauses when available RAM is below this (GiB).
-TRAINER_MIN_AVAILABLE_GB: float = 3.0
+#: Override via ``LEAN_RL_TRAINER_MIN_AVAILABLE_GB`` env var.
+TRAINER_MIN_AVAILABLE_GB: float = float(
+    os.environ.get("LEAN_RL_TRAINER_MIN_AVAILABLE_GB", "3.0")
+)
 
 #: MCTS aborts when available RAM drops below this (GiB).
 #: Override via ``LEAN_RL_MIN_AVAILABLE_GB`` env var.
@@ -419,6 +425,27 @@ def get_rss_gb() -> float:
         return pages * _PAGE_SIZE_BYTES / _BYTES_PER_GIB
     except Exception:
         return 0.0
+
+
+def get_process_tree_rss_gb() -> float:
+    """Return RSS of this process plus descendants in GiB.
+
+    Falls back to ``get_rss_gb()`` if ``psutil`` is unavailable.
+    """
+    own_rss_gb = get_rss_gb()
+    try:
+        import psutil
+
+        current = psutil.Process(os.getpid())
+        total_bytes = current.memory_info().rss
+        for child in current.children(recursive=True):
+            try:
+                total_bytes += child.memory_info().rss
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                continue
+        return total_bytes / _BYTES_PER_GIB
+    except Exception:
+        return own_rss_gb
 
 
 def get_available_memory_gb() -> float:

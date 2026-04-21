@@ -36,7 +36,10 @@ cd "$HOME/lean_reinforcement"
 export LEAN_RL_DISABLE_LIVE_PROGRESS=1
 export LEAN_RL_SHUTDOWN_CGROUP_SAMPLE_SECS=20
 export LEAN_RL_SHUTDOWN_CGROUP_SAMPLE_INTERVAL_S=1
-export LEAN_RL_MAX_RSS_GB=8.0
+export LEAN_RL_MAX_RSS_GB=11.0
+export LEAN_RL_WORKER_MIN_AVAILABLE_GB=14.0
+export LEAN_RL_TRAINER_MIN_AVAILABLE_GB=12.0
+export LEAN_RL_MIN_AVAILABLE_GB=8.0
 
 echo "======================================================"
 echo "Starting Experiment: Concurrency"
@@ -51,6 +54,12 @@ srun python3 -m lean_reinforcement.training.train \
     --training-mode value_head \
     --no-use-hyperbolic \
     --no-use-wandb \
+    --num-workers 6 \
+    --lean-memory-limit-gb 10 \
+    --num-epochs 2 \
+    --max-steps 30 \
+    --max-rollout-depth 30 \
+    --num-iterations 800 \
     --checkpoint-dir "$BASE_DIR" \
     --indexed-corpus-path "$CORPUS_DIR/indexed_corpus.pkl" 2>&1 | tee "$TRAIN_LOG"
 

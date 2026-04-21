@@ -22,7 +22,7 @@ from lean_reinforcement.utilities.memory import (
     aggressive_cleanup,
     configure_glibc_for_workers,
     get_available_memory_gb,
-    get_rss_gb,
+    get_process_tree_rss_gb,
     install_memory_dump_signal_handler,
     kill_child_processes,
     kill_lean_orphans,
@@ -164,10 +164,10 @@ def process_theorem(
 
     # --- Mid-theorem RSS check ---
     # Abort before MCTS search if RSS is already near the ceiling.
-    rss_after_env = get_rss_gb()
-    if rss_after_env > MAX_WORKER_RSS_GB:
+    tree_rss_after_env = get_process_tree_rss_gb()
+    if tree_rss_after_env > MAX_WORKER_RSS_GB:
         logger.error(
-            f"RSS {rss_after_env:.1f} GB exceeds hard cap "
+            f"Process-tree RSS {tree_rss_after_env:.1f} GB exceeds hard cap "
             f"{MAX_WORKER_RSS_GB:.1f} GB after env creation for "
             f"{theorem.full_name}. Aborting theorem."
         )
@@ -188,7 +188,7 @@ def process_theorem(
                 "proof_search/time": time.time() - theorem_start,
                 "proof_search/rss_abort": True,
                 "proof_search/failure_reason": (
-                    f"rss abort: {rss_after_env:.1f} GB > {MAX_WORKER_RSS_GB:.1f} GB"
+                    f"rss abort: {tree_rss_after_env:.1f} GB > {MAX_WORKER_RSS_GB:.1f} GB"
                 ),
             },
             "data": [],
@@ -437,19 +437,19 @@ def worker_loop(
             break
 
         # --- Per-worker RSS check before new theorem ---
-        rss_gb = get_rss_gb()
+        rss_gb = get_process_tree_rss_gb()
         rss_soft_cap = MAX_WORKER_RSS_GB * 0.75
         if rss_gb > rss_soft_cap:
             logger.warning(
-                f"Worker {worker_id}: RSS {rss_gb:.1f} GB exceeds "
+                f"Worker {worker_id}: process-tree RSS {rss_gb:.1f} GB exceeds "
                 f"soft cap {rss_soft_cap:.1f} GB before new theorem. "
                 f"Attempting cleanup."
             )
             aggressive_cleanup()
-            rss_gb = get_rss_gb()
+            rss_gb = get_process_tree_rss_gb()
             if rss_gb > rss_soft_cap:
                 logger.error(
-                    f"Worker {worker_id}: RSS still {rss_gb:.1f} GB "
+                    f"Worker {worker_id}: process-tree RSS still {rss_gb:.1f} GB "
                     f"after cleanup. Recycling worker."
                 )
                 sys.exit(_RSS_RECYCLE_EXIT_CODE)
@@ -484,18 +484,18 @@ def worker_loop(
         result_queue.put(data)
 
         rss_soft_cap_gb = MAX_WORKER_RSS_GB * 0.9
-        rss_after_theorem_gb = get_rss_gb()
+        rss_after_theorem_gb = get_process_tree_rss_gb()
         if rss_after_theorem_gb > rss_soft_cap_gb:
             logger.warning(
-                f"Worker {worker_id}: RSS {rss_after_theorem_gb:.1f} GB exceeds "
+                f"Worker {worker_id}: process-tree RSS {rss_after_theorem_gb:.1f} GB exceeds "
                 f"soft cap {rss_soft_cap_gb:.1f} GB after theorem. "
                 "Attempting cleanup and worker recycle if still high."
             )
             aggressive_cleanup()
-            rss_post_cleanup_gb = get_rss_gb()
+            rss_post_cleanup_gb = get_process_tree_rss_gb()
             if rss_post_cleanup_gb > rss_soft_cap_gb:
                 logger.error(
-                    f"Worker {worker_id}: RSS still high at {rss_post_cleanup_gb:.1f} GB "
+                    f"Worker {worker_id}: process-tree RSS still high at {rss_post_cleanup_gb:.1f} GB "
                     "after cleanup. Exiting worker to prevent runaway memory growth."
                 )
                 sys.exit(_RSS_RECYCLE_EXIT_CODE)

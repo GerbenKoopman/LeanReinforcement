@@ -15,7 +15,7 @@ from loguru import logger
 
 from lean_reinforcement.agent.transformer import TransformerProtocol
 from lean_reinforcement.utilities.memory import (
-    get_rss_gb,
+    get_process_tree_rss_gb,
     MAX_WORKER_RSS_GB,
 )
 
@@ -114,7 +114,7 @@ class _ProxyMixin:
                 pass  # poll interval expired — check RSS then retry
 
             polls += 1
-            rss = get_rss_gb()
+            rss = get_process_tree_rss_gb()
 
             # Periodic log so external tooling can correlate RSS with time
             if polls % 6 == 0:  # every ~30 s
@@ -132,7 +132,7 @@ class _ProxyMixin:
                 # Attempt cleanup
                 gc.collect()
                 _malloc_trim()
-                rss = get_rss_gb()
+                rss = get_process_tree_rss_gb()
                 if rss > RSS_HARD_CAP:
                     logger.error(
                         f"Worker {self.worker_id}: RSS={rss:.2f} GB EXCEEDS "
