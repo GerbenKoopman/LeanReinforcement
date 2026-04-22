@@ -642,7 +642,7 @@ def start_rss_watchdog(
     hard_cap_gb: float = MAX_WORKER_RSS_GB,
     check_interval: float = 1.0,
 ) -> threading.Thread:
-    """Daemon thread that ``os._exit()``s when RSS exceeds *hard_cap_gb*.
+    """Daemon thread that ``os._exit()``s when process-tree RSS exceeds *hard_cap_gb*.
 
     Catches growth during blocking C calls where Python-level checks
     can't fire. Returns the started thread.
@@ -658,13 +658,13 @@ def start_rss_watchdog(
         )
         while True:
             try:
-                rss = get_rss_gb()
+                rss = get_process_tree_rss_gb()
                 _wd_checks += 1
                 # Periodic heartbeat every 60 checks (~60s)
                 if _wd_checks % 60 == 0:
                     logger.debug(
                         f"[RSS WATCHDOG] PID {_wd_pid} "
-                        f"check #{_wd_checks} rss={rss:.2f}GB "
+                        f"check #{_wd_checks} tree_rss={rss:.2f}GB "
                         f"cap={hard_cap_gb:.1f}GB"
                     )
                 if rss > hard_cap_gb:
@@ -676,7 +676,7 @@ def start_rss_watchdog(
                         comm = "unknown"
                     msg = (
                         f"[RSS WATCHDOG] {comm} (PID {pid}): "
-                        f"RSS {rss:.1f} GB exceeds hard cap "
+                        f"process-tree RSS {rss:.1f} GB exceeds hard cap "
                         f"{hard_cap_gb:.1f} GB. Exiting NOW."
                     )
                     try:
