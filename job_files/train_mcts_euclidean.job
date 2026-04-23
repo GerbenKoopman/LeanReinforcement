@@ -41,11 +41,18 @@ export BASE_DIR="checkpoints/mcts_euclidean"
 
 TRAIN_LOG=$(mktemp)
 
+set +e
 srun python3 -m lean_reinforcement.training.train \
     --training-mode value_head \
     --no-use-hyperbolic \
     --checkpoint-dir "$BASE_DIR" \
     --indexed-corpus-path "$CORPUS_DIR/indexed_corpus.pkl" 2>&1 | tee "$TRAIN_LOG"
+SRUN_EXIT=${PIPESTATUS[0]}
+set -e
+
+if [ "$SRUN_EXIT" -ne 0 ]; then
+    echo "WARNING: training step exited with code ${SRUN_EXIT}; continuing pipeline despite Slurm OOM status."
+fi
 
 RUN_DIR=$(awk -F'Using iteration checkpoint directory: ' '/Using iteration checkpoint directory:/ {print $2}' "$TRAIN_LOG" | tail -n1 | tr -d '\r')
 rm -f "$TRAIN_LOG"
@@ -57,6 +64,6 @@ fi
 
 echo "Running evaluation for run directory: ${RUN_DIR}"
 
-echo "Submitting clean evaluation job..."
-EVAL_JOB_ID=$(sbatch --parsable --dependency=afterok:$SLURM_JOB_ID --export=ALL,RUN_DIR="$RUN_DIR",USE_HYPERBOLIC=0 job_files/evaluate.job)
-echo "Submitted Eval Job: ${EVAL_JOB_ID} (depends on ${SLURM_JOB_ID})"
+# echo "Submitting clean evaluation job..."
+# EVAL_JOB_ID=$(sbatch --parsable --dependency=afterok:$SLURM_JOB_ID --export=ALL,RUN_DIR="$RUN_DIR",USE_HYPERBOLIC=0 job_files/evaluate.job)
+# echo "Submitted Eval Job: ${EVAL_JOB_ID} (depends on ${SLURM_JOB_ID})"
