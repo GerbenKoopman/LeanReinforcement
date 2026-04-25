@@ -43,6 +43,7 @@ TRAIN_LOG=$(mktemp)
 
 set +e
 srun python3 -m lean_reinforcement.training.train \
+    --no-use-wandb \
     --training-mode value_head \
     --no-use-hyperbolic \
     --checkpoint-dir "$BASE_DIR" \

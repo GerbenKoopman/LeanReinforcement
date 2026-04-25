@@ -359,7 +359,7 @@ def get_config() -> TrainingConfig:
     )
     parser.add_argument(
         "--use-wandb",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
         default=True,
         help="Use wandb for logging.",
     )
