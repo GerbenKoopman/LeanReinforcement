@@ -51,11 +51,19 @@ echo "Training with curvature: ${CURV}"
 
 TRAIN_LOG=$(mktemp)
 
+set +e
 srun python3 -m lean_reinforcement.training.train \
+    --no-use-wandb \
     --training-mode ppo \
     --use-hyperbolic \
     --checkpoint-dir "$BASE_DIR" \
     --indexed-corpus-path "$CORPUS_DIR/indexed_corpus.pkl" "${CURV_ARG[@]}" 2>&1 | tee "$TRAIN_LOG"
+SRUN_EXIT=${PIPESTATUS[0]}
+set -e
+
+if [ "$SRUN_EXIT" -ne 0 ]; then
+    echo "WARNING: training step exited with code ${SRUN_EXIT}; continuing pipeline despite Slurm OOM status."
+fi
 
 RUN_DIR=$(awk -F'Using iteration checkpoint directory: ' '/Using iteration checkpoint directory:/ {print $2}' "$TRAIN_LOG" | tail -n1 | tr -d '\r')
 rm -f "$TRAIN_LOG"

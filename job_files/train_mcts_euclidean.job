@@ -65,6 +65,6 @@ fi
 
 echo "Running evaluation for run directory: ${RUN_DIR}"
 
-# echo "Submitting clean evaluation job..."
-# EVAL_JOB_ID=$(sbatch --parsable --dependency=afterok:$SLURM_JOB_ID --export=ALL,RUN_DIR="$RUN_DIR",USE_HYPERBOLIC=0 job_files/evaluate.job)
-# echo "Submitted Eval Job: ${EVAL_JOB_ID} (depends on ${SLURM_JOB_ID})"
+echo "Submitting clean evaluation job..."
+EVAL_JOB_ID=$(sbatch --parsable --dependency=afterok:$SLURM_JOB_ID --export=ALL,RUN_DIR="$RUN_DIR",USE_HYPERBOLIC=0 job_files/evaluate.job)
+echo "Submitted Eval Job: ${EVAL_JOB_ID} (depends on ${SLURM_JOB_ID})"
