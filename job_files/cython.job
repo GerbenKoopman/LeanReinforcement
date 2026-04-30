@@ -20,7 +20,8 @@ module load CUDA/12.6.0
 export CUDA_HOME=$CUDA_ROOT
 export CUDA_PATH=$CUDA_ROOT
 
-source activate lean-reinforcement
+source "$EBROOTANACONDA3/etc/profile.d/conda.sh"
+conda activate lean-reinforcement
 
 # Source environment variables from .env file
 set -a
