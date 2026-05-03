@@ -29,10 +29,10 @@ cd $HOME/lean_reinforcement
 
 # Build Cython extensions
 echo "Building Cython extensions..."
-python3 setup.py build_ext --inplace
+python setup.py build_ext --inplace
 
 echo "Starting training run with distributed environment..."
-srun python3 -m lean_reinforcement.training.train \
+srun python -m lean_reinforcement.training.train \
     --data-type novel_premises \
     --indexed-corpus-path $CORPUS_DIR/indexed_corpus.pkl \
     --num-epochs 10 \

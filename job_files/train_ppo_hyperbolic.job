@@ -5,7 +5,7 @@
 #SBATCH --job-name=ppo_hyperbolic
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=18
-#SBATCH --time=06:00:00
+#SBATCH --time=12:00:00
 #SBATCH --output=logs/experiment_ppo_hyperbolic_%A.out
 
 # --- Fail on error ---
@@ -53,7 +53,7 @@ echo "Training with curvature: ${CURV}"
 TRAIN_LOG=$(mktemp)
 
 set +e
-srun python3 -m lean_reinforcement.training.train \
+srun python -m lean_reinforcement.training.train \
     --no-use-wandb \
     --training-mode ppo \
     --use-hyperbolic \

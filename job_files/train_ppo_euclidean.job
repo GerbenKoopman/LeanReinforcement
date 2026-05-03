@@ -5,7 +5,7 @@
 #SBATCH --job-name=ppo_euclidean
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=18
-#SBATCH --time=06:00:00
+#SBATCH --time=12:00:00
 #SBATCH --output=logs/experiment_ppo_euclidean_%A.out
 
 # --- Fail on error ---
@@ -43,7 +43,7 @@ export BASE_DIR="checkpoints/ppo_euclidean"
 TRAIN_LOG=$(mktemp)
 
 set +e
-srun python3 -m lean_reinforcement.training.train \
+srun python -m lean_reinforcement.training.train \
     --no-use-wandb \
     --training-mode ppo \
     --no-use-hyperbolic \

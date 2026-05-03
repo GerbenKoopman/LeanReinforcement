@@ -62,7 +62,7 @@ else
     elif command -v conda &> /dev/null; then
         PYTHON_CMD="conda run -n lean-reinforcement python"
     else
-        PYTHON_CMD="python3"
+        PYTHON_CMD="python"
     fi
 fi
 
@@ -79,7 +79,7 @@ print_header() {
     echo " Theorems per trial: ${NUM_THEOREMS}"
     echo " GPU: ${CUDA_VISIBLE_DEVICES:-auto}"
     echo " WandB: ${USE_WANDB}"
-    echo " Python: $(python3 --version 2>&1)"
+    echo " Python: $(python --version 2>&1)"
     echo "============================================================"
     echo ""
 }
@@ -100,9 +100,9 @@ run_benchmark() {
         echo "ERROR: Benchmark failed with exit code ${EXIT_CODE}"
         echo ""
         echo "Troubleshooting steps:"
-        echo "  1. Verify the module is installed: python3 -m lean_reinforcement.training.hyperparam_search --help"
+        echo "  1. Verify the module is installed: python -m lean_reinforcement.training.hyperparam_search --help"
         echo "  2. Check dependencies: pip list | grep -E 'lean|loguru'"
-        echo "  3. Check Python: python3 --version"
+        echo "  3. Check Python: python --version"
         exit ${EXIT_CODE}
     }
 }

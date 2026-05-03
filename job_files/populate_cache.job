@@ -43,7 +43,7 @@ fi
 cd $HOME/lean_reinforcement || exit 1
 
 echo "=== Pre-population Lean/cache diagnostics ==="
-srun python3 -m lean_reinforcement.utilities.lean_cache_diagnostics \
+srun python -m lean_reinforcement.utilities.lean_cache_diagnostics \
   --project-root "$HOME/lean_reinforcement" \
   --cache-dir "${CACHE_DIR}" \
   --commit "${COMMIT}"
@@ -53,7 +53,7 @@ srun python3 -m lean_reinforcement.utilities.lean_cache_diagnostics \
 unset DISABLE_REMOTE_CACHE
 
 # Run LeanDojo trace to populate the cache
-srun python3 -c "
+srun python -c "
 from lean_dojo import LeanGitRepo, trace
 repo = LeanGitRepo('https://github.com/leanprover-community/mathlib4', '${COMMIT}')
 trace(repo)
@@ -100,7 +100,7 @@ do
 done
 
 echo "=== Post-population Lean/cache diagnostics ==="
-srun python3 -m lean_reinforcement.utilities.lean_cache_diagnostics \
+srun python -m lean_reinforcement.utilities.lean_cache_diagnostics \
   --project-root "$HOME/lean_reinforcement" \
   --cache-dir "${CACHE_DIR}" \
   --commit "${COMMIT}"

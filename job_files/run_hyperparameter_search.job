@@ -134,7 +134,7 @@ else
     elif command -v conda &> /dev/null; then
         PYTHON_CMD="conda run -n lean-reinforcement python"
     else
-        PYTHON_CMD="python3"
+        PYTHON_CMD="python"
     fi
 fi
 

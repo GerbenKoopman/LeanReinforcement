@@ -29,7 +29,7 @@ cd $HOME/lean_reinforcement
 
 # Build Cython extensions
 echo "Building Cython extensions..."
-python3 setup.py build_ext --inplace
+python setup.py build_ext --inplace
 
 echo "============================================"
 echo "Starting Benchmark Suite"
@@ -42,7 +42,7 @@ echo "============================================"
 echo ""
 echo "PHASE 1: Training runs (18 configurations)"
 echo "============================================"
-python3 -m benchmark.run_benchmark \
+python -m benchmark.run_benchmark \
     --algorithms alpha_zero guided_rollout \
     --seeds 42 43 44 \
     --sizes light medium heavy
@@ -50,7 +50,7 @@ python3 -m benchmark.run_benchmark \
 echo ""
 echo "PHASE 2: Evaluating on test set"
 echo "============================================"
-python3 -m benchmark.evaluate_benchmark \
+python -m benchmark.evaluate_benchmark \
     --algorithms alpha_zero guided_rollout \
     --seeds 42 43 44 \
     --sizes light medium heavy \
@@ -60,7 +60,7 @@ python3 -m benchmark.evaluate_benchmark \
 echo ""
 echo "PHASE 3: Generating plots"
 echo "============================================"
-python3 -m benchmark.plot_benchmark \
+python -m benchmark.plot_benchmark \
     --output-dir plots/benchmark \
     --split test
 
