@@ -24,15 +24,11 @@ module load CUDA/12.6.0
 export CUDA_HOME=$CUDA_ROOT
 export CUDA_PATH=$CUDA_ROOT
 
+for var in $(env | grep -o '^CONDA_[^=]*'); do
+    unset "$var"
+done
+
 source "$EBROOTANACONDA3/etc/profile.d/conda.sh"
-
-# Clear inherited Conda state from the parent job's --export=ALL
-conda deactivate 2>/dev/null || true
-unset CONDA_DEFAULT_ENV
-unset CONDA_PREFIX
-unset CONDA_PROMPT_MODIFIER
-# ---------------
-
 conda activate lean-reinforcement
 
 set -a
