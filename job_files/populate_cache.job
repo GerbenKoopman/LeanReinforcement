@@ -40,6 +40,13 @@ if [ -d "${CACHE_DIR}/leanprover-community-mathlib4-${COMMIT}" ]; then
   rm -rf "${CACHE_DIR}/leanprover-community-mathlib4-${COMMIT}"
 fi
 
+# Also remove the git repo cache to avoid corrupted .git directories
+REPO_CACHE_DIR="${CACHE_DIR}/repos/gitpython-mathlib4-${COMMIT}"
+if [ -d "${REPO_CACHE_DIR}" ]; then
+  echo "Removing existing git repository cache to ensure a clean trace."
+  rm -rf "${REPO_CACHE_DIR}"
+fi
+
 cd $HOME/lean_reinforcement || exit 1
 
 echo "=== Pre-population Lean/cache diagnostics ==="
