@@ -17,6 +17,7 @@ dependencies:
   - lxml
   - pygithub
   - git-lfs
+  - libstdcxx-ng
   - pip:
     - lean-dojo
     - wandb

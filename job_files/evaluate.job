@@ -31,6 +31,9 @@ done
 source "$EBROOTANACONDA3/etc/profile.d/conda.sh"
 conda activate lean-reinforcement
 
+# Force the system to use Conda's newer C++ standard library
+export LD_LIBRARY_PATH="$CONDA_PREFIX/lib:$LD_LIBRARY_PATH"
+
 set -a
 if [ -f "$HOME/lean_reinforcement/.env" ]; then
     source "$HOME/lean_reinforcement/.env"
