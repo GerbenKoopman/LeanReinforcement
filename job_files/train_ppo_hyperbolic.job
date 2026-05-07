@@ -42,10 +42,18 @@ export BASE_DIR="checkpoints/ppo_hyperbolic"
 
 # Read curvature exported via sbatch; allow unset for compatibility
 CURV="${curvature:-}"
+
+TRAIN_ARGS=(
+    --no-use-wandb
+    --training-mode ppo
+    --mcts-type alpha_zero
+    --use-hyperbolic
+    --checkpoint-dir "$BASE_DIR"
+    --indexed-corpus-path "$CORPUS_DIR/indexed_corpus.pkl"
+)
+
 if [ -n "$CURV" ]; then
-    CURV_ARG=(--curvature "$CURV")
-else
-    CURV_ARG=()
+    TRAIN_ARGS+=(--curvature "$CURV")
 fi
 
 echo "Training with curvature: ${CURV}"
@@ -54,11 +62,7 @@ TRAIN_LOG=$(mktemp)
 
 set +e
 srun python -m lean_reinforcement.training.train \
-    --no-use-wandb \
-    --training-mode ppo \
-    --use-hyperbolic \
-    --checkpoint-dir "$BASE_DIR" \
-    --indexed-corpus-path "$CORPUS_DIR/indexed_corpus.pkl" "${CURV_ARG[@]}" 2>&1 | tee "$TRAIN_LOG"
+    "${TRAIN_ARGS[@]}" 2>&1 | tee "$TRAIN_LOG"
 SRUN_EXIT=${PIPESTATUS[0]}
 set -e
 
@@ -72,6 +76,17 @@ rm -f "$TRAIN_LOG"
 if [ -z "$RUN_DIR" ] || [ ! -d "$RUN_DIR" ]; then
     echo "ERROR: Could not determine exact run directory from training logs."
     exit 1
+fi
+
+CONFIG_FILE="$RUN_DIR/training_config.json"
+set +e
+python -m lean_reinforcement.utilities.dump_config "${TRAIN_ARGS[@]}" > "$CONFIG_FILE"
+DUMP_EXIT=$?
+set -e
+if [ "$DUMP_EXIT" -ne 0 ]; then
+    echo "WARNING: Failed to write training config to $CONFIG_FILE"
+else
+    echo "Saved training config to $CONFIG_FILE"
 fi
 
 echo "Running evaluation for run directory: ${RUN_DIR}"

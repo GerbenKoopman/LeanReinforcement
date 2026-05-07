@@ -40,15 +40,20 @@ echo "======================================================"
 # Execute the training script
 export BASE_DIR="checkpoints/mcts_euclidean"
 
+TRAIN_ARGS=(
+    --no-use-wandb
+    --training-mode value_head
+    --mcts-type alpha_zero
+    --no-use-hyperbolic
+    --checkpoint-dir "$BASE_DIR"
+    --indexed-corpus-path "$CORPUS_DIR/indexed_corpus.pkl"
+)
+
 TRAIN_LOG=$(mktemp)
 
 set +e
 srun python -m lean_reinforcement.training.train \
-    --no-use-wandb \
-    --training-mode value_head \
-    --no-use-hyperbolic \
-    --checkpoint-dir "$BASE_DIR" \
-    --indexed-corpus-path "$CORPUS_DIR/indexed_corpus.pkl" 2>&1 | tee "$TRAIN_LOG"
+    "${TRAIN_ARGS[@]}" 2>&1 | tee "$TRAIN_LOG"
 SRUN_EXIT=${PIPESTATUS[0]}
 set -e
 
@@ -62,6 +67,17 @@ rm -f "$TRAIN_LOG"
 if [ -z "$RUN_DIR" ] || [ ! -d "$RUN_DIR" ]; then
     echo "ERROR: Could not determine exact run directory from training logs."
     exit 1
+fi
+
+CONFIG_FILE="$RUN_DIR/training_config.json"
+set +e
+python -m lean_reinforcement.utilities.dump_config "${TRAIN_ARGS[@]}" > "$CONFIG_FILE"
+DUMP_EXIT=$?
+set -e
+if [ "$DUMP_EXIT" -ne 0 ]; then
+    echo "WARNING: Failed to write training config to $CONFIG_FILE"
+else
+    echo "Saved training config to $CONFIG_FILE"
 fi
 
 echo "Running evaluation for run directory: ${RUN_DIR}"
