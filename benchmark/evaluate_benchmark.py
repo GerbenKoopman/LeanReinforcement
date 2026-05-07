@@ -67,11 +67,13 @@ class TestEvaluator(Trainer):
         shared_corpus: Optional[Corpus] = None,
         shared_dataloader: Optional[LeanDataLoader] = None,
         use_hyperbolic: bool = False,
+        reuse_data_cache: bool = True,
     ):
         self.config = config
         self.dataset_split = dataset_split
         self._checkpoint_prefix_override = checkpoint_prefix_override
         self._use_hyperbolic = use_hyperbolic
+        self.reuse_data_cache = reuse_data_cache
 
         # Initialize progress tracking (required by parent train() and _collect_data())
         self.progress_stats = ProgressStats(
