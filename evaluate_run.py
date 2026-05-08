@@ -1,6 +1,10 @@
 import argparse
+import json
 from pathlib import Path
+from typing import Optional
+
 from benchmark.evaluate_benchmark import TestEvaluator, build_eval_config
+from lean_reinforcement.utilities.config import TrainingConfig
 
 
 def find_latest_run(base_dir: Path):
@@ -17,6 +21,37 @@ def find_latest_run(base_dir: Path):
         ),
     )[-1]
     return latest_dir
+
+
+def load_training_config(run_dir: Path) -> Optional[TrainingConfig]:
+    config_path = run_dir / "training_config.json"
+    if not config_path.exists():
+        return None
+    try:
+        with open(config_path, "r") as f:
+            raw = json.load(f)
+        config = TrainingConfig(**raw)
+    except (OSError, json.JSONDecodeError, TypeError) as exc:
+        print(f"Warning: failed to load training config from {config_path}: {exc}")
+        return None
+
+    # Ensure evaluation writes under the specific run directory.
+    config.checkpoint_dir = str(run_dir)
+    return config
+
+
+def build_eval_from_training(
+    config: TrainingConfig, num_theorems: int
+) -> TrainingConfig:
+    # Keep search hyperparameters identical, but adjust training-only settings.
+    config.num_epochs = 1
+    config.num_theorems = num_theorems
+    config.save_checkpoints = False
+    config.save_training_data = False
+    config.use_wandb = False
+    config.resume = False
+    config.train_value_head = False
+    return config
 
 
 def main():
@@ -67,21 +102,36 @@ def main():
 
     print(f"Evaluating run in {run_dir}")
 
-    eval_config = build_eval_config(
-        algorithm="alpha_zero",
-        seed=42,
-        size="light",
-        run_dir=run_dir,
-        num_theorems=args.num_theorems,
-    )
+    training_config = load_training_config(run_dir)
+    if training_config is not None:
+        eval_config = build_eval_from_training(training_config, args.num_theorems)
+    else:
+        eval_config = build_eval_config(
+            algorithm="alpha_zero",
+            seed=42,
+            size="light",
+            run_dir=run_dir,
+            num_theorems=args.num_theorems,
+        )
+
     if args.curvature is not None:
         eval_config.curvature = args.curvature
+
+    use_hyperbolic = eval_config.use_hyperbolic
+    if training_config is None:
+        use_hyperbolic = args.use_hyperbolic
+        eval_config.use_hyperbolic = args.use_hyperbolic
+    elif args.use_hyperbolic and not eval_config.use_hyperbolic:
+        print(
+            "Warning: --use-hyperbolic ignored because training_config.json "
+            "indicates euclidean evaluation."
+        )
 
     evaluator = TestEvaluator(
         config=eval_config,
         run_dir=run_dir,
         dataset_split=args.split,
-        use_hyperbolic=args.use_hyperbolic,
+        use_hyperbolic=use_hyperbolic,
     )
     evaluator.train()  # This runs evaluation
 
