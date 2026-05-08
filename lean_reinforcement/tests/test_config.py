@@ -6,9 +6,8 @@ from lean_reinforcement.utilities.config import (
     TrainingConfig,
 )
 
-
 DEFAULT_DATA_TYPE = "novel_premises"
-DEFAULT_NUM_EPOCHS = 10
+DEFAULT_NUM_EPOCHS = 6
 DEFAULT_MCTS_TYPE = "alpha_zero"
 DEFAULT_TRAIN_VALUE_HEAD = True
 
