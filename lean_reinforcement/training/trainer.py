@@ -32,7 +32,7 @@ from lean_reinforcement.utilities.analyze_training_data import (
     print_training_stats,
     save_training_data,
 )
-from lean_reinforcement.agent.transformer import Transformer
+from lean_reinforcement.agent.transformer import Transformer, TransformerProtocol
 from lean_reinforcement.agent.value_head import ValueHead, HyperbolicValueHead
 from lean_reinforcement.agent.ppo_agent import PPOAgent
 from lean_reinforcement.training.datasets import ValueHeadDataset
@@ -59,7 +59,6 @@ from lean_reinforcement.utilities.gym import (
     LeanDojoEnv,
     is_outdated_traced_repo_error,
 )
-
 
 # In-process caches to avoid repeating expensive data setup between trials.
 _CORPUS_CACHE: Dict[str, Corpus] = {}
@@ -318,7 +317,9 @@ class Trainer:
     def _setup_models(self) -> None:
         logger.info(f"Using checkpoint directory: {self.checkpoint_dir}")
 
-        self.transformer = Transformer(model_name=self.config.model_name)
+        self.transformer: TransformerProtocol = Transformer(
+            model_name=self.config.model_name
+        )
 
         self.value_head: Optional[ValueHead | HyperbolicValueHead] = None
         self.ppo_agent: Optional[PPOAgent] = None

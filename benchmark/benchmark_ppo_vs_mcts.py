@@ -88,9 +88,10 @@ from benchmark.run_benchmark import (
 )
 
 from benchmark.evaluate_benchmark import (
+    PPOPolicyEvaluator,
+    TestEvaluator,
     build_eval_config,
     load_or_init_corpus,
-    TestEvaluator,
 )
 
 # Set allocator config early so PyTorch can pick it up before CUDA init.
@@ -859,7 +860,8 @@ def run_single(
 
             # Run evaluation
             eval_start = time.time()
-            evaluator = TestEvaluator(
+            evaluator_cls = PPOPolicyEvaluator if is_ppo else TestEvaluator
+            evaluator = evaluator_cls(
                 eval_config,
                 run_dir,
                 dataset_split=test_split,

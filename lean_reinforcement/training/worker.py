@@ -15,7 +15,7 @@ import warnings
 import numpy as np
 import torch
 
-from lean_dojo import DojoInitError
+from lean_dojo import DojoInitError, LeanError, ProofFinished, ProofGivenUp, TacticState
 from ReProver.common import Pos
 
 from lean_reinforcement.utilities.memory import (
@@ -119,6 +119,7 @@ def process_theorem(
         f"mcts={args.mcts_type}, iterations={args.num_iterations}, steps={args.max_steps})"
     )
 
+    env: Optional[LeanDojoEnv] = None
     try:
         env = LeanDojoEnv(theorem, theorem_pos, args.env_timeout)
     except DojoInitError as e:
@@ -310,6 +311,218 @@ def process_theorem(
 
         del runner
         del env
+        aggressive_cleanup()
+
+
+def process_theorem_policy(
+    thm_data: Dict[str, Any],
+    dataloader: LeanDataLoader,
+    transformer: QueueProxyTransformer,
+    args: TrainingConfig,
+    checkpoint_dir: Optional[Path] = None,
+    worker_id: Optional[int] = None,
+) -> Dict[str, Any]:
+    """
+    Process a single theorem using a policy-only tactic generator (no MCTS).
+    """
+    theorem_start = time.time()
+    theorem = dataloader.extract_theorem(thm_data)
+    if not theorem:
+        logger.error(
+            f"Worker {worker_id}: Failed to extract theorem from data; keys={list(thm_data.keys())}"
+        )
+        return {
+            "metrics": {
+                "proof_search/success": False,
+                "proof_search/steps": 0,
+                "proof_search/time": time.time() - theorem_start,
+                "proof_search/extraction_error": True,
+                "proof_search/failure_reason": "theorem extraction failed",
+            },
+            "data": [],
+            "theorem_name": "unknown_extraction_failed",
+            "worker_id": worker_id,
+        }
+
+    theorem_pos = Pos(*thm_data["start"])
+    if not theorem_pos:
+        logger.error(
+            f"Worker {worker_id}: Failed to create position for theorem {theorem.full_name}"
+        )
+        return {
+            "metrics": {
+                "proof_search/success": False,
+                "proof_search/steps": 0,
+                "proof_search/time": time.time() - theorem_start,
+                "proof_search/position_error": True,
+                "proof_search/failure_reason": "invalid theorem position",
+            },
+            "data": [],
+            "theorem_name": theorem.full_name,
+            "worker_id": worker_id,
+        }
+
+    logger.debug(
+        f"Worker {worker_id}: Starting PPO policy eval for {theorem.full_name} "
+        f"(env_timeout={args.env_timeout}s, proof_timeout={args.proof_timeout}s, "
+        f"steps={args.max_steps})"
+    )
+
+    env: Optional[LeanDojoEnv] = None
+    try:
+        env = LeanDojoEnv(theorem, theorem_pos, args.env_timeout)
+    except DojoInitError as e:
+        logger.error(
+            f"Failed to initialize environment for theorem {theorem.full_name}: {e}"
+        )
+        aggressive_cleanup()
+        reason = _summarize_error(e)
+        return {
+            "metrics": {
+                "proof_search/success": False,
+                "proof_search/steps": 0,
+                "proof_search/time": time.time() - theorem_start,
+                "proof_search/env_init_error": True,
+                "proof_search/failure_reason": reason,
+            },
+            "data": [],
+            "theorem_name": theorem.full_name,
+            "worker_id": worker_id,
+        }
+    except Exception as e:
+        logger.exception(
+            f"Unexpected error initializing environment for theorem {theorem.full_name}: {e}"
+        )
+        outdated_trace = is_outdated_traced_repo_error(e)
+        aggressive_cleanup()
+        reason = _summarize_error(e)
+        if outdated_trace:
+            reason = f"outdated trace cache: {reason}"
+        return {
+            "metrics": {
+                "proof_search/success": False,
+                "proof_search/steps": 0,
+                "proof_search/time": time.time() - theorem_start,
+                "proof_search/env_init_unexpected_error": True,
+                "proof_search/outdated_trace_cache": outdated_trace,
+                "proof_search/failure_reason": reason,
+            },
+            "data": [],
+            "theorem_name": theorem.full_name,
+            "worker_id": worker_id,
+        }
+
+    steps = 0
+    success = False
+    failure_reason: Optional[str] = None
+
+    try:
+        for step in range(1, args.max_steps + 1):
+            elapsed = time.time() - theorem_start
+            if elapsed > args.proof_timeout:
+                failure_reason = "proof timeout"
+                break
+
+            current_state = env.current_state
+            if not isinstance(current_state, TacticState):
+                if isinstance(current_state, ProofFinished):
+                    success = True
+                elif isinstance(current_state, (LeanError, ProofGivenUp)):
+                    failure_reason = str(current_state)
+                else:
+                    failure_reason = "invalid state"
+                break
+
+            try:
+                num_tactics = max(1, int(args.num_tactics_to_expand))
+                tactics = transformer.generate_tactics(current_state.pp, n=num_tactics)
+            except InferenceTimeoutError as e:
+                logger.exception(
+                    f"Inference timeout during policy eval for theorem {theorem.full_name}: {e}"
+                )
+                failure_reason = _summarize_error(e)
+                break
+            except MemoryLimitExceeded as e:
+                logger.exception(
+                    f"Memory limit exceeded during policy eval for theorem {theorem.full_name}: {e}"
+                )
+                failure_reason = _summarize_error(e)
+                break
+
+            if not tactics:
+                failure_reason = "no tactics generated"
+                break
+
+            chosen_tactic: Optional[str] = None
+            for tactic in tactics:
+                next_state = env.run_tactic_stateless(current_state, tactic)
+                if isinstance(next_state, ProofFinished):
+                    chosen_tactic = tactic
+                    break
+                if isinstance(next_state, TacticState):
+                    chosen_tactic = tactic
+                    break
+
+            if chosen_tactic is None:
+                failure_reason = "no valid tactic"
+                break
+
+            _, reward, done = env.step(chosen_tactic)
+            steps += 1
+
+            if done:
+                success = reward > 0
+                if not success:
+                    failure_reason = str(env.current_state)
+                break
+
+        if not success and failure_reason is None and steps >= args.max_steps:
+            failure_reason = "max steps reached"
+
+        metrics: Dict[str, Any] = {
+            "proof_search/success": success,
+            "proof_search/steps": steps,
+            "proof_search/time": time.time() - theorem_start,
+        }
+        if failure_reason is not None:
+            metrics["proof_search/failure_reason"] = failure_reason
+
+        return {
+            "metrics": metrics,
+            "data": [],
+            "theorem_name": theorem.full_name,
+            "worker_id": worker_id,
+        }
+    except Exception as e:
+        logger.exception(
+            f"Error during policy eval for theorem {theorem.full_name}: {e}"
+        )
+        reason = _summarize_error(e)
+        return {
+            "metrics": {
+                "proof_search/success": False,
+                "proof_search/steps": steps,
+                "proof_search/time": time.time() - theorem_start,
+                "proof_search/unexpected_error": True,
+                "proof_search/failure_reason": reason,
+            },
+            "data": [],
+            "theorem_name": theorem.full_name,
+            "worker_id": worker_id,
+        }
+    finally:
+        if env:
+            try:
+                env.close()
+            except Exception as e:
+                logger.error(f"Error closing environment: {e}")
+
+        try:
+            kill_child_processes()
+            kill_lean_orphans()
+        except Exception:
+            pass
+
         aggressive_cleanup()
 
 
@@ -517,6 +730,171 @@ def worker_loop(
         del value_head_proxy
 
     # Final aggressive cleanup before exit
+    aggressive_cleanup()
+
+
+def policy_worker_loop(
+    worker_id: int,
+    request_queue: mp.Queue,
+    response_queue: mp.Queue,
+    theorem_queue: mp.Queue,
+    result_queue: mp.Queue,
+    args: TrainingConfig,
+    checkpoint_dir: "Path",
+):
+    """
+    Worker process loop for PPO policy evaluation (no MCTS).
+    """
+    # --- glibc malloc tuning (must be first) ---
+    configure_glibc_for_workers()
+
+    # --- SIGUSR1 memory diagnostic handler ---
+    install_memory_dump_signal_handler()
+
+    os.makedirs("logs", exist_ok=True)
+    logger.remove()
+    logger.add(
+        f"logs/worker_{worker_id}.log",
+        rotation="10 MB",
+        level="DEBUG" if args.debugging else "INFO",
+        backtrace=args.debugging,
+        diagnose=args.debugging,
+    )
+    if args.debugging:
+        logger.add(
+            sys.stderr,
+            level="DEBUG",
+            backtrace=True,
+            diagnose=False,
+        )
+
+    start_rss_watchdog(hard_cap_gb=MAX_WORKER_RSS_GB, check_interval=1.0)
+    warnings.filterwarnings("ignore", message="Can't initialize NVML")
+
+    if args.seed is not None:
+        worker_seed = args.seed * 1000 + worker_id
+        random.seed(worker_seed)
+        np.random.seed(worker_seed)
+        torch.manual_seed(worker_seed)
+        logger.info(f"Worker {worker_id} seed set to {worker_seed}")
+
+    os.environ["CUDA_VISIBLE_DEVICES"] = ""
+
+    lean_mem_gb = getattr(args, "lean_memory_limit_gb", 2)
+    os.environ["TACTIC_MEMORY_LIMIT"] = f"{lean_mem_gb}g"
+    try:
+        import lean_dojo.constants as _ldc
+
+        _ldc.TACTIC_MEMORY_LIMIT = f"{lean_mem_gb}g"
+        import lean_dojo.interaction.dojo as _ldd
+
+        _ldd.TACTIC_MEMORY_LIMIT = f"{lean_mem_gb}g"
+    except Exception as e:
+        logger.warning(f"Worker {worker_id}: Could not patch TACTIC_MEMORY_LIMIT: {e}")
+    logger.info(
+        f"Worker {worker_id}: Lean REPL memory limit set to {lean_mem_gb} GB "
+        f"(--memory={lean_mem_gb * 1024} MB)"
+    )
+
+    set_oom_score_adj(1000)
+
+    transformer_proxy = QueueProxyTransformer(
+        request_queue,
+        response_queue,
+        worker_id,
+        timeout=args.inference_timeout,
+    )
+
+    dataloader = LeanDataLoader(
+        corpus=None,
+        dataset_path="leandojo_benchmark_4",
+        data_type=args.data_type,
+        load_splits=False,
+    )
+
+    theorems_processed = 0
+    MEMORY_BACKOFF_MAX = 30.0
+    MEMORY_BACKOFF_BASE = 2.0
+
+    while True:
+        try:
+            thm_data = theorem_queue.get(timeout=1)
+        except queue.Empty:
+            continue
+
+        if thm_data is None:
+            break
+
+        rss_gb = get_rss_gb()
+        rss_soft_cap = MAX_WORKER_RSS_GB * 0.75
+        if rss_gb > rss_soft_cap:
+            logger.warning(
+                f"Worker {worker_id}: RSS {rss_gb:.1f} GB exceeds "
+                f"soft cap {rss_soft_cap:.1f} GB before new theorem. "
+                "Attempting cleanup."
+            )
+            aggressive_cleanup()
+            rss_gb = get_rss_gb()
+            if rss_gb > rss_soft_cap:
+                logger.error(
+                    f"Worker {worker_id}: RSS still {rss_gb:.1f} GB "
+                    "after cleanup. Recycling worker."
+                )
+                sys.exit(_RSS_RECYCLE_EXIT_CODE)
+
+        backoff = MEMORY_BACKOFF_BASE
+        avail_gb = get_available_memory_gb()
+        while avail_gb < WORKER_MIN_AVAILABLE_GB:
+            logger.warning(
+                f"Worker {worker_id}: Low system memory "
+                f"({avail_gb:.1f} GB available, "
+                f"need {WORKER_MIN_AVAILABLE_GB:.0f} GB). "
+                f"Waiting {backoff:.0f}s before starting next theorem."
+            )
+            aggressive_cleanup()
+            time.sleep(backoff)
+            backoff = min(backoff * 1.5, MEMORY_BACKOFF_MAX)
+            avail_gb = get_available_memory_gb()
+
+        data = process_theorem_policy(
+            thm_data,
+            dataloader,
+            transformer_proxy,
+            args,
+            checkpoint_dir,
+            worker_id=worker_id,
+        )
+
+        result_queue.put(data)
+
+        rss_soft_cap_gb = MAX_WORKER_RSS_GB * 0.9
+        rss_after_theorem_gb = get_rss_gb()
+        if rss_after_theorem_gb > rss_soft_cap_gb:
+            logger.warning(
+                f"Worker {worker_id}: RSS {rss_after_theorem_gb:.1f} GB exceeds "
+                f"soft cap {rss_soft_cap_gb:.1f} GB after theorem. "
+                "Attempting cleanup and worker recycle if still high."
+            )
+            aggressive_cleanup()
+            rss_post_cleanup_gb = get_rss_gb()
+            if rss_post_cleanup_gb > rss_soft_cap_gb:
+                logger.error(
+                    f"Worker {worker_id}: RSS still high at {rss_post_cleanup_gb:.1f} GB "
+                    "after cleanup. Exiting worker to prevent runaway memory growth."
+                )
+                sys.exit(_RSS_RECYCLE_EXIT_CODE)
+
+        theorems_processed += 1
+        del data
+        aggressive_cleanup()
+
+    logger.info(
+        f"Worker {worker_id} shutting down after processing {theorems_processed} theorems"
+    )
+
+    del dataloader
+    del transformer_proxy
+
     aggressive_cleanup()
 
     logger.info(f"Worker {worker_id} cleanup complete")

@@ -3,7 +3,11 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from benchmark.evaluate_benchmark import TestEvaluator, build_eval_config
+from benchmark.evaluate_benchmark import (
+    PPOPolicyEvaluator,
+    TestEvaluator,
+    build_eval_config,
+)
 from lean_reinforcement.utilities.config import TrainingConfig
 
 
@@ -127,7 +131,10 @@ def main():
             "indicates euclidean evaluation."
         )
 
-    evaluator = TestEvaluator(
+    evaluator_cls = (
+        PPOPolicyEvaluator if eval_config.training_mode == "ppo" else TestEvaluator
+    )
+    evaluator = evaluator_cls(
         config=eval_config,
         run_dir=run_dir,
         dataset_split=args.split,

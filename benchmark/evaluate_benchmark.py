@@ -23,8 +23,9 @@ from loguru import logger
 
 from lean_reinforcement.agent.transformer import Transformer
 from lean_reinforcement.agent.value_head import ValueHead, HyperbolicValueHead
+from lean_reinforcement.agent.ppo import EuclideanPPO, HyperbolicPPO, PPOConfig
 from lean_reinforcement.training.trainer import Trainer
-from lean_reinforcement.training.worker import worker_loop
+from lean_reinforcement.training.worker import worker_loop, policy_worker_loop
 from lean_reinforcement.training.progress import (
     ProgressStats,
     make_progress_display,
@@ -35,6 +36,7 @@ from lean_reinforcement.utilities.memory import (
     aggressive_cleanup,
     empty_gpu_cache,
     log_gpu_memory,
+    periodic_cache_cleanup,
 )
 from lean_reinforcement.utilities.dataloader import LeanDataLoader
 from ReProver.common import Corpus
@@ -53,6 +55,175 @@ from benchmark.run_benchmark import (
 )
 
 load_dotenv()
+
+
+class PPOActorAdapter:
+    """Adapter that exposes PPO actor generation via TransformerProtocol methods."""
+
+    def __init__(self, config: TrainingConfig, run_dir: Path) -> None:
+        ppo_config = PPOConfig(
+            value_head_latent_dim=config.value_head_latent_dim,
+            curvature=config.curvature,
+        )
+        self.ppo: EuclideanPPO | HyperbolicPPO
+        if config.use_hyperbolic:
+            self.ppo = HyperbolicPPO(model_name=config.model_name, config=ppo_config)
+        else:
+            self.ppo = EuclideanPPO(model_name=config.model_name, config=ppo_config)
+
+        self.model = self.ppo.model
+        self.tokenizer = self.ppo.tokenizer
+        self.device = self.ppo.device
+        self._generate_call_count = 0
+
+        self._load_checkpoint(run_dir, config.use_hyperbolic)
+        self.model.eval()
+
+    def _load_checkpoint(self, run_dir: Path, use_hyperbolic: bool) -> None:
+        prefixes = ["ppo_hyperbolic" if use_hyperbolic else "ppo_euclidean", "ppo"]
+        for prefix in prefixes:
+            epoch = self.ppo.load_latest_checkpoint(run_dir, prefix=prefix)
+            if epoch > 0:
+                logger.info(f"Loaded PPO checkpoint '{prefix}' (epoch {epoch})")
+                return
+        logger.warning(
+            "No PPO checkpoint found for evaluation; using base actor weights."
+        )
+
+    @torch.no_grad()
+    def generate_tactics(self, state: str, n: int = 1) -> List[str]:
+        tokenized_state = self.tokenizer(
+            state, return_tensors="pt", truncation=True, max_length=2048
+        ).to(self.device)
+
+        input_length = tokenized_state.input_ids.shape[1]
+        tactics_ids = self.model.generate(
+            tokenized_state.input_ids,
+            max_length=input_length + 512,
+            num_beams=n,
+            do_sample=False,
+            num_return_sequences=n,
+            early_stopping=False,
+            length_penalty=0.0,
+        )
+        tactics: List[str] = self.tokenizer.batch_decode(
+            tactics_ids, skip_special_tokens=True
+        )
+
+        self._generate_call_count = periodic_cache_cleanup(self._generate_call_count)
+        return tactics
+
+    @torch.no_grad()
+    def generate_tactics_with_probs(
+        self, state: str, n: int = 1
+    ) -> List[tuple[str, float]]:
+        tokenized_state = self.tokenizer(
+            state, return_tensors="pt", truncation=True, max_length=2048
+        ).to(self.device)
+
+        input_length = tokenized_state.input_ids.shape[1]
+        outputs = self.model.generate(
+            tokenized_state.input_ids,
+            max_length=input_length + 512,
+            num_beams=n,
+            do_sample=False,
+            num_return_sequences=n,
+            early_stopping=False,
+            return_dict_in_generate=True,
+            output_scores=True,
+            length_penalty=0.0,
+        )
+        tactics = self.tokenizer.batch_decode(
+            outputs.sequences, skip_special_tokens=True
+        )
+
+        sequence_scores = outputs.sequences_scores
+        probs = torch.softmax(sequence_scores, dim=0)
+        result = list(zip(tactics, probs.tolist()))
+
+        self._generate_call_count = periodic_cache_cleanup(self._generate_call_count)
+        return result
+
+    @torch.no_grad()
+    def generate_tactics_batch(self, states: List[str], n: int = 1) -> List[List[str]]:
+        if not states:
+            return []
+
+        tokenized_states = self.tokenizer(
+            states,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=2048,
+        ).to(self.device)
+
+        input_length = tokenized_states.input_ids.shape[1]
+        tactics_ids = self.model.generate(
+            tokenized_states.input_ids,
+            attention_mask=tokenized_states.attention_mask,
+            max_length=input_length + 512,
+            num_beams=n,
+            do_sample=False,
+            num_return_sequences=n,
+            early_stopping=False,
+            length_penalty=0.0,
+        )
+
+        tactics = self.tokenizer.batch_decode(tactics_ids, skip_special_tokens=True)
+        result: List[List[str]] = []
+        for i in range(0, len(tactics), n):
+            result.append(tactics[i : i + n])
+
+        self._generate_call_count = periodic_cache_cleanup(self._generate_call_count)
+        return result
+
+    @torch.no_grad()
+    def generate_tactics_with_probs_batch(
+        self, states: List[str], n: int = 1
+    ) -> List[List[tuple[str, float]]]:
+        if not states:
+            return []
+
+        tokenized_states = self.tokenizer(
+            states,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=2048,
+        ).to(self.device)
+
+        input_length = tokenized_states.input_ids.shape[1]
+        outputs = self.model.generate(
+            tokenized_states.input_ids,
+            attention_mask=tokenized_states.attention_mask,
+            max_length=input_length + 512,
+            num_beams=n,
+            do_sample=False,
+            num_return_sequences=n,
+            early_stopping=False,
+            return_dict_in_generate=True,
+            output_scores=True,
+            length_penalty=0.0,
+        )
+
+        all_tactics = self.tokenizer.batch_decode(
+            outputs.sequences, skip_special_tokens=True
+        )
+        sequence_scores = outputs.sequences_scores
+
+        results: List[List[tuple[str, float]]] = []
+        for i in range(len(states)):
+            start_idx = i * n
+            end_idx = (i + 1) * n
+
+            batch_tactics = all_tactics[start_idx:end_idx]
+            batch_scores = sequence_scores[start_idx:end_idx]
+            batch_probs = torch.softmax(batch_scores, dim=0).tolist()
+
+            results.append(list(zip(batch_tactics, batch_probs)))
+
+        self._generate_call_count = periodic_cache_cleanup(self._generate_call_count)
+        return results
 
 
 class TestEvaluator(Trainer):
@@ -116,6 +287,28 @@ class TestEvaluator(Trainer):
             del self.corpus
 
         self._setup_multiprocessing()
+
+    def _spawn_worker(self, worker_id: int) -> mp.Process:
+        return mp.Process(
+            target=worker_loop,
+            args=(
+                worker_id,
+                self.request_queue,
+                self.response_queues[worker_id],
+                self.theorem_queue,
+                self.result_queue,
+                self.config,
+                self.checkpoint_dir,
+            ),
+        )
+
+    def _start_workers(self) -> None:
+        logger.info(f"Starting {self.config.num_workers} workers")
+        self.workers = []
+        for i in range(self.config.num_workers):
+            p = self._spawn_worker(i)
+            p.start()
+            self.workers.append(p)
 
     def _setup_models_for_eval(self, run_dir: Path) -> None:
         """Set up models and load the best checkpoint."""
@@ -332,17 +525,7 @@ class TestEvaluator(Trainer):
                             p.join(timeout=1)
                         except Exception:
                             pass
-                        new_p = mp.Process(
-                            target=worker_loop,
-                            args=(
-                                idx,
-                                self.request_queue,
-                                self.response_queues[idx],
-                                self.theorem_queue,
-                                self.result_queue,
-                                self.config,
-                            ),
-                        )
+                        new_p = self._spawn_worker(idx)
                         new_p.start()
                         self.workers[idx] = new_p
 
@@ -460,6 +643,31 @@ class TestEvaluator(Trainer):
             }
             for t in all_theorem_results
         ]
+
+
+class PPOPolicyEvaluator(TestEvaluator):
+    """Evaluate using the PPO actor policy (no MCTS search)."""
+
+    def _setup_models_for_eval(self, run_dir: Path) -> None:
+        logger.info(f"Loading PPO actor for evaluation from {run_dir}")
+        self.transformer = PPOActorAdapter(self.config, run_dir)
+        self.value_head = None
+        self.start_epoch = 0
+        log_gpu_memory(prefix="After PPO actor initialization - ")
+
+    def _spawn_worker(self, worker_id: int) -> mp.Process:
+        return mp.Process(
+            target=policy_worker_loop,
+            args=(
+                worker_id,
+                self.request_queue,
+                self.response_queues[worker_id],
+                self.theorem_queue,
+                self.result_queue,
+                self.config,
+                self.checkpoint_dir,
+            ),
+        )
 
 
 def build_eval_config(
