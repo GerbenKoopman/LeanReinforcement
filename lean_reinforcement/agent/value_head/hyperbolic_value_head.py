@@ -42,11 +42,6 @@ class _HyperbolicRegressor(nn.Module):
 
     def forward(self, encoder_out: torch.Tensor) -> torch.Tensor:
         rho_max = cast(torch.Tensor, self.rho_max)
-        # Map Euclidean encoder features to a bounded tangent vector by
-        # normalizing direction and controlling magnitude explicitly.
-        # Per-coordinate scaling alone is not enough in high dimensions,
-        # because vector norms can still grow large and push expmap outputs
-        # onto/near the Poincare boundary.
         max_tangent_norm = rho_max * torch.sigmoid(self.xi)
         direction = encoder_out / encoder_out.norm(dim=-1, keepdim=True).clamp_min(1e-8)
         x = max_tangent_norm * direction
