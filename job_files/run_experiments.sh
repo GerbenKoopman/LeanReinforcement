@@ -24,13 +24,21 @@ CONFIG_DUMPER=("$PYTHON_BIN" -m lean_reinforcement.utilities.dump_config)
 MCTS_TYPE="alpha_zero"
 LAST_JOB_ID=""
 
-# Experiment grid defaults (edit as needed).
-VALUE_HEAD_DIMS=(64 128 256)
-VALUE_HEAD_HIDDEN_LAYERS=(1 2 4)
-EXPLORATION_WEIGHTS=(1.0 0.5 0.25)
-HYPERBOLIC_CURVATURES=(1.0 0.5 0.1)
-ENABLE_EUCLIDEAN=1
-ENABLE_HYPERBOLIC=1
+# Single-parameter sweep defaults (edit as needed).
+BASE_VALUE_HEAD_DIM=1024
+BASE_VALUE_HEAD_HIDDEN_LAYERS=1
+BASE_EXPLORATION_WEIGHT=1.41421356237
+BASE_HYPERBOLIC_CURVATURE=1.0
+
+SWEEP_VALUE_HEAD_DIMS_ENABLED=1
+SWEEP_VALUE_HEAD_HIDDEN_LAYERS_ENABLED=1
+SWEEP_EXPLORATION_WEIGHTS_ENABLED=1
+SWEEP_CURVATURES_ENABLED=1
+
+SWEEP_VALUE_HEAD_DIMS=(64 128 256)
+SWEEP_VALUE_HEAD_HIDDEN_LAYERS=(1 2 4)
+SWEEP_EXPLORATION_WEIGHTS=(1.0 0.5 0.25)
+SWEEP_CURVATURES=(1.0 0.5 0.1)
 
 has_value_head_weights() {
 	local run_dir="$1"
@@ -38,20 +46,10 @@ has_value_head_weights() {
 	[ -f "$run_dir/value_head_${mcts_type}_latest.pth" ]
 }
 
-has_ppo_weights() {
-	local run_dir="$1"
-	shopt -s nullglob
-	local actor_files=("$run_dir"/ppo_actor_epoch_*.pth)
-	local critic_files=("$run_dir"/ppo_critic_epoch_*.pth)
-	shopt -u nullglob
-	[ "${#actor_files[@]}" -gt 0 ] && [ "${#critic_files[@]}" -gt 0 ]
-}
-
 find_matching_run() {
 	local base_dir="$1"
-	local training_mode="$2"
-	local mcts_type="$3"
-	shift 3
+	local mcts_type="$2"
+	shift 2
 	local train_args=("$@")
 
 	local tmp_config
@@ -70,11 +68,7 @@ find_matching_run() {
 				continue
 			fi
 
-			if [ "$training_mode" = "ppo" ]; then
-				has_ppo_weights "$dir" || continue
-			else
-				has_value_head_weights "$dir" "$mcts_type" || continue
-			fi
+			has_value_head_weights "$dir" "$mcts_type" || continue
 
 			local mtime
 			mtime=$(stat -c %Y "$dir" 2>/dev/null || echo 0)
@@ -137,11 +131,10 @@ run_experiment() {
 	local label="$1"
 	local job_file="$2"
 	local base_dir_rel="$3"
-	local training_mode="$4"
-	local use_hyperbolic="$5"
-	local curvature="${6:-}"
-	local dependency="${7:-}"
-	local extra_args_str="${8:-}"
+	local use_hyperbolic="$4"
+	local curvature="${5:-}"
+	local dependency="${6:-}"
+	local extra_args_str="${7:-}"
 
 	local base_dir_abs="$ROOT_DIR/$base_dir_rel"
 	local corpus_base="${CORPUS_DIR:-}"
@@ -149,7 +142,7 @@ run_experiment() {
 
 	local train_args=(
 		--no-use-wandb
-		--training-mode "$training_mode"
+		--training-mode value_head
 		--mcts-type "$MCTS_TYPE"
 		--checkpoint-dir "$base_dir_rel"
 		--indexed-corpus-path "$indexed_corpus_path"
@@ -173,7 +166,7 @@ run_experiment() {
 	fi
 
 	local match
-	match=$(find_matching_run "$base_dir_abs" "$training_mode" "$MCTS_TYPE" "${train_args[@]}")
+	match=$(find_matching_run "$base_dir_abs" "$MCTS_TYPE" "${train_args[@]}")
 	if [ -n "$match" ]; then
 		echo "Found matching checkpoint for $label: $match"
 		local eval_job_id
@@ -194,57 +187,126 @@ run_experiment() {
 	LAST_JOB_ID="$train_job_id"
 }
 
+queue_single_sweep() {
+	local label_prefix="$1"
+	local job_file="$2"
+	local base_dir_rel="$3"
+	local use_hyperbolic="$4"
+	local sweep_mode="$5"
+	shift 5
+	local sweep_values=("$@")
+
+	if [ "${#sweep_values[@]}" -eq 0 ]; then
+		return
+	fi
+
+	for sweep_value in "${sweep_values[@]}"; do
+		local dim="$BASE_VALUE_HEAD_DIM"
+		local layers="$BASE_VALUE_HEAD_HIDDEN_LAYERS"
+		local puct="$BASE_EXPLORATION_WEIGHT"
+		local curvature="$BASE_HYPERBOLIC_CURVATURE"
+
+		case "$sweep_mode" in
+			value_head_hidden_layers)
+				layers="$sweep_value"
+				;;
+			value_head_latent_dim)
+				dim="$sweep_value"
+				;;
+			exploration_weight)
+				puct="$sweep_value"
+				;;
+			curvature)
+				curvature="$sweep_value"
+				;;
+		esac
+
+		local label_suffix="baseline"
+		case "$sweep_mode" in
+			value_head_hidden_layers)
+				label_suffix="layers${layers}"
+				;;
+			value_head_latent_dim)
+				label_suffix="dim${dim}"
+				;;
+			exploration_weight)
+				label_suffix="puct${puct}"
+				;;
+			curvature)
+				label_suffix="curv${curvature//./p}"
+				;;
+		esac
+
+		local label="${label_prefix}_${label_suffix}"
+		local extra_args="--value-head-latent-dim $dim --value-head-hidden-layers $layers --exploration-weight $puct"
+		local dependency="$PRIMARY_JOB_ID"
+
+		run_experiment \
+			"$label" \
+			"$job_file" \
+			"$base_dir_rel" \
+			"$use_hyperbolic" \
+			"$curvature" \
+			"$dependency" \
+			"$extra_args"
+
+		if [ -z "$PRIMARY_JOB_ID" ] && [ -n "$LAST_JOB_ID" ]; then
+			PRIMARY_JOB_ID="$LAST_JOB_ID"
+		fi
+	done
+}
+
 queue_value_head_ablation() {
 	local label_prefix="$1"
 	local job_file="$2"
 	local base_dir_rel="$3"
 	local use_hyperbolic="$4"
-	local curvature="${5:-}"
 
-	for dim in "${VALUE_HEAD_DIMS[@]}"; do
-		for layers in "${VALUE_HEAD_HIDDEN_LAYERS[@]}"; do
-			for puct in "${EXPLORATION_WEIGHTS[@]}"; do
-				local label="${label_prefix}_dim${dim}_layers${layers}_puct${puct}"
-				local extra_args="--value-head-latent-dim $dim --value-head-hidden-layers $layers --exploration-weight $puct"
-				local dependency="$PRIMARY_JOB_ID"
+	if [ "$SWEEP_VALUE_HEAD_DIMS_ENABLED" = "1" ]; then
+		queue_single_sweep \
+			"$label_prefix" \
+			"$job_file" \
+			"$base_dir_rel" \
+			"$use_hyperbolic" \
+			"value_head_latent_dim" \
+			"${SWEEP_VALUE_HEAD_DIMS[@]}"
+	fi
 
-				run_experiment \
-					"$label" \
-					"$job_file" \
-					"$base_dir_rel" \
-					"value_head" \
-					"$use_hyperbolic" \
-					"$curvature" \
-					"$dependency" \
-					"$extra_args"
+	if [ "$SWEEP_VALUE_HEAD_HIDDEN_LAYERS_ENABLED" = "1" ]; then
+		queue_single_sweep \
+			"$label_prefix" \
+			"$job_file" \
+			"$base_dir_rel" \
+			"$use_hyperbolic" \
+			"value_head_hidden_layers" \
+			"${SWEEP_VALUE_HEAD_HIDDEN_LAYERS[@]}"
+	fi
 
-				if [ -z "$PRIMARY_JOB_ID" ] && [ -n "$LAST_JOB_ID" ]; then
-					PRIMARY_JOB_ID="$LAST_JOB_ID"
-				fi
-			done
-		done
-	done
+	if [ "$SWEEP_EXPLORATION_WEIGHTS_ENABLED" = "1" ]; then
+		queue_single_sweep \
+			"$label_prefix" \
+			"$job_file" \
+			"$base_dir_rel" \
+			"$use_hyperbolic" \
+			"exploration_weight" \
+			"${SWEEP_EXPLORATION_WEIGHTS[@]}"
+	fi
+
+	if [ "$SWEEP_CURVATURES_ENABLED" = "1" ]; then
+		queue_single_sweep \
+			"$label_prefix" \
+			"$job_file" \
+			"$base_dir_rel" \
+			"$use_hyperbolic" \
+			"curvature" \
+			"${SWEEP_CURVATURES[@]}"
+	fi
 }
 
 PRIMARY_JOB_ID=""
 
-if [ "$ENABLE_EUCLIDEAN" = "1" ]; then
-	queue_value_head_ablation \
-		"mcts_euclidean" \
-		"$JOB_DIR/train_mcts_euclidean.job" \
-		"checkpoints/mcts_euclidean" \
-		"0" \
-		""
-fi
-
-if [ "$ENABLE_HYPERBOLIC" = "1" ]; then
-	for curv in "${HYPERBOLIC_CURVATURES[@]}"; do
-		safe_curv=${curv//./p}
-		queue_value_head_ablation \
-			"mcts_hyperbolic_curv${safe_curv}" \
-			"$JOB_DIR/train_mcts_hyperbolic.job" \
-			"checkpoints/mcts_hyperbolic" \
-			"1" \
-			"$curv"
-	done
-fi
+queue_value_head_ablation \
+	"mcts_hyperbolic" \
+	"$JOB_DIR/train_mcts_hyperbolic.job" \
+	"checkpoints/mcts_hyperbolic" \
+	"1"
