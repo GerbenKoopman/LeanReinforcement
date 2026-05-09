@@ -348,11 +348,13 @@ class Trainer:
                     transformer_for_value_head,
                     latent_dim=self.config.value_head_latent_dim,
                     curvature=self.config.curvature,
+                    hidden_layers=self.config.value_head_hidden_layers,
                 )
             else:
                 self.value_head = ValueHead(
                     transformer_for_value_head,
                     latent_dim=self.config.value_head_latent_dim,
+                    hidden_layers=self.config.value_head_hidden_layers,
                 )
 
             if self.config.resume or self.config.use_test_value_head:

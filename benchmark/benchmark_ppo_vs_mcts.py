@@ -458,12 +458,14 @@ class MCTSBenchmarkTrainer(Trainer):
                 transformer_for_vh,
                 latent_dim=self.config.value_head_latent_dim,
                 curvature=self.config.curvature,
+                hidden_layers=getattr(self.config, "value_head_hidden_layers", 1),
             )
         else:
             logger.info("Using Euclidean (MLP) value head")
             self.value_head = ValueHead(
                 transformer_for_vh,
                 latent_dim=self.config.value_head_latent_dim,
+                hidden_layers=getattr(self.config, "value_head_hidden_layers", 1),
             )
 
         if self.config.resume:
@@ -589,11 +591,13 @@ class PPOBenchmarkTrainer(Trainer):
                 transformer_for_vh,
                 latent_dim=self.config.value_head_latent_dim,
                 curvature=self.config.curvature,
+                hidden_layers=getattr(self.config, "value_head_hidden_layers", 1),
             )
         else:
             self.value_head = ValueHead(
                 transformer_for_vh,
                 latent_dim=self.config.value_head_latent_dim,
+                hidden_layers=getattr(self.config, "value_head_hidden_layers", 1),
             )
 
         self.start_epoch = self._start_epoch_override

@@ -20,7 +20,7 @@ from lean_reinforcement.agent.value_head.constants import ENCODER_OUTPUT_DIM
 
 
 class _HyperbolicRegressor(nn.Module):
-    """Hyperbolic projection head: input_dim -> latent_dim -> 1."""
+    """Hyperbolic projection head: input_dim -> latent_dim x N -> 1."""
 
     def __init__(
         self,
@@ -29,13 +29,23 @@ class _HyperbolicRegressor(nn.Module):
         latent_dim: int,
         rho_max: float,
         xi_init: float,
+        hidden_layers: int,
     ) -> None:
         super().__init__()
+        if hidden_layers < 1:
+            raise ValueError("hidden_layers must be >= 1")
+
         self.manifold = manifold
         self.xi = nn.Parameter(torch.tensor(xi_init))
 
         self.in_linear = hnn.HLinear(input_dim, latent_dim, self.manifold)
         self.activation = hnn.HReLU(self.manifold)
+        self.hidden_layers = nn.ModuleList(
+            [
+                hnn.HLinear(latent_dim, latent_dim, self.manifold)
+                for _ in range(hidden_layers - 1)
+            ]
+        )
         self.out_linear = hnn.HLinear(latent_dim, 1, self.manifold)
 
         self.register_buffer("rho_max", torch.tensor(rho_max))
@@ -49,8 +59,9 @@ class _HyperbolicRegressor(nn.Module):
         tangent = TangentTensor(data=x, man_dim=1, manifold=self.manifold)
         hidden = self.manifold.expmap(tangent)
 
-        hidden = self.in_linear(hidden)
-        hidden = self.activation(hidden)
+        hidden = self.activation(self.in_linear(hidden))
+        for layer in self.hidden_layers:
+            hidden = self.activation(layer(hidden))
         hidden = self.out_linear(hidden)
 
         tangent = self.manifold.logmap(x=None, y=hidden)
@@ -67,6 +78,7 @@ class HyperbolicValueHead(BaseValueHead):
         latent_dim: int = 1024,
         rho_max: float = 0.95,
         xi_init: float = 0.01,
+        hidden_layers: int = 1,
         input_dim: int = ENCODER_OUTPUT_DIM,
         curvature: float = 1.0,
     ) -> None:
@@ -77,12 +89,14 @@ class HyperbolicValueHead(BaseValueHead):
         self.input_dim = input_dim
         self.latent_dim = latent_dim
         self.rho_max = rho_max
+        self.hidden_layers = hidden_layers
 
         self.value_head = self._build_value_head(
             input_dim=input_dim,
             latent_dim=latent_dim,
             rho_max=rho_max,
             xi_init=xi_init,
+            hidden_layers=hidden_layers,
         )
 
         if torch.cuda.is_available():
@@ -93,6 +107,7 @@ class HyperbolicValueHead(BaseValueHead):
             "latent_dim": self.latent_dim,
             "rho_max": self.rho_max,
             "input_dim": self.input_dim,
+            "hidden_layers": self.hidden_layers,
             "type": "hyperbolic",
         }
 
@@ -102,6 +117,7 @@ class HyperbolicValueHead(BaseValueHead):
         latent_dim: int,
         rho_max: float,
         xi_init: float,
+        hidden_layers: int,
     ) -> nn.Module:
         return _HyperbolicRegressor(
             manifold=self.manifold,
@@ -109,4 +125,5 @@ class HyperbolicValueHead(BaseValueHead):
             latent_dim=latent_dim,
             rho_max=rho_max,
             xi_init=xi_init,
+            hidden_layers=hidden_layers,
         )

@@ -330,10 +330,13 @@ class TestEvaluator(Trainer):
                     self.transformer,
                     latent_dim=self.config.value_head_latent_dim,
                     curvature=self.config.curvature,
+                    hidden_layers=getattr(self.config, "value_head_hidden_layers", 1),
                 )
             else:
                 self.value_head = ValueHead(
-                    self.transformer, latent_dim=self.config.value_head_latent_dim
+                    self.transformer,
+                    latent_dim=self.config.value_head_latent_dim,
+                    hidden_layers=getattr(self.config, "value_head_hidden_layers", 1),
                 )
             loaded_epoch = load_checkpoint(self.value_head, run_dir, prefix=prefix)
             logger.info(f"Loaded checkpoint from epoch {loaded_epoch}")
@@ -344,10 +347,13 @@ class TestEvaluator(Trainer):
                     self.transformer,
                     latent_dim=self.config.value_head_latent_dim,
                     curvature=self.config.curvature,
+                    hidden_layers=getattr(self.config, "value_head_hidden_layers", 1),
                 )
             else:
                 self.value_head = ValueHead(
-                    self.transformer, latent_dim=self.config.value_head_latent_dim
+                    self.transformer,
+                    latent_dim=self.config.value_head_latent_dim,
+                    hidden_layers=getattr(self.config, "value_head_hidden_layers", 1),
                 )
             logger.warning(
                 f"No checkpoint found at {checkpoint_path}, using untrained value head"

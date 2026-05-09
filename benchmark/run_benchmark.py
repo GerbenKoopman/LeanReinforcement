@@ -385,7 +385,9 @@ class BenchmarkTrainer(Trainer):
 
         if self.config.mcts_type == "alpha_zero" or self.config.train_value_head:
             self.value_head = ValueHead(
-                self.transformer, latent_dim=self.config.value_head_latent_dim
+                self.transformer,
+                latent_dim=self.config.value_head_latent_dim,
+                hidden_layers=getattr(self.config, "value_head_hidden_layers", 1),
             )
 
             if self.config.resume:

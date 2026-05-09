@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import argparse
+import math
 import os
 from typing import Optional
 
@@ -22,6 +23,7 @@ class TrainingConfig:
     value_head_batch_size: int
     training_mode: str = "value_head"
     value_head_latent_dim: int = 1024
+    value_head_hidden_layers: int = 1
     train_value_head: bool = True
     use_hyperbolic: bool = False  # Use hyperbolic (Poincaré ball) value head
     use_final_reward: bool = False
@@ -58,6 +60,7 @@ class TrainingConfig:
     # Max MCTS tree nodes — limits per-worker memory.
     # The PUCT-based pruner evicts worst-scored leaves at this limit.
     max_tree_nodes: int = 10000
+    exploration_weight: float = math.sqrt(2)
 
     # Timeout parameters (all in seconds)
     # Note: These form a hierarchy - each level should be larger than the one below
@@ -100,6 +103,7 @@ class TrainingConfig:
             train_epochs=getattr(args, "train_epochs", 50),
             value_head_batch_size=getattr(args, "value_head_batch_size", 4),
             value_head_latent_dim=getattr(args, "value_head_latent_dim", 1024),
+            value_head_hidden_layers=getattr(args, "value_head_hidden_layers", 1),
             train_value_head=getattr(args, "train_value_head", True),
             use_hyperbolic=getattr(args, "use_hyperbolic", False),
             use_final_reward=getattr(args, "use_final_reward", True),
@@ -116,6 +120,7 @@ class TrainingConfig:
             curvature=getattr(args, "curvature", 1.0),
             full_search=getattr(args, "full_search", True),
             max_tree_nodes=getattr(args, "max_tree_nodes", 10000),
+            exploration_weight=getattr(args, "exploration_weight", math.sqrt(2)),
             lean_memory_limit_gb=getattr(args, "lean_memory_limit_gb", 8),
             log_search_tree=getattr(args, "log_search_tree", False),
         )
@@ -193,6 +198,15 @@ def get_config() -> TrainingConfig:
         type=int,
         default=64,
         help="Number of tactics to expand in MCTS.",
+    )
+    parser.add_argument(
+        "--exploration-weight",
+        type=float,
+        default=math.sqrt(2),
+        help=(
+            "PUCT exploration constant. Lower values bias more toward the value head; "
+            "higher values favor exploration."
+        ),
     )
     parser.add_argument(
         "--max-rollout-depth",
@@ -284,6 +298,12 @@ def get_config() -> TrainingConfig:
         type=int,
         default=1024,
         help="Hidden dimension for the value head MLP. Default: 1024.",
+    )
+    parser.add_argument(
+        "--value-head-hidden-layers",
+        type=int,
+        default=1,
+        help="Number of hidden layers in the value head MLP (>= 1).",
     )
     parser.add_argument(
         "--train-value-head",

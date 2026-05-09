@@ -213,6 +213,7 @@ def process_theorem(
     mcts_kwargs["max_time"] = args.max_time
     mcts_kwargs["max_tree_nodes"] = getattr(args, "max_tree_nodes", 1000)
     mcts_kwargs["log_search_tree"] = getattr(args, "log_search_tree", False)
+    mcts_kwargs["exploration_weight"] = args.exploration_weight
 
     runner = AgentRunner(
         env=env,
