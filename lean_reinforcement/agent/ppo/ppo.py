@@ -307,7 +307,9 @@ class _BasePPO:
             return 0
 
         critic_path = checkpoint_dir / f"{prefix}_critic_epoch_{max_epoch}.pth"
-        ckpt = torch.load(str(critic_path), map_location=self.device)
+        ckpt = torch.load(
+            str(critic_path), map_location=self.device, weights_only=False
+        )
         self.critic.load_state_dict(ckpt["critic_state_dict"])
         self.optimizer.load_state_dict(ckpt["optimizer_state_dict"])
 
