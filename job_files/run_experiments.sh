@@ -24,6 +24,14 @@ CONFIG_DUMPER=("$PYTHON_BIN" -m lean_reinforcement.utilities.dump_config)
 MCTS_TYPE="alpha_zero"
 LAST_JOB_ID=""
 
+# Experiment grid defaults (edit as needed).
+VALUE_HEAD_DIMS=(64 128 256)
+VALUE_HEAD_HIDDEN_LAYERS=(1 2 4)
+EXPLORATION_WEIGHTS=(1.0 0.5 0.25)
+HYPERBOLIC_CURVATURES=(1.0 0.5 0.1)
+ENABLE_EUCLIDEAN=1
+ENABLE_HYPERBOLIC=1
+
 has_value_head_weights() {
 	local run_dir="$1"
 	local mcts_type="$2"
@@ -103,14 +111,24 @@ submit_train() {
 	local job_file="$1"
 	local dependency="${2:-}"
 	local curvature="${3:-}"
+	local extra_args_str="${4:-}"
+
+	local export_vars=("ALL")
+	if [ -n "$curvature" ]; then
+		export_vars+=("curvature=$curvature")
+	fi
+	if [ -n "$extra_args_str" ]; then
+		export_vars+=("EXTRA_TRAIN_ARGS=$extra_args_str")
+	fi
+
+	local export_joined
+	export_joined=$(IFS=,; echo "${export_vars[*]}")
 
 	local sbatch_args=()
 	if [ -n "$dependency" ]; then
 		sbatch_args+=(--dependency="afterok:$dependency")
 	fi
-	if [ -n "$curvature" ]; then
-		sbatch_args+=(--export="curvature=$curvature")
-	fi
+	sbatch_args+=(--export="$export_joined")
 
 	sbatch --parsable "${sbatch_args[@]}" "$job_file"
 }
@@ -123,6 +141,7 @@ run_experiment() {
 	local use_hyperbolic="$5"
 	local curvature="${6:-}"
 	local dependency="${7:-}"
+	local extra_args_str="${8:-}"
 
 	local base_dir_abs="$ROOT_DIR/$base_dir_rel"
 	local corpus_base="${CORPUS_DIR:-}"
@@ -146,6 +165,13 @@ run_experiment() {
 		train_args+=(--curvature "$curvature")
 	fi
 
+	local extra_args=()
+	if [ -n "$extra_args_str" ]; then
+		# shellcheck disable=SC2206
+		extra_args=($extra_args_str)
+		train_args+=("${extra_args[@]}")
+	fi
+
 	local match
 	match=$(find_matching_run "$base_dir_abs" "$training_mode" "$MCTS_TYPE" "${train_args[@]}")
 	if [ -n "$match" ]; then
@@ -160,87 +186,65 @@ run_experiment() {
 	echo "No matching checkpoint found for $label; submitting training."
 	local train_job_id
 	if [ "$use_hyperbolic" = "1" ] && [ -n "$curvature" ]; then
-		train_job_id=$(submit_train "$job_file" "$dependency" "$curvature")
+		train_job_id=$(submit_train "$job_file" "$dependency" "$curvature" "$extra_args_str")
 	else
-		train_job_id=$(submit_train "$job_file" "$dependency")
+		train_job_id=$(submit_train "$job_file" "$dependency" "" "$extra_args_str")
 	fi
 	echo "Submitted Train Job: $train_job_id"
 	LAST_JOB_ID="$train_job_id"
 }
 
+queue_value_head_ablation() {
+	local label_prefix="$1"
+	local job_file="$2"
+	local base_dir_rel="$3"
+	local use_hyperbolic="$4"
+	local curvature="${5:-}"
+
+	for dim in "${VALUE_HEAD_DIMS[@]}"; do
+		for layers in "${VALUE_HEAD_HIDDEN_LAYERS[@]}"; do
+			for puct in "${EXPLORATION_WEIGHTS[@]}"; do
+				local label="${label_prefix}_dim${dim}_layers${layers}_puct${puct}"
+				local extra_args="--value-head-latent-dim $dim --value-head-hidden-layers $layers --exploration-weight $puct"
+				local dependency="$PRIMARY_JOB_ID"
+
+				run_experiment \
+					"$label" \
+					"$job_file" \
+					"$base_dir_rel" \
+					"value_head" \
+					"$use_hyperbolic" \
+					"$curvature" \
+					"$dependency" \
+					"$extra_args"
+
+				if [ -z "$PRIMARY_JOB_ID" ] && [ -n "$LAST_JOB_ID" ]; then
+					PRIMARY_JOB_ID="$LAST_JOB_ID"
+				fi
+			done
+		done
+	done
+}
+
 PRIMARY_JOB_ID=""
 
-run_experiment \
-	"mcts_euclidean" \
-	"$JOB_DIR/train_mcts_euclidean.job" \
-	"checkpoints/mcts_euclidean" \
-	"value_head" \
-	"0" \
-	""
-
-if [ -n "$LAST_JOB_ID" ]; then
-	PRIMARY_JOB_ID="$LAST_JOB_ID"
+if [ "$ENABLE_EUCLIDEAN" = "1" ]; then
+	queue_value_head_ablation \
+		"mcts_euclidean" \
+		"$JOB_DIR/train_mcts_euclidean.job" \
+		"checkpoints/mcts_euclidean" \
+		"0" \
+		""
 fi
 
-# run_experiment \
-#     "mcts_hyperbolic_curvature_0.1" \
-#     "$JOB_DIR/train_mcts_hyperbolic.job" \
-#     "checkpoints/mcts_hyperbolic" \
-#     "value_head" \
-#     "1" \
-#     "0.1" \
-#     "$PRIMARY_JOB_ID"
-
-# run_experiment \
-#     "mcts_hyperbolic_curvature_0.5" \
-#     "$JOB_DIR/train_mcts_hyperbolic.job" \
-#     "checkpoints/mcts_hyperbolic" \
-#     "value_head" \
-#     "1" \
-#     "0.5" \
-#     "$PRIMARY_JOB_ID"
-
-run_experiment \
-	"mcts_hyperbolic_curvature_1.0" \
-	"$JOB_DIR/train_mcts_hyperbolic.job" \
-	"checkpoints/mcts_hyperbolic" \
-	"value_head" \
-	"1" \
-	"1.0" \
-	"$PRIMARY_JOB_ID"
-
-run_experiment \
-	"ppo_euclidean" \
-	"$JOB_DIR/train_ppo_euclidean.job" \
-	"checkpoints/ppo_euclidean" \
-	"ppo" \
-	"0" \
-	"" \
-	"$PRIMARY_JOB_ID"
-
-# run_experiment \
-#     "ppo_hyperbolic_curvature_0.1" \
-#     "$JOB_DIR/train_ppo_hyperbolic.job" \
-#     "checkpoints/ppo_hyperbolic" \
-#     "ppo" \
-#     "1" \
-#     "0.1" \
-#     "$PRIMARY_JOB_ID"
-
-# run_experiment \
-#     "ppo_hyperbolic_curvature_0.5" \
-#     "$JOB_DIR/train_ppo_hyperbolic.job" \
-#     "checkpoints/ppo_hyperbolic" \
-#     "ppo" \
-#     "1" \
-#     "0.5" \
-#     "$PRIMARY_JOB_ID"
-
-run_experiment \
-	"ppo_hyperbolic_curvature_1.0" \
-	"$JOB_DIR/train_ppo_hyperbolic.job" \
-	"checkpoints/ppo_hyperbolic" \
-	"ppo" \
-	"1" \
-	"1.0" \
-	"$PRIMARY_JOB_ID"
+if [ "$ENABLE_HYPERBOLIC" = "1" ]; then
+	for curv in "${HYPERBOLIC_CURVATURES[@]}"; do
+		safe_curv=${curv//./p}
+		queue_value_head_ablation \
+			"mcts_hyperbolic_curv${safe_curv}" \
+			"$JOB_DIR/train_mcts_hyperbolic.job" \
+			"checkpoints/mcts_hyperbolic" \
+			"1" \
+			"$curv"
+	done
+fi

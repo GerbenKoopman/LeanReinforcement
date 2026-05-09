@@ -40,6 +40,13 @@ echo "======================================================"
 # Execute the training script
 export BASE_DIR="checkpoints/mcts_euclidean"
 
+EXTRA_TRAIN_ARGS="${EXTRA_TRAIN_ARGS:-}"
+EXTRA_TRAIN_ARGS_ARR=()
+if [ -n "$EXTRA_TRAIN_ARGS" ]; then
+    # shellcheck disable=SC2206
+    EXTRA_TRAIN_ARGS_ARR=($EXTRA_TRAIN_ARGS)
+fi
+
 TRAIN_ARGS=(
     --no-use-wandb
     --training-mode value_head
@@ -48,6 +55,10 @@ TRAIN_ARGS=(
     --checkpoint-dir "$BASE_DIR"
     --indexed-corpus-path "$CORPUS_DIR/indexed_corpus.pkl"
 )
+
+if [ "${#EXTRA_TRAIN_ARGS_ARR[@]}" -gt 0 ]; then
+    TRAIN_ARGS+=("${EXTRA_TRAIN_ARGS_ARR[@]}")
+fi
 
 TRAIN_LOG=$(mktemp)
 
