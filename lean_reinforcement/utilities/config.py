@@ -22,8 +22,8 @@ class TrainingConfig:
     train_epochs: int
     value_head_batch_size: int
     training_mode: str = "value_head"
-    value_head_latent_dim: int = 1024
-    value_head_hidden_layers: int = 1
+    value_head_latent_dim: int = 64
+    value_head_hidden_layers: int = 4
     train_value_head: bool = True
     use_hyperbolic: bool = False  # Use hyperbolic (Poincaré ball) value head
     use_final_reward: bool = False
@@ -55,7 +55,7 @@ class TrainingConfig:
     )
 
     # Hyperbolicity
-    curvature: float = 1.0
+    curvature: float = 0.1
 
     # Max MCTS tree nodes — limits per-worker memory.
     # The PUCT-based pruner evicts worst-scored leaves at this limit.
@@ -102,8 +102,8 @@ class TrainingConfig:
             training_mode=getattr(args, "training_mode", "value_head"),
             train_epochs=getattr(args, "train_epochs", 50),
             value_head_batch_size=getattr(args, "value_head_batch_size", 4),
-            value_head_latent_dim=getattr(args, "value_head_latent_dim", 1024),
-            value_head_hidden_layers=getattr(args, "value_head_hidden_layers", 1),
+            value_head_latent_dim=getattr(args, "value_head_latent_dim", 64),
+            value_head_hidden_layers=getattr(args, "value_head_hidden_layers", 4),
             train_value_head=getattr(args, "train_value_head", True),
             use_hyperbolic=getattr(args, "use_hyperbolic", False),
             use_final_reward=getattr(args, "use_final_reward", True),
@@ -117,7 +117,7 @@ class TrainingConfig:
             checkpoint_dir=getattr(args, "checkpoint_dir", None),
             use_wandb=getattr(args, "use_wandb", True),
             inference_timeout=getattr(args, "inference_timeout", 600.0),
-            curvature=getattr(args, "curvature", 1.0),
+            curvature=getattr(args, "curvature", 0.1),
             full_search=getattr(args, "full_search", True),
             max_tree_nodes=getattr(args, "max_tree_nodes", 10000),
             exploration_weight=getattr(args, "exploration_weight", math.sqrt(2)),
@@ -252,7 +252,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--curvature",
         type=float,
-        default=1.0,
+        default=0.1,
         help="Curvature of the Poincare Disk, best kept between 0 and 1 (float).",
     )
 
@@ -296,13 +296,13 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--value-head-latent-dim",
         type=int,
-        default=1024,
-        help="Hidden dimension for the value head MLP. Default: 1024.",
+        default=64,
+        help="Hidden dimension for the value head MLP. Default: 64.",
     )
     parser.add_argument(
         "--value-head-hidden-layers",
         type=int,
-        default=1,
+        default=4,
         help="Number of hidden layers in the value head MLP (>= 1).",
     )
     parser.add_argument(
