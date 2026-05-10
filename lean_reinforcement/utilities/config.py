@@ -81,7 +81,7 @@ class TrainingConfig:
     def from_args(cls, args: argparse.Namespace) -> "TrainingConfig":
         return cls(
             data_type=getattr(args, "data_type", "novel_premises"),
-            num_epochs=getattr(args, "num_epochs", 6),
+            num_epochs=getattr(args, "num_epochs", 10),
             num_theorems=getattr(args, "num_theorems", 128),
             num_iterations=getattr(args, "num_iterations", 1000),
             max_steps=getattr(args, "max_steps", 80),
@@ -141,7 +141,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--num-epochs",
         type=int,
-        default=6,
+        default=10,
         help="Number of self-play/training epochs.",
     )
     parser.add_argument(
