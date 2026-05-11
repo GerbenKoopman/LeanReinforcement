@@ -135,6 +135,7 @@ class BaseMCTS:
         max_rollout_depth: int = 30,
         max_time: float = 300.0,  # Max time per MCTS search step (seconds)
         log_search_tree: bool = False,
+        q_weight: float = 1.0,
         **kwargs,
     ):
         self.env = env
@@ -148,6 +149,7 @@ class BaseMCTS:
         self.node_count = 0
         self.virtual_losses: Dict[Node, int] = {}
         self.log_search_tree = log_search_tree
+        self.q_weight = q_weight
 
         # Timeout tracking for search operations
         self._search_deadline: Optional[float] = None

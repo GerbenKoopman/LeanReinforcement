@@ -61,6 +61,7 @@ class TrainingConfig:
     # The PUCT-based pruner evicts worst-scored leaves at this limit.
     max_tree_nodes: int = 10000
     exploration_weight: float = math.sqrt(2)
+    q_weight: float = 0.1  # Weight for Q value in PUCT formula: q_weight * Q + U
 
     # Timeout parameters (all in seconds)
     # Note: These form a hierarchy - each level should be larger than the one below
@@ -121,6 +122,7 @@ class TrainingConfig:
             full_search=getattr(args, "full_search", True),
             max_tree_nodes=getattr(args, "max_tree_nodes", 10000),
             exploration_weight=getattr(args, "exploration_weight", math.sqrt(2)),
+            q_weight=getattr(args, "q_weight", 0.1),
             lean_memory_limit_gb=getattr(args, "lean_memory_limit_gb", 8),
             log_search_tree=getattr(args, "log_search_tree", False),
         )
@@ -206,6 +208,15 @@ def get_config() -> TrainingConfig:
         help=(
             "PUCT exploration constant. Lower values bias more toward the value head; "
             "higher values favor exploration."
+        ),
+    )
+    parser.add_argument(
+        "--q-weight",
+        type=float,
+        default=0.1,
+        help=(
+            "Weight for Q value in PUCT formula: q_weight * Q(s,a) + U(s,a). "
+            "Default 1.0 uses standard PUCT. Lower values reduce exploitation bias."
         ),
     )
     parser.add_argument(

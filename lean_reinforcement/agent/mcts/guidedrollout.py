@@ -51,6 +51,7 @@ class MCTS_GuidedRollout(BaseMCTS):
         num_tactics_to_expand: int = 8,
         max_rollout_depth: int = 30,
         max_time: float = 300.0,  # Max time per MCTS search step (seconds)
+        q_weight: float = 1.0,
         **kwargs,
     ):
         super().__init__(
@@ -63,6 +64,7 @@ class MCTS_GuidedRollout(BaseMCTS):
             num_tactics_to_expand=num_tactics_to_expand,
             max_rollout_depth=max_rollout_depth,
             max_time=max_time,
+            q_weight=q_weight,
             **kwargs,
         )
 
@@ -77,10 +79,11 @@ class MCTS_GuidedRollout(BaseMCTS):
 
         # Q(s,a): Exploitation term
         # Use max_value instead of mean value for max-backup
-        if visit_count == 0:
-            q_value = 0.0
-        else:
-            q_value = node.max_value - (v_loss / visit_count)
+        exploitation = (
+            0.0
+            if visit_count == 0
+            else self.q_weight * (node.max_value - (v_loss / visit_count))
+        )
 
         # U(s,a): Exploration term
         exploration = (
@@ -89,7 +92,7 @@ class MCTS_GuidedRollout(BaseMCTS):
             * (math.sqrt(node.parent.visit_count) / (1 + visit_count))
         )
 
-        return q_value + exploration
+        return exploitation + exploration
 
     def _get_best_child(self, node: Node) -> Node:
         """Selects the best child based on the PUCT score."""
