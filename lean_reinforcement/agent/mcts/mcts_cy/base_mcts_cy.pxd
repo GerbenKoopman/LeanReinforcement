@@ -31,6 +31,8 @@ cdef class BaseMCTS:
     cdef public int node_count
     cdef public dict virtual_losses
     cdef public dict seen_states
+    cdef public bint log_search_tree
+    cdef public float q_weight
     cdef public object theorem
     cdef public object theorem_pos
     cdef public Node root
@@ -47,7 +49,7 @@ cdef class BaseMCTS:
     cpdef Node _get_best_child(self, Node node)
     cpdef Node _expand(self, Node node)
     cpdef list _expand_batch(self, list nodes)
-    cpdef float _simulate(self, Node node)
+    cpdef float _simulate(self, Node node, object env=*)
     cpdef list _simulate_batch(self, list nodes)
     cpdef void _backpropagate(self, Node node, float reward)
     cpdef int _count_nodes(self, Node node, set _visited=*)

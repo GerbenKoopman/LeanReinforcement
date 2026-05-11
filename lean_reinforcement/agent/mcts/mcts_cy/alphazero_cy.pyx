@@ -1,6 +1,4 @@
-from libc.math cimport sqrt
 from lean_reinforcement.agent.mcts.mcts_cy.base_mcts_cy cimport Node, BaseMCTS
-import math
 import torch
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 from lean_reinforcement.utilities.memory import (
@@ -10,8 +8,6 @@ from lean_reinforcement.utilities.memory import (
     MAX_WORKER_RSS_GB,
 )
 
-# Cap on proof-state string length — same as GuidedRollout.
-cdef int _MAX_EXPAND_STATE_CHARS = 20000
 
 cdef class MCTS_AlphaZero(BaseMCTS):
     cdef public object value_head
@@ -27,7 +23,8 @@ cdef class MCTS_AlphaZero(BaseMCTS):
         int batch_size=8,
         int num_tactics_to_expand=8,
         int max_rollout_depth=30,
-        max_time: float = 300.0,
+        float max_time=300.0,
+        float q_weight=1.0,
         **kwargs,
     ):
         super().__init__(
@@ -39,22 +36,24 @@ cdef class MCTS_AlphaZero(BaseMCTS):
             batch_size=batch_size,
             num_tactics_to_expand=num_tactics_to_expand,
             max_rollout_depth=max_rollout_depth,
+            max_time=max_time,
+            q_weight=q_weight,
+            **kwargs,
         )
         self.value_head = value_head
         self.config = config
 
-
-
     cpdef Node _expand(self, Node node):
         cdef object next_state
+        cdef object state_key
         cdef Node child
+        cdef list children_to_encode = []
+        cdef list states_to_encode = []
 
         if not isinstance(node.state, TacticState):
             raise TypeError("Cannot expand a node without a TacticState.")
 
         state_str = node.state.pp
-        if len(state_str) > _MAX_EXPAND_STATE_CHARS:
-            return node
 
         if node.encoder_features is None and self.config.use_caching:
             node.encoder_features = self.value_head.encode_states([state_str])
@@ -65,11 +64,33 @@ cdef class MCTS_AlphaZero(BaseMCTS):
 
         for tactic, prob in tactics_with_probs:
             next_state = self.env.run_tactic_stateless(node.state, tactic)
-            child = self._create_child_node(node, tactic, next_state, prob)
-            
-            # If a new node was created, encode its features
-            if self.config.use_caching and child.visit_count == 0 and isinstance(child.state, TacticState):
-                child.encoder_features = self.value_head.encode_states([child.state.pp])
+
+            # Check for duplicate states
+            state_key = self._get_state_key(next_state)
+            if state_key is not None and state_key in self.seen_states:
+                child = self.seen_states[state_key]
+                child.add_parent(node, tactic)
+                if child not in node.children:
+                    node.children.append(child)
+                continue
+
+            child = Node(next_state, parent=node, action=tactic)
+            child.prior_p = prob
+            node.children.append(child)
+            self.node_count += 1
+
+            # Register new state in seen_states and collect for batch encoding
+            if isinstance(next_state, TacticState):
+                if state_key is not None:
+                    self.seen_states[state_key] = child
+                children_to_encode.append(child)
+                states_to_encode.append(next_state.pp)
+
+        # Batch encode all children's states at once for efficiency
+        if children_to_encode and self.config.use_caching:
+            batch_features = self.value_head.encode_states(states_to_encode)
+            for i, child in enumerate(children_to_encode):
+                child.encoder_features = batch_features[i : i + 1]
 
         node.untried_actions = []
 
@@ -78,41 +99,51 @@ cdef class MCTS_AlphaZero(BaseMCTS):
             if isinstance(child.state, ProofFinished):
                 return child
 
-        if node.children:
-            return self._get_best_child(node)
         return node
 
     cpdef list _expand_batch(self, list nodes):
         cdef list states = []
         cdef list nodes_to_generate = []
+        cdef list nodes_needing_features = []
+        cdef list states_for_features = []
         cdef Node node
         cdef list batch_tactics_with_probs
         cdef list tasks = []
         cdef list results = []
-        cdef list new_children_nodes = []
-        cdef list new_children_states = []
+        cdef list children_to_encode = []
+        cdef list states_to_encode = []
         cdef int i
         cdef object tactic
         cdef float prob
         cdef object next_state
         cdef Node child
         cdef object batch_features
+        cdef object state_key
 
         for node in nodes:
             if isinstance(node.state, TacticState):
-                state_pp = node.state.pp
-                if len(state_pp) > _MAX_EXPAND_STATE_CHARS:
-                    continue
-                # If caching is on and we don't have features, encode them now.
-                if node.encoder_features is None and self.config.use_caching:
-                    # This is suboptimal (batching would be better), but preserves original logic.
-                    node.encoder_features = self.value_head.encode_states([state_pp])
-                states.append(state_pp)
+                states.append(node.state.pp)
                 nodes_to_generate.append(node)
+
+                # Collect nodes needing encoder features for batch encoding
+                if node.encoder_features is None:
+                    nodes_needing_features.append(node)
+                    states_for_features.append(node.state.pp)
+
+        # Early timeout check before expensive operations
+        if self._is_timeout():
+            return nodes
+
+        # Batch encode parent nodes' features if any are missing
+        if nodes_needing_features and self.config.use_caching:
+            batch_features = self.value_head.encode_states(states_for_features)
+            for i, node in enumerate(nodes_needing_features):
+                node.encoder_features = batch_features[i : i + 1]
 
         if not states:
             return nodes
 
+        # Early timeout check after encoding
         if self._is_timeout():
             return nodes
 
@@ -120,6 +151,7 @@ cdef class MCTS_AlphaZero(BaseMCTS):
             states, n=self.num_tactics_to_expand
         )
 
+        # Early timeout check after model call
         if self._is_timeout():
             return nodes
 
@@ -128,6 +160,7 @@ cdef class MCTS_AlphaZero(BaseMCTS):
             for tactic, prob in batch_tactics_with_probs[i]:
                 tasks.append((node, tactic, prob))
 
+        assert self.env.dojo is not None, "Dojo not initialized"
         for node, tactic, prob in tasks:
             if self._is_timeout():
                 break
@@ -136,39 +169,43 @@ cdef class MCTS_AlphaZero(BaseMCTS):
             if get_rss_gb() > (MAX_WORKER_RSS_GB * 0.9):
                 break
             try:
-                next_state = self.env.run_tactic_stateless(node.state, tactic)
+                next_state = self.env.dojo.run_tac(node.state, tactic)
             except Exception as e:
                 next_state = LeanError(error=str(e))
-            # Skip child states whose string representation is too large
-            if (
-                isinstance(next_state, TacticState)
-                and len(next_state.pp) > _MAX_EXPAND_STATE_CHARS
-            ):
-                continue
             results.append((node, tactic, prob, next_state))
 
+        # Create children (reusing existing nodes for duplicates - DAG structure)
         for node, tactic, prob, next_state in results:
-            child = self._create_child_node(node, tactic, next_state, prob)
-            # If a new node was created, add it to the list for feature encoding
-            if child.visit_count == 0 and isinstance(child.state, TacticState):
-                 if self.config.use_caching and child not in new_children_nodes:
-                    new_children_nodes.append(child)
-                    new_children_states.append(child.state.pp)
+            state_key = self._get_state_key(next_state)
+            if state_key is not None and state_key in self.seen_states:
+                child = self.seen_states[state_key]
+                child.add_parent(node, tactic)
+                if child not in node.children:
+                    node.children.append(child)
+                continue
 
-        # Batch encode features for all new nodes
-        if self.config.use_caching and new_children_nodes:
-            if self._is_timeout():
-                 # Fallback if timeout occurs before encoding
-                 pass
-            else:
-                batch_features = self.value_head.encode_states(new_children_states)
-                for i in range(len(new_children_nodes)):
-                    new_children_nodes[i].encoder_features = batch_features[i].unsqueeze(0)
+            child = Node(next_state, parent=node, action=tactic)
+            child.prior_p = prob
+            node.children.append(child)
+            self.node_count += 1
+
+            # Register new state in seen_states and collect for batch encoding
+            if isinstance(next_state, TacticState):
+                if state_key is not None:
+                    self.seen_states[state_key] = child
+                children_to_encode.append(child)
+                states_to_encode.append(next_state.pp)
+
+        # Batch encode all children's states at once for efficiency
+        if children_to_encode and self.config.use_caching:
+            batch_features = self.value_head.encode_states(states_to_encode)
+            for i, child in enumerate(children_to_encode):
+                child.encoder_features = batch_features[i : i + 1]
 
         for node in nodes_to_generate:
             node.untried_actions = []
 
-        # Return best child for each node, preferring ProofFinished children
+        # Return ProofFinished child for each node if present; otherwise return the node
         cdef list result_nodes = []
         for node in nodes:
             proof_child = None
@@ -178,19 +215,17 @@ cdef class MCTS_AlphaZero(BaseMCTS):
                     break
             if proof_child is not None:
                 result_nodes.append(proof_child)
-            elif node.children:
-                result_nodes.append(self._get_best_child(node))
             else:
                 result_nodes.append(node)
         return result_nodes
 
-    cpdef float _simulate(self, Node node):
+    cpdef float _simulate(self, Node node, object env=None):
         cdef float value
-        
+
         # Check timeout before evaluation
         if self._is_timeout():
             return 0.0  # Neutral reward on timeout
-            
+
         if node.is_terminal:
             if isinstance(node.state, ProofFinished):
                 return 1.0

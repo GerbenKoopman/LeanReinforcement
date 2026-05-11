@@ -1,19 +1,17 @@
 from libc.math cimport sqrt
-import gc
 import heapq
-import math
-import os
+import json
 import time
+from pathlib import Path
 import torch
 from typing import List, Optional, Dict
 from loguru import logger
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 from lean_reinforcement.utilities.memory import (
-    malloc_trim,
+    aggressive_cleanup,
     empty_gpu_cache,
     get_rss_gb,
     get_available_memory_gb,
-    log_gpu_memory,
     MCTS_MIN_AVAILABLE_GB,
     MAX_WORKER_RSS_GB,
 )
@@ -90,9 +88,13 @@ cdef class BaseMCTS:
         int num_tactics_to_expand=8,
         int max_rollout_depth=30,
         float max_time=300.0,
+        bint log_search_tree=False,
+        float q_weight=1.0,
+        **kwargs,
     ):
         self.env = env
         self.transformer = transformer
+        self.config = config
         self.exploration_weight = exploration_weight
         self.max_tree_nodes = max_tree_nodes
         self.batch_size = batch_size
@@ -101,6 +103,8 @@ cdef class BaseMCTS:
         self.max_time = max_time
         self.node_count = 0
         self.virtual_losses = {}
+        self.log_search_tree = log_search_tree
+        self.q_weight = q_weight
         # Seen states dictionary for deduplication (maps state string to Node)
         self.seen_states = {}
 
@@ -177,7 +181,13 @@ cdef class BaseMCTS:
         
         return child
 
-    def search(self, int num_iterations, batch_size=None, max_time=None):
+    def search(
+        self,
+        int num_iterations,
+        batch_size=None,
+        max_time=None,
+        search_tree_log_dir=None,
+    ):
         cdef int iteration
         cdef int current_batch_size
         cdef list leaves
@@ -196,24 +206,22 @@ cdef class BaseMCTS:
             effective_max_time = self.max_time
         else:
             effective_max_time = max_time
-        
+
         cdef int b_size = batch_size
         start_time = time.time()
         self._search_deadline = start_time + effective_max_time
 
-        # --- Search start ---
-        cdef int _pid = os.getpid()
-        cdef float _search_start_rss = get_rss_gb()
-        logger.info(
-            f"[MCTS] search() START pid={_pid} "
-            f"rss={_search_start_rss:.2f}GB "
-            f"iters={num_iterations} batch={b_size} "
-            f"max_time={effective_max_time:.0f}s"
-        )
+        # Track RSS at search start to detect runaway growth.
+        cdef float _rss_at_search_start = get_rss_gb()
+        cdef float _RSS_MAX_GROWTH = 1.5
 
         with torch.no_grad():
             batch_count = 0
             for iteration in range(0, num_iterations, b_size):
+                # Early stopping if solution found
+                if self.root.max_value == 1.0:
+                    break
+
                 # Check time limit
                 if self._is_timeout():
                     break
@@ -252,28 +260,20 @@ cdef class BaseMCTS:
                     leaves.append(leaf)
 
                 if not leaves or self._is_timeout():
-                    # Clean up virtual losses on timeout
+                    for leaf in leaves:
+                        self._remove_virtual_loss(leaf)
                     if self._is_timeout():
-                        for leaf in leaves:
-                            self._remove_virtual_loss(leaf)
+                        break
                     continue
 
-                _t_expand = time.time()
                 expanded_nodes = self._expand_batch(leaves)
-                
+
                 if self._is_timeout():
                     for leaf in leaves:
                         self._remove_virtual_loss(leaf)
                     break
 
                 rewards = self._simulate_batch(expanded_nodes)
-
-                # Reclaim memory after heavy simulate phase
-                # (rollouts create many temporary TacticState / Goal objects
-                #  that may linger in glibc arenas or pymalloc pools)
-                if batch_count % 4 == 0:
-                    gc.collect()
-                    malloc_trim()
 
                 for i in range(len(leaves)):
                     leaf = leaves[i]
@@ -292,40 +292,100 @@ cdef class BaseMCTS:
                 if self.node_count > self.max_tree_nodes:
                     self._prune_to_budget()
 
-                if torch.cuda.is_available() and batch_count % 5 == 0 and batch_count > 0:
+                # --- Memory cleanup (every 4th batch) ---
+                if batch_count % 4 == 0:
+                    aggressive_cleanup()
                     empty_gpu_cache()
 
-                # --- OOM prevention checks (every 4th batch) ---
+                # --- RSS growth check ---
+                rss_now = get_rss_gb()
+                rss_growth = rss_now - _rss_at_search_start
+                if rss_growth > _RSS_MAX_GROWTH:
+                    logger.warning(
+                        f"RSS grew +{rss_growth:.2f} GB since search start "
+                        f"(now {rss_now:.1f} GB, started at "
+                        f"{_rss_at_search_start:.1f} GB, limit "
+                        f"{_RSS_MAX_GROWTH} GB). Forcing cleanup."
+                    )
+                    aggressive_cleanup()
+                    if get_rss_gb() - _rss_at_search_start > _RSS_MAX_GROWTH:
+                        logger.warning(
+                            f"RSS still {get_rss_gb():.1f} GB after cleanup "
+                            f"(started at {_rss_at_search_start:.1f} GB). "
+                            f"Aborting search to prevent OOM."
+                        )
+                        break
+
+                # --- OOM checks (every 4th batch) ---
                 if batch_count % 4 == 0:
-                    rss_gb = get_rss_gb()
                     avail_gb = get_available_memory_gb()
                     if avail_gb < MCTS_MIN_AVAILABLE_GB:
                         logger.warning(
-                            f"[MCTS] System memory critically low "
-                            f"({avail_gb:.1f} GB available). "
-                            f"Aborting search. pid={_pid}"
+                            f"System memory critically low "
+                            f"({avail_gb:.1f} GB available, "
+                            f"threshold {MCTS_MIN_AVAILABLE_GB} GB). "
+                            f"Aborting search to prevent OOM kill."
                         )
                         break
-                    if rss_gb > (MAX_WORKER_RSS_GB * 0.9):
+
+                    rss_gb = get_rss_gb()
+                    if rss_gb > MAX_WORKER_RSS_GB:
                         logger.warning(
-                            f"[MCTS] RSS ({rss_gb:.1f} GB) near cap "
-                            f"({MAX_WORKER_RSS_GB:.1f} GB). "
-                            f"Aborting search. pid={_pid}"
+                            f"RSS ({rss_gb:.1f} GB) exceeds hard cap "
+                            f"({MAX_WORKER_RSS_GB:.1f} GB). Aborting search."
                         )
                         break
 
                 batch_count += 1
 
-        # --- Search end ---
-        cdef float _end_rss = get_rss_gb()
-        cdef float _end_elapsed = time.time() - start_time
-        logger.info(
-            f"[MCTS] search() END pid={_pid} "
-            f"rss={_end_rss:.2f}GB (start={_search_start_rss:.2f}GB "
-            f"delta={_end_rss - _search_start_rss:+.2f}GB) "
-            f"elapsed={_end_elapsed:.0f}s iters_done={iteration + current_batch_size} "
-            f"nodes={self.node_count}"
-        )
+        if self.log_search_tree and search_tree_log_dir:
+            self._save_search_tree(Path(search_tree_log_dir))
+
+    def _serialize_node(self, Node node):
+        return {
+            "state": node._pp,
+            "action": node.action,
+            "visit_count": node.visit_count,
+            "max_value": node.max_value,
+            "prior_p": node.prior_p,
+            "depth": node.depth,
+            "children": [child._pp for child in node.children if child._pp],
+        }
+
+    def _save_search_tree(self, log_dir):
+        """Saves the serialized search tree to a JSON file."""
+        log_dir = Path(log_dir)
+        log_dir.mkdir(parents=True, exist_ok=True)
+        search_tree_dir = log_dir / "search_trees"
+        search_tree_dir.mkdir(parents=True, exist_ok=True)
+
+        def _sanitize(s: str) -> str:
+            return "".join(c if c.isalnum() or c in "-_" else "_" for c in s)
+
+        th_name = getattr(self.theorem, "full_name", "theorem")
+        pos_str = str(self.theorem_pos)
+        safe_name = _sanitize(th_name)[:120]
+        safe_pos = _sanitize(pos_str)[:40]
+        tree_file = search_tree_dir / f"search_tree_{safe_name}_{safe_pos}.json"
+
+        nodes_to_visit = [self.root]
+        visited_nodes = set()
+        serialized_nodes = {}
+
+        while nodes_to_visit:
+            node = nodes_to_visit.pop(0)
+            if node._pp and node._pp not in visited_nodes:
+                visited_nodes.add(node._pp)
+                serialized_nodes[node._pp] = self._serialize_node(node)
+                nodes_to_visit.extend(node.children)
+
+        tree_data = {
+            "root": self.root._pp,
+            "nodes": serialized_nodes,
+        }
+
+        with open(tree_file, "w") as f:
+            json.dump(tree_data, f, indent=2)
 
     cpdef Node _select(self, Node node):
         cdef Node current = node
@@ -357,7 +417,9 @@ cdef class BaseMCTS:
         if visit_count == 0:
             q_value = 0.0
         else:
-            q_value = node.max_value - (v_loss / <float>visit_count)
+            q_value = self.q_weight * (
+                node.max_value - (v_loss / <float>visit_count)
+            )
 
         exploration = (
             self.exploration_weight
@@ -390,7 +452,7 @@ cdef class BaseMCTS:
     cpdef list _expand_batch(self, list nodes):
         return [self._expand(node) for node in nodes]
 
-    cpdef float _simulate(self, Node node):
+    cpdef float _simulate(self, Node node, object env=None):
         raise NotImplementedError
 
     cpdef list _simulate_batch(self, list nodes):
@@ -583,7 +645,7 @@ cdef class BaseMCTS:
         (>= _MIN_VISITS_TO_PROTECT) get a large bonus and are protected.
         """
         cdef int v = node.visit_count
-        cdef float mv = node.max_value if node.max_value > -1e8 else 0.0
+        cdef float mv = node.max_value
 
         if v >= _MIN_VISITS_TO_PROTECT:
             return v * 1000.0 + mv * 100.0 - node.depth
@@ -638,10 +700,6 @@ cdef class BaseMCTS:
             if len(self.seen_states) > (self.node_count * 3):
                 self.seen_states = {}
                 self._rebuild_seen_states(self.root)
-            # Force glibc to release freed arena pages immediately.
-            # Without this, the arena VMA grows monotonically because
-            # glibc doesn't return pages until malloc_trim is called.
-            malloc_trim()
             logger.debug(
                 f"Pruned {pruned} leaf nodes "
                 f"({self.node_count} nodes remaining)"
