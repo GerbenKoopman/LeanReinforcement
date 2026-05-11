@@ -7,7 +7,7 @@ from lean_reinforcement.utilities.config import (
 )
 
 DEFAULT_DATA_TYPE = "novel_premises"
-DEFAULT_NUM_EPOCHS = 6
+DEFAULT_NUM_EPOCHS = 10
 DEFAULT_MCTS_TYPE = "alpha_zero"
 DEFAULT_TRAIN_VALUE_HEAD = True
 
@@ -22,7 +22,7 @@ class TestConfig(unittest.TestCase):
             self.assertEqual(config.num_epochs, DEFAULT_NUM_EPOCHS)
             self.assertEqual(config.mcts_type, DEFAULT_MCTS_TYPE)
             self.assertEqual(config.train_value_head, DEFAULT_TRAIN_VALUE_HEAD)
-            self.assertEqual(config.value_head_latent_dim, 1024)
+            self.assertEqual(config.value_head_latent_dim, 64)
 
     def test_custom_args(self) -> None:
         """Test that command line arguments override defaults."""
@@ -65,7 +65,7 @@ class TestConfig(unittest.TestCase):
         ]
         with patch.object(sys, "argv", test_args):
             config = get_config()
-            self.assertEqual(config.value_head_latent_dim, 1024)
+            self.assertEqual(config.value_head_latent_dim, 64)
 
     def test_value_head_latent_dim_single(self) -> None:
         """Test single value head latent dimension."""

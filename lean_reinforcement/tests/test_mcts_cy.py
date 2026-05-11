@@ -1,6 +1,9 @@
+import json
 import math
+import tempfile
 import unittest
-from unittest.mock import Mock, MagicMock
+from pathlib import Path
+from unittest.mock import Mock, MagicMock, patch
 
 from lean_dojo import TacticState, ProofFinished, LeanError, ProofGivenUp
 
@@ -53,6 +56,12 @@ class TestNodeCy(unittest.TestCase):
         self.assertTrue(Node(Mock(spec=ProofFinished)).is_terminal)
         self.assertTrue(Node(Mock(spec=LeanError)).is_terminal)
         self.assertTrue(Node(Mock(spec=ProofGivenUp)).is_terminal)
+
+    def test_node_depth(self) -> None:
+        root = Node(self._tactic_state_mock("root_state"))
+        child = Node(self._tactic_state_mock("child_state"), parent=root)
+        self.assertEqual(root.depth, 0)
+        self.assertEqual(child.depth, 1)
 
 
 class MockLeanDojoEnv(MagicMock):
@@ -143,6 +152,40 @@ class TestBaseMCTSCy(unittest.TestCase):
         self.assertEqual(mcts.root.state, new_state)
         self.assertEqual(mcts.node_count, 1)
 
+    def test_extract_proof_path(self) -> None:
+        mcts = MCTS_GuidedRollout(
+            env=self.env, transformer=self.transformer, config=self.config
+        )
+        root_state = Mock(spec=TacticState)
+        root_state.pp = "root_state"
+        root = Node(root_state)
+
+        proof_state = Mock(spec=ProofFinished)
+        proof_child = Node(proof_state, parent=root, action="tactic1")
+        root.children = [proof_child]
+        root.max_value = 1.0
+        proof_child.max_value = 1.0
+
+        mcts.root = root
+        self.assertEqual(mcts.extract_proof_path(), ["tactic1"])
+
+    def test_search_tree_logging(self) -> None:
+        mcts = MCTS_GuidedRollout(
+            env=self.env,
+            transformer=self.transformer,
+            config=self.config,
+            log_search_tree=True,
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            mcts.search(num_iterations=0, search_tree_log_dir=tmpdir)
+            search_dir = Path(tmpdir) / "search_trees"
+            self.assertTrue(search_dir.exists())
+            files = list(search_dir.glob("search_tree_*.json"))
+            self.assertEqual(len(files), 1)
+            with open(files[0], "r") as f:
+                data = json.load(f)
+            self.assertEqual(data["root"], mcts.root._pp)
+
 
 class TestMCTSGuidedRolloutCy(unittest.TestCase):
     def setUp(self) -> None:
@@ -173,6 +216,31 @@ class TestMCTSGuidedRolloutCy(unittest.TestCase):
         )
         self.assertAlmostEqual(score, expected_score, places=5)
 
+    def test_puct_score_q_weight(self) -> None:
+        mcts = MCTS_GuidedRollout(
+            env=self.env,
+            transformer=self.transformer,
+            config=self.config,
+            q_weight=0.5,
+        )
+        ps = Mock(spec=TacticState)
+        ps.pp = "parent_state"
+        parent = Node(ps)
+        parent.visit_count = 10
+        cs = Mock(spec=TacticState)
+        cs.pp = "child_state"
+        child = Node(cs)
+        child.parents.append((parent, "tactic"))
+        child.visit_count = 1
+        child.max_value = 0.8
+        child.prior_p = 0.5
+
+        score = mcts._puct_score(child)
+        expected_score = 0.5 * 0.8 + mcts.exploration_weight * 0.5 * (
+            math.sqrt(10.0) / (1 + 1)
+        )
+        self.assertAlmostEqual(score, expected_score, places=5)
+
     def test_expand(self) -> None:
         state = Mock(spec=TacticState)
         state.pp = "state_pp"
@@ -186,7 +254,7 @@ class TestMCTSGuidedRolloutCy(unittest.TestCase):
 
         child = self.mcts._expand(node)
         self.assertIsInstance(child, Node)
-
+        self.assertIs(child, node.children[0])
         self.assertEqual(len(node.children), 1)
         self.assertIs(node.children[0].get_parent(), node)
         self.assertEqual(node.children[0].action, "tactic1")
@@ -219,6 +287,32 @@ class TestMCTSGuidedRolloutCy(unittest.TestCase):
         reward = self.mcts._simulate(node)
         self.assertAlmostEqual(reward, 0.98)
         self.assertEqual(self.env.run_tactic_stateless.call_count, 2)
+
+    def test_simulate_uses_env_override(self) -> None:
+        state = Mock(spec=TacticState)
+        state.pp = "state_pp"
+        node = Node(state)
+        self.transformer.generate_tactics.return_value = ["tactic1"]
+
+        alt_env = Mock()
+        alt_env.run_tactic_stateless = Mock(return_value=Mock(spec=ProofFinished))
+        self.env.run_tactic_stateless = Mock()
+
+        with (
+            patch(
+                "lean_reinforcement.agent.mcts.mcts_cy.guidedrollout_cy.get_available_memory_gb",
+                return_value=10.0,
+            ),
+            patch(
+                "lean_reinforcement.agent.mcts.mcts_cy.guidedrollout_cy.get_rss_gb",
+                return_value=0.1,
+            ),
+        ):
+            reward = self.mcts._simulate(node, env=alt_env)
+
+        self.assertAlmostEqual(reward, 0.99, places=5)
+        alt_env.run_tactic_stateless.assert_called_once_with(state, "tactic1")
+        self.env.run_tactic_stateless.assert_not_called()
 
 
 class TestMCTSAlphaZeroCy(unittest.TestCase):
@@ -268,6 +362,33 @@ class TestMCTSAlphaZeroCy(unittest.TestCase):
         )
         self.assertAlmostEqual(score_unvisited, expected_score_unvisited, places=5)
 
+    def test_puct_score_q_weight(self) -> None:
+        mcts = MCTS_AlphaZero(
+            value_head=self.value_head,
+            env=self.env,
+            transformer=self.transformer,
+            config=self.config,
+            q_weight=0.5,
+        )
+        ps = Mock(spec=TacticState)
+        ps.pp = "parent_state"
+        parent = Node(ps)
+        parent.visit_count = 10
+
+        cs = Mock(spec=TacticState)
+        cs.pp = "child_state"
+        child = Node(cs)
+        child.parents.append((parent, "tactic"))
+        child.visit_count = 1
+        child.max_value = 0.8
+        child.prior_p = 0.8
+
+        score = mcts._puct_score(child)
+        expected_score = 0.5 * 0.8 + mcts.exploration_weight * 0.8 * (
+            math.sqrt(10.0) / (1 + 1)
+        )
+        self.assertAlmostEqual(score, expected_score, places=5)
+
     def test_expand_alphazero(self) -> None:
         state = Mock(spec=TacticState)
         state.pp = "state_pp"
@@ -291,12 +412,43 @@ class TestMCTSAlphaZeroCy(unittest.TestCase):
 
         expanded_node = self.mcts._expand(node)
         self.assertIsInstance(expanded_node, Node)
+        self.assertIs(expanded_node, node)
         self.assertEqual(len(node.children), 2)
         self.assertEqual(node.children[0].action, "tactic1")
         self.assertAlmostEqual(node.children[0].prior_p, 0.6, places=5)
         self.assertEqual(node.children[1].action, "tactic2")
         self.assertAlmostEqual(node.children[1].prior_p, 0.4, places=5)
         self.assertTrue(node.is_fully_expanded())
+
+    def test_expand_batch_uses_dojo(self) -> None:
+        state = Mock(spec=TacticState)
+        state.pp = "state_pp"
+        node = Node(state)
+        self.transformer.generate_tactics_with_probs_batch.return_value = [
+            [("tactic1", 0.5)]
+        ]
+
+        next_state = Mock(spec=TacticState)
+        next_state.pp = "next_state_pp"
+        self.env.dojo.run_tac = Mock(return_value=next_state)
+        self.env.run_tactic_stateless = Mock()
+
+        with (
+            patch(
+                "lean_reinforcement.agent.mcts.mcts_cy.alphazero_cy.get_available_memory_gb",
+                return_value=10.0,
+            ),
+            patch(
+                "lean_reinforcement.agent.mcts.mcts_cy.alphazero_cy.get_rss_gb",
+                return_value=0.1,
+            ),
+        ):
+            result = self.mcts._expand_batch([node])
+
+        self.env.dojo.run_tac.assert_called_once_with(state, "tactic1")
+        self.env.run_tactic_stateless.assert_not_called()
+        self.assertEqual(len(node.children), 1)
+        self.assertEqual(result[0], node)
 
     def test_simulate_alphazero(self) -> None:
         state = Mock(spec=TacticState)
