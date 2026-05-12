@@ -49,6 +49,23 @@ class BaseValueHead(nn.Module):
 
         return cast(torch.Tensor, features.detach())
 
+    def latent_from_features(self, features: torch.Tensor) -> torch.Tensor:
+        """Project encoder features into the value head's latent space."""
+        latent_projector = getattr(self.value_head, "latent_from_features", None)
+        if latent_projector is None:
+            raise NotImplementedError(
+                f"{type(self.value_head).__name__} does not expose latent features"
+            )
+        latent = cast(torch.Tensor, latent_projector(features))
+        return latent.detach()
+
+    @torch.no_grad()
+    def latent_states(self, s: List[str]) -> torch.Tensor:
+        """Encode proof-state strings into the learned latent space."""
+        self.eval()
+        features = self.encode_states(s)
+        return self.latent_from_features(features)
+
     def _predict_logits(self, features: torch.Tensor) -> torch.Tensor:
         logits = cast(torch.Tensor, self.value_head(features)).squeeze()
         if logits.ndim == 0:

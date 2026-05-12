@@ -224,6 +224,12 @@ class TestHyperbolicValueHead(unittest.TestCase):
         self.assertIsNotNone(xi_grad)
         self.assertFalse(torch.isnan(xi_grad).any())
 
+    def test_latent_from_features(self) -> None:
+        device = next(self.value_head.value_head.parameters()).device
+        features = torch.randn(4, ENCODER_OUTPUT_DIM, device=device)
+        latent = self.value_head.latent_from_features(features)
+        self.assertEqual(latent.shape, (4, 1024))
+
     def test_state_dict_save_restore(self) -> None:
         """Trainer uses value_head.value_head.state_dict() for early stopping."""
         import copy

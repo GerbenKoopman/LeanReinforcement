@@ -51,6 +51,19 @@ class _HyperbolicRegressor(nn.Module):
         self.register_buffer("rho_max", torch.tensor(rho_max))
 
     def forward(self, encoder_out: torch.Tensor) -> torch.Tensor:
+        hidden = self._hidden_from_features(encoder_out)
+        hidden = self.out_linear(hidden)
+
+        tangent = self.manifold.logmap(x=None, y=hidden)
+
+        return cast(torch.Tensor, tangent.tensor)
+
+    def latent_from_features(self, encoder_out: torch.Tensor) -> torch.Tensor:
+        hidden = self._hidden_from_features(encoder_out)
+        tangent_hidden = self.manifold.logmap(x=None, y=hidden)
+        return cast(torch.Tensor, tangent_hidden.tensor)
+
+    def _hidden_from_features(self, encoder_out: torch.Tensor):
         rho_max = cast(torch.Tensor, self.rho_max)
         max_tangent_norm = rho_max * torch.sigmoid(self.xi)
         direction = encoder_out / encoder_out.norm(dim=-1, keepdim=True).clamp_min(1e-8)
@@ -62,11 +75,7 @@ class _HyperbolicRegressor(nn.Module):
         hidden = self.activation(self.in_linear(hidden))
         for layer in self.hidden_layers:
             hidden = self.activation(layer(hidden))
-        hidden = self.out_linear(hidden)
-
-        tangent = self.manifold.logmap(x=None, y=hidden)
-
-        return cast(torch.Tensor, tangent.tensor)
+        return hidden
 
 
 class HyperbolicValueHead(BaseValueHead):

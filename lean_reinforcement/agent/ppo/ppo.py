@@ -214,6 +214,8 @@ class _BasePPO:
 
         total_actor_loss = 0.0
         total_critic_loss = 0.0
+        total_actor_grad_norm = 0.0
+        total_critic_grad_norm = 0.0
         total_steps = 0
         values = torch.zeros(1, device=self.device)
 
@@ -258,20 +260,34 @@ class _BasePPO:
 
                 loss = actor_loss + 0.5 * critic_loss
                 loss.backward()
+
+                actor_grad_norm = torch.nn.utils.clip_grad_norm_(
+                    self.model.parameters(), float("inf")
+                )
+                critic_grad_norm = torch.nn.utils.clip_grad_norm_(
+                    self.critic.parameters(), float("inf")
+                )
+
                 self.optimizer.step()
 
                 total_actor_loss += float(actor_loss.item())
                 total_critic_loss += float(critic_loss.item())
+                total_actor_grad_norm += float(actor_grad_norm.item())
+                total_critic_grad_norm += float(critic_grad_norm.item())
                 total_steps += 1
 
         avg_actor = total_actor_loss / max(1, total_steps)
         avg_critic = total_critic_loss / max(1, total_steps)
+        avg_actor_grad_norm = total_actor_grad_norm / max(1, total_steps)
+        avg_critic_grad_norm = total_critic_grad_norm / max(1, total_steps)
         value_mean = float(values.mean().item()) if values.numel() > 0 else 0.0
 
         return {
             "ppo_actor_loss": avg_actor,
             "ppo_critic_loss": avg_critic,
             "ppo_value_mean": value_mean,
+            "ppo_actor_grad_norm": avg_actor_grad_norm,
+            "ppo_critic_grad_norm": avg_critic_grad_norm,
         }
 
     def save_checkpoint(

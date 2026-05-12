@@ -90,6 +90,29 @@ class MCTS_AlphaZero(BaseMCTS):
         """Selects the best child based on the PUCT score."""
         return max(node.children, key=self._puct_score)
 
+    def _maybe_store_analysis_embedding(self, node: Node) -> None:
+        if not self.config.log_search_tree:
+            return
+        if getattr(self.value_head, "latent_dim", None) != 2:
+            return
+        if node.analysis_embedding is not None:
+            return
+
+        if node.encoder_features is None:
+            if not isinstance(node.state, TacticState):
+                return
+            try:
+                node.encoder_features = self.value_head.encode_states([node.state.pp])
+            except Exception:
+                return
+
+        try:
+            node.analysis_embedding = self.value_head.latent_from_features(
+                node.encoder_features
+            )
+        except Exception:
+            node.analysis_embedding = None
+
     def _expand(self, node: Node) -> Node:
         """
         Phase 2: Expansion (AlphaZero-style)
@@ -107,6 +130,7 @@ class MCTS_AlphaZero(BaseMCTS):
         # Cache encoder features for this node if not already cached
         if node.encoder_features is None and self.config.use_caching:
             node.encoder_features = self.value_head.encode_states([state_str])
+        self._maybe_store_analysis_embedding(node)
 
         tactics_with_probs = self.transformer.generate_tactics_with_probs(
             state_str, n=self.num_tactics_to_expand
@@ -147,6 +171,7 @@ class MCTS_AlphaZero(BaseMCTS):
             batch_features = self.value_head.encode_states(states_to_encode)
             for i, child in enumerate(children_to_encode):
                 child.encoder_features = batch_features[i : i + 1]
+                self._maybe_store_analysis_embedding(child)
 
         node.untried_actions = []
 
@@ -183,6 +208,7 @@ class MCTS_AlphaZero(BaseMCTS):
             batch_features = self.value_head.encode_states(states_for_features)
             for i, node in enumerate(nodes_needing_features):
                 node.encoder_features = batch_features[i : i + 1]
+                self._maybe_store_analysis_embedding(node)
 
         if not states:
             return nodes
@@ -256,6 +282,7 @@ class MCTS_AlphaZero(BaseMCTS):
             batch_features = self.value_head.encode_states(states_to_encode)
             for i, child in enumerate(children_to_encode):
                 child.encoder_features = batch_features[i : i + 1]
+                self._maybe_store_analysis_embedding(child)
 
         for node in nodes_to_generate:
             node.untried_actions = []
@@ -292,6 +319,7 @@ class MCTS_AlphaZero(BaseMCTS):
         if node.encoder_features is not None:
             # Use the cached features - much more efficient!
             value = self.value_head.predict_from_features(node.encoder_features)
+            self._maybe_store_analysis_embedding(node)
         else:
             # Fall back to full encoding if features aren't cached
             state_str = node.state.pp
@@ -342,11 +370,15 @@ class MCTS_AlphaZero(BaseMCTS):
             values = self.value_head.predict_from_features_batch(batch_features)
             for idx, val in zip(indices_with_features, values):
                 results[idx] = val
+            for node in (nodes[i] for i in indices_with_features):
+                self._maybe_store_analysis_embedding(node)
 
         # Predict from states (encode + predict)
         if states_to_encode:
             values = self.value_head.predict_batch(states_to_encode)
             for idx, val in zip(indices_to_encode, values):
                 results[idx] = val
+            for idx in indices_to_encode:
+                self._maybe_store_analysis_embedding(nodes[idx])
 
         return results

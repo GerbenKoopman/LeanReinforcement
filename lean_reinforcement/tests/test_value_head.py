@@ -122,6 +122,14 @@ class TestValueHead(unittest.TestCase):
             self.assertGreaterEqual(value, -1.0)
             self.assertLessEqual(value, 1.0)
 
+    def test_latent_from_features(self) -> None:
+        value_head = ValueHead(self.mock_transformer, latent_dim=2, hidden_layers=1)
+        features = torch.randn(3, 1472)
+
+        latent = value_head.latent_from_features(features)
+
+        self.assertEqual(latent.shape, (3, 2))
+
 
 class TestValueHeadLatentDim(unittest.TestCase):
     """Test suite for latent-dimension ValueHead behavior."""

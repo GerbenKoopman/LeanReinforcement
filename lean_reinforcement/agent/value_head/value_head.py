@@ -28,11 +28,14 @@ class _EuclideanRegressor(nn.Module):
         self.out_linear = nn.Linear(latent_dim, 1)
 
     def forward(self, features: torch.Tensor) -> torch.Tensor:
+        hidden = self.latent_from_features(features)
+        hidden = self.out_linear(hidden)
+        return cast(torch.Tensor, hidden)
+
+    def latent_from_features(self, features: torch.Tensor) -> torch.Tensor:
         hidden = self.activation(self.in_linear(features))
         for layer in self.hidden_layers:
             hidden = self.activation(layer(hidden))
-        hidden = self.out_linear(hidden)
-
         return cast(torch.Tensor, hidden)
 
 

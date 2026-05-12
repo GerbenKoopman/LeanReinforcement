@@ -54,6 +54,7 @@ class Node:
         "untried_actions",
         "encoder_features",
         "depth",
+        "analysis_embedding",
     )
 
     def __init__(
@@ -85,6 +86,7 @@ class Node:
         self.untried_actions: Optional[List[str]] = None
 
         self.encoder_features: Optional[torch.Tensor] = None
+        self.analysis_embedding: Optional[torch.Tensor] = None
 
         # Depth from the root — used during pruning to prefer keeping
         # shallow nodes (closer to the root) and pruning deep dead ends.
@@ -118,8 +120,8 @@ class Node:
 
 
 class BaseMCTS:
-    """
-    A base class for MCTS, containing the shared logic for the MCTS algorithm framework.
+    """Base class for shared MCTS logic.
+
     Subclasses must implement the expansion and simulation strategies.
     """
 
@@ -494,6 +496,22 @@ class BaseMCTS:
             self._save_search_tree(Path(search_tree_log_dir))
 
     def _serialize_node(self, node: Node) -> Dict[str, Any]:
+        encoder_features = None
+        if node.encoder_features is not None:
+            encoder_features = getattr(
+                node.encoder_features, "tensor", node.encoder_features
+            )
+            if isinstance(encoder_features, torch.Tensor):
+                encoder_features = encoder_features.detach().cpu().tolist()
+
+        analysis_embedding = None
+        if node.analysis_embedding is not None:
+            analysis_embedding = getattr(
+                node.analysis_embedding, "tensor", node.analysis_embedding
+            )
+            if isinstance(analysis_embedding, torch.Tensor):
+                analysis_embedding = analysis_embedding.detach().cpu().tolist()
+
         return {
             "state": node._pp,
             "action": node.action,
@@ -501,6 +519,8 @@ class BaseMCTS:
             "max_value": node.max_value,
             "prior_p": node.prior_p,
             "depth": node.depth,
+            "encoder_features": encoder_features,
+            "analysis_embedding": analysis_embedding,
             "children": [child._pp for child in node.children if child._pp],
         }
 
