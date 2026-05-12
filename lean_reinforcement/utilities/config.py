@@ -55,7 +55,7 @@ class TrainingConfig:
     )
 
     # Hyperbolicity
-    curvature: float = 0.1
+    curvature: float = 1.0
 
     # Max MCTS tree nodes — limits per-worker memory.
     # The PUCT-based pruner evicts worst-scored leaves at this limit.
@@ -118,7 +118,7 @@ class TrainingConfig:
             checkpoint_dir=getattr(args, "checkpoint_dir", None),
             use_wandb=getattr(args, "use_wandb", True),
             inference_timeout=getattr(args, "inference_timeout", 600.0),
-            curvature=getattr(args, "curvature", 0.1),
+            curvature=getattr(args, "curvature", 1.0),
             full_search=getattr(args, "full_search", True),
             max_tree_nodes=getattr(args, "max_tree_nodes", 10000),
             exploration_weight=getattr(args, "exploration_weight", math.sqrt(2)),
@@ -263,7 +263,7 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--curvature",
         type=float,
-        default=0.1,
+        default=1.0,
         help="Curvature of the Poincare Disk, best kept between 0 and 1 (float).",
     )
 
