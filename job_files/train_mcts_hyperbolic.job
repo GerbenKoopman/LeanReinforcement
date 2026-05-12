@@ -5,7 +5,7 @@
 #SBATCH --job-name=mcts_hyperbolic
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=18
-#SBATCH --time=12:00:00
+#SBATCH --time=24:00:00
 #SBATCH --output=logs/experiment_mcts_hyperbolic_%A.out
 
 # --- Fail on error ---
@@ -55,6 +55,9 @@ TRAIN_ARGS=(
     --training-mode value_head
     --mcts-type alpha_zero
     --use-hyperbolic
+    --value-head-latent-dim 2
+    --value-head-hidden-layers 1
+    --log-search-tree
     --checkpoint-dir "$BASE_DIR"
     --indexed-corpus-path "$CORPUS_DIR/indexed_corpus.pkl"
 )
@@ -98,6 +101,21 @@ if [ "$DUMP_EXIT" -ne 0 ]; then
     echo "WARNING: Failed to write training config to $CONFIG_FILE"
 else
     echo "Saved training config to $CONFIG_FILE"
+fi
+
+ANALYSIS_FILE="$RUN_DIR/search_tree_analysis.json"
+set +e
+python -m lean_reinforcement.utilities.tree_analysis \
+    --search-tree-dir "$RUN_DIR/search_trees" \
+    --output "$ANALYSIS_FILE" \
+    --plot-2d \
+    --plot-output "$RUN_DIR/search_tree_embeddings_2d.png"
+ANALYSIS_EXIT=$?
+set -e
+if [ "$ANALYSIS_EXIT" -ne 0 ]; then
+    echo "WARNING: Search tree analysis failed for $RUN_DIR"
+else
+    echo "Saved search tree analysis to $ANALYSIS_FILE"
 fi
 
 echo "Running evaluation for run directory: ${RUN_DIR}"
