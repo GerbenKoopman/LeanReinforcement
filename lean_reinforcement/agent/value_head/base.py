@@ -57,7 +57,7 @@ class BaseValueHead(nn.Module):
                 f"{type(self.value_head).__name__} does not expose latent features"
             )
         latent = cast(torch.Tensor, latent_projector(features))
-        return latent.detach()
+        return latent.detach().cpu()
 
     @torch.no_grad()
     def latent_states(self, s: List[str]) -> torch.Tensor:
