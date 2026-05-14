@@ -1,0 +1,680 @@
+[
+  {
+    "type": "value",
+    "state": "C : Type u\ninst\u271d : Category.{v, u} C\nX Y : C\n\u03b1 : X \u2245 Y\nf : End X\n\u22a2 (refl X).conj f = f",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Sort u_1\n\u03b2 : \u03b1 \u2192 Sort u_2\na\u2081 a\u2082 : \u03b1\nb\u2081 : \u03b2 a\u2081\nb\u2082 : \u03b2 a\u2082\n\u22a2 \u27e8a\u2081, b\u2081\u27e9 = \u27e8a\u2082, b\u2082\u27e9 \u2194 a\u2081 = a\u2082 \u2227 HEq b\u2081 b\u2082",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "n m : \u2115\nf : Vector \u2115 m \u2192 \u2115\ng : Vector \u2115 n \u2192 Vector \u2115 m\nhf : Primrec' f\nhg : Vec g\n\u22a2 Primrec' fun v => f (g v)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "A : Type v\ninst\u271d\u2076 : Ring A\nR : Type u\ninst\u271d\u2075 : CommRing R\ninst\u271d\u2074 : Algebra R A\nM : Type w\ninst\u271d\u00b3 : AddCommGroup M\ninst\u271d\u00b2 : Module R M\ninst\u271d\u00b9 : Module A M\ninst\u271d : IsScalarTower R A M\nf : End R M\nm : M\n\u22a2 \u2045f, m\u2046 = f m",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : Type u_2\n\u03b2 : Type u_3\ninst\u271d : GeneralizedHeytingAlgebra \u03b1\na b c d : \u03b1\n\u22a2 \u22a4 \u21e8 a = a",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : Type u_2\n\u03b2 : Type u_3\ninst\u271d : GeneralizedHeytingAlgebra \u03b1\na b c d : \u03b1\n\u22a2 a = \u22a4 \u21e8 a",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "V : Type u_1\nP : Type u_2\ninst\u271d : MetricSpace P\np : P\nps : Set P\ns : Sphere P\nhp : p \u2208 ps\nhps : ps \u2286 Metric.sphere s.center s.radius\n\u22a2 dist p s.center = s.radius",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "V : Type u_1\nP : Type u_2\ninst\u271d : MetricSpace P\np : P\nps : Set P\ns : Sphere P\nhp : p \u2208 ps\nhps : ps \u2286 Metric.sphere s.center s.radius\n\u22a2 p \u2208 s",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "C : Type u\ninst\u271d\u00b2 : Category.{v, u} C\nD : Type u\u2082\ninst\u271d\u00b9 : Category.{v\u2082, u\u2082} D\nW X Y Z : C\nf : X \u27f6 Y\ng : X \u27f6 Z\ninst\u271d : IsIso g\n\u22a2 (pushoutCoconeOfRightIso f g).\u03b9.app none = f",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "G : Type u_1\ninst\u271d\u00b3 : Group G\nA B : Subgroup G\n\u03c6 : \u21a5A \u2243* \u21a5B\nH : Type u_2\ninst\u271d\u00b2 : Group H\nM : Type u_3\ninst\u271d\u00b9 : Monoid M\nd : TransversalPair G A B\ninst\u271d : DecidableEq G\ng : G\nw : NormalWord d\n\u22a2 ReducedWord.prod \u03c6 (g \u2022 w).toReducedWord = of g * ReducedWord.prod \u03c6 w.toReducedWord",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "F : Type u_1\n\u03b9 : Type u_2\n\u03b1 : Type u_3\n\u03b2 : Type u_4\ninst\u271d : DivisionSemiring \u03b1\nq\u271d r q : \u211a\u22650\na : \u03b1\n\u22a2 \u2191q * a = a * \u2191q",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "F : Type u_1\n\u03b9 : Type u_2\n\u03b1 : Type u_3\n\u03b2 : Type u_4\ninst\u271d : DivisionSemiring \u03b1\nq\u271d r q : \u211a\u22650\na : \u03b1\n\u22a2 a * \u2191q = \u2191q * a",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "R : Type u_1\ninst\u271d : CommRing R\nI : Ideal R\n\u22a2 NonarchimedeanRing R",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "R : Type u_1\ninst\u271d : CommRing R\nI : Ideal R\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "R : Type u_1\ninst\u271d : CommRing R\nI : Ideal R\ninhabited_h : Inhabited R\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "M : Type u_1\nA : Type u_2\nB : Type u_3\ninst\u271d : MulOneClass M\nS : Set (Submonoid M)\ns : Submonoid M\nhs : s \u2208 S\n\u22a2 \u2200 {x : M}, x \u2208 s \u2192 x \u2208 sSup S",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "M : Type u_1\nA : Type u_2\nB : Type u_3\ninst : MulOneClass M\nS : Set (Submonoid M)\ns : Submonoid M\nhs : s \u2208 S\nx : M\na : x \u2208 s\n\u22a2 x \u2208 sSup S",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "M : Type u_1\nA : Type u_2\nB : Type u_3\ninst : MulOneClass M\nS : Set (Submonoid M)\ns : Submonoid M\nhs : s \u2208 S\nx\u271d : M\na : x\u271d \u2208 s\nx : Set M\nhx : x \u2208 range fun t => \u22c2 (_ : t \u2208 upperBounds S), \u2191t\n\u22a2 x\u271d \u2208 x",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "M : Type u_1\nA : Type u_2\nB : Type u_3\ninst : MulOneClass M\nS : Set (Submonoid M)\ns : Submonoid M\nhs : s \u2208 S\nx : M\na : x \u2208 s\ny : Set M\nhy : y \u2208 range fun t => \u22c2 (_ : t \u2208 upperBounds S), \u2191t\n\u22a2 x \u2208 y",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Sort u_1\nR : Type u_2\nA : Type u_3\ninst\u271d\u00b2 : CommSemiring R\ninst\u271d\u00b9 : Semiring A\ninst\u271d : Algebra R A\nS\u2081 S\u2082 : Subalgebra R A\u1d50\u1d52\u1d56\n\u22a2 (S\u2081 \u2293 S\u2082).unop = S\u2081.unop \u2293 S\u2082.unop",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "A : Type u_1\ninst\u271d\u00b9 : CanonicallyOrderedAddCommMonoid A\ninst\u271d : HasAntidiagonal A\nn : A\nkl : A \u00d7 A\nhlk : kl \u2208 antidiagonal n\n\u22a2 kl.1 \u2264 n",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\ninst\u271d\u00b2 : UniformSpace \u03b1\ninst\u271d\u00b9 : UniformSpace \u03b2\ninst\u271d : UniformSpace \u03b3\nf : SeparationQuotient \u03b1 \u2192 \u03b2\n\u22a2 UniformContinuous f \u2194 UniformContinuous (f \u2218 mk)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "n : \u2115\u221e\n\ud835\udd42 : Type u_1\ninst\u271d\u2074 : RCLike \ud835\udd42\nE' : Type u_2\ninst\u271d\u00b3 : NormedAddCommGroup E'\ninst\u271d\u00b2 : NormedSpace \ud835\udd42 E'\nF' : Type u_3\ninst\u271d\u00b9 : NormedAddCommGroup F'\ninst\u271d : NormedSpace \ud835\udd42 F'\nf : E' \u2192 F'\nx : E'\nhf : ContDiffAt \ud835\udd42 1 f x\n\u22a2 \u2203 K, \u2203 t \u2208 \ud835\udcdd x, LipschitzOnWith K f t",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case h\nn : \u2115\u221e\n\ud835\udd42 : Type u_1\ninst\u271d\u2074 : RCLike \ud835\udd42\nE' : Type u_2\ninst\u271d\u00b3 : NormedAddCommGroup E'\ninst\u271d\u00b2 : NormedSpace \ud835\udd42 E'\nF' : Type u_3\ninst\u271d\u00b9 : NormedAddCommGroup F'\ninst\u271d : NormedSpace \ud835\udd42 F'\nf : E' \u2192 F'\nx : E'\nhf : ContDiffAt \ud835\udd42 1 f x\n\u22a2 \u2203 t \u2208 \ud835\udcdd x, LipschitzOnWith ?w f t\n\ncase w\nn : \u2115\u221e\n\ud835\udd42 : Type u_1\ninst\u271d\u2074 : RCLike \ud835\udd42\nE' : Type u_2\ninst\u271d\u00b3 : NormedAddCommGroup E'\ninst\u271d\u00b2 : NormedSpace \ud835\udd42 E'\nF' : Type u_3\ninst\u271d\u00b9 : NormedAddCommGroup F'\ninst\u271d : NormedSpace \ud835\udd42 F'\nf : E' \u2192 F'\nx : E'\nhf : ContDiffAt \ud835\udd42 1 f x\n\u22a2 \u211d\u22650",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b4 : Type u_3\ninst\u271d\u00b2 : MeasurableSpace \u03b1\ninst\u271d\u00b9 : MeasurableSpace \u03b2\ns\u271d : Set \u03b1\na\u271d : \u03b1\ninst\u271d : MeasurableSingletonClass \u03b1\na : \u03b1\ns : Set \u03b1\n\u22a2 (dirac a) s = s.indicator 1 a",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b4 : Type u_3\ninst\u271d\u00b2 : MeasurableSpace \u03b1\ninst\u271d\u00b9 : MeasurableSpace \u03b2\ns\u271d : Set \u03b1\na\u271d : \u03b1\ninst\u271d : MeasurableSingletonClass \u03b1\na : \u03b1\ns : Set \u03b1\n\u22a2 s.indicator 1 a = (dirac a) s",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u22a2 \u2200 (k : \u2115), antidiagonalTuple k 0 = [0]",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d\u00b9 : AddMonoidWithOne \u03b1\ninst\u271d : AddMonoidWithOne \u03b2\nn : \u2115\n\u22a2 (\u2191n).2 = \u2191n",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "m n a b c d : \u2124\n\u22a2 a \u2261 a [ZMOD n]",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b3 : Type u_3\nF : Type u_4\nG : Type u_5\ninst\u271d\u2076 : PseudoEMetricSpace \u03b1\ninst\u271d\u2075 : PseudoEMetricSpace \u03b2\ninst\u271d\u2074 : PseudoEMetricSpace \u03b3\ninst\u271d\u00b3 : FunLike F \u03b1 \u03b2\ninst\u271d\u00b2 : DilationClass F \u03b1 \u03b2\ninst\u271d\u00b9 : FunLike G \u03b2 \u03b3\ninst\u271d : DilationClass G \u03b2 \u03b3\nf : F\ng : G\nx y z : \u03b1\ns : Set \u03b1\n\u22a2 1 = Dilation.id \u03b1",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03c3 : Type u_3\ninst\u271d\u00b2 : Primcodable \u03b1\ninst\u271d\u00b9 : Primcodable \u03b2\ninst\u271d : Primcodable \u03c3\n\u22a2 Primrec Encodable.decode",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\ninst\u271d\u00b9 : Lattice \u03b1\ninst\u271d : BoundedOrder \u03b1\na b : Complementeds \u03b1\n\u22a2 \u2191\u22a5 = \u22a5",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\nE : Type u_2\nm m0 : MeasurableSpace \u03b1\np : \u211d\u22650\u221e\nq : \u211d\n\u03bc : Measure \u03b1\ninst\u271d : NormedAddCommGroup E\nhm : m \u2264 m0\nf : \u03b1 \u2192 \u211d\u22650\u221e\nhf : Measurable f\n\u22a2 essSup f (\u03bc.trim hm) = essSup f \u03bc",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03ba : Type u_2\nX : Type u_3\nX' : Type u_4\nY : Type u_5\nZ : Type u_6\n\u03b1 : Type u_7\n\u03b1' : Type u_8\n\u03b2 : Type u_9\n\u03b2' : Type u_10\n\u03b3 : Type u_11\n\ud835\udcd5 : Type u_12\ntX : TopologicalSpace X\ntY : TopologicalSpace Y\ntZ : TopologicalSpace Z\nu\u03b1 : UniformSpace \u03b1\nu\u03b2 : UniformSpace \u03b2\nu\u03b3 : UniformSpace \u03b3\nl : Filter \u03b9\ninst\u271d : l.NeBot\nF : \u03b9 \u2192 X \u2192 \u03b1\nf : X \u2192 \u03b1\nx\u2080 : X\nh\u2081 : Tendsto F l (\ud835\udcdd f)\nh\u2082 : EquicontinuousAt F x\u2080\n\u22a2 ContinuousAt f x\u2080",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inl\n\u03b9 : Type u_1\n\u03ba : Type u_2\nX : Type u_3\nX' : Type u_4\nY : Type u_5\nZ : Type u_6\n\u03b1 : Type u_7\n\u03b1' : Type u_8\n\u03b2 : Type u_9\n\u03b2' : Type u_10\n\u03b3 : Type u_11\n\ud835\udcd5 : Type u_12\ntX : TopologicalSpace X\ntY : TopologicalSpace Y\ntZ : TopologicalSpace Z\nu\u03b1 : UniformSpace \u03b1\nu\u03b2 : UniformSpace \u03b2\nu\u03b3 : UniformSpace \u03b3\nl : Filter \u03b9\ninst\u271d : l.NeBot\nF : \u03b9 \u2192 X \u2192 \u03b1\nf : X \u2192 \u03b1\nx\u2080 : X\nh\u2081 : Tendsto F l (\ud835\udcdd f)\nh\u2082 : EquicontinuousAt F x\u2080\nh\u271d : IsEmpty \u03b1\n\u22a2 ContinuousAt f x\u2080\n\ncase inr\n\u03b9 : Type u_1\n\u03ba : Type u_2\nX : Type u_3\nX' : Type u_4\nY : Type u_5\nZ : Type u_6\n\u03b1 : Type u_7\n\u03b1' : Type u_8\n\u03b2 : Type u_9\n\u03b2' : Type u_10\n\u03b3 : Type u_11\n\ud835\udcd5 : Type u_12\ntX : TopologicalSpace X\ntY : TopologicalSpace Y\ntZ : TopologicalSpace Z\nu\u03b1 : UniformSpace \u03b1\nu\u03b2 : UniformSpace \u03b2\nu\u03b3 : UniformSpace \u03b3\nl : Filter \u03b9\ninst\u271d : l.NeBot\nF : \u03b9 \u2192 X \u2192 \u03b1\nf : X \u2192 \u03b1\nx\u2080 : X\nh\u2081 : Tendsto F l (\ud835\udcdd f)\nh\u2082 : EquicontinuousAt F x\u2080\nh\u271d : Nonempty \u03b1\n\u22a2 ContinuousAt f x\u2080",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "R\u271d : Type u\nF : Type u_1\nR : Type u_2\nS : Type u_3\ninst\u271d\u2077 : NonUnitalSemiring R\ninst\u271d\u2076 : PartialOrder R\ninst\u271d\u2075 : StarRing R\ninst\u271d\u2074 : StarOrderedRing R\ninst\u271d\u00b3 : NonUnitalSemiring S\ninst\u271d\u00b2 : PartialOrder S\ninst\u271d\u00b9 : StarRing S\ninst\u271d : StarOrderedRing S\nf : R \u2192\u2099+* S\nhf : \u2200 (r : R), f (star r) = star (f r)\nx y : R\nhxy : x \u2264 y\n\u22a2 f x \u2264 f y",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03c0\u271d : \u03b9 \u2192 Sort u_2\ns : Finset \u03b9\nf\u271d g\u271d : (i : \u03b9) \u2192 \u03c0\u271d i\ninst\u271d\u00b9 : (j : \u03b9) \u2192 Decidable (j \u2208 s)\n\u03c0 : \u03b9 \u2192 Type u_3\nt : Set \u03b9\nt' : (i : \u03b9) \u2192 Set (\u03c0 i)\nf g f' g' h\u271d : (i : \u03b9) \u2192 \u03c0 i\ninst\u271d : (i : \u03b9) \u2192 Preorder (\u03c0 i)\nh : g \u2264 f\n\u22a2 s.piecewise f g \u2208 Set.Icc g f",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03c0\u271d : \u03b9 \u2192 Sort u_2\ns : Finset \u03b9\nf\u271d g\u271d : (i : \u03b9) \u2192 \u03c0\u271d i\ninst\u271d\u00b9 : (j : \u03b9) \u2192 Decidable (j \u2208 s)\n\u03c0 : \u03b9 \u2192 Type u_3\nt : Set \u03b9\nt' : (i : \u03b9) \u2192 Set (\u03c0 i)\nf g f' g' h\u271d : (i : \u03b9) \u2192 \u03c0 i\ninst\u271d : (i : \u03b9) \u2192 Preorder (\u03c0 i)\nh : g \u2264 f\n\u22a2 g \u2264 s.piecewise f g \u2227 s.piecewise f g \u2264 f",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case left\n\u03b9 : Type u_1\n\u03c0\u271d : \u03b9 \u2192 Sort u_2\ns : Finset \u03b9\nf\u271d g\u271d : (i : \u03b9) \u2192 \u03c0\u271d i\ninst\u271d\u00b9 : (j : \u03b9) \u2192 Decidable (j \u2208 s)\n\u03c0 : \u03b9 \u2192 Type u_3\nt : Set \u03b9\nt' : (i : \u03b9) \u2192 Set (\u03c0 i)\nf g f' g' h\u271d : (i : \u03b9) \u2192 \u03c0 i\ninst\u271d : (i : \u03b9) \u2192 Preorder (\u03c0 i)\nh : g \u2264 f\n\u22a2 g \u2264 s.piecewise f g\n\ncase right\n\u03b9 : Type u_1\n\u03c0\u271d : \u03b9 \u2192 Sort u_2\ns : Finset \u03b9\nf\u271d g\u271d : (i : \u03b9) \u2192 \u03c0\u271d i\ninst\u271d\u00b9 : (j : \u03b9) \u2192 Decidable (j \u2208 s)\n\u03c0 : \u03b9 \u2192 Type u_3\nt : Set \u03b9\nt' : (i : \u03b9) \u2192 Set (\u03c0 i)\nf g f' g' h\u271d : (i : \u03b9) \u2192 \u03c0 i\ninst\u271d : (i : \u03b9) \u2192 Preorder (\u03c0 i)\nh : g \u2264 f\n\u22a2 s.piecewise f g \u2264 f",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03c0\u271d : \u03b9 \u2192 Sort u_2\ns : Finset \u03b9\nf\u271d g\u271d : (i : \u03b9) \u2192 \u03c0\u271d i\ninst\u271d\u00b9 : (j : \u03b9) \u2192 Decidable (j \u2208 s)\n\u03c0 : \u03b9 \u2192 Type u_3\nt : Set \u03b9\nt' : (i : \u03b9) \u2192 Set (\u03c0 i)\nf g f' g' h\u271d : (i : \u03b9) \u2192 \u03c0 i\ninst\u271d : (i : \u03b9) \u2192 Preorder (\u03c0 i)\nh : g \u2264 f\n\u22a2 (g \u2264 fun i => if i \u2208 s then f i else g i) \u2227 (fun i => if i \u2208 s then f i else g i) \u2264 f",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case mk\n\u03b9 : Type u_1\n\u03c0\u271d : \u03b9 \u2192 Sort u_2\ns : Finset \u03b9\nf\u271d g\u271d : (i : \u03b9) \u2192 \u03c0\u271d i\ninst\u271d\u00b9 : (j : \u03b9) \u2192 Decidable (j \u2208 s)\n\u03c0 : \u03b9 \u2192 Type u_3\nt : Set \u03b9\nt' : (i : \u03b9) \u2192 Set (\u03c0 i)\nf g f' g' h\u271d : (i : \u03b9) \u2192 \u03c0 i\ninst\u271d : (i : \u03b9) \u2192 Preorder (\u03c0 i)\nh : g \u2264 f\nval\u271d : Multiset \u03b9\nnodup\u271d : val\u271d.Nodup\n\u22a2 g \u2264 { val := val\u271d, nodup := nodup\u271d }.piecewise f g \u2227 { val := val\u271d, nodup := nodup\u271d }.piecewise f g \u2264 f",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "R : Type u\nS\u2081 : Type v\nS\u2082 : Type w\nS\u2083 : Type x\n\u03c3 : Type u_1\na a' a\u2081 a\u2082 : R\ne : \u2115\ns : \u03c3 \u2192\u2080 \u2115\ninst\u271d : CommSemiring R\nn : \u2115\nf : MvPolynomial (Fin (n + 1)) R\nh : f \u2260 0\n\u22a2 ((finSuccEquiv R n) f).support.Nonempty",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "R : Type u\nS\u2081 : Type v\nS\u2082 : Type w\nS\u2083 : Type x\n\u03c3 : Type u_1\na a' a\u2081 a\u2082 : R\ne : \u2115\ns : \u03c3 \u2192\u2080 \u2115\ninst\u271d : CommSemiring R\nn : \u2115\nf : MvPolynomial (Fin (n + 1)) R\nh : f \u2260 0\n\u22a2 \u00aceval\u2082 (Polynomial.C.comp C) (fun i => Fin.cases Polynomial.X (fun k => Polynomial.C (X k)) i) f = 0",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "R : Type u\nS\u2081 : Type v\nS\u2082 : Type w\nS\u2083 : Type x\n\u03c3 : Type u_1\na a' a\u2081 a\u2082 : R\ne : \u2115\ns : \u03c3 \u2192\u2080 \u2115\ninst\u271d : CommSemiring R\nn : \u2115\nf : MvPolynomial (Fin (n + 1)) R\nh : eval\u2082 (Polynomial.C.comp C) (fun i => Fin.cases Polynomial.X (fun k => Polynomial.C (X k)) i) f = 0\n\u22a2 f = 0",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "R : Type u_1\nK : Type u_2\nL : Type u_3\nM : Type u_4\ninst\u271d\u00b9\u2070 : CommRing R\ninst\u271d\u2079 : LieRing L\ninst\u271d\u2078 : LieAlgebra R L\ninst\u271d\u2077 : AddCommGroup M\ninst\u271d\u2076 : Module R M\ninst\u271d\u2075 : LieRingModule L M\ninst\u271d\u2074 : LieModule R L M\ninst\u271d\u00b3 : Module.Free R M\ninst\u271d\u00b2 : Module.Finite R M\ninst\u271d\u00b9 : Module.Free R L\ninst\u271d : Module.Finite R L\nI : LieIdeal R L\n\u22a2 \u2191(killingCompl R L I) = (killingForm R L).orthogonal \u2191I",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "E : Type u_1\ninst\u271d\u00b3 : SeminormedAddCommGroup E\ninst\u271d\u00b2 : NormedSpace \u211d E\nF : Type u_2\ninst\u271d\u00b9 : NormedAddCommGroup F\ninst\u271d : NormedSpace \u211d F\nx y : F\nhy : y \u2260 0\n\u22a2 Set.InjOn Norm.norm {x | SameRay \u211d x y}",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "R : Type u_1\nM : Type u_2\nN : Type u_3\nP : Type u_4\ninst\u271d\u2078 : CommRing R\ninst\u271d\u2077 : AddCommGroup M\ninst\u271d\u2076 : AddCommGroup N\ninst\u271d\u2075 : AddCommGroup P\ninst\u271d\u2074 : Module R M\ninst\u271d\u00b3 : Module R N\ninst\u271d\u00b2 : Module R P\nf : M \u2192\u2097[R] N\ng : N \u2192\u2097[R] P\nQ : Type u_5\ninst\u271d\u00b9 : AddCommGroup Q\ninst\u271d : Module R Q\nhfg : Exact \u21d1f \u21d1g\nhg : Surjective \u21d1g\n\u22a2 inverse Q hfg hg \u2218\u2097 rTensor Q g = (range (rTensor Q f)).mkQ",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "R : Type u_1\nM : Type u_2\nN : Type u_3\nP : Type u_4\ninst\u271d\u2078 : CommRing R\ninst\u271d\u2077 : AddCommGroup M\ninst\u271d\u2076 : AddCommGroup N\ninst\u271d\u2075 : AddCommGroup P\ninst\u271d\u2074 : Module R M\ninst\u271d\u00b3 : Module R N\ninst\u271d\u00b2 : Module R P\nf : M \u2192\u2097[R] N\ng : N \u2192\u2097[R] P\nQ : Type u_5\ninst\u271d\u00b9 : AddCommGroup Q\ninst\u271d : Module R Q\nhfg : Exact \u21d1f \u21d1g\nhg : Surjective \u21d1g\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "a : \u2115\na1 : 1 < a\nm n : \u2115\nh : n \u2264 m\n\u22a2 xz a1 (m - n) = xz a1 m * xz a1 n - \u2191(Pell.d a1) * yz a1 m * yz a1 n",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "a : \u2115\na1 : 1 < a\nm n : \u2115\nh : n \u2264 m\n\u22a2 xz a1 (m - n) \u2264 xz a1 m * xz a1 n - \u2191(Pell.d a1) * yz a1 m * yz a1 n \u2227\n    xz a1 m * xz a1 n \u2264 xz a1 (m - n) + \u2191(Pell.d a1) * yz a1 m * yz a1 n",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b2\u2082 : Type u_3\n\u03b3 : Type u_4\n\u03b9 : Sort u_5\n\u03b9' : Sort u_6\n\u03ba : \u03b9 \u2192 Sort u_7\n\u03ba' : \u03b9' \u2192 Sort u_8\ninst\u271d : CompleteLattice \u03b1\ns\u271d t : Set \u03b1\na b : \u03b1\ns : Set \u03b1\n\u22a2 toDual (sSup s) = sInf (\u21d1ofDual \u207b\u00b9' s)",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "C : Type u\u2081\ninst\u271d\u00b9 : Category.{v\u2081, u\u2081} C\nD : Type u\u2082\ninst\u271d : Category.{v\u2082, u\u2082} D\nF : C \u2964 D\nX Y Z : C\nf\u271d : Y \u27f6 X\nS\u271d R\u271d : Sieve X\nf : Y \u27f6 X\nS R : Sieve X\n\u22a2 pullback f (S \u2293 R) = pullback f S \u2293 pullback f R",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\nA : Type u_3\nB : Type u_4\nF : Type u_5\ninst\u271d\u00b3 : AddMonoidWithOne B\ninst\u271d\u00b2 : FunLike F \u2115 A\ninst\u271d\u00b9 : AddMonoid A\ninst\u271d : AddMonoidHomClass F \u2115 A\nf g : F\nh : f 1 = g 1\n\u22a2 f = g",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\nA : Type u_3\nB : Type u_4\nF : Type u_5\ninst\u271d\u00b3 : AddMonoidWithOne B\ninst\u271d\u00b2 : FunLike F \u2115 A\ninst\u271d\u00b9 : AddMonoid A\ninst\u271d : AddMonoidHomClass F \u2115 A\nf g : F\nh : f 1 = g 1\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "C : Type u\ninst\u271d\u00b2 : Category.{v, u} C\ninst\u271d\u00b9 : Preadditive C\nX Y : C\nf g : X \u27f6 Y\ninst\u271d : HasBinaryBiproduct X X\n\u22a2 f + g = lift (\ud835\udfd9 X) (\ud835\udfd9 X) \u226b desc f g",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "R : Type u_1\nS : Type u_2\nT : Type u_3\ninst\u271d\u00b9\u00b9 : CommRing R\ninst\u271d\u00b9\u2070 : Ring S\ninst\u271d\u2079 : Algebra R S\nA : Type u_4\nB : Type u_5\ninst\u271d\u2078 : CommRing A\ninst\u271d\u2077 : CommRing B\ninst\u271d\u2076 : IsDomain B\ninst\u271d\u2075 : Algebra A B\nK : Type u_6\ninst\u271d\u2074 : Field K\nS' : Type u_7\ninst\u271d\u00b3 : CommRing S'\ninst\u271d\u00b2 : Algebra R S'\ninst\u271d\u00b9 : Algebra A S\ninst\u271d : Algebra A S'\npb : PowerBasis A S\ne : S \u2243\u2090[A] S'\n\u22a2 (pb.map e).minpolyGen = pb.minpolyGen",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\nG : \u03b9 \u2192 Type u_2\nH : Type u_3\nK : Type u_4\ninst\u271d\u00b2 : Monoid K\ninst\u271d\u00b9 : (i : \u03b9) \u2192 Group (G i)\ninst\u271d : Group H\n\u03c6 : (i : \u03b9) \u2192 H \u2192* G i\nh\u03c6 : \u2200 (i : \u03b9), Injective \u21d1(\u03c6 i)\ni : \u03b9\n\u22a2 Injective \u21d1(of i)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\n\u03b4 : Type u_1\n\u03b9 : Sort x\nl\u271d f : Filter \u03b1\ng : \u03b1 \u2192 Filter \u03b2\nl : Filter \u03b2\nh : \u2200\u1da0 (x : \u03b1) in f, g x \u2264 l\n\u22a2 f.bind g \u2264 l",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b3 : Type u_3\n\u03b4 : Type u_4\n\u03b4' : Type u_5\n\u03b9 : Sort u\u03b9\ns t u : Set \u03b1\ninst\u271d\u00b9 : MeasurableSpace \u03b1\ninst\u271d : MeasurableSpace \u03b2\n\u22a2 Measurable Sum.inl",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "a b c : \u211d\u22650\nh : a \u2264 b * c\n\u22a2 a / b \u2264 c",
+    "value_target": -1.0,
+    "mcts_value": 0.018119169399142265
+  },
+  {
+    "type": "value",
+    "state": "a b c : \u211d\u22650\nh : a \u2264 b * c\n\u22a2 a * b\u207b\u00b9 \u2264 c",
+    "value_target": -1.0,
+    "mcts_value": 0.018119169399142265
+  },
+  {
+    "type": "value",
+    "state": "a b c : \u211d\u22650\nh : c < a / b\n\u22a2 b * c < a",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case a\na b c : \u211d\u22650\nh : a \u2264 b * c\n\u22a2 a / b < c",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case pos\na b c : \u211d\u22650\nh : a \u2264 b * c\nha : a = 0\n\u22a2 a / b \u2264 c\n\ncase neg\na b c : \u211d\u22650\nh : a \u2264 b * c\nha : \u00aca = 0\n\u22a2 a / b \u2264 c",
+    "value_target": -1.0,
+    "mcts_value": 0.017897458747029305
+  },
+  {
+    "type": "value",
+    "state": "a b c : \u211d\u22650\nh : a \u2264 b * c\n\u22a2 0 < b",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "a b c : \u211d\u22650\nh : c < a * b\u207b\u00b9\n\u22a2 b * c < a",
+    "value_target": -1.0,
+    "mcts_value": 0.018119169399142265
+  },
+  {
+    "type": "value",
+    "state": "case a\na b c : \u211d\u22650\nh : a \u2264 b * c\n\u22a2 a * b\u207b\u00b9 \u2264 ?b\n\ncase a\na b c : \u211d\u22650\nh : a \u2264 b * c\n\u22a2 ?b \u2264 c\n\ncase b\na b c : \u211d\u22650\nh : a \u2264 b * c\n\u22a2 \u211d\u22650",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\nB : Type u_2\nF : Type u_3\nE : B \u2192 Type u_4\nZ : Type u_5\ninst\u271d\u00b9 : TopologicalSpace B\ninst\u271d : TopologicalSpace F\nproj : Z \u2192 B\ne\u271d : Pretrivialization F proj\nx : Z\ne e' : Pretrivialization F proj\n\u22a2 (e.symm.trans e'.toPartialEquiv).symm = e'.symm.trans e.toPartialEquiv",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9\u271d : Sort u_1\n\u03b1 : Type u_2\n\u03b2 : Type u_3\nl : Filter \u03b1\ninst\u271d : CountableInterFilter l\n\u03b9 : Type u_4\nS : Set \u03b9\nhS : S.Countable\ns t : (i : \u03b9) \u2192 i \u2208 S \u2192 Set \u03b1\nh : \u2200 (i : \u03b9) (hi : i \u2208 S), s i hi \u2264\u1da0[l] t i hi\n\u22a2 \u22c3 i, \u22c3 (h : i \u2208 S), s i h \u2264\u1da0[l] \u22c3 i, \u22c3 (h : i \u2208 S), t i h",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "n : \u2115\nP : MvPFunctor.{u} (n + 1)\n\u03b1 : TypeVec.{u_1} n\na : P.A\nf : P.last.B a \u2192 P.last.W\ng' : P.drop.B a \u27f9 \u03b1\ng : (j : P.last.B a) \u2192 P.WPath (f j) \u27f9 \u03b1\n\u22a2 P.wPathDestRight (P.wPathCasesOn g' g) = g",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b3 : Type u_3\n\u03b9 : Sort u_4\n\u03b9' : Sort u_5\n\u03b9\u2082 : Sort u_6\n\u03ba : \u03b9 \u2192 Sort u_7\n\u03ba\u2081 : \u03b9 \u2192 Sort u_8\n\u03ba\u2082 : \u03b9 \u2192 Sort u_9\n\u03ba' : \u03b9' \u2192 Sort u_10\nf : \u03b1 \u2192 \u03b2 \u2192 \u03b3\ns : Set \u03b1\nt : Set \u03b2\n\u22a2 image2 f s t = (f '' s).seq t",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "case h\n\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b3 : Type u_3\n\u03b9 : Sort u_4\n\u03b9' : Sort u_5\n\u03b9\u2082 : Sort u_6\n\u03ba : \u03b9 \u2192 Sort u_7\n\u03ba\u2081 : \u03b9 \u2192 Sort u_8\n\u03ba\u2082 : \u03b9 \u2192 Sort u_9\n\u03ba' : \u03b9' \u2192 Sort u_10\nf : \u03b1 \u2192 \u03b2 \u2192 \u03b3\ns : Set \u03b1\nt : Set \u03b2\nx\u271d : \u03b3\n\u22a2 x\u271d \u2208 image2 f s t \u2194 x\u271d \u2208 (f '' s).seq t",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\ud835\udd5c : Type u_1\ninst\u271d\u2074 : NontriviallyNormedField \ud835\udd5c\nE : Type u_2\ninst\u271d\u00b3 : NormedAddCommGroup E\ninst\u271d\u00b2 : NormedSpace \ud835\udd5c E\nF : Type u_3\ninst\u271d\u00b9 : NormedAddCommGroup F\ninst\u271d : NormedSpace \ud835\udd5c F\nf : E \u2192 F\ns : Set E\nf' : E \u2192L[\ud835\udd5c] F\ne : F \u2243L[\ud835\udd5c] E\n\u22a2 UniqueDiffOn \ud835\udd5c (\u21d1e \u207b\u00b9' s) \u2194 UniqueDiffOn \ud835\udd5c s",
+    "value_target": -1.0,
+    "mcts_value": 0.013149519450962543
+  },
+  {
+    "type": "value",
+    "state": "case mp\n\ud835\udd5c : Type u_1\ninst\u271d\u2074 : NontriviallyNormedField \ud835\udd5c\nE : Type u_2\ninst\u271d\u00b3 : NormedAddCommGroup E\ninst\u271d\u00b2 : NormedSpace \ud835\udd5c E\nF : Type u_3\ninst\u271d\u00b9 : NormedAddCommGroup F\ninst\u271d : NormedSpace \ud835\udd5c F\nf : E \u2192 F\ns : Set E\nf' : E \u2192L[\ud835\udd5c] F\ne : F \u2243L[\ud835\udd5c] E\n\u22a2 UniqueDiffOn \ud835\udd5c (\u21d1e \u207b\u00b9' s) \u2192 UniqueDiffOn \ud835\udd5c s\n\ncase mpr\n\ud835\udd5c : Type u_1\ninst\u271d\u2074 : NontriviallyNormedField \ud835\udd5c\nE : Type u_2\ninst\u271d\u00b3 : NormedAddCommGroup E\ninst\u271d\u00b2 : NormedSpace \ud835\udd5c E\nF : Type u_3\ninst\u271d\u00b9 : NormedAddCommGroup F\ninst\u271d : NormedSpace \ud835\udd5c F\nf : E \u2192 F\ns : Set E\nf' : E \u2192L[\ud835\udd5c] F\ne : F \u2243L[\ud835\udd5c] E\n\u22a2 UniqueDiffOn \ud835\udd5c s \u2192 UniqueDiffOn \ud835\udd5c (\u21d1e \u207b\u00b9' s)",
+    "value_target": -1.0,
+    "mcts_value": 0.01273052953183651
+  },
+  {
+    "type": "value",
+    "state": "\ud835\udd5c : Type u_1\ninst\u271d\u2074 : NontriviallyNormedField \ud835\udd5c\nE : Type u_2\ninst\u271d\u00b3 : NormedAddCommGroup E\ninst\u271d\u00b2 : NormedSpace \ud835\udd5c E\nF : Type u_3\ninst\u271d\u00b9 : NormedAddCommGroup F\ninst\u271d : NormedSpace \ud835\udd5c F\nf : E \u2192 F\ns : Set E\nf' : E \u2192L[\ud835\udd5c] F\ne : F \u2243L[\ud835\udd5c] E\n\u22a2 (\u2200 (x : F), e x \u2208 s \u2192 UniqueDiffWithinAt \ud835\udd5c (\u21d1e \u207b\u00b9' s) x) \u2194 \u2200 x \u2208 s, UniqueDiffWithinAt \ud835\udd5c s x",
+    "value_target": -1.0,
+    "mcts_value": 0.013149519450962543
+  },
+  {
+    "type": "value",
+    "state": "case mpr\n\ud835\udd5c : Type u_1\ninst\u271d\u2074 : NontriviallyNormedField \ud835\udd5c\nE : Type u_2\ninst\u271d\u00b3 : NormedAddCommGroup E\ninst\u271d\u00b2 : NormedSpace \ud835\udd5c E\nF : Type u_3\ninst\u271d\u00b9 : NormedAddCommGroup F\ninst\u271d : NormedSpace \ud835\udd5c F\nf : E \u2192 F\ns : Set E\nf' : E \u2192L[\ud835\udd5c] F\ne : F \u2243L[\ud835\udd5c] E\n\u22a2 UniqueDiffOn \ud835\udd5c s \u2192 UniqueDiffOn \ud835\udd5c (\u21d1e \u207b\u00b9' s)\n\ncase mp\n\ud835\udd5c : Type u_1\ninst\u271d\u2074 : NontriviallyNormedField \ud835\udd5c\nE : Type u_2\ninst\u271d\u00b3 : NormedAddCommGroup E\ninst\u271d\u00b2 : NormedSpace \ud835\udd5c E\nF : Type u_3\ninst\u271d\u00b9 : NormedAddCommGroup F\ninst\u271d : NormedSpace \ud835\udd5c F\nf : E \u2192 F\ns : Set E\nf' : E \u2192L[\ud835\udd5c] F\ne : F \u2243L[\ud835\udd5c] E\n\u22a2 UniqueDiffOn \ud835\udd5c (\u21d1e \u207b\u00b9' s) \u2192 UniqueDiffOn \ud835\udd5c s",
+    "value_target": -1.0,
+    "mcts_value": 0.01273052953183651
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : LinearOrderedField \u03b1\nf g : CauSeq \u03b1 abs\n\u22a2 \u2191(f \u2293 g) = \u2191f \u2293 \u2191g",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "x y : \u211d\n\u22a2 |sin x| \u2264 1",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03a9 : Type u_2\n\u03b9 : Type u_3\n\u03b2\u271d : Type u_4\n\u03b2' : Type u_5\n\u03b3 : Type u_6\n\u03b3' : Type u_7\n_m\u03b1 : MeasurableSpace \u03b1\n_m\u03a9 : MeasurableSpace \u03a9\n\u03ba : \u21a5(kernel \u03b1 \u03a9)\n\u03bc : Measure \u03b1\nf\u271d : \u03a9 \u2192 \u03b2\u271d\ng : \u03a9 \u2192 \u03b2'\n\u03b2 : Type u_8\nm : MeasurableSpace \u03b2\ninst\u271d\u00b2 : Div \u03b2\ninst\u271d\u00b9 : MeasurableDiv\u2082 \u03b2\nf : \u03b9 \u2192 \u03a9 \u2192 \u03b2\ninst\u271d : IsMarkovKernel \u03ba\nhf_indep : iIndepFun (fun x => m) f \u03ba \u03bc\nhf_meas : \u2200 (i : \u03b9), Measurable (f i)\ni j k l : \u03b9\nhik : i \u2260 k\nhil : i \u2260 l\nhjk : j \u2260 k\nhjl : j \u2260 l\n\u22a2 IndepFun (f i / f j) (f k / f l) \u03ba \u03bc",
+    "value_target": -1.0,
+    "mcts_value": 0.01471538096666336
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03a9 : Type u_2\n\u03b9 : Type u_3\n\u03b2\u271d : Type u_4\n\u03b2' : Type u_5\n\u03b3 : Type u_6\n\u03b3' : Type u_7\n_m\u03b1 : MeasurableSpace \u03b1\n_m\u03a9 : MeasurableSpace \u03a9\n\u03ba : \u21a5(kernel \u03b1 \u03a9)\n\u03bc : Measure \u03b1\nf\u271d : \u03a9 \u2192 \u03b2\u271d\ng : \u03a9 \u2192 \u03b2'\n\u03b2 : Type u_8\nm : MeasurableSpace \u03b2\ninst\u271d\u00b2 : Div \u03b2\ninst\u271d\u00b9 : MeasurableDiv\u2082 \u03b2\nf : \u03b9 \u2192 \u03a9 \u2192 \u03b2\ninst\u271d : IsMarkovKernel \u03ba\nhf_indep : iIndepFun (fun x => m) f \u03ba \u03bc\nhf_meas : \u2200 (i : \u03b9), Measurable (f i)\ni j k l : \u03b9\nhik : i \u2260 k\nhil : i \u2260 l\nhjk : j \u2260 k\nhjl : j \u2260 l\n\u22a2 IndepFun (f k / f l) (f i / f j) \u03ba \u03bc",
+    "value_target": -1.0,
+    "mcts_value": 0.01471538096666336
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03a9 : Type u_2\n\u03b9 : Type u_3\n\u03b2\u271d : Type u_4\n\u03b2' : Type u_5\n\u03b3 : Type u_6\n\u03b3' : Type u_7\n_m\u03b1 : MeasurableSpace \u03b1\n_m\u03a9 : MeasurableSpace \u03a9\n\u03ba : \u21a5(kernel \u03b1 \u03a9)\n\u03bc : Measure \u03b1\nf\u271d : \u03a9 \u2192 \u03b2\u271d\ng : \u03a9 \u2192 \u03b2'\n\u03b2 : Type u_8\nm : MeasurableSpace \u03b2\ninst\u271d\u00b2 : Div \u03b2\ninst\u271d\u00b9 : MeasurableDiv\u2082 \u03b2\nf : \u03b9 \u2192 \u03a9 \u2192 \u03b2\ninst\u271d : IsMarkovKernel \u03ba\nhf_indep : iIndepFun (fun x => m) f \u03ba \u03bc\nhf_meas : \u2200 (i : \u03b9), Measurable (f i)\ni j k l : \u03b9\nhik : i \u2260 k\nhil : i \u2260 l\nhjk : j \u2260 k\nhjl : j \u2260 l\n\u22a2 Indep (MeasurableSpace.comap (f i / f j) m) (MeasurableSpace.comap (f k / f l) m) \u03ba \u03bc",
+    "value_target": -1.0,
+    "mcts_value": 0.013870184309780598
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03a9 : Type u_2\n\u03b9 : Type u_3\n\u03b2\u271d : Type u_4\n\u03b2' : Type u_5\n\u03b3 : Type u_6\n\u03b3' : Type u_7\n_m\u03b1 : MeasurableSpace \u03b1\n_m\u03a9 : MeasurableSpace \u03a9\n\u03ba : \u21a5(kernel \u03b1 \u03a9)\n\u03bc : Measure \u03b1\nf\u271d : \u03a9 \u2192 \u03b2\u271d\ng : \u03a9 \u2192 \u03b2'\n\u03b2 : Type u_8\nm : MeasurableSpace \u03b2\ninst\u271d\u00b2 : Div \u03b2\ninst\u271d\u00b9 : MeasurableDiv\u2082 \u03b2\nf : \u03b9 \u2192 \u03a9 \u2192 \u03b2\ninst\u271d : IsMarkovKernel \u03ba\nhf_indep : iIndepFun (fun x => m) f \u03ba \u03bc\nhf_meas : \u2200 (i : \u03b9), Measurable (f i)\ni j k l : \u03b9\nhik : i \u2260 k\nhil : i \u2260 l\nhjk : j \u2260 k\nhjl : j \u2260 l\nx hx : Set \u03a9\n\u22a2 x \u2208 {s | MeasurableSet s} \u2192 hx \u2208 {s | MeasurableSet s} \u2192 \u2200\u1d50 (a : \u03b1) \u2202\u03bc, (\u03ba a) (x \u2229 hx) = (\u03ba a) x * (\u03ba a) hx",
+    "value_target": -1.0,
+    "mcts_value": 0.01471538096666336
+  },
+  {
+    "type": "value",
+    "state": "case h1\n\u03b1 : Type u_1\n\u03a9 : Type u_2\n\u03b9 : Type u_3\n\u03b2\u271d : Type u_4\n\u03b2' : Type u_5\n\u03b3 : Type u_6\n\u03b3' : Type u_7\n_m\u03b1 : MeasurableSpace \u03b1\n_m\u03a9 : MeasurableSpace \u03a9\n\u03ba : \u21a5(kernel \u03b1 \u03a9)\n\u03bc : Measure \u03b1\nf\u271d : \u03a9 \u2192 \u03b2\u271d\ng : \u03a9 \u2192 \u03b2'\n\u03b2 : Type u_8\nm : MeasurableSpace \u03b2\ninst\u271d\u00b2 : Div \u03b2\ninst\u271d\u00b9 : MeasurableDiv\u2082 \u03b2\nf : \u03b9 \u2192 \u03a9 \u2192 \u03b2\ninst\u271d : IsMarkovKernel \u03ba\nhf_indep : iIndepFun (fun x => m) f \u03ba \u03bc\nhf_meas : \u2200 (i : \u03b9), Measurable (f i)\ni j k l : \u03b9\nhik : i \u2260 k\nhil : i \u2260 l\nhjk : j \u2260 k\nhjl : j \u2260 l\n\u22a2 MeasurableSpace.comap (f i / f j) m \u2264 _m\u03a9\n\ncase h2\n\u03b1 : Type u_1\n\u03a9 : Type u_2\n\u03b9 : Type u_3\n\u03b2\u271d : Type u_4\n\u03b2' : Type u_5\n\u03b3 : Type u_6\n\u03b3' : Type u_7\n_m\u03b1 : MeasurableSpace \u03b1\n_m\u03a9 : MeasurableSpace \u03a9\n\u03ba : \u21a5(kernel \u03b1 \u03a9)\n\u03bc : Measure \u03b1\nf\u271d : \u03a9 \u2192 \u03b2\u271d\ng : \u03a9 \u2192 \u03b2'\n\u03b2 : Type u_8\nm : MeasurableSpace \u03b2\ninst\u271d\u00b2 : Div \u03b2\ninst\u271d\u00b9 : MeasurableDiv\u2082 \u03b2\nf : \u03b9 \u2192 \u03a9 \u2192 \u03b2\ninst\u271d : IsMarkovKernel \u03ba\nhf_indep : iIndepFun (fun x => m) f \u03ba \u03bc\nhf_meas : \u2200 (i : \u03b9), Measurable (f i)\ni j k l : \u03b9\nhik : i \u2260 k\nhil : i \u2260 l\nhjk : j \u2260 k\nhjl : j \u2260 l\n\u22a2 MeasurableSpace.comap (f k / f l) m \u2264 _m\u03a9\n\ncase hp1\n\u03b1 : Type u_1\n\u03a9 : Type u_2\n\u03b9 : Type u_3\n\u03b2\u271d : Type u_4\n\u03b2' : Type u_5\n\u03b3 : Type u_6\n\u03b3' : Type u_7\n_m\u03b1 : MeasurableSpace \u03b1\n_m\u03a9 : MeasurableSpace \u03a9\n\u03ba : \u21a5(kernel \u03b1 \u03a9)\n\u03bc : Measure \u03b1\nf\u271d : \u03a9 \u2192 \u03b2\u271d\ng : \u03a9 \u2192 \u03b2'\n\u03b2 : Type u_8\nm : MeasurableSpace \u03b2\ninst\u271d\u00b2 : Div \u03b2\ninst\u271d\u00b9 : MeasurableDiv\u2082 \u03b2\nf : \u03b9 \u2192 \u03a9 \u2192 \u03b2\ninst\u271d : IsMarkovKernel \u03ba\nhf_indep : iIndepFun (fun x => m) f \u03ba \u03bc\nhf_meas : \u2200 (i : \u03b9), Measurable (f i)\ni j k l : \u03b9\nhik : i \u2260 k\nhil : i \u2260 l\nhjk : j \u2260 k\nhjl : j \u2260 l\n\u22a2 IsPiSystem ?p1\n\ncase hp2\n\u03b1 : Type u_1\n\u03a9 : Type u_2\n\u03b9 : Type u_3\n\u03b2\u271d : Type u_4\n\u03b2' : Type u_5\n\u03b3 : Type u_6\n\u03b3' : Type u_7\n_m\u03b1 : MeasurableSpace \u03b1\n_m\u03a9 : MeasurableSpace \u03a9\n\u03ba : \u21a5(kernel \u03b1 \u03a9)\n\u03bc : Measure \u03b1\nf\u271d : \u03a9 \u2192 \u03b2\u271d\ng : \u03a9 \u2192 \u03b2'\n\u03b2 : Type u_8\nm : MeasurableSpace \u03b2\ninst\u271d\u00b2 : Div \u03b2\ninst\u271d\u00b9 : MeasurableDiv\u2082 \u03b2\nf : \u03b9 \u2192 \u03a9 \u2192 \u03b2\ninst\u271d : IsMarkovKernel \u03ba\nhf_indep : iIndepFun (fun x => m) f \u03ba \u03bc\nhf_meas : \u2200 (i : \u03b9), Measurable (f i)\ni j k l : \u03b9\nhik : i \u2260 k\nhil : i \u2260 l\nhjk : j \u2260 k\nhjl : j \u2260 l\n\u22a2 IsPiSystem ?p2\n\ncase hpm1\n\u03b1 : Type u_1\n\u03a9 : Type u_2\n\u03b9 : Type u_3\n\u03b2\u271d : Type u_4\n\u03b2' : Type u_5\n\u03b3 : Type u_6\n\u03b3' : Type u_7\n_m\u03b1 : MeasurableSpace \u03b1\n_m\u03a9 : MeasurableSpace \u03a9\n\u03ba : \u21a5(kernel \u03b1 \u03a9)\n\u03bc : Measure \u03b1\nf\u271d : \u03a9 \u2192 \u03b2\u271d\ng : \u03a9 \u2192 \u03b2'\n\u03b2 : Type u_8\nm : MeasurableSpace \u03b2\ninst\u271d\u00b2 : Div \u03b2\ninst\u271d\u00b9 : MeasurableDiv\u2082 \u03b2\nf : \u03b9 \u2192 \u03a9 \u2192 \u03b2\ninst\u271d : IsMarkovKernel \u03ba\nhf_indep : iIndepFun (fun x => m) f \u03ba \u03bc\nhf_meas : \u2200 (i : \u03b9), Measurable (f i)\ni j k l : \u03b9\nhik : i \u2260 k\nhil : i \u2260 l\nhjk : j \u2260 k\nhjl : j \u2260 l\n\u22a2 MeasurableSpace.comap (f i / f j) m = generateFrom ?p1\n\ncase hpm2\n\u03b1 : Type u_1\n\u03a9 : Type u_2\n\u03b9 : Type u_3\n\u03b2\u271d : Type u_4\n\u03b2' : Type u_5\n\u03b3 : Type u_6\n\u03b3' : Type u_7\n_m\u03b1 : MeasurableSpace \u03b1\n_m\u03a9 : MeasurableSpace \u03a9\n\u03ba : \u21a5(kernel \u03b1 \u03a9)\n\u03bc : Measure \u03b1\nf\u271d : \u03a9 \u2192 \u03b2\u271d\ng : \u03a9 \u2192 \u03b2'\n\u03b2 : Type u_8\nm : MeasurableSpace \u03b2\ninst\u271d\u00b2 : Div \u03b2\ninst\u271d\u00b9 : MeasurableDiv\u2082 \u03b2\nf : \u03b9 \u2192 \u03a9 \u2192 \u03b2\ninst\u271d : IsMarkovKernel \u03ba\nhf_indep : iIndepFun (fun x => m) f \u03ba \u03bc\nhf_meas : \u2200 (i : \u03b9), Measurable (f i)\ni j k l : \u03b9\nhik : i \u2260 k\nhil : i \u2260 l\nhjk : j \u2260 k\nhjl : j \u2260 l\n\u22a2 MeasurableSpace.comap (f k / f l) m = generateFrom ?p2\n\ncase hyp\n\u03b1 : Type u_1\n\u03a9 : Type u_2\n\u03b9 : Type u_3\n\u03b2\u271d : Type u_4\n\u03b2' : Type u_5\n\u03b3 : Type u_6\n\u03b3' : Type u_7\n_m\u03b1 : MeasurableSpace \u03b1\n_m\u03a9 : MeasurableSpace \u03a9\n\u03ba : \u21a5(kernel \u03b1 \u03a9)\n\u03bc : Measure \u03b1\nf\u271d : \u03a9 \u2192 \u03b2\u271d\ng : \u03a9 \u2192 \u03b2'\n\u03b2 : Type u_8\nm : MeasurableSpace \u03b2\ninst\u271d\u00b2 : Div \u03b2\ninst\u271d\u00b9 : MeasurableDiv\u2082 \u03b2\nf : \u03b9 \u2192 \u03a9 \u2192 \u03b2\ninst\u271d : IsMarkovKernel \u03ba\nhf_indep : iIndepFun (fun x => m) f \u03ba \u03bc\nhf_meas : \u2200 (i : \u03b9), Measurable (f i)\ni j k l : \u03b9\nhik : i \u2260 k\nhil : i \u2260 l\nhjk : j \u2260 k\nhjl : j \u2260 l\n\u22a2 IndepSets ?p1 ?p2 \u03ba \u03bc\n\ncase p1\n\u03b1 : Type u_1\n\u03a9 : Type u_2\n\u03b9 : Type u_3\n\u03b2\u271d : Type u_4\n\u03b2' : Type u_5\n\u03b3 : Type u_6\n\u03b3' : Type u_7\n_m\u03b1 : MeasurableSpace \u03b1\n_m\u03a9 : MeasurableSpace \u03a9\n\u03ba : \u21a5(kernel \u03b1 \u03a9)\n\u03bc : Measure \u03b1\nf\u271d : \u03a9 \u2192 \u03b2\u271d\ng : \u03a9 \u2192 \u03b2'\n\u03b2 : Type u_8\nm : MeasurableSpace \u03b2\ninst\u271d\u00b2 : Div \u03b2\ninst\u271d\u00b9 : MeasurableDiv\u2082 \u03b2\nf : \u03b9 \u2192 \u03a9 \u2192 \u03b2\ninst\u271d : IsMarkovKernel \u03ba\nhf_indep : iIndepFun (fun x => m) f \u03ba \u03bc\nhf_meas : \u2200 (i : \u03b9), Measurable (f i)\ni j k l : \u03b9\nhik : i \u2260 k\nhil : i \u2260 l\nhjk : j \u2260 k\nhjl : j \u2260 l\n\u22a2 Set (Set \u03a9)\n\ncase p2\n\u03b1 : Type u_1\n\u03a9 : Type u_2\n\u03b9 : Type u_3\n\u03b2\u271d : Type u_4\n\u03b2' : Type u_5\n\u03b3 : Type u_6\n\u03b3' : Type u_7\n_m\u03b1 : MeasurableSpace \u03b1\n_m\u03a9 : MeasurableSpace \u03a9\n\u03ba : \u21a5(kernel \u03b1 \u03a9)\n\u03bc : Measure \u03b1\nf\u271d : \u03a9 \u2192 \u03b2\u271d\ng : \u03a9 \u2192 \u03b2'\n\u03b2 : Type u_8\nm : MeasurableSpace \u03b2\ninst\u271d\u00b2 : Div \u03b2\ninst\u271d\u00b9 : MeasurableDiv\u2082 \u03b2\nf : \u03b9 \u2192 \u03a9 \u2192 \u03b2\ninst\u271d : IsMarkovKernel \u03ba\nhf_indep : iIndepFun (fun x => m) f \u03ba \u03bc\nhf_meas : \u2200 (i : \u03b9), Measurable (f i)\ni j k l : \u03b9\nhik : i \u2260 k\nhil : i \u2260 l\nhjk : j \u2260 k\nhjl : j \u2260 l\n\u22a2 Set (Set \u03a9)",
+    "value_target": -1.0,
+    "mcts_value": 0.011417212896049023
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03a9 : Type u_2\n\u03b9 : Type u_3\n\u03b2\u271d : Type u_4\n\u03b2' : Type u_5\n\u03b3 : Type u_6\n\u03b3' : Type u_7\n_m\u03b1 : MeasurableSpace \u03b1\n_m\u03a9 : MeasurableSpace \u03a9\n\u03ba : \u21a5(kernel \u03b1 \u03a9)\n\u03bc : Measure \u03b1\nf\u271d : \u03a9 \u2192 \u03b2\u271d\ng : \u03a9 \u2192 \u03b2'\n\u03b2 : Type u_8\nm : MeasurableSpace \u03b2\ninst\u271d\u00b2 : Div \u03b2\ninst\u271d\u00b9 : MeasurableDiv\u2082 \u03b2\nf : \u03b9 \u2192 \u03a9 \u2192 \u03b2\ninst\u271d : IsMarkovKernel \u03ba\nhf_indep : iIndepFun (fun x => m) f \u03ba \u03bc\nhf_meas : \u2200 (i : \u03b9), Measurable (f i)\ni j k l : \u03b9\nhik : i \u2260 k\nhil : i \u2260 l\nhjk : j \u2260 k\nhjl : j \u2260 l\nx hx : Set \u03a9\n\u22a2 MeasurableSet x \u2192 MeasurableSet hx \u2192 \u2200\u1d50 (a : \u03b1) \u2202\u03bc, (\u03ba a) (x \u2229 hx) = (\u03ba a) x * (\u03ba a) hx",
+    "value_target": -1.0,
+    "mcts_value": 0.013950525783002377
+  },
+  {
+    "type": "value",
+    "state": "R : Type u_1\nR\u2082 : Type u_2\nK : Type u_3\nM : Type u_4\nM\u2082 : Type u_5\nV : Type u_6\nS : Type u_7\ninst\u271d\u2077 : Semiring R\ninst\u271d\u2076 : AddCommMonoid M\ninst\u271d\u2075 : Module R M\nx : M\np p' : Submodule R M\ninst\u271d\u2074 : Semiring R\u2082\n\u03c3\u2081\u2082 : R \u2192+* R\u2082\ninst\u271d\u00b3 : AddCommMonoid M\u2082\ninst\u271d\u00b2 : Module R\u2082 M\u2082\nF : Type u_8\ninst\u271d\u00b9 : FunLike F M M\u2082\ninst\u271d : SemilinearMapClass F \u03c3\u2081\u2082 M M\u2082\ns t : Set M\n\u03b9 : Sort u_9\nv : \u03b9 \u2192 M\n\u22a2 span R (range v) = \u2a06 i, span R {v i}",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "R : Type u_1\nR\u2082 : Type u_2\nK : Type u_3\nM : Type u_4\nM\u2082 : Type u_5\nV : Type u_6\nS : Type u_7\ninst\u271d\u2077 : Semiring R\ninst\u271d\u2076 : AddCommMonoid M\ninst\u271d\u2075 : Module R M\nx : M\np p' : Submodule R M\ninst\u271d\u2074 : Semiring R\u2082\n\u03c3\u2081\u2082 : R \u2192+* R\u2082\ninst\u271d\u00b3 : AddCommMonoid M\u2082\ninst\u271d\u00b2 : Module R\u2082 M\u2082\nF : Type u_8\ninst\u271d\u00b9 : FunLike F M M\u2082\ninst\u271d : SemilinearMapClass F \u03c3\u2081\u2082 M M\u2082\ns t : Set M\n\u03b9 : Sort u_9\nv : \u03b9 \u2192 M\ninhabited_h : Inhabited R\n\u22a2 span R (range v) = \u2a06 i, span R {v i}",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nn : \u2115\nx : \u03b1\n\u22a2 \u2191n * x = x * \u2191n",
+    "value_target": -1.0,
+    "mcts_value": 0.014941622503101826
+  },
+  {
+    "type": "value",
+    "state": "case zero\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\n\u22a2 \u21910 * x = x * \u21910\n\ncase succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn : \u2115\nn_ih : \u2191n * x = x * \u2191n\n\u22a2 \u2191(n + 1) * x = x * \u2191(n + 1)",
+    "value_target": -1.0,
+    "mcts_value": 0.013926716521382332
+  },
+  {
+    "type": "value",
+    "state": "case zero\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\n\u22a2 \u21910 * x = x * \u21910\n\ncase succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn\u271d : \u2115\n\u22a2 \u2191(n\u271d + 1) * x = x * \u2191(n\u271d + 1)",
+    "value_target": -1.0,
+    "mcts_value": 0.014941622503101826
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nn : \u2115\nx : \u03b1\n\u22a2 x * \u2191n = \u2191n * x",
+    "value_target": -1.0,
+    "mcts_value": 0.014941622503101826
+  },
+  {
+    "type": "value",
+    "state": "case zero\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\n\u22a2 \u21910 * x = x * \u21910\n\ncase succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn : \u2115\nhn : \u2191n * x = x * \u2191n\n\u22a2 \u2191(n + 1) * x = x * \u2191(n + 1)",
+    "value_target": -1.0,
+    "mcts_value": 0.013937925919890404
+  },
+  {
+    "type": "value",
+    "state": "case zero\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\n\u22a2 \u21910 * x = x * \u21910\n\ncase succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn : \u2115\nih : \u2191n * x = x * \u2191n\n\u22a2 \u2191(n + 1) * x = x * \u2191(n + 1)",
+    "value_target": -1.0,
+    "mcts_value": 0.013905785046517849
+  },
+  {
+    "type": "value",
+    "state": "case zero\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\n\u22a2 \u21910 * x = x * \u21910\n\ncase succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn\u271d : \u2115\na\u271d : \u2191n\u271d * x = x * \u2191n\u271d\n\u22a2 \u2191(n\u271d + 1) * x = x * \u2191(n\u271d + 1)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn\u271d : \u2115\na\u271d : \u2191n\u271d * x = x * \u2191n\u271d\n\u22a2 (\u2191n\u271d + 1) * x = x * (\u2191n\u271d + 1)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case zero\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\n\u22a2 \u21910 * x = x * \u21910\n\ncase succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nn : \u2115\nhn : \u2200 (x : \u03b1), \u2191n * x = x * \u2191n\nx : \u03b1\n\u22a2 \u2191(n + 1) * x = x * \u2191(n + 1)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn : \u2115\nn_ih : \u2191n * x = x * \u2191n\n\u22a2 \u2191(n + 1) * x = x * \u2191(n + 1)\n\ncase zero\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\n\u22a2 \u21910 * x = x * \u21910",
+    "value_target": -1.0,
+    "mcts_value": 0.013926716521382332
+  },
+  {
+    "type": "value",
+    "state": "case succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn : \u2115\nn_ih : \u2191n * x = x * \u2191n\n\u22a2 \u2191(n + 1) * x = x * \u2191(n + 1)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case zero\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\n\u22a2 0 * x = x * 0\n\ncase succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn : \u2115\nn_ih : \u2191n * x = x * \u2191n\n\u22a2 \u2191(n + 1) * x = x * \u2191(n + 1)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn\u271d : \u2115\n\u22a2 \u2191(n\u271d + 1) * x = x * \u2191(n\u271d + 1)\n\ncase zero\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\n\u22a2 \u21910 * x = x * \u21910",
+    "value_target": -1.0,
+    "mcts_value": 0.014941622503101826
+  },
+  {
+    "type": "value",
+    "state": "case succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn\u271d : \u2115\n\u22a2 \u2191(n\u271d + 1) * x = x * \u2191(n\u271d + 1)",
+    "value_target": -1.0,
+    "mcts_value": 0.014941622503101826
+  },
+  {
+    "type": "value",
+    "state": "case zero\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\n\u22a2 0 * x = x * 0\n\ncase succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn\u271d : \u2115\n\u22a2 \u2191(n\u271d + 1) * x = x * \u2191(n\u271d + 1)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case zero\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\n\u22a2 0 = x * 0\n\ncase succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn\u271d : \u2115\n\u22a2 \u2191(n\u271d + 1) * x = x * \u2191(n\u271d + 1)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn\u271d : \u2115\n\u22a2 (\u2191n\u271d + 1) * x = x * (\u2191n\u271d + 1)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn : \u2115\nhn : \u2191n * x = x * \u2191n\n\u22a2 \u2191(n + 1) * x = x * \u2191(n + 1)\n\ncase zero\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\n\u22a2 \u21910 * x = x * \u21910",
+    "value_target": -1.0,
+    "mcts_value": 0.013937925919890404
+  },
+  {
+    "type": "value",
+    "state": "case succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn : \u2115\nhn : \u2191n * x = x * \u2191n\n\u22a2 \u2191(n + 1) * x = x * \u2191(n + 1)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case zero\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\n\u22a2 0 * x = x * 0\n\ncase succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn : \u2115\nhn : \u2191n * x = x * \u2191n\n\u22a2 \u2191(n + 1) * x = x * \u2191(n + 1)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn : \u2115\nih : \u2191n * x = x * \u2191n\n\u22a2 \u2191(n + 1) * x = x * \u2191(n + 1)\n\ncase zero\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\n\u22a2 \u21910 * x = x * \u21910",
+    "value_target": -1.0,
+    "mcts_value": 0.013905785046517849
+  },
+  {
+    "type": "value",
+    "state": "case succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn : \u2115\nih : \u2191n * x = x * \u2191n\n\u22a2 \u2191(n + 1) * x = x * \u2191(n + 1)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case zero\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\n\u22a2 0 * x = x * 0\n\ncase succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn : \u2115\nih : \u2191n * x = x * \u2191n\n\u22a2 \u2191(n + 1) * x = x * \u2191(n + 1)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case succ.zero\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn_ih : \u21910 * x = x * \u21910\n\u22a2 \u2191(0 + 1) * x = x * \u2191(0 + 1)\n\ncase succ.succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn\u271d : \u2115\nn_ih : \u2191(n\u271d + 1) * x = x * \u2191(n\u271d + 1)\n\u22a2 \u2191(n\u271d + 1 + 1) * x = x * \u2191(n\u271d + 1 + 1)\n\ncase zero\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\n\u22a2 \u21910 * x = x * \u21910",
+    "value_target": -1.0,
+    "mcts_value": 0.012815636582672596
+  },
+  {
+    "type": "value",
+    "state": "case succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn : \u2115\nn_ih : \u2191n * x = x * \u2191n\n\u22a2 (\u2191n + 1) * x = x * (\u2191n + 1)\n\ncase zero\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\n\u22a2 \u21910 * x = x * \u21910",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case succ.succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn\u271d : \u2115\nn_ih : \u2191(n\u271d + 1) * x = x * \u2191(n\u271d + 1)\n\u22a2 (\u2191n\u271d + 1 + 1) * x = x * (\u2191n\u271d + 1 + 1)\n\ncase zero\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\n\u22a2 \u21910 * x = x * \u21910",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case succ\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\nn\u271d : \u2115\n\u22a2 (\u2191n\u271d + 1) * x = x * (\u2191n\u271d + 1)\n\ncase zero\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d : NonAssocSemiring \u03b1\nx : \u03b1\n\u22a2 \u21910 * x = x * \u21910",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  }
+]

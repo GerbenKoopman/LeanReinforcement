@@ -1,0 +1,725 @@
+{
+  "epoch": 1,
+  "seed": null,
+  "mcts_type": "alpha_zero",
+  "total": 119,
+  "proved": 41,
+  "failed": 78,
+  "success_rate": 0.3445378151260504,
+  "theorems": [
+    {
+      "theorem_name": "HasFTaylorSeriesUpToOn.continuousLinearMap_comp",
+      "success": false,
+      "steps": 0,
+      "time": 6.4629199504852295
+    },
+    {
+      "theorem_name": "Equiv.sumCongr_symm",
+      "success": true,
+      "steps": 1,
+      "time": 8.875852584838867
+    },
+    {
+      "theorem_name": "WithTop.toDual_le_iff",
+      "success": true,
+      "steps": 1,
+      "time": 10.84236192703247
+    },
+    {
+      "theorem_name": "BoundedLatticeHom.copy_eq",
+      "success": true,
+      "steps": 1,
+      "time": 9.430816411972046
+    },
+    {
+      "theorem_name": "isMinOn_const",
+      "success": true,
+      "steps": 1,
+      "time": 7.502831935882568
+    },
+    {
+      "theorem_name": "OrderRingIso.toFun_eq_coe",
+      "success": true,
+      "steps": 1,
+      "time": 13.527206182479858
+    },
+    {
+      "theorem_name": "LinearEquiv.prod_symm",
+      "success": true,
+      "steps": 1,
+      "time": 16.886488676071167
+    },
+    {
+      "theorem_name": "Derivation.coe_mk'_linearMap",
+      "success": true,
+      "steps": 1,
+      "time": 20.863179922103882
+    },
+    {
+      "theorem_name": "LieIdeal.coe_killingCompl_top",
+      "success": false,
+      "steps": 0,
+      "time": 76.69627642631531
+    },
+    {
+      "theorem_name": "MeasureTheory.ProbabilityMeasure.prod_apply",
+      "success": true,
+      "steps": 1,
+      "time": 26.615315914154053
+    },
+    {
+      "theorem_name": "Function.Antiperiodic.const_add",
+      "success": false,
+      "steps": 0,
+      "time": 50.9388473033905
+    },
+    {
+      "theorem_name": "exist_unique_eq_mul_prod",
+      "success": false,
+      "steps": 0,
+      "time": 76.22990298271179
+    },
+    {
+      "theorem_name": "CategoryTheory.Localization.Preadditive.add'_left_neg'",
+      "success": false,
+      "steps": 0,
+      "time": 364.90019631385803
+    },
+    {
+      "theorem_name": "ContinuousMap.tendsto_of_tendstoLocallyUniformly",
+      "success": false,
+      "steps": 0,
+      "time": 374.12718534469604
+    },
+    {
+      "theorem_name": "CategoryTheory.Functor.IsCoverDense.sheafHom_eq",
+      "success": false,
+      "steps": 0,
+      "time": 371.7061641216278
+    },
+    {
+      "theorem_name": "UniformSpace.Completion.denseInducing_toCompl",
+      "success": false,
+      "steps": 0,
+      "time": 374.09085035324097
+    },
+    {
+      "theorem_name": "MeasureTheory.measurePreserving_prod_mul_right",
+      "success": false,
+      "steps": 0,
+      "time": 369.3810713291168
+    },
+    {
+      "theorem_name": "nnnorm_multiset_prod_le",
+      "success": false,
+      "steps": 0,
+      "time": 372.85397696495056
+    },
+    {
+      "theorem_name": "Subgroup.inf_subgroupOf_inf_normal_of_right",
+      "success": false,
+      "steps": 0,
+      "time": 373.2985842227936
+    },
+    {
+      "theorem_name": "AlgebraicGeometry.PresheafedSpace.stalkMap_germ'",
+      "success": false,
+      "steps": 0,
+      "time": 372.2352602481842
+    },
+    {
+      "theorem_name": "LinearMap.trace_eq_matrix_trace_of_finset",
+      "success": false,
+      "steps": 0,
+      "time": 376.89104175567627
+    },
+    {
+      "theorem_name": "SubMulAction.smul_mem_iff'",
+      "success": false,
+      "steps": 0,
+      "time": 377.05313754081726
+    },
+    {
+      "theorem_name": "one_le_inv",
+      "success": true,
+      "steps": 1,
+      "time": 27.829578161239624
+    },
+    {
+      "theorem_name": "tendsto_comp_of_locally_uniform_limit_within",
+      "success": false,
+      "steps": 0,
+      "time": 370.0760395526886
+    },
+    {
+      "theorem_name": "MvPolynomial.finSuccEquiv_X_zero",
+      "success": true,
+      "steps": 1,
+      "time": 25.17301869392395
+    },
+    {
+      "theorem_name": "StieltjesFunction.iInf_rat_gt_eq",
+      "success": false,
+      "steps": 0,
+      "time": 373.2421908378601
+    },
+    {
+      "theorem_name": "IndexedPartition.iUnion",
+      "success": true,
+      "steps": 2,
+      "time": 60.39586544036865
+    },
+    {
+      "theorem_name": "WithZero.one_lt_coe",
+      "success": true,
+      "steps": 1,
+      "time": 77.43364191055298
+    },
+    {
+      "theorem_name": "half_pos",
+      "success": true,
+      "steps": 1,
+      "time": 18.02738046646118
+    },
+    {
+      "theorem_name": "LeftInvariantDerivation.comp_L",
+      "success": false,
+      "steps": 0,
+      "time": 368.75115609169006
+    },
+    {
+      "theorem_name": "differentiableOn_star_iff",
+      "success": true,
+      "steps": 1,
+      "time": 19.8405978679657
+    },
+    {
+      "theorem_name": "InnerProductGeometry.angle_sub_lt_pi_div_two_of_inner_eq_zero",
+      "success": false,
+      "steps": 0,
+      "time": 378.24745082855225
+    },
+    {
+      "theorem_name": "Sylow.coe_smul",
+      "success": true,
+      "steps": 1,
+      "time": 21.68938684463501
+    },
+    {
+      "theorem_name": "Submodule.toAddSubmonoid_strictMono",
+      "success": true,
+      "steps": 1,
+      "time": 22.74457550048828
+    },
+    {
+      "theorem_name": "Function.Embedding.swap_apply",
+      "success": true,
+      "steps": 2,
+      "time": 43.473517179489136
+    },
+    {
+      "theorem_name": "invOf_mul_self'",
+      "success": false,
+      "steps": 0,
+      "time": 16.47638177871704
+    },
+    {
+      "theorem_name": "CategoryTheory.MorphismProperty.RespectsIso.epimorphisms",
+      "success": false,
+      "steps": 0,
+      "time": 369.0751781463623
+    },
+    {
+      "theorem_name": "Complex.ofReal_ne_zero",
+      "success": true,
+      "steps": 1,
+      "time": 19.75476336479187
+    },
+    {
+      "theorem_name": "FreeCommRing.of_injective",
+      "success": false,
+      "steps": 0,
+      "time": 360.41645908355713
+    },
+    {
+      "theorem_name": "CategoryTheory.Functor.map_isPushout",
+      "success": false,
+      "steps": 0,
+      "time": 372.78357696533203
+    },
+    {
+      "theorem_name": "Basis.det_smul_mk_coord_eq_det_update",
+      "success": false,
+      "steps": 0,
+      "time": 363.3175699710846
+    },
+    {
+      "theorem_name": "Equiv.Perm.cycleType_extendDomain",
+      "success": false,
+      "steps": 0,
+      "time": 385.8388559818268
+    },
+    {
+      "theorem_name": "Nat.preimage_Ioc",
+      "success": false,
+      "steps": 0,
+      "time": 360.54718947410583
+    },
+    {
+      "theorem_name": "BoxIntegral.Integrable.tendsto_integralSum_toFilteriUnion_single",
+      "success": false,
+      "steps": 0,
+      "time": 368.88249254226685
+    },
+    {
+      "theorem_name": "le_ciSup_set",
+      "success": false,
+      "steps": 0,
+      "time": 374.8332509994507
+    },
+    {
+      "theorem_name": "nhdsSet_singleton",
+      "success": true,
+      "steps": 1,
+      "time": 18.80505347251892
+    },
+    {
+      "theorem_name": "CoxeterSystem.length_mul_ge_max",
+      "success": false,
+      "steps": 0,
+      "time": 367.33300614356995
+    },
+    {
+      "theorem_name": "Inseparable.const_smul",
+      "success": false,
+      "steps": 0,
+      "time": 370.12589144706726
+    },
+    {
+      "theorem_name": "Submodule.mem_dualCoannihilator",
+      "success": true,
+      "steps": 1,
+      "time": 22.995967864990234
+    },
+    {
+      "theorem_name": "InnerProductGeometry.norm_sub_sq_eq_norm_sq_add_norm_sq'",
+      "success": false,
+      "steps": 0,
+      "time": 372.6283435821533
+    },
+    {
+      "theorem_name": "Set.ncard_le_one_iff_subset_singleton",
+      "success": false,
+      "steps": 0,
+      "time": 367.39042806625366
+    },
+    {
+      "theorem_name": "MeasurableSet.isClopenable'",
+      "success": false,
+      "steps": 0,
+      "time": 368.6763262748718
+    },
+    {
+      "theorem_name": "Finsupp.prod_mapDomain_index_inj",
+      "success": false,
+      "steps": 0,
+      "time": 361.0547504425049
+    },
+    {
+      "theorem_name": "LieSubalgebra.span_iUnion",
+      "success": false,
+      "steps": 0,
+      "time": 415.7519631385803
+    },
+    {
+      "theorem_name": "CategoryTheory.Limits.walkingParallelPairOp_zero",
+      "success": true,
+      "steps": 1,
+      "time": 21.503205060958862
+    },
+    {
+      "theorem_name": "Field.rank_mul_sepDegree_of_isSeparable",
+      "success": false,
+      "steps": 0,
+      "time": 77.0823757648468
+    },
+    {
+      "theorem_name": "Nat.cast_eq_zero",
+      "success": true,
+      "steps": 1,
+      "time": 25.652355194091797
+    },
+    {
+      "theorem_name": "UpperSet.sdiff_idem",
+      "success": true,
+      "steps": 1,
+      "time": 21.3783962726593
+    },
+    {
+      "theorem_name": "MulHom.eqOn_closure",
+      "success": false,
+      "steps": 0,
+      "time": 372.0734634399414
+    },
+    {
+      "theorem_name": "Fin.predAbove_last_of_ne_last",
+      "success": false,
+      "steps": 0,
+      "time": 363.57385778427124
+    },
+    {
+      "theorem_name": "Polynomial.isUnit_iff_degree_eq_zero",
+      "success": false,
+      "steps": 0,
+      "time": 368.26032400131226
+    },
+    {
+      "theorem_name": "NNRat.cast_lt_zero",
+      "success": true,
+      "steps": 1,
+      "time": 23.444793224334717
+    },
+    {
+      "theorem_name": "Real.arcsin_eq_of_sin_eq",
+      "success": true,
+      "steps": 1,
+      "time": 18.705671310424805
+    },
+    {
+      "theorem_name": "MeasureTheory.SimpleFunc.norm_approxOn_y\u2080_le",
+      "success": false,
+      "steps": 0,
+      "time": 368.2146706581116
+    },
+    {
+      "theorem_name": "AntivaryOn.comp_monotone_on_left",
+      "success": false,
+      "steps": 0,
+      "time": 366.7098140716553
+    },
+    {
+      "theorem_name": "CategoryTheory.RelCat.unopFunctor_comp_opFunctor_eq",
+      "success": true,
+      "steps": 1,
+      "time": 17.98174476623535
+    },
+    {
+      "theorem_name": "Ordinal.eq_enumOrd",
+      "success": false,
+      "steps": 0,
+      "time": 362.208300113678
+    },
+    {
+      "theorem_name": "Real.Angle.continuous_sin",
+      "success": false,
+      "steps": 0,
+      "time": 361.354394197464
+    },
+    {
+      "theorem_name": "nullMeasurableSet_region_between_cc",
+      "success": false,
+      "steps": 0,
+      "time": 364.7456977367401
+    },
+    {
+      "theorem_name": "CauSeq.Completion.mk_add",
+      "success": true,
+      "steps": 1,
+      "time": 22.932413578033447
+    },
+    {
+      "theorem_name": "RingTheory.Sequence.IsRegular.of_perm_of_subset_jacobson_annihilator",
+      "success": false,
+      "steps": 0,
+      "time": 369.7507269382477
+    },
+    {
+      "theorem_name": "List.length_pmap",
+      "success": true,
+      "steps": 1,
+      "time": 23.2254319190979
+    },
+    {
+      "theorem_name": "EReal.top_mul_of_neg",
+      "success": false,
+      "steps": 0,
+      "time": 361.62844681739807
+    },
+    {
+      "theorem_name": "Int.le_of_eq",
+      "success": true,
+      "steps": 1,
+      "time": 16.682265996932983
+    },
+    {
+      "theorem_name": "LinearMap.finrank_range_add_finrank_ker",
+      "success": false,
+      "steps": 0,
+      "time": 410.23809838294983
+    },
+    {
+      "theorem_name": "Finset.image_biUnion",
+      "success": true,
+      "steps": 1,
+      "time": 20.94887661933899
+    },
+    {
+      "theorem_name": "CategoryTheory.BicartesianSq.of_is_biproduct\u2082",
+      "success": false,
+      "steps": 0,
+      "time": 369.9485054016113
+    },
+    {
+      "theorem_name": "PartialEquiv.IsImage.symm_iff",
+      "success": false,
+      "steps": 0,
+      "time": 362.6300046443939
+    },
+    {
+      "theorem_name": "DFunLike.coe_injective",
+      "success": false,
+      "steps": 0,
+      "time": 369.9558529853821
+    },
+    {
+      "theorem_name": "subset_interior_iff_isOpen",
+      "success": false,
+      "steps": 0,
+      "time": 361.1709580421448
+    },
+    {
+      "theorem_name": "extChartAt_target_mem_nhds",
+      "success": false,
+      "steps": 0,
+      "time": 364.16653299331665
+    },
+    {
+      "theorem_name": "Filter.kernMap_principal",
+      "success": false,
+      "steps": 0,
+      "time": 384.25633573532104
+    },
+    {
+      "theorem_name": "CliffordAlgebra.changeForm_contractLeft",
+      "success": false,
+      "steps": 0,
+      "time": 405.3129403591156
+    },
+    {
+      "theorem_name": "HomotopyCategory.quotient_map_out_comp_out",
+      "success": true,
+      "steps": 1,
+      "time": 16.477124452590942
+    },
+    {
+      "theorem_name": "nilpotent_iff_mem_prime",
+      "success": false,
+      "steps": 0,
+      "time": 371.3803901672363
+    },
+    {
+      "theorem_name": "Partrec.dom_re",
+      "success": false,
+      "steps": 0,
+      "time": 364.1210777759552
+    },
+    {
+      "theorem_name": "NormedSpace.Dual.toWeakDual_eq_iff",
+      "success": true,
+      "steps": 1,
+      "time": 14.59292483329773
+    },
+    {
+      "theorem_name": "AlgebraicGeometry.isOpenImmersion_iff_stalk",
+      "success": false,
+      "steps": 0,
+      "time": 374.53151059150696
+    },
+    {
+      "theorem_name": "ContinuousLinearEquiv.comp_right_hasFDerivAt_iff",
+      "success": false,
+      "steps": 0,
+      "time": 371.54924964904785
+    },
+    {
+      "theorem_name": "PiTensorProduct.tprodCoeff_eq_smul_tprod",
+      "success": false,
+      "steps": 0,
+      "time": 362.18577575683594
+    },
+    {
+      "theorem_name": "Composition.sizeUpTo_index_le",
+      "success": false,
+      "steps": 0,
+      "time": 361.06912636756897
+    },
+    {
+      "theorem_name": "MeasureTheory.snorm'_const_of_isProbabilityMeasure",
+      "success": true,
+      "steps": 1,
+      "time": 14.980993747711182
+    },
+    {
+      "theorem_name": "Matrix.col_mulVec",
+      "success": true,
+      "steps": 1,
+      "time": 12.053632497787476
+    },
+    {
+      "theorem_name": "Quaternion.imI_snd_dualNumberEquiv",
+      "success": true,
+      "steps": 1,
+      "time": 16.776586055755615
+    },
+    {
+      "theorem_name": "Sum.Lex.inl_strictMono",
+      "success": true,
+      "steps": 1,
+      "time": 14.606609106063843
+    },
+    {
+      "theorem_name": "MDifferentiable.mfderivWithin",
+      "success": false,
+      "steps": 0,
+      "time": 393.3727340698242
+    },
+    {
+      "theorem_name": "EuclideanDomain.gcd_eq_zero_iff",
+      "success": false,
+      "steps": 0,
+      "time": 405.8001172542572
+    },
+    {
+      "theorem_name": "IsPurelyInseparable.tower_top",
+      "success": false,
+      "steps": 0,
+      "time": 377.3008437156677
+    },
+    {
+      "theorem_name": "NonUnitalAlgebra.coe_iInf",
+      "success": false,
+      "steps": 0,
+      "time": 396.495404958725
+    },
+    {
+      "theorem_name": "InfTopHom.coe_mk",
+      "success": true,
+      "steps": 1,
+      "time": 23.093749284744263
+    },
+    {
+      "theorem_name": "MeasureTheory.integrable_add_iff_integrable_right",
+      "success": false,
+      "steps": 0,
+      "time": 363.5691747665405
+    },
+    {
+      "theorem_name": "IsAlgClosed.ringEquivOfCardinalEqOfCharZero",
+      "success": false,
+      "steps": 0,
+      "time": 360.9003007411957
+    },
+    {
+      "theorem_name": "UpperHalfPlane.im_le_im_mul_exp_dist",
+      "success": false,
+      "steps": 0,
+      "time": 369.0282733440399
+    },
+    {
+      "theorem_name": "PowerSeries.constantCoeff_invUnitsSub",
+      "success": true,
+      "steps": 1,
+      "time": 29.683642864227295
+    },
+    {
+      "theorem_name": "integrableOn_Iic_iff_integrableOn_Iio'",
+      "success": false,
+      "steps": 0,
+      "time": 391.67248797416687
+    },
+    {
+      "theorem_name": "Encodable.sortedUniv_nodup",
+      "success": true,
+      "steps": 1,
+      "time": 18.65738534927368
+    },
+    {
+      "theorem_name": "CategoryTheory.GrothendieckTopology.Subpresheaf.eq_sheafify",
+      "success": false,
+      "steps": 0,
+      "time": 366.87593483924866
+    },
+    {
+      "theorem_name": "Set.Subsingleton.measure_zero",
+      "success": false,
+      "steps": 0,
+      "time": 365.8440856933594
+    },
+    {
+      "theorem_name": "Set.iUnion_Ico_right",
+      "success": true,
+      "steps": 1,
+      "time": 19.39272952079773
+    },
+    {
+      "theorem_name": "Finsupp.liftAddHom_apply_single",
+      "success": true,
+      "steps": 1,
+      "time": 23.13271713256836
+    },
+    {
+      "theorem_name": "Primrec.list_length",
+      "success": false,
+      "steps": 0,
+      "time": 307.0743269920349
+    },
+    {
+      "theorem_name": "Asymptotics.isLittleO_const_mul_right_iff",
+      "success": false,
+      "steps": 0,
+      "time": 366.87304425239563
+    },
+    {
+      "theorem_name": "Ordnode.balanceR_eq_balance'",
+      "success": false,
+      "steps": 0,
+      "time": 372.05133032798767
+    },
+    {
+      "theorem_name": "Real.abs_log_mul_self_lt",
+      "success": false,
+      "steps": 0,
+      "time": 362.9671220779419
+    },
+    {
+      "theorem_name": "Finpartition.parts_top_subset",
+      "success": false,
+      "steps": 0,
+      "time": 371.02627778053284
+    },
+    {
+      "theorem_name": "csSup_union",
+      "success": false,
+      "steps": 0,
+      "time": 363.41522097587585
+    },
+    {
+      "theorem_name": "Subgroup.smul_apply_eq_smul_apply_inv_smul",
+      "success": false,
+      "steps": 0,
+      "time": 322.7461552619934
+    },
+    {
+      "theorem_name": "MonoidHom.eq_of_eqOn_dense",
+      "success": false,
+      "steps": 0,
+      "time": 361.6211519241333
+    },
+    {
+      "theorem_name": "CategoryTheory.PreOneHypercover.sieve\u2081'_eq_sieve\u2081",
+      "success": false,
+      "steps": 0,
+      "time": 366.31432604789734
+    }
+  ]
+}

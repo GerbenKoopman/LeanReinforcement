@@ -1,0 +1,806 @@
+[
+  {
+    "type": "value",
+    "state": "B X : Stonean\n\u03c0 : X \u27f6 B\n\u22a2 [EffectiveEpi \u03c0, Epi \u03c0, Function.Surjective \u21d1\u03c0].TFAE",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "a b : Prop\ninst\u271d : Decidable a\nh : a \u2192 b\n\u22a2 b \u2228 \u00aca",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u0393 : Type u_1\nR : Type u_2\ninst\u271d\u00b9 : PartialOrder \u0393\ninst\u271d : Zero R\na b : \u0393\nr : R\nx : HahnSeries \u0393 R\nhx : x \u2260 0\n\u22a2 x.orderTop = \u2191(\u22ef.min \u22ef)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "F : Type u_1\n\u03b1 : Type u_2\n\u03b2 : Type u_3\n\u03b3 : Type u_4\n\u03b4 : Type u_5\ninst\u271d\u00b3 : TopologicalSpace \u03b1\ninst\u271d\u00b2 : TopologicalSpace \u03b2\ninst\u271d\u00b9 : TopologicalSpace \u03b3\ninst\u271d : TopologicalSpace \u03b4\nf : \u03b1 \u2192CO \u03b2\n\u22a2 \u21d1f.toContinuousMap = \u21d1f",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b3 : Type u_3\ninst\u271d\u00b2 : TopologicalSpace \u03b1\ninst\u271d\u00b9 : TopologicalSpace \u03b2\ninst\u271d : TopologicalSpace \u03b3\ns t : CompactOpens \u03b1\n\u22a2 \u2191(s \u2294 t) = \u2191s \u222a \u2191t",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\ninst\u271d\u2077 : ConditionallyCompleteLinearOrder \u03b1\ninst\u271d\u2076 : TopologicalSpace \u03b1\ninst\u271d\u2075 : OrderTopology \u03b1\ninst\u271d\u2074 : ConditionallyCompleteLinearOrder \u03b2\ninst\u271d\u00b3 : TopologicalSpace \u03b2\ninst\u271d\u00b2 : OrderTopology \u03b2\ninst\u271d\u00b9 : Nonempty \u03b3\ninst\u271d : DenselyOrdered \u03b1\na b : \u03b1\n\u22a2 IsPreconnected (Ioc a b)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b3 : Type u_3\n\u03b4 : Type u_4\ne : PartialEquiv \u03b1 \u03b2\ne' : PartialEquiv \u03b2 \u03b3\ns : Set \u03b2\n\u22a2 \u2191e.symm '' (e.target \u2229 s) = e.source \u2229 \u2191e \u207b\u00b9' (e.target \u2229 s)",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b3 : Type u_3\n\u03b4 : Type u_4\ne : PartialEquiv \u03b1 \u03b2\ne' : PartialEquiv \u03b2 \u03b3\ns : Set \u03b2\n\u22a2 \u2191e.symm '' (e.target \u2229 s) = e.source \u2229 (\u2191e \u207b\u00b9' e.target \u2229 \u2191e \u207b\u00b9' s)",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "V : Type u_1\nP : Type u_2\ninst\u271d\u00b3 : NormedAddCommGroup V\ninst\u271d\u00b2 : InnerProductSpace \u211d V\ninst\u271d\u00b9 : MetricSpace P\ninst\u271d : NormedAddTorsor V P\nc c\u2081 c\u2082 p\u2081\u271d p\u2082\u271d p\u2081 p\u2082 : P\n\u22a2 (perpBisector p\u2081 p\u2082).direction = (Submodule.span \u211d {p\u2082 -\u1d65 p\u2081})\u15ee",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case h\nV : Type u_1\nP : Type u_2\ninst\u271d\u00b3 : NormedAddCommGroup V\ninst\u271d\u00b2 : InnerProductSpace \u211d V\ninst\u271d\u00b9 : MetricSpace P\ninst\u271d : NormedAddTorsor V P\nc c\u2081 c\u2082 p\u2081\u271d p\u2082\u271d p\u2081 p\u2082 : P\nx\u271d : V\n\u22a2 x\u271d \u2208 (perpBisector p\u2081 p\u2082).direction \u2194 x\u271d \u2208 (Submodule.span \u211d {p\u2082 -\u1d65 p\u2081})\u15ee",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "X : Type u_1\nX' : Type u_2\nY : Type u_3\nY' : Type u_4\nZ : Type u_5\nZ' : Type u_6\ninst\u271d\u2075 : TopologicalSpace X\ninst\u271d\u2074 : TopologicalSpace X'\ninst\u271d\u00b3 : TopologicalSpace Y\ninst\u271d\u00b2 : TopologicalSpace Y'\ninst\u271d\u00b9 : TopologicalSpace Z\ninst\u271d : TopologicalSpace Z'\ne : PartialHomeomorph X Y\n\u22a2 e.symm.target = e.source",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\nf\u271d g h f : Perm \u03b1\n\u22a2 f.Disjoint 1",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "R : Type u\ninst\u271d\u00b9 : CommRing R\nW : WeierstrassCurve R\ninst\u271d : Nontrivial R\nn : \u2124\nhn : n \u2260 0\n\u22a2 0 < (W.\u03a6 n).natDegree",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u\n\u03b2 : Type v\nX : Type u_1\ninst\u271d : PseudoEMetricSpace \u03b1\n\u03b5' : \u211d\u22650\u221e\nh\u03b5' : 0 < \u03b5'\n\u22a2 (\ud835\udce4 \u03b1).HasBasis (fun \u03b5 => \u03b5 \u2208 Ioo 0 \u03b5') fun \u03b5 => {p | edist p.1 p.2 < \u03b5}",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u\n\u03b2 : Type v\nX : Type u_1\ninst\u271d : PseudoEMetricSpace \u03b1\n\u03b5' : \u211d\u22650\u221e\nh\u03b5' : 0 < \u03b5'\n\u22a2 (\ud835\udce4 \u03b1).HasBasis (fun \u03b5 => 0 < \u03b5 \u2227 \u03b5 < \u03b5') fun \u03b5 => {p | edist p.1 p.2 < \u03b5}",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case mem_iff'\n\u03b1 : Type u\n\u03b2 : Type v\nX : Type u_1\ninst\u271d : PseudoEMetricSpace \u03b1\n\u03b5' : \u211d\u22650\u221e\nh\u03b5' : 0 < \u03b5'\n\u22a2 \u2200 (t : Set (\u03b1 \u00d7 \u03b1)), t \u2208 \ud835\udce4 \u03b1 \u2194 \u2203 i, (0 < i \u2227 i < \u03b5') \u2227 {p | edist p.1 p.2 < i} \u2286 t",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u\n\u03b2 : \u03b1 \u2192 Type v\ninst\u271d : DecidableEq \u03b1\na : \u03b1\nb : \u03b2 a\n\u22a2 insert a b \u2205 = singleton a b",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "R : Type u\ninst\u271d\u00b3 : CommSemiring R\nS : Type u_1\ninst\u271d\u00b2 : CommSemiring S\nf : R \u2192* S\ng : R \u2192+* S\np m n : \u2115\ninst\u271d\u00b9 : ExpChar R p\ninst\u271d : ExpChar S p\nx y : R\n\u22a2 (iterateFrobenius R p 0) x = x",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "R : Type u\ninst\u271d\u00b3 : CommSemiring R\nS : Type u_1\ninst\u271d\u00b2 : CommSemiring S\nf : R \u2192* S\ng : R \u2192+* S\np m n : \u2115\ninst\u271d\u00b9 : ExpChar R p\ninst\u271d : ExpChar S p\nx y : R\n\u22a2 x = (iterateFrobenius R p 0) x",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "C : Type u\ninst\u271d\u00b9 : Category.{v, u} C\ninst\u271d : NonPreadditiveAbelian C\nX Y : C\na : X \u27f6 Y\n\u22a2 a - 0 = a",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "C : Type u\ninst\u271d\u00b9 : Category.{v, u} C\ninst\u271d : NonPreadditiveAbelian C\nX Y : C\na : X \u27f6 Y\n\u22a2 a = a - 0",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "J : Type v'\ninst\u271d\u00b3 : Category.{u', v'} J\nC : Type u\ninst\u271d\u00b2 : Category.{v, u} C\nK : Type u_1\ninst\u271d\u00b9 : Category.{?u.14710, u_1} K\nD : Type u_2\ninst\u271d : Category.{?u.14717, u_2} D\nF : J \u2964 C\nc : Cocone F\nH : IsVanKampenColimit c\n\u22a2 IsUniversalColimit c",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "m n\u271d n : \u2124\n\u22a2 Xor' (Even n) (Odd n)",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b3 : Type u_3\n\u03b9 : Type u_4\ninst\u271d\u2075 : Countable \u03b9\nm : MeasurableSpace \u03b1\n\u03bc \u03bd : Measure \u03b1\ninst\u271d\u2074 : TopologicalSpace \u03b2\ninst\u271d\u00b3 : TopologicalSpace \u03b3\nf g : \u03b1 \u2192 \u03b2\nM : Type u_5\ninst\u271d\u00b2 : CommMonoid M\ninst\u271d\u00b9 : TopologicalSpace M\ninst\u271d : ContinuousMul M\nl : Multiset (\u03b1 \u2192 M)\nhl : \u2200 f \u2208 l, AEStronglyMeasurable f \u03bc\n\u22a2 AEStronglyMeasurable l.prod \u03bc",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Sort u\n\u03b2 : Sort v\n\u03b3 : Sort w\ne : \u03b1 \u2243 \u03b2\n\u22a2 e.toFun = \u21d1e",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "A : Type u_1\ninst\u271d\u00b9 : Ring A\ninst\u271d : Algebra \u211d A\n\u22a2 liftAux (-I) \u22ef = \u2191conjAe",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\nM\u271d M : Matroid \u03b1\ninst\u271d : M.FiniteRk\n\u22a2 \u00acM.InfiniteRk",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\nM\u271d M : Matroid \u03b1\ninst\u271d : M.FiniteRk\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case h\n\u03b1 : Type u_1\nM_1 M : Matroid \u03b1\ninst : M.FiniteRk\na : M.InfiniteRk\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\nM\u271d M : Matroid \u03b1\ninst\u271d : M.FiniteRk\nh : \u00acFalse\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case h.mk\n\u03b1 : Type u_1\nM_1 : Matroid \u03b1\nM : Set \u03b1\nBase\u271d Indep\u271d : Set \u03b1 \u2192 Prop\nindep_iff'\u271d : \u2200 \u2983I : Set \u03b1\u2984, Indep\u271d I \u2194 \u2203 B, Base\u271d B \u2227 I \u2286 B\nexists_base\u271d : \u2203 B, Base\u271d B\nbase_exchange\u271d : ExchangeProperty Base\u271d\nmaximality\u271d : \u2200 X \u2286 M, ExistsMaximalSubsetProperty Indep\u271d X\nsubset_ground\u271d : \u2200 (B : Set \u03b1), Base\u271d B \u2192 B \u2286 M\ninst :\n  { E := M, Base := Base\u271d, Indep := Indep\u271d, indep_iff' := indep_iff'\u271d, exists_base := exists_base\u271d,\n      base_exchange := base_exchange\u271d, maximality := maximality\u271d, subset_ground := subset_ground\u271d }.FiniteRk\na :\n  { E := M, Base := Base\u271d, Indep := Indep\u271d, indep_iff' := indep_iff'\u271d, exists_base := exists_base\u271d,\n      base_exchange := base_exchange\u271d, maximality := maximality\u271d, subset_ground := subset_ground\u271d }.InfiniteRk\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case h.mk\n\u03b1 : Type u_1\nM_1 : Matroid \u03b1\nE\u271d : Set \u03b1\nBase\u271d Indep\u271d : Set \u03b1 \u2192 Prop\nindep_iff'\u271d : \u2200 \u2983I : Set \u03b1\u2984, Indep\u271d I \u2194 \u2203 B, Base\u271d B \u2227 I \u2286 B\nexists_base\u271d : \u2203 B, Base\u271d B\nbase_exchange\u271d : ExchangeProperty Base\u271d\nmaximality\u271d : \u2200 X \u2286 E\u271d, ExistsMaximalSubsetProperty Indep\u271d X\nsubset_ground\u271d : \u2200 (B : Set \u03b1), Base\u271d B \u2192 B \u2286 E\u271d\ninst :\n  { E := E\u271d, Base := Base\u271d, Indep := Indep\u271d, indep_iff' := indep_iff'\u271d, exists_base := exists_base\u271d,\n      base_exchange := base_exchange\u271d, maximality := maximality\u271d, subset_ground := subset_ground\u271d }.FiniteRk\na :\n  { E := E\u271d, Base := Base\u271d, Indep := Indep\u271d, indep_iff' := indep_iff'\u271d, exists_base := exists_base\u271d,\n      base_exchange := base_exchange\u271d, maximality := maximality\u271d, subset_ground := subset_ground\u271d }.InfiniteRk\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "C : Type u_1\nD : Type u_2\ninst\u271d\u2076 : Category.{u_3, u_1} C\ninst\u271d\u2075 : Category.{u_4, u_2} D\ninst\u271d\u2074 : HasZeroMorphisms C\ninst\u271d\u00b3 : HasZeroMorphisms D\nS S\u2081 S\u2082 : ShortComplex C\nh : S.Exact\nF : C \u2964 D\ninst\u271d\u00b2 : F.PreservesZeroMorphisms\ninst\u271d\u00b9 : F.PreservesLeftHomologyOf S\ninst\u271d : (S.map F).HasHomology\n\u22a2 (S.map F).Exact",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u\n\u03b2 : Type v\n\u03b9 : Type u_1\n\u03c0 : \u03b9 \u2192 Type u_2\ninst\u271d : TopologicalSpace \u03b1\ns\u271d t u v s : Set \u03b1\nH : IsPreirreducible s\n\u22a2 IsPreconnected s",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "F : Type v'\nR' : Type u'\nR : Type u\nA : Type v\nB : Type w\nC : Type w'\ninst\u271d\u00b9\u2076 : CommSemiring R\ninst\u271d\u00b9\u2075 : StarRing R\ninst\u271d\u00b9\u2074 : NonUnitalSemiring A\ninst\u271d\u00b9\u00b3 : StarRing A\ninst\u271d\u00b9\u00b2 : Module R A\ninst\u271d\u00b9\u00b9 : IsScalarTower R A A\ninst\u271d\u00b9\u2070 : SMulCommClass R A A\ninst\u271d\u2079 : StarModule R A\ninst\u271d\u2078 : NonUnitalSemiring B\ninst\u271d\u2077 : StarRing B\ninst\u271d\u2076 : Module R B\ninst\u271d\u2075 : IsScalarTower R B B\ninst\u271d\u2074 : SMulCommClass R B B\ninst\u271d\u00b3 : StarModule R B\ninst\u271d\u00b2 : FunLike F A B\ninst\u271d\u00b9 : NonUnitalAlgHomClass F R A B\ninst\u271d : NonUnitalStarAlgHomClass F R A B\n\u22a2 NonUnitalStarAlgHom.range (NonUnitalStarAlgHom.id R A) = \u22a4",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "F : Type v'\nR' : Type u'\nR : Type u\nA : Type v\nB : Type w\nC : Type w'\ninst\u271d\u00b9\u2076 : CommSemiring R\ninst\u271d\u00b9\u2075 : StarRing R\ninst\u271d\u00b9\u2074 : NonUnitalSemiring A\ninst\u271d\u00b9\u00b3 : StarRing A\ninst\u271d\u00b9\u00b2 : Module R A\ninst\u271d\u00b9\u00b9 : IsScalarTower R A A\ninst\u271d\u00b9\u2070 : SMulCommClass R A A\ninst\u271d\u2079 : StarModule R A\ninst\u271d\u2078 : NonUnitalSemiring B\ninst\u271d\u2077 : StarRing B\ninst\u271d\u2076 : Module R B\ninst\u271d\u2075 : IsScalarTower R B B\ninst\u271d\u2074 : SMulCommClass R B B\ninst\u271d\u00b3 : StarModule R B\ninst\u271d\u00b2 : FunLike F A B\ninst\u271d\u00b9 : NonUnitalAlgHomClass F R A B\ninst\u271d : NonUnitalStarAlgHomClass F R A B\n\u22a2 \u2200 (x : A), x \u2208 NonUnitalStarAlgHom.range (NonUnitalStarAlgHom.id R A)",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b3 : Type u_3\n\u03b4 : Type u_4\nm : MeasurableSpace \u03b1\n\u03bc \u03bd : Measure \u03b1\ninst\u271d\u2075 : MeasurableSpace \u03b4\ninst\u271d\u2074 : NormedAddCommGroup \u03b2\ninst\u271d\u00b3 : NormedAddCommGroup \u03b3\n\ud835\udd5c : Type u_5\ninst\u271d\u00b2 : NormedRing \ud835\udd5c\ninst\u271d\u00b9 : Module \ud835\udd5c \u03b2\ninst\u271d : BoundedSMul \ud835\udd5c \u03b2\nc : \ud835\udd5c\nf : \u03b1 \u2192\u2098[\u03bc] \u03b2\n\u22a2 f.Integrable \u2192 (c \u2022 f).Integrable",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b3 : Type u_3\n\u03b4 : Type u_4\nm : MeasurableSpace \u03b1\n\u03bc \u03bd : Measure \u03b1\ninst\u271d\u2075 : MeasurableSpace \u03b4\ninst\u271d\u2074 : NormedAddCommGroup \u03b2\ninst\u271d\u00b3 : NormedAddCommGroup \u03b3\n\ud835\udd5c : Type u_5\ninst\u271d\u00b2 : NormedRing \ud835\udd5c\ninst\u271d\u00b9 : Module \ud835\udd5c \u03b2\ninst\u271d : BoundedSMul \ud835\udd5c \u03b2\nc : \ud835\udd5c\nf : \u03b1 \u2192\u2098[\u03bc] \u03b2\nh : \u00ac(f.Integrable \u2192 (c \u2022 f).Integrable)\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b3 : Type u_3\n\u03b4 : Type u_4\nm : MeasurableSpace \u03b1\n\u03bc \u03bd : Measure \u03b1\ninst : MeasurableSpace \u03b4\ninst_1 : NormedAddCommGroup \u03b2\ninst_2 : NormedAddCommGroup \u03b3\n\ud835\udd5c : Type u_5\ninst_3 : NormedRing \ud835\udd5c\ninst_4 : Module \ud835\udd5c \u03b2\ninst_5 : BoundedSMul \ud835\udd5c \u03b2\nc : \ud835\udd5c\nf : \u03b1 \u2192\u2098[\u03bc] \u03b2\na : f.Integrable\n\u22a2 (c \u2022 f).Integrable",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case mk\n\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b3 : Type u_3\n\u03b4 : Type u_4\nm : MeasurableSpace \u03b1\n\u03bc \u03bd : Measure \u03b1\ninst\u271d\u2075 : MeasurableSpace \u03b4\ninst\u271d\u2074 : NormedAddCommGroup \u03b2\ninst\u271d\u00b3 : NormedAddCommGroup \u03b3\n\ud835\udd5c : Type u_5\ninst\u271d\u00b2 : NormedRing \ud835\udd5c\ninst\u271d\u00b9 : Module \ud835\udd5c \u03b2\ninst\u271d : BoundedSMul \ud835\udd5c \u03b2\nc : \ud835\udd5c\nf : \u03b1 \u2192\u2098[\u03bc] \u03b2\na\u271d : { f // AEStronglyMeasurable f \u03bc }\nh : \u00ac(Integrable (Quot.mk Setoid.r a\u271d) \u2192 (c \u2022 Quot.mk Setoid.r a\u271d).Integrable)\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d\u00b2 : Preorder \u03b1\nL S : TopologicalSpace \u03b1\ninst\u271d\u00b9 : IsLawson \u03b1\ninst\u271d : IsScott \u03b1\ns : Set \u03b1\nh : IsLowerSet s\n\u22a2 IsClosed s \u2194 IsClosed s",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d\u00b2 : Preorder \u03b1\nL S : TopologicalSpace \u03b1\ninst\u271d\u00b9 : IsLawson \u03b1\ninst\u271d : IsScott \u03b1\ns : Set \u03b1\nh : IsLowerSet s\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case mp\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d\u00b2 : Preorder \u03b1\nL S : TopologicalSpace \u03b1\ninst\u271d\u00b9 : IsLawson \u03b1\ninst\u271d : IsScott \u03b1\ns : Set \u03b1\nh : IsLowerSet s\n\u22a2 IsClosed s \u2192 IsClosed s\n\ncase mpr\n\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d\u00b2 : Preorder \u03b1\nL S : TopologicalSpace \u03b1\ninst\u271d\u00b9 : IsLawson \u03b1\ninst\u271d : IsScott \u03b1\ns : Set \u03b1\nh : IsLowerSet s\n\u22a2 IsClosed s \u2192 IsClosed s",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\ninst\u271d\u00b2 : Preorder \u03b1\nL S : TopologicalSpace \u03b1\ninst\u271d\u00b9 : IsLawson \u03b1\ninst\u271d : IsScott \u03b1\ns : Set \u03b1\nh\u271d : IsLowerSet s\nh : \u00ac(IsClosed s \u2194 IsClosed s)\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "R : Type uR\nM\u2081 : Type uM\u2081\nM\u2082 : Type uM\u2082\nM\u2083 : Type uM\u2083\nM\u2084 : Type uM\u2084\ninst\u271d\u2079 : CommRing R\ninst\u271d\u2078 : AddCommGroup M\u2081\ninst\u271d\u2077 : AddCommGroup M\u2082\ninst\u271d\u2076 : AddCommGroup M\u2083\ninst\u271d\u2075 : AddCommGroup M\u2084\ninst\u271d\u2074 : Module R M\u2081\ninst\u271d\u00b3 : Module R M\u2082\ninst\u271d\u00b2 : Module R M\u2083\ninst\u271d\u00b9 : Module R M\u2084\ninst\u271d : Invertible 2\nQ\u2081 : QuadraticForm R M\u2081\nQ\u2082 : QuadraticForm R M\u2082\nx : M\u2081 \u2297[R] M\u2082\n\u22a2 (Q\u2081.tensorComm Q\u2082) x = (TensorProduct.comm R M\u2081 M\u2082) x",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b3 : Type u_3\nr : \u03b1 \u2192 \u03b1 \u2192 Prop\ns\u271d t\u271d : Multiset \u03b1\na : \u03b1\nf : \u03b1 \u2192 \u03b3\ng : \u03b2 \u2192 \u03b3\ns : Multiset \u03b1\nt : Multiset \u03b2\nhs : s.Nodup\nht : t.Nodup\ni : (a : \u03b1) \u2192 a \u2208 s \u2192 \u03b2\nhi : \u2200 (a : \u03b1) (ha : a \u2208 s), i a ha \u2208 t\ni_inj : \u2200 (a\u2081 : \u03b1) (ha\u2081 : a\u2081 \u2208 s) (a\u2082 : \u03b1) (ha\u2082 : a\u2082 \u2208 s), i a\u2081 ha\u2081 = i a\u2082 ha\u2082 \u2192 a\u2081 = a\u2082\ni_surj : \u2200 b \u2208 t, \u2203 a, \u2203 (ha : a \u2208 s), i a ha = b\nh : \u2200 (a : \u03b1) (ha : a \u2208 s), f a = g (i a ha)\n\u22a2 map f s = map g t",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b3 : Type u_3\nr : \u03b1 \u2192 \u03b1 \u2192 Prop\ns\u271d t\u271d : Multiset \u03b1\na : \u03b1\nf : \u03b1 \u2192 \u03b3\ng : \u03b2 \u2192 \u03b3\ns : Multiset \u03b1\nt : Multiset \u03b2\nhs : s.Nodup\nht : t.Nodup\ni : (a : \u03b1) \u2192 a \u2208 s \u2192 \u03b2\nhi : \u2200 (a : \u03b1) (ha : a \u2208 s), i a ha \u2208 t\ni_inj : \u2200 (a\u2081 : \u03b1) (ha\u2081 : a\u2081 \u2208 s) (a\u2082 : \u03b1) (ha\u2082 : a\u2082 \u2208 s), i a\u2081 ha\u2081 = i a\u2082 ha\u2082 \u2192 a\u2081 = a\u2082\ni_surj : \u2200 b \u2208 t, \u2203 a, \u2203 (ha : a \u2208 s), i a ha = b\nh : \u2200 (a : \u03b1) (ha : a \u2208 s), f a = g (i a ha)\n\u22a2 map g t = map f s",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "M : Type u_1\ninst\u271d\u00b2 : MulOneClass M\ninst\u271d\u00b9 : Pow M \u2115\ninst\u271d : NatPowAssoc M\nk m n : \u2115\nx : M\n\u22a2 x ^ k * x ^ m * x ^ n = x ^ k * (x ^ m * x ^ n)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "M : Type u_1\ninst\u271d\u00b2 : MulOneClass M\ninst\u271d\u00b9 : Pow M \u2115\ninst\u271d : NatPowAssoc M\nk m n : \u2115\nx : M\n\u22a2 x ^ k * (x ^ m * x ^ n) = x ^ k * x ^ m * x ^ n",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "R : Type u\nK : Type u'\nM : Type v\nV : Type v'\nM\u2082 : Type w\nV\u2082 : Type w'\nM\u2083 : Type y\nV\u2083 : Type y'\nM\u2084 : Type z\n\u03b9 : Type x\nM\u2085 : Type u_1\nM\u2086 : Type u_2\ninst\u271d\u2074 : Semiring R\ninst\u271d\u00b3 : AddCommMonoid M\ninst\u271d\u00b2 : AddCommMonoid M\u2082\ninst\u271d\u00b9 : AddCommMonoid M\u2083\ninst\u271d : AddCommGroup M\u2084\nmodule_M : Module R M\nmodule_M\u2082 : Module R M\u2082\nmodule_M\u2083 : Module R M\u2083\nmodule_M\u2084 : Module R M\u2084\ne\u2081 : M \u2243\u2097[R] M\u2082\ne\u2082 : M\u2083 \u2243\u2097[R] M\u2084\nf : M \u2192\u2097[R] M\u2084\nx : M\u2082 \u00d7 M\u2084\n\u22a2 (e\u2081.skewProd e\u2082 f).symm x = (e\u2081.symm x.1, e\u2082.symm (x.2 - f (e\u2081.symm x.1)))",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\n\u03b4 : Type u_2\n\u03c0 : \u03b9 \u2192 Type u_3\nr : \u03b1 \u2192 \u03b1 \u2192 Prop\ninst\u271d\u00b9 : LinearOrder \u03b1\ninst\u271d : Preorder \u03b2\nf : \u03b1 \u2192 \u03b2\ns : Set \u03b1\nhf : StrictMono f\n\u22a2 Injective f",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\n\u03b4 : Type u_2\n\u03c0 : \u03b9 \u2192 Type u_3\nr : \u03b1 \u2192 \u03b1 \u2192 Prop\ninst\u271d\u00b9 : LinearOrder \u03b1\ninst\u271d : Preorder \u03b2\nf : \u03b1 \u2192 \u03b2\ns : Set \u03b1\nhf : StrictMono f\na ha : \u03b1\n\u22a2 f a = f ha \u2192 a = ha",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\n\u03b4 : Type u_2\n\u03c0 : \u03b9 \u2192 Type u_3\nr : \u03b1 \u2192 \u03b1 \u2192 Prop\ninst\u271d\u00b9 : LinearOrder \u03b1\ninst\u271d : Preorder \u03b2\nf : \u03b1 \u2192 \u03b2\ns : Set \u03b1\nhf : StrictMono f\na : \u03b1\n\u22a2 \u2200 \u2983a\u2082 : \u03b1\u2984, f a = f a\u2082 \u2192 a = a\u2082",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\n\u03b4 : Type u_2\n\u03c0 : \u03b9 \u2192 Type u_3\nr : \u03b1 \u2192 \u03b1 \u2192 Prop\ninst\u271d\u00b9 : LinearOrder \u03b1\ninst\u271d : Preorder \u03b2\nf : \u03b1 \u2192 \u03b2\ns : Set \u03b1\nhf : StrictMono f\nb hb : \u03b1\n\u22a2 f b = f hb \u2192 b = hb",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\n\u03b4 : Type u_2\n\u03c0 : \u03b9 \u2192 Type u_3\nr : \u03b1 \u2192 \u03b1 \u2192 Prop\ninst\u271d\u00b9 : LinearOrder \u03b1\ninst\u271d : Preorder \u03b2\nf : \u03b1 \u2192 \u03b2\ns : Set \u03b1\nhf : StrictMono f\nx hx : \u03b1\n\u22a2 f x = f hx \u2192 x = hx",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\n\u03b4 : Type u_2\n\u03c0 : \u03b9 \u2192 Type u_3\nr : \u03b1 \u2192 \u03b1 \u2192 Prop\ninst\u271d\u00b9 : LinearOrder \u03b1\ninst\u271d : Preorder \u03b2\nf : \u03b1 \u2192 \u03b2\ns : Set \u03b1\nhf : StrictMono f\na ha : \u03b1\nb : f a = f ha\n\u22a2 a = ha",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\n\u03b4 : Type u_2\n\u03c0 : \u03b9 \u2192 Type u_3\nr : \u03b1 \u2192 \u03b1 \u2192 Prop\ninst\u271d\u00b9 : LinearOrder \u03b1\ninst\u271d : Preorder \u03b2\nf : \u03b1 \u2192 \u03b2\ns : Set \u03b1\nhf : StrictMono f\na b : \u03b1\nhab : f a = f b\n\u22a2 a = b",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\n\u03b4 : Type u_2\n\u03c0 : \u03b9 \u2192 Type u_3\nr : \u03b1 \u2192 \u03b1 \u2192 Prop\ninst\u271d\u00b9 : LinearOrder \u03b1\ninst\u271d : Preorder \u03b2\nf : \u03b1 \u2192 \u03b2\ns : Set \u03b1\nhf : StrictMono f\na hal : \u03b1\n\u22a2 f a = f hal \u2192 a = hal",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\n\u03b4 : Type u_2\n\u03c0 : \u03b9 \u2192 Type u_3\nr : \u03b1 \u2192 \u03b1 \u2192 Prop\ninst\u271d\u00b9 : LinearOrder \u03b1\ninst\u271d : Preorder \u03b2\nf : \u03b1 \u2192 \u03b2\ns : Set \u03b1\nhf : StrictMono f\na\u2081\u271d : \u03b1\n\u22a2 \u2200 \u2983a\u2082 : \u03b1\u2984, f a\u2081\u271d = f a\u2082 \u2192 a\u2081\u271d = a\u2082",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\n\u03b4 : Type u_2\n\u03c0 : \u03b9 \u2192 Type u_3\nr : \u03b1 \u2192 \u03b1 \u2192 Prop\ninst\u271d\u00b9 : LinearOrder \u03b1\ninst\u271d : Preorder \u03b2\nf : \u03b1 \u2192 \u03b2\ns : Set \u03b1\nhf : StrictMono f\na ha : \u03b1\nhb : f a = f ha\n\u22a2 a = ha",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case hf\n\u03b9 : Type u_1\n\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\n\u03b4 : Type u_2\n\u03c0 : \u03b9 \u2192 Type u_3\nr : \u03b1 \u2192 \u03b1 \u2192 Prop\ninst\u271d\u00b9 : LinearOrder \u03b1\ninst\u271d : Preorder \u03b2\nf : \u03b1 \u2192 \u03b2\ns : Set \u03b1\nhf : StrictMono f\na ha : \u03b1\n\u22a2 StrictMono f",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\n\u03b4 : Type u_2\n\u03c0 : \u03b9 \u2192 Type u_3\nr : \u03b1 \u2192 \u03b1 \u2192 Prop\ninst\u271d\u00b9 : LinearOrder \u03b1\ninst\u271d : Preorder \u03b2\nf : \u03b1 \u2192 \u03b2\ns : Set \u03b1\nhf : StrictMono f\nb hb : \u03b1\na\u271d : f b = f hb\n\u22a2 b = hb",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\n\u03b4 : Type u_2\n\u03c0 : \u03b9 \u2192 Type u_3\nr : \u03b1 \u2192 \u03b1 \u2192 Prop\ninst\u271d\u00b9 : LinearOrder \u03b1\ninst\u271d : Preorder \u03b2\nf : \u03b1 \u2192 \u03b2\ns : Set \u03b1\nhf : StrictMono f\nx hx : \u03b1\nh : f x = f hx\n\u22a2 x = hx",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case a\n\u03b9 : Type u_1\n\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\n\u03b4 : Type u_2\n\u03c0 : \u03b9 \u2192 Type u_3\nr : \u03b1 \u2192 \u03b1 \u2192 Prop\ninst\u271d\u00b9 : LinearOrder \u03b1\ninst\u271d : Preorder \u03b2\nf : \u03b1 \u2192 \u03b2\ns : Set \u03b1\nhf : StrictMono f\na b : \u03b1\nhab : f a = f b\n\u22a2 a \u2264 b\n\ncase a\n\u03b9 : Type u_1\n\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\n\u03b4 : Type u_2\n\u03c0 : \u03b9 \u2192 Type u_3\nr : \u03b1 \u2192 \u03b1 \u2192 Prop\ninst\u271d\u00b9 : LinearOrder \u03b1\ninst\u271d : Preorder \u03b2\nf : \u03b1 \u2192 \u03b2\ns : Set \u03b1\nhf : StrictMono f\na b : \u03b1\nhab : f a = f b\n\u22a2 b \u2264 a",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\n\u03b4 : Type u_2\n\u03c0 : \u03b9 \u2192 Type u_3\nr : \u03b1 \u2192 \u03b1 \u2192 Prop\ninst\u271d\u00b9 : LinearOrder \u03b1\ninst\u271d : Preorder \u03b2\nf : \u03b1 \u2192 \u03b2\ns : Set \u03b1\nhf : StrictMono f\na hal : \u03b1\nh : \u00ac(f a = f hal \u2192 a = hal)\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Sort u_1\n\u03b2 : Sort u_2\n\u03b3 : Sort u_3\n\u22a2 IsEmpty (PProd \u03b1 \u03b2) \u2194 IsEmpty \u03b1 \u2228 IsEmpty \u03b2",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Sort u_1\n\u03b2 : Sort u_2\n\u03b3 : Sort u_3\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Sort u_1\n\u03b2 : Sort u_2\n\u03b3 : Sort u_3\n\u22a2 IsEmpty \u03b1 \u2228 IsEmpty \u03b2 \u2194 IsEmpty (PProd \u03b1 \u03b2)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "C : Type u\u2081\ninst\u271d\u2077 : Category.{v\u2081, u\u2081} C\ninst\u271d\u2076 : HasZeroMorphisms C\nD : Type u\u2082\ninst\u271d\u2075 : Category.{v\u2082, u\u2082} D\ninst\u271d\u2074 : HasZeroMorphisms D\nG : C \u2964 D\ninst\u271d\u00b3 : G.PreservesZeroMorphisms\nX Y Z : C\nf : X \u27f6 Y\nh : Z \u27f6 X\nw : h \u226b f = 0\ninst\u271d\u00b2 : HasKernel f\ninst\u271d\u00b9 : HasKernel (G.map f)\ninst\u271d : PreservesLimit (parallelPair f 0) G\n\u22a2 (iso G f).hom = kernelComparison f G",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "case h\nC : Type u\u2081\ninst\u271d\u2077 : Category.{v\u2081, u\u2081} C\ninst\u271d\u2076 : HasZeroMorphisms C\nD : Type u\u2082\ninst\u271d\u2075 : Category.{v\u2082, u\u2082} D\ninst\u271d\u2074 : HasZeroMorphisms D\nG : C \u2964 D\ninst\u271d\u00b3 : G.PreservesZeroMorphisms\nX Y Z : C\nf : X \u27f6 Y\nh : Z \u27f6 X\nw : h \u226b f = 0\ninst\u271d\u00b2 : HasKernel f\ninst\u271d\u00b9 : HasKernel (G.map f)\ninst\u271d : PreservesLimit (parallelPair f 0) G\n\u22a2 (iso G f).hom \u226b equalizer.\u03b9 (G.map f) 0 = kernelComparison f G \u226b equalizer.\u03b9 (G.map f) 0",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "K : Type u_1\nL : Type u_2\nL' : Type u_3\ninst\u271d\u2074 : Field K\ninst\u271d\u00b3 : Field L\ninst\u271d\u00b2 : Field L'\ninst\u271d\u00b9 : Algebra K L\ninst\u271d : Algebra K L'\nS F E : IntermediateField K L\nhfin : FiniteDimensional K \u21a5E\nh_le : F \u2264 E\nh_finrank : finrank K \u21a5E \u2264 finrank K \u21a5F\n\u22a2 F = E",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "K : Type u_1\nL : Type u_2\nL' : Type u_3\ninst\u271d\u2074 : Field K\ninst\u271d\u00b3 : Field L\ninst\u271d\u00b2 : Field L'\ninst\u271d\u00b9 : Algebra K L\ninst\u271d : Algebra K L'\nS F E : IntermediateField K L\nhfin : FiniteDimensional K \u21a5E\nh_le : F \u2264 E\nh_finrank : finrank K \u21a5E \u2264 finrank K \u21a5F\n\u22a2 E = F",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\ud835\udd5c : Type u_1\nE : Type u_2\nF : Type u_3\ninst\u271d\u2076 : RCLike \ud835\udd5c\ninst\u271d\u2075 : NormedAddCommGroup E\ninst\u271d\u2074 : NormedAddCommGroup F\ninst\u271d\u00b3 : InnerProductSpace \ud835\udd5c E\ninst\u271d\u00b2 : InnerProductSpace \ud835\udd5c F\ninst\u271d\u00b9 : CompleteSpace E\ninst\u271d : CompleteSpace F\nT : E \u2192L[\ud835\udd5c] E\nhT : T.IsPositive\nS : E \u2192L[\ud835\udd5c] F\n\u22a2 (S.comp (T.comp (adjoint S))).IsPositive",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : Type u_2\n\u03b2 : Type u_3\ns\u271d : Set \u03b1\ninst\u271d : Bornology \u03b1\ns : Set \u03b9\nf : \u03b9 \u2192 Set \u03b1\nhs : s.Finite\n\u22a2 IsCobounded (\u22c2 i \u2208 s, f i) \u2194 \u2200 i \u2208 s, IsCobounded (f i)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case mp\n\u03b9 : Type u_1\n\u03b1 : Type u_2\n\u03b2 : Type u_3\ns_1 : Set \u03b1\ninst : Bornology \u03b1\ns : Set \u03b9\nf : \u03b9 \u2192 Set \u03b1\nhs : s.Finite\na : IsCobounded (\u22c2 i \u2208 s, f i)\ni : \u03b9\na_1 : i \u2208 s\n\u22a2 IsCobounded (f i)\n\ncase mpr\n\u03b9 : Type u_1\n\u03b1 : Type u_2\n\u03b2 : Type u_3\ns_1 : Set \u03b1\ninst : Bornology \u03b1\ns : Set \u03b9\nf : \u03b9 \u2192 Set \u03b1\nhs : s.Finite\na : \u2200 i \u2208 s, IsCobounded (f i)\n\u22a2 IsCobounded (\u22c2 i \u2208 s, f i)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "E : Type u_1\ninst\u271d\u2076 : NormedAddCommGroup E\ninst\u271d\u2075 : NormedSpace \u211d E\ninst\u271d\u2074 : CompleteSpace E\nH : Type u_2\ninst\u271d\u00b3 : TopologicalSpace H\nI : ModelWithCorners \u211d E H\nM : Type u_3\ninst\u271d\u00b2 : TopologicalSpace M\ninst\u271d\u00b9 : ChartedSpace H M\ninst\u271d : SmoothManifoldWithCorners I M\n\u03b3 \u03b3' : \u211d \u2192 M\nv : (x : M) \u2192 TangentSpace I x\ns s' : Set \u211d\nt\u2080 : \u211d\nh\u03b3 : IsIntegralCurve \u03b3 v\ndt : \u211d\n\u22a2 IsIntegralCurve (\u03b3 \u2218 fun x => x + dt) v",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "E : Type u_1\ninst\u271d\u2076 : NormedAddCommGroup E\ninst\u271d\u2075 : NormedSpace \u211d E\ninst\u271d\u2074 : CompleteSpace E\nH : Type u_2\ninst\u271d\u00b3 : TopologicalSpace H\nI : ModelWithCorners \u211d E H\nM : Type u_3\ninst\u271d\u00b2 : TopologicalSpace M\ninst\u271d\u00b9 : ChartedSpace H M\ninst\u271d : SmoothManifoldWithCorners I M\n\u03b3 \u03b3' : \u211d \u2192 M\nv : (x : M) \u2192 TangentSpace I x\ns s' : Set \u211d\nt\u2080 : \u211d\nh\u03b3 : IsIntegralCurve \u03b3 v\ndt h' : \u211d\n\u22a2 HasMFDerivAt \ud835\udcd8(\u211d, \u211d) I (\u03b3 \u2218 fun x => x + dt) h' (ContinuousLinearMap.smulRight 1 (v ((\u03b3 \u2218 fun x => x + dt) h')))",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "E : Type u_1\ninst\u271d\u2076 : NormedAddCommGroup E\ninst\u271d\u2075 : NormedSpace \u211d E\ninst\u271d\u2074 : CompleteSpace E\nH : Type u_2\ninst\u271d\u00b3 : TopologicalSpace H\nI : ModelWithCorners \u211d E H\nM : Type u_3\ninst\u271d\u00b2 : TopologicalSpace M\ninst\u271d\u00b9 : ChartedSpace H M\ninst\u271d : SmoothManifoldWithCorners I M\n\u03b3 \u03b3' : \u211d \u2192 M\nv : (x : M) \u2192 TangentSpace I x\ns s' : Set \u211d\nt\u2080 : \u211d\nh\u03b3 : IsIntegralCurve \u03b3 v\ndt : \u211d\nh' : \u00acIsIntegralCurve (\u03b3 \u2218 fun x => x + dt) v\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "E : Type u_1\ninst\u271d\u2076 : NormedAddCommGroup E\ninst\u271d\u2075 : NormedSpace \u211d E\ninst\u271d\u2074 : CompleteSpace E\nH : Type u_2\ninst\u271d\u00b3 : TopologicalSpace H\nI : ModelWithCorners \u211d E H\nM : Type u_3\ninst\u271d\u00b2 : TopologicalSpace M\ninst\u271d\u00b9 : ChartedSpace H M\ninst\u271d : SmoothManifoldWithCorners I M\n\u03b3 \u03b3' : \u211d \u2192 M\nv : (x : M) \u2192 TangentSpace I x\ns s' : Set \u211d\nt\u2080 : \u211d\nh\u03b3 : IsIntegralCurve \u03b3 v\ndt : \u211d\nthis : \u00acIsIntegralCurve (\u03b3 \u2218 fun x => x + dt) v\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "E : Type u_1\ninst\u271d\u2076 : NormedAddCommGroup E\ninst\u271d\u2075 : NormedSpace \u211d E\ninst\u271d\u2074 : CompleteSpace E\nH\u271d : Type u_2\ninst\u271d\u00b3 : TopologicalSpace H\u271d\nI : ModelWithCorners \u211d E H\u271d\nM : Type u_3\ninst\u271d\u00b2 : TopologicalSpace M\ninst\u271d\u00b9 : ChartedSpace H\u271d M\ninst\u271d : SmoothManifoldWithCorners I M\n\u03b3 \u03b3' : \u211d \u2192 M\nv : (x : M) \u2192 TangentSpace I x\ns s' : Set \u211d\nt\u2080 : \u211d\nh\u03b3 : IsIntegralCurve \u03b3 v\ndt : \u211d\nH : \u00acIsIntegralCurve (\u03b3 \u2218 fun x => x + dt) v\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "E : Type u_1\ninst\u271d\u2076 : NormedAddCommGroup E\ninst\u271d\u2075 : NormedSpace \u211d E\ninst\u271d\u2074 : CompleteSpace E\nH : Type u_2\ninst\u271d\u00b3 : TopologicalSpace H\nI : ModelWithCorners \u211d E H\nM : Type u_3\ninst\u271d\u00b2 : TopologicalSpace M\ninst\u271d\u00b9 : ChartedSpace H M\ninst\u271d : SmoothManifoldWithCorners I M\n\u03b3 \u03b3' : \u211d \u2192 M\nv : (x : M) \u2192 TangentSpace I x\ns s' : Set \u211d\nt\u2080 : \u211d\nh\u03b3 : IsIntegralCurve \u03b3 v\ndt : \u211d\nha : \u00acIsIntegralCurve (\u03b3 \u2218 fun x => x + dt) v\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "E : Type u_1\ninst\u271d\u2076 : NormedAddCommGroup E\ninst\u271d\u2075 : NormedSpace \u211d E\ninst\u271d\u2074 : CompleteSpace E\nH : Type u_2\ninst\u271d\u00b3 : TopologicalSpace H\nI : ModelWithCorners \u211d E H\nM : Type u_3\ninst\u271d\u00b2 : TopologicalSpace M\ninst\u271d\u00b9 : ChartedSpace H M\ninst\u271d : SmoothManifoldWithCorners I M\n\u03b3 \u03b3' : \u211d \u2192 M\nv : (x : M) \u2192 TangentSpace I x\ns s' : Set \u211d\nt\u2080 : \u211d\nh\u03b3 : IsIntegralCurve \u03b3 v\ndt : \u211d\nhb : \u00acIsIntegralCurve (\u03b3 \u2218 fun x => x + dt) v\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "E : Type u_1\ninst\u271d\u2076 : NormedAddCommGroup E\ninst\u271d\u2075 : NormedSpace \u211d E\ninst\u271d\u2074 : CompleteSpace E\nH : Type u_2\ninst\u271d\u00b3 : TopologicalSpace H\nI : ModelWithCorners \u211d E H\nM : Type u_3\ninst\u271d\u00b2 : TopologicalSpace M\ninst\u271d\u00b9 : ChartedSpace H M\ninst\u271d : SmoothManifoldWithCorners I M\n\u03b3 \u03b3' : \u211d \u2192 M\nv : (x : M) \u2192 TangentSpace I x\ns s' : Set \u211d\nt\u2080 : \u211d\nh\u03b3 : IsIntegralCurve \u03b3 v\ndt : \u211d\nhba : \u00acIsIntegralCurve (\u03b3 \u2218 fun x => x + dt) v\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "E : Type u_1\ninst\u271d\u2076 : NormedAddCommGroup E\ninst\u271d\u2075 : NormedSpace \u211d E\ninst\u271d\u2074 : CompleteSpace E\nH : Type u_2\ninst\u271d\u00b3 : TopologicalSpace H\nI : ModelWithCorners \u211d E H\nM : Type u_3\ninst\u271d\u00b2 : TopologicalSpace M\ninst\u271d\u00b9 : ChartedSpace H M\ninst\u271d : SmoothManifoldWithCorners I M\n\u03b3 \u03b3' : \u211d \u2192 M\nv : (x : M) \u2192 TangentSpace I x\ns s' : Set \u211d\nt\u2080 : \u211d\nh\u03b3 : IsIntegralCurve \u03b3 v\ndt : \u211d\nx\u271d : \u00acIsIntegralCurve (\u03b3 \u2218 fun x => x + dt) v\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "E : Type u_1\ninst\u271d\u2076 : NormedAddCommGroup E\ninst\u271d\u2075 : NormedSpace \u211d E\ninst\u271d\u2074 : CompleteSpace E\nH : Type u_2\ninst\u271d\u00b3 : TopologicalSpace H\nI : ModelWithCorners \u211d E H\nM : Type u_3\ninst\u271d\u00b2 : TopologicalSpace M\ninst\u271d\u00b9 : ChartedSpace H M\ninst\u271d : SmoothManifoldWithCorners I M\n\u03b3 \u03b3' : \u211d \u2192 M\nv : (x : M) \u2192 TangentSpace I x\ns s' : Set \u211d\nt\u2080 : \u211d\nh\u03b3 : IsIntegralCurve \u03b3 v\ndt h' : \u211d\n\u22a2 HasMFDerivAt \ud835\udcd8(\u211d, \u211d) I (\u03b3 \u2218 fun x => x + dt) h' (ContinuousLinearMap.smulRight 1 (v (\u03b3 (h' + dt))))",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case a\nE : Type u_1\ninst\u271d\u2076 : NormedAddCommGroup E\ninst\u271d\u2075 : NormedSpace \u211d E\ninst\u271d\u2074 : CompleteSpace E\nH : Type u_2\ninst\u271d\u00b3 : TopologicalSpace H\nI : ModelWithCorners \u211d E H\nM : Type u_3\ninst\u271d\u00b2 : TopologicalSpace M\ninst\u271d\u00b9 : ChartedSpace H M\ninst\u271d : SmoothManifoldWithCorners I M\n\u03b3 \u03b3' : \u211d \u2192 M\nv : (x : M) \u2192 TangentSpace I x\ns s' : Set \u211d\nt\u2080 : \u211d\nh\u03b3 : IsIntegralCurve \u03b3 v\ndt h' : \u211d\n\u22a2 HasMFDerivAt \ud835\udcd8(\u211d, \u211d) I (\u03b3 \u2218 fun x => x + dt) h' (ContinuousLinearMap.smulRight 1 (v ((\u03b3 \u2218 fun x => x + dt) h'))) \u2194\n    IsIntegralCurve (\u03b3 \u2218 fun x => x + dt) v",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "E : Type u_1\ninst\u271d\u2076 : NormedAddCommGroup E\ninst\u271d\u2075 : NormedSpace \u211d E\ninst\u271d\u2074 : CompleteSpace E\nH : Type u_2\ninst\u271d\u00b3 : TopologicalSpace H\nI : ModelWithCorners \u211d E H\nM : Type u_3\ninst\u271d\u00b2 : TopologicalSpace M\ninst\u271d\u00b9 : ChartedSpace H M\ninst\u271d : SmoothManifoldWithCorners I M\n\u03b3 \u03b3' : \u211d \u2192 M\nv : (x : M) \u2192 TangentSpace I x\ns s' : Set \u211d\nt\u2080 : \u211d\nh\u03b3 : \u2200 (t : \u211d), HasMFDerivAt \ud835\udcd8(\u211d, \u211d) I \u03b3 t (ContinuousLinearMap.smulRight 1 (v (\u03b3 t)))\ndt : \u211d\nthis : \u00acIsIntegralCurve (\u03b3 \u2218 fun x => x + dt) v\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "E : Type u_1\ninst\u271d\u2076 : NormedAddCommGroup E\ninst\u271d\u2075 : NormedSpace \u211d E\ninst\u271d\u2074 : CompleteSpace E\nH : Type u_2\ninst\u271d\u00b3 : TopologicalSpace H\nI : ModelWithCorners \u211d E H\nM : Type u_3\ninst\u271d\u00b2 : TopologicalSpace M\ninst\u271d\u00b9 : ChartedSpace H M\ninst\u271d : SmoothManifoldWithCorners I M\n\u03b3 \u03b3' : \u211d \u2192 M\nv : (x : M) \u2192 TangentSpace I x\ns s' : Set \u211d\nt\u2080 : \u211d\nh\u03b3 : \u2200 (t : \u211d), HasMFDerivAt \ud835\udcd8(\u211d, \u211d) I \u03b3 t (ContinuousLinearMap.smulRight 1 (v (\u03b3 t)))\ndt : \u211d\nhb : \u00acIsIntegralCurve (\u03b3 \u2218 fun x => x + dt) v\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "E : Type u_1\ninst\u271d\u2076 : NormedAddCommGroup E\ninst\u271d\u2075 : NormedSpace \u211d E\ninst\u271d\u2074 : CompleteSpace E\nH : Type u_2\ninst\u271d\u00b3 : TopologicalSpace H\nI : ModelWithCorners \u211d E H\nM : Type u_3\ninst\u271d\u00b2 : TopologicalSpace M\ninst\u271d\u00b9 : ChartedSpace H M\ninst\u271d : SmoothManifoldWithCorners I M\n\u03b3 \u03b3' : \u211d \u2192 M\nv : (x : M) \u2192 TangentSpace I x\ns s' : Set \u211d\nt\u2080 : \u211d\nh\u03b3 : \u2200 (t : \u211d), HasMFDerivAt \ud835\udcd8(\u211d, \u211d) I \u03b3 t (ContinuousLinearMap.smulRight 1 (v (\u03b3 t)))\ndt : \u211d\nhba : \u00acIsIntegralCurve (\u03b3 \u2218 fun x => x + dt) v\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\ud835\udc9c : Set (Set \u03b1)\ns t : Set \u03b1\n\u212c : Set (Set \u03b1)\nh : \ud835\udc9c \u2286 \u212c\n\u22a2 generateSetAlgebra \ud835\udc9c \u2286 generateSetAlgebra \u212c",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b9\u2082 : Type u_2\n\u03b9\u2083 : Type u_3\nR : Type u_4\ninst\u271d\u00b9\u2070 : CommSemiring R\nR\u2081 : Type u_5\nR\u2082 : Type u_6\ns : \u03b9 \u2192 Type u_7\ninst\u271d\u2079 : (i : \u03b9) \u2192 AddCommMonoid (s i)\ninst\u271d\u2078 : (i : \u03b9) \u2192 Module R (s i)\nM : Type u_8\ninst\u271d\u2077 : AddCommMonoid M\ninst\u271d\u2076 : Module R M\nE : Type u_9\ninst\u271d\u2075 : AddCommMonoid E\ninst\u271d\u2074 : Module R E\nF : Type u_10\ninst\u271d\u00b3 : AddCommMonoid F\nt : \u03b9 \u2192 Type u_11\ninst\u271d\u00b2 : (i : \u03b9) \u2192 AddCommMonoid (t i)\ninst\u271d\u00b9 : (i : \u03b9) \u2192 Module R (t i)\ninst\u271d : IsEmpty \u03b9\nf : (i : \u03b9) \u2192 s i\n\u22a2 (isEmptyEquiv \u03b9) ((tprod R) f) = 1",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b9\u2082 : Type u_2\n\u03b9\u2083 : Type u_3\nR : Type u_4\ninst\u271d\u00b9\u2070 : CommSemiring R\nR\u2081 : Type u_5\nR\u2082 : Type u_6\ns : \u03b9 \u2192 Type u_7\ninst\u271d\u2079 : (i : \u03b9) \u2192 AddCommMonoid (s i)\ninst\u271d\u2078 : (i : \u03b9) \u2192 Module R (s i)\nM : Type u_8\ninst\u271d\u2077 : AddCommMonoid M\ninst\u271d\u2076 : Module R M\nE : Type u_9\ninst\u271d\u2075 : AddCommMonoid E\ninst\u271d\u2074 : Module R E\nF : Type u_10\ninst\u271d\u00b3 : AddCommMonoid F\nt : \u03b9 \u2192 Type u_11\ninst\u271d\u00b2 : (i : \u03b9) \u2192 AddCommMonoid (t i)\ninst\u271d\u00b9 : (i : \u03b9) \u2192 Module R (t i)\ninst\u271d : IsEmpty \u03b9\nf : (i : \u03b9) \u2192 s i\n\u22a2 1 = (isEmptyEquiv \u03b9) ((tprod R) f)",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u\n\u03b2 : Type v\ninst\u271d\u00b9 : Semiring \u03b1\ninst\u271d : Semiring \u03b2\nf : \u03b1 \u2192 \u03b2\nhf\u271d : IsSemiringHom f\nx y : \u03b1\nhf : IsSemiringHom f\n\u22a2 IsMonoidHom f",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "a x\u271d z x : \u2102\nhx : 0 \u2264 x.re\n\u22a2 x.arg = Real.arcsin (x.im / abs x)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "F : Type u_1\n\u03b9 : Type u_2\n\u03b1 : Type u_3\n\u03b2 : Type u_4\n\u03b3 : Type u_5\n\u03b4 : Type u_6\ninst\u271d\u2074 : FunLike F \u03b1 \u03b2\ninst\u271d\u00b3 : Inf \u03b1\ninst\u271d\u00b2 : Inf \u03b2\ninst\u271d\u00b9 : Inf \u03b3\ninst\u271d : Inf \u03b4\n\u22a2 \u21d1(InfHom.id \u03b1) = id",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "F : Type u_1\n\u03b9 : Type u_2\n\u03b1 : Type u_3\n\u03b2 : Type u_4\n\u03b3 : Type u_5\n\u03b4 : Type u_6\ninst\u271d\u2074 : FunLike F \u03b1 \u03b2\ninst\u271d\u00b3 : Inf \u03b1\ninst\u271d\u00b2 : Inf \u03b2\ninst\u271d\u00b9 : Inf \u03b3\ninst\u271d : Inf \u03b4\n\u22a2 id = \u21d1(InfHom.id \u03b1)",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type v\n\u03b3 : Type u_2\n\u03b4 : Type u_3\na : Multiset \u03b1\n\u22a2 {a}.join = a",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type v\n\u03b3 : Type u_2\n\u03b4 : Type u_3\na : Multiset \u03b1\n\u22a2 a = {a}.join",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u\n\u03b2 : Type v\n\u03b9 : Sort w\nr r' s\u271d : \u03b1 \u2192 \u03b1 \u2192 Prop\ns : Set \u03b1\nh : DirectedOn r s\nH : \u2200 \u2983a b : \u03b1\u2984, r a b \u2192 r' a b\n\u22a2 DirectedOn r' s",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "J : Type v\ninst\u271d\u00b9 : Category.{w, v} J\nF : J \u2964 Type u\ninst\u271d : HasColimit F\ns : Cocone F\nj : J\nx : F.obj j\n\u22a2 colimit.desc F s (colimit.\u03b9 F j x) = s.\u03b9.app j x",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "J : Type v\ninst\u271d\u00b9 : Category.{w, v} J\nF : J \u2964 Type u\ninst\u271d : HasColimit F\ns : Cocone F\nj : J\nx : F.obj j\n\u22a2 s.\u03b9.app j x = colimit.desc F s (colimit.\u03b9 F j x)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b3 : Type u_3\np q : \u03b1 \u2192 Prop\ninst\u271d\u00b9 : DecidablePred p\ninst\u271d : DecidablePred q\ns\u271d s : Finset \u03b1\na : \u03b1\n\u22a2 a \u2208 filter p s \u2194 a \u2208 s \u2227 p a",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b3 : Type u_3\np q : \u03b1 \u2192 Prop\ninst\u271d\u00b9 : DecidablePred p\ninst\u271d : DecidablePred q\ns\u271d s : Finset \u03b1\na : \u03b1\n\u22a2 a \u2208 s \u2227 p a \u2194 a \u2208 filter p s",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\nR : Type x\ninst\u271d : NonUnitalNonAssocRing \u03b1\na b c : \u03b1\n\u22a2 (a - b) * c = a * c - b * c",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\nR : Type x\ninst\u271d : NonUnitalNonAssocRing \u03b1\na b c : \u03b1\n\u22a2 a * c - b * c = (a - b) * c",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\nR : Type x\ninst\u271d : NonUnitalNonAssocRing \u03b1\nb c : \u03b1\n\u22a2 \u2200 (a : \u03b1), (a - b) * c = a * c - b * c",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u22a2 Tendsto (fun n => \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc) atTop (\ud835\udcdd 0)",
+    "value_target": -1.0,
+    "mcts_value": -0.2144487500190735
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u22a2 \u2200 \u03b5 > 0, \u2203 N, \u2200 n \u2265 N, \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc \u2264 \u03b5",
+    "value_target": -1.0,
+    "mcts_value": -0.2144487500190735
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : \u222b\u207b (a : \u03b2), ENNReal.ofReal \u2016f a - y\u2080\u2016 \u2202\u03bc < \u22a4\n\u22a2 Tendsto (fun n => \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc) atTop (\ud835\udcdd 0)",
+    "value_target": -1.0,
+    "mcts_value": -0.2144487500190735
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u22a2 (fun x => 0) =\u1da0[atTop] fun n => \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\nn : \u2115\n\u22a2 0 = \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc",
+    "value_target": -1.0,
+    "mcts_value": -0.23507773876190186
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u03b5 : \u211d\u22650\u221e\nh\u03b5 : \u03b5 > 0\n\u22a2 \u2203 N, \u2200 n \u2265 N, \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc \u2264 \u03b5",
+    "value_target": -1.0,
+    "mcts_value": -0.2237422913312912
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u03b5 : \u211d\u22650\u221e\n\u03b5pos : \u03b5 > 0\n\u22a2 \u2203 N, \u2200 n \u2265 N, \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc \u2264 \u03b5",
+    "value_target": -1.0,
+    "mcts_value": -0.23150739073753357
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u03b5 : \u211d\u22650\u221e\n\u03b5_pos : \u03b5 > 0\n\u22a2 \u2203 N, \u2200 n \u2265 N, \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc \u2264 \u03b5",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u22a2 \u2200 (\u03b5 : \u211d\u22650\u221e), 0 < \u03b5 \u2192 \u2203 N, \u2200 (n : \u2115), N \u2264 n \u2192 \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc \u2264 \u03b5",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u03b5 : \u211d\u22650\u221e\npos : \u03b5 > 0\n\u22a2 \u2203 N, \u2200 n \u2265 N, \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc \u2264 \u03b5",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u03b4 : \u211d\u22650\u221e\nh\u03b4 : \u03b4 > 0\n\u22a2 \u2203 N, \u2200 n \u2265 N, \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc \u2264 \u03b4",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u03b5 : \u211d\u22650\u221e\n\u03b50 : \u03b5 > 0\n\u22a2 \u2203 N, \u2200 n \u2265 N, \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc \u2264 \u03b5",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u03b5 : \u211d\u22650\u221e\na\u271d : \u03b5 > 0\n\u22a2 \u2203 N, \u2200 n \u2265 N, \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc \u2264 \u03b5",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u03bd : \u211d\u22650\u221e\nh\u03bd : \u03bd > 0\n\u22a2 \u2203 N, \u2200 n \u2265 N, \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc \u2264 \u03bd",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u03b5 : \u211d\u22650\u221e\n\u03b5pos : 0 < \u03b5\n\u22a2 \u2203 N, \u2200 n \u2265 N, \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc \u2264 \u03b5",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u03b5 : \u211d\u22650\u221e\nH : \u03b5 > 0\n\u22a2 \u2203 N, \u2200 n \u2265 N, \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc \u2264 \u03b5",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u03b5' : \u211d\u22650\u221e\nh\u03b5' : \u03b5' > 0\n\u22a2 \u2203 N, \u2200 n \u2265 N, \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc \u2264 \u03b5'",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u03b5 : \u211d\u22650\u221e\nh\u03b5 : \u03b5 > 0\nh : \u00ac\u2203 N, \u2200 n \u2265 N, \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc \u2264 \u03b5\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u03b5 : \u211d\u22650\u221e\nh\u03b5 : \u03b5 > 0\nH : \u00ac\u2203 N, \u2200 n \u2265 N, \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc \u2264 \u03b5\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case h\n\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u03b5 : \u211d\u22650\u221e\nh\u03b5 : \u03b5 > 0\n\u22a2 \u2200 n \u2265 0, \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc \u2264 \u03b5",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case h\n\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u03b5 : \u211d\u22650\u221e\nh\u03b5 : \u03b5 > 0\n\u22a2 \u2200 n \u2265 1, \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc \u2264 \u03b5",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u03b5 : \u211d\u22650\u221e\nh\u03b5 : \u2200 (N : \u2115), \u2203 n \u2265 N, \u03b5 < \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc\n\u22a2 \u03b5 \u2264 0",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u03b5 : \u211d\u22650\u221e\nh\u03b5 : \u03b5 > 0\n\u22a2 \u2203 N, \u2200 (n : \u2115), N \u2264 n \u2192 \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc \u2264 \u03b5",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case intro\n\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\n\u03b5 : \u211d\u22650\u221e\nh\u03b5 : \u03b5 > 0\nN : NNReal\nhN : N \u2208 \u222b\u207b (a : \u03b2), \u2191\u2016(fun x => f x - y\u2080) a\u2016\u208a \u2202\u03bc \u2227 \u2200 a \u2208 \u22a4, N < a\n\u22a2 \u2203 N, \u2200 n \u2265 N, \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc \u2264 \u03b5",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u03b5 : \u211d\u22650\u221e\n\u03b5pos : \u03b5 > 0\nH : \u00ac\u2203 N, \u2200 n \u2265 N, \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc \u2264 \u03b5\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case h\n\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u03b5 : \u211d\u22650\u221e\n\u03b5pos : \u03b5 > 0\n\u22a2 \u2200 n \u2265 0, \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc \u2264 \u03b5",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case h\n\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\nhi : HasFiniteIntegral (fun x => f x - y\u2080) \u03bc\n\u03b5 : \u211d\u22650\u221e\n\u03b5pos : \u03b5 > 0\n\u22a2 \u2200 n \u2265 1, \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc \u2264 \u03b5",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case intro\n\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b9 : Type u_3\nE : Type u_4\nF : Type u_5\n\ud835\udd5c : Type u_6\ninst\u271d\u2074 : MeasurableSpace \u03b2\ninst\u271d\u00b3 : MeasurableSpace E\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : OpensMeasurableSpace E\nf : \u03b2 \u2192 E\nhf : Measurable f\ns : Set E\ny\u2080 : E\nh\u2080 : y\u2080 \u2208 s\ninst\u271d : SeparableSpace \u2191s\n\u03bc : Measure \u03b2\nh\u03bc : \u2200\u1d50 (x : \u03b2) \u2202\u03bc, f x \u2208 closure s\n\u03b5 : \u211d\u22650\u221e\n\u03b5pos : \u03b5 > 0\nN : NNReal\nhN : N \u2208 \u222b\u207b (a : \u03b2), \u2191\u2016(fun x => f x - y\u2080) a\u2016\u208a \u2202\u03bc \u2227 \u2200 a \u2208 \u22a4, N < a\n\u22a2 \u2203 N, \u2200 n \u2265 N, \u222b\u207b (x : \u03b2), \u2191\u2016\u2191(approxOn f hf s y\u2080 h\u2080 n) x - f x\u2016\u208a \u2202\u03bc \u2264 \u03b5",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  }
+]

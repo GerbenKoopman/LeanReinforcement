@@ -1,0 +1,10 @@
+{
+  "last_epoch": 3,
+  "last_updated": "2026-04-03T19:13:04.014879",
+  "data_type": "novel_premises",
+  "mcts_type": "alpha_zero",
+  "num_iterations": 1000,
+  "max_steps": 80,
+  "train_epochs": 50,
+  "use_final_reward": true
+}

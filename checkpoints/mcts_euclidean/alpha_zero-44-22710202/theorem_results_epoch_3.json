@@ -1,0 +1,725 @@
+{
+  "epoch": 3,
+  "seed": null,
+  "mcts_type": "alpha_zero",
+  "total": 119,
+  "proved": 49,
+  "failed": 70,
+  "success_rate": 0.4117647058823529,
+  "theorems": [
+    {
+      "theorem_name": "WithTop.map\u2082_top_left",
+      "success": true,
+      "steps": 1,
+      "time": 6.9216148853302
+    },
+    {
+      "theorem_name": "CauSeq.smul_apply",
+      "success": true,
+      "steps": 1,
+      "time": 11.431037664413452
+    },
+    {
+      "theorem_name": "CategoryTheory.Limits.WalkingPair.swap_apply_left",
+      "success": true,
+      "steps": 1,
+      "time": 10.644229888916016
+    },
+    {
+      "theorem_name": "Localization.coe_algEquiv",
+      "success": true,
+      "steps": 1,
+      "time": 18.57730722427368
+    },
+    {
+      "theorem_name": "Set.image_iUnion\u2082",
+      "success": true,
+      "steps": 1,
+      "time": 18.424624919891357
+    },
+    {
+      "theorem_name": "Submodule.quotientPiLift_mk",
+      "success": true,
+      "steps": 1,
+      "time": 25.577465057373047
+    },
+    {
+      "theorem_name": "Set.pi_piecewise",
+      "success": false,
+      "steps": 0,
+      "time": 367.13445687294006
+    },
+    {
+      "theorem_name": "Filter.IsBoundedUnder.bddBelow_range",
+      "success": false,
+      "steps": 0,
+      "time": 371.0356240272522
+    },
+    {
+      "theorem_name": "Cardinal.mul_ciSup",
+      "success": false,
+      "steps": 0,
+      "time": 365.86109232902527
+    },
+    {
+      "theorem_name": "QuotientMap.of_surjective_continuous",
+      "success": false,
+      "steps": 0,
+      "time": 370.00046467781067
+    },
+    {
+      "theorem_name": "Subgroup.index_inf_le",
+      "success": false,
+      "steps": 0,
+      "time": 375.43239092826843
+    },
+    {
+      "theorem_name": "Bornology.IsVonNBounded.image_multilinear'",
+      "success": false,
+      "steps": 0,
+      "time": 367.27092719078064
+    },
+    {
+      "theorem_name": "convex_halfspace_im_ge",
+      "success": false,
+      "steps": 0,
+      "time": 380.8410985469818
+    },
+    {
+      "theorem_name": "AddMonoidHom.dfinsupp_sumAddHom_apply",
+      "success": false,
+      "steps": 0,
+      "time": 366.5475420951843
+    },
+    {
+      "theorem_name": "Differentiable.iterate",
+      "success": false,
+      "steps": 0,
+      "time": 368.8208010196686
+    },
+    {
+      "theorem_name": "linear_isometry_complex_aux",
+      "success": false,
+      "steps": 0,
+      "time": 369.6002109050751
+    },
+    {
+      "theorem_name": "div_mul_cancel_left",
+      "success": true,
+      "steps": 1,
+      "time": 21.286881923675537
+    },
+    {
+      "theorem_name": "mem_subalgebraOfSubsemiring",
+      "success": true,
+      "steps": 1,
+      "time": 17.22320008277893
+    },
+    {
+      "theorem_name": "ZMod.cast_mul",
+      "success": false,
+      "steps": 0,
+      "time": 372.8359122276306
+    },
+    {
+      "theorem_name": "Submodule.topologicalClosure_eq_top_iff",
+      "success": false,
+      "steps": 0,
+      "time": 369.35809779167175
+    },
+    {
+      "theorem_name": "ConvexOn.congr",
+      "success": false,
+      "steps": 0,
+      "time": 360.35859417915344
+    },
+    {
+      "theorem_name": "Polynomial.le_natDegree_of_mem_supp",
+      "success": true,
+      "steps": 2,
+      "time": 46.69464468955994
+    },
+    {
+      "theorem_name": "Metric.tendsto_dist_right_cobounded_atTop",
+      "success": true,
+      "steps": 2,
+      "time": 47.051390409469604
+    },
+    {
+      "theorem_name": "Quiver.Path.nil_ne_cons",
+      "success": true,
+      "steps": 1,
+      "time": 17.620527505874634
+    },
+    {
+      "theorem_name": "NonUnitalRingHom.closure_preimage_le",
+      "success": true,
+      "steps": 2,
+      "time": 126.5834801197052
+    },
+    {
+      "theorem_name": "MulHom.comp_assoc",
+      "success": true,
+      "steps": 1,
+      "time": 16.58940887451172
+    },
+    {
+      "theorem_name": "AlternatingMap.zero_apply",
+      "success": true,
+      "steps": 1,
+      "time": 17.344483375549316
+    },
+    {
+      "theorem_name": "EuclideanGeometry.left_ne_right_of_oangle_eq_pi_div_two",
+      "success": false,
+      "steps": 0,
+      "time": 614.4695408344269
+    },
+    {
+      "theorem_name": "ContinuousLinearMap.map_add",
+      "success": true,
+      "steps": 1,
+      "time": 32.53727102279663
+    },
+    {
+      "theorem_name": "Multiset.fold_cons'_right",
+      "success": false,
+      "steps": 0,
+      "time": 373.00142788887024
+    },
+    {
+      "theorem_name": "IsLocalMinOn.fderivWithin_nonneg",
+      "success": false,
+      "steps": 0,
+      "time": 371.67519450187683
+    },
+    {
+      "theorem_name": "Filter.eventuallyConst_iff_exists_eventuallyEq",
+      "success": false,
+      "steps": 0,
+      "time": 363.9815378189087
+    },
+    {
+      "theorem_name": "Matrix.Fin.circulant_isSymm_iff",
+      "success": false,
+      "steps": 0,
+      "time": 366.12633514404297
+    },
+    {
+      "theorem_name": "String.Iterator.ValidFor.next",
+      "success": false,
+      "steps": 0,
+      "time": 367.82099318504333
+    },
+    {
+      "theorem_name": "Finset.inter_right_comm",
+      "success": true,
+      "steps": 1,
+      "time": 22.986667156219482
+    },
+    {
+      "theorem_name": "ArithmeticFunction.zeta_mul_apply",
+      "success": false,
+      "steps": 0,
+      "time": 372.0225820541382
+    },
+    {
+      "theorem_name": "CategoryTheory.Abelian.exact_epi_comp_iff",
+      "success": false,
+      "steps": 0,
+      "time": 367.627947807312
+    },
+    {
+      "theorem_name": "Submodule.toLinearPMap_range",
+      "success": false,
+      "steps": 0,
+      "time": 371.4912190437317
+    },
+    {
+      "theorem_name": "Finset.inter_eq_inter_iff_left",
+      "success": false,
+      "steps": 0,
+      "time": 365.65157198905945
+    },
+    {
+      "theorem_name": "CategoryTheory.Tor'_map_app'",
+      "success": true,
+      "steps": 1,
+      "time": 22.781424283981323
+    },
+    {
+      "theorem_name": "CategoryTheory.Limits.kernelSubobjectIso_comp_kernel_map",
+      "success": true,
+      "steps": 1,
+      "time": 15.402382135391235
+    },
+    {
+      "theorem_name": "Rat.cast_nonpos",
+      "success": true,
+      "steps": 1,
+      "time": 18.406832456588745
+    },
+    {
+      "theorem_name": "Sublattice.coe_sInf",
+      "success": true,
+      "steps": 1,
+      "time": 17.087412118911743
+    },
+    {
+      "theorem_name": "ProbabilityTheory.condIndep_iSup_of_monotone",
+      "success": false,
+      "steps": 0,
+      "time": 462.38295245170593
+    },
+    {
+      "theorem_name": "Mathlib.Tactic.Ring.sub_congr",
+      "success": true,
+      "steps": 1,
+      "time": 15.785892724990845
+    },
+    {
+      "theorem_name": "MonoidHom.subgroupOf_range_eq_of_le",
+      "success": false,
+      "steps": 0,
+      "time": 375.23454785346985
+    },
+    {
+      "theorem_name": "MonoidHom.inv_comp",
+      "success": true,
+      "steps": 1,
+      "time": 26.457151651382446
+    },
+    {
+      "theorem_name": "Ideal.sum_pow_mem_span_pow",
+      "success": false,
+      "steps": 0,
+      "time": 366.69061040878296
+    },
+    {
+      "theorem_name": "Real.sSup_nonpos",
+      "success": false,
+      "steps": 0,
+      "time": 361.42727279663086
+    },
+    {
+      "theorem_name": "MeasureTheory.Measure.ae_sum_iff'",
+      "success": false,
+      "steps": 0,
+      "time": 379.0494604110718
+    },
+    {
+      "theorem_name": "CategoryTheory.Arrow.comp_right",
+      "success": true,
+      "steps": 1,
+      "time": 36.33699870109558
+    },
+    {
+      "theorem_name": "IsLocalization.coeSubmodule_span_singleton",
+      "success": true,
+      "steps": 1,
+      "time": 27.118972778320312
+    },
+    {
+      "theorem_name": "HasFDerivAt.ccosh",
+      "success": false,
+      "steps": 0,
+      "time": 376.05538272857666
+    },
+    {
+      "theorem_name": "FGModuleCat.FGModuleCatEvaluation_apply",
+      "success": true,
+      "steps": 1,
+      "time": 26.215715169906616
+    },
+    {
+      "theorem_name": "Vector.mapAccumr\u2082_mapAccumr_right",
+      "success": true,
+      "steps": 1,
+      "time": 32.414021730422974
+    },
+    {
+      "theorem_name": "Primrec.or",
+      "success": false,
+      "steps": 0,
+      "time": 368.3883635997772
+    },
+    {
+      "theorem_name": "AEMeasurable.sup_const",
+      "success": false,
+      "steps": 0,
+      "time": 374.7906422615051
+    },
+    {
+      "theorem_name": "Matrix.inv_add_inv",
+      "success": false,
+      "steps": 0,
+      "time": 366.2929275035858
+    },
+    {
+      "theorem_name": "MeasureTheory.piPremeasure_pi_mono",
+      "success": true,
+      "steps": 2,
+      "time": 76.24735021591187
+    },
+    {
+      "theorem_name": "PMF.pure_bind",
+      "success": true,
+      "steps": 1,
+      "time": 23.34638810157776
+    },
+    {
+      "theorem_name": "DFinsupp.toMultiset_toDFinsupp",
+      "success": false,
+      "steps": 0,
+      "time": 369.82392930984497
+    },
+    {
+      "theorem_name": "Inducing.continuousAt_iff",
+      "success": true,
+      "steps": 3,
+      "time": 248.26231980323792
+    },
+    {
+      "theorem_name": "ENat.iInf_coe_lt_top",
+      "success": true,
+      "steps": 2,
+      "time": 65.37823796272278
+    },
+    {
+      "theorem_name": "Rat.preimage_cast_Ico",
+      "success": true,
+      "steps": 1,
+      "time": 16.54931950569153
+    },
+    {
+      "theorem_name": "IsLUB.mul_right",
+      "success": true,
+      "steps": 1,
+      "time": 22.558608055114746
+    },
+    {
+      "theorem_name": "NormedSpace.dualPairing_apply",
+      "success": true,
+      "steps": 1,
+      "time": 16.7788188457489
+    },
+    {
+      "theorem_name": "Multiset.prod_ne_zero_of_prime",
+      "success": true,
+      "steps": 2,
+      "time": 42.38848114013672
+    },
+    {
+      "theorem_name": "Turing.PartrecToTM2.trStmts\u2081_self",
+      "success": true,
+      "steps": 1,
+      "time": 20.848318815231323
+    },
+    {
+      "theorem_name": "Polynomial.eval\u2082_C_X",
+      "success": true,
+      "steps": 2,
+      "time": 31.136759042739868
+    },
+    {
+      "theorem_name": "MDifferentiableAt.mdifferentiableWithinAt",
+      "success": false,
+      "steps": 0,
+      "time": 405.76968002319336
+    },
+    {
+      "theorem_name": "Finset.inf_id_set_eq_sInter",
+      "success": true,
+      "steps": 2,
+      "time": 51.66462540626526
+    },
+    {
+      "theorem_name": "diff_mem_nhdsWithin_compl",
+      "success": true,
+      "steps": 2,
+      "time": 48.47761130332947
+    },
+    {
+      "theorem_name": "GaloisInsertion.isAtom_iff'",
+      "success": false,
+      "steps": 0,
+      "time": 362.9269654750824
+    },
+    {
+      "theorem_name": "IntervalIntegrable.trans_iterate_Ico",
+      "success": false,
+      "steps": 0,
+      "time": 607.4424569606781
+    },
+    {
+      "theorem_name": "PNat.find_comp_succ",
+      "success": false,
+      "steps": 0,
+      "time": 370.9336643218994
+    },
+    {
+      "theorem_name": "ContDiffWithinAt.arctan",
+      "success": false,
+      "steps": 0,
+      "time": 360.476749420166
+    },
+    {
+      "theorem_name": "IsLowerSet.not_bot_mem",
+      "success": true,
+      "steps": 2,
+      "time": 83.64821410179138
+    },
+    {
+      "theorem_name": "Ici_mem_nhdsSet_Ici_iff",
+      "success": false,
+      "steps": 0,
+      "time": 367.27446246147156
+    },
+    {
+      "theorem_name": "WithTop.some_eq_coe",
+      "success": true,
+      "steps": 1,
+      "time": 16.956305503845215
+    },
+    {
+      "theorem_name": "ProbabilityTheory.kernel.isSFiniteKernel_sum_of_denumerable",
+      "success": false,
+      "steps": 0,
+      "time": 373.9718816280365
+    },
+    {
+      "theorem_name": "MeasureTheory.FiniteMeasure.zero_prod",
+      "success": true,
+      "steps": 1,
+      "time": 16.558177709579468
+    },
+    {
+      "theorem_name": "Metric.nonempty_ball",
+      "success": false,
+      "steps": 0,
+      "time": 368.62993001937866
+    },
+    {
+      "theorem_name": "Wbtw.dist_le_max_dist",
+      "success": false,
+      "steps": 0,
+      "time": 374.00547432899475
+    },
+    {
+      "theorem_name": "completedRiemannZeta_eq",
+      "success": false,
+      "steps": 0,
+      "time": 374.00280261039734
+    },
+    {
+      "theorem_name": "Relation.ReflTransGen.symmetric",
+      "success": false,
+      "steps": 0,
+      "time": 367.7239923477173
+    },
+    {
+      "theorem_name": "CategoryTheory.Functor.HasLeftKanExtension.mk",
+      "success": false,
+      "steps": 0,
+      "time": 365.84056210517883
+    },
+    {
+      "theorem_name": "Zsqrtd.add_im",
+      "success": true,
+      "steps": 1,
+      "time": 19.34380078315735
+    },
+    {
+      "theorem_name": "EquicontinuousAt.comp",
+      "success": false,
+      "steps": 0,
+      "time": 363.2826979160309
+    },
+    {
+      "theorem_name": "QuadraticForm.coe_associatedHom",
+      "success": true,
+      "steps": 1,
+      "time": 21.65311598777771
+    },
+    {
+      "theorem_name": "Set.sInter_pair",
+      "success": true,
+      "steps": 1,
+      "time": 21.24647545814514
+    },
+    {
+      "theorem_name": "Polynomial.IsSplittingField.adjoin_rootSet",
+      "success": false,
+      "steps": 0,
+      "time": 643.3862295150757
+    },
+    {
+      "theorem_name": "IntervalIntegrable.continuousOn_mul",
+      "success": false,
+      "steps": 0,
+      "time": 374.8847677707672
+    },
+    {
+      "theorem_name": "Computation.get_think",
+      "success": false,
+      "steps": 0,
+      "time": 360.27418541908264
+    },
+    {
+      "theorem_name": "Stream'.Seq.not_terminates_iff",
+      "success": false,
+      "steps": 0,
+      "time": 364.88565587997437
+    },
+    {
+      "theorem_name": "UniformSpace.Completion.extension_coe",
+      "success": false,
+      "steps": 0,
+      "time": 363.3466126918793
+    },
+    {
+      "theorem_name": "mem_quasispectrum_iff",
+      "success": true,
+      "steps": 1,
+      "time": 25.199770212173462
+    },
+    {
+      "theorem_name": "Matrix.toEuclideanLin_apply",
+      "success": true,
+      "steps": 1,
+      "time": 35.390172481536865
+    },
+    {
+      "theorem_name": "Basis.SmithNormalForm.le_ker_coord_of_nmem_range",
+      "success": false,
+      "steps": 0,
+      "time": 363.04660081863403
+    },
+    {
+      "theorem_name": "List.rdrop_append_of_le_length",
+      "success": false,
+      "steps": 0,
+      "time": 364.7887649536133
+    },
+    {
+      "theorem_name": "ModuleCat.restrictScalarsId'App_hom_naturality",
+      "success": true,
+      "steps": 1,
+      "time": 24.97145104408264
+    },
+    {
+      "theorem_name": "ConcaveOn.translate_left",
+      "success": false,
+      "steps": 0,
+      "time": 363.6383240222931
+    },
+    {
+      "theorem_name": "Filter.Eventually.and_frequently",
+      "success": false,
+      "steps": 0,
+      "time": 362.8401975631714
+    },
+    {
+      "theorem_name": "LazyList.append_assoc",
+      "success": false,
+      "steps": 0,
+      "time": 362.5126814842224
+    },
+    {
+      "theorem_name": "Filter.hasBasis_iInf_principal",
+      "success": false,
+      "steps": 0,
+      "time": 379.2455720901489
+    },
+    {
+      "theorem_name": "Set.exists_subset_mul_div",
+      "success": false,
+      "steps": 0,
+      "time": 375.12525844573975
+    },
+    {
+      "theorem_name": "Nat.nonempty_of_pos_sInf",
+      "success": true,
+      "steps": 2,
+      "time": 53.03432893753052
+    },
+    {
+      "theorem_name": "RieszExtension.exists_top",
+      "success": false,
+      "steps": 0,
+      "time": 364.3964591026306
+    },
+    {
+      "theorem_name": "Cardinal.aleph0_pos",
+      "success": true,
+      "steps": 2,
+      "time": 36.18067717552185
+    },
+    {
+      "theorem_name": "UniformSpace.secondCountable_of_separable",
+      "success": false,
+      "steps": 0,
+      "time": 371.6996042728424
+    },
+    {
+      "theorem_name": "MeasureTheory.integrable_prod",
+      "success": false,
+      "steps": 0,
+      "time": 360.6339998245239
+    },
+    {
+      "theorem_name": "EuclideanGeometry.wbtw_of_collinear_of_dist_center_le_radius",
+      "success": false,
+      "steps": 0,
+      "time": 363.6297912597656
+    },
+    {
+      "theorem_name": "Polynomial.comp_assoc",
+      "success": false,
+      "steps": 0,
+      "time": 361.01616191864014
+    },
+    {
+      "theorem_name": "perfectField_of_perfectClosure_eq_bot",
+      "success": false,
+      "steps": 0,
+      "time": 365.9838356971741
+    },
+    {
+      "theorem_name": "ascPochhammer_eval_succ",
+      "success": false,
+      "steps": 0,
+      "time": 370.48402762413025
+    },
+    {
+      "theorem_name": "MeasureTheory.ProbabilityMeasure.tendsto_measure_of_null_frontier_of_tendsto",
+      "success": false,
+      "steps": 0,
+      "time": 369.1409673690796
+    },
+    {
+      "theorem_name": "PosNum.cast_to_num",
+      "success": false,
+      "steps": 0,
+      "time": 363.397686958313
+    },
+    {
+      "theorem_name": "Complex.conj_mul'",
+      "success": false,
+      "steps": 0,
+      "time": 362.00392508506775
+    },
+    {
+      "theorem_name": "Set.SurjOn.union_union",
+      "success": false,
+      "steps": 0,
+      "time": 337.37934136390686
+    },
+    {
+      "theorem_name": "LieSubmodule.lieSpan_eq",
+      "success": false,
+      "steps": 0,
+      "time": 619.3795297145844
+    }
+  ]
+}

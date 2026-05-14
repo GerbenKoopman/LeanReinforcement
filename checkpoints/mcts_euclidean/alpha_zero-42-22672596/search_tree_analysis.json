@@ -1,0 +1,7 @@
+{
+  "aggregate": {},
+  "search_tree_dir": "checkpoints/mcts_euclidean/alpha_zero-42-22672596/search_trees",
+  "tree_count": 0,
+  "tree_files": [],
+  "trees": []
+}

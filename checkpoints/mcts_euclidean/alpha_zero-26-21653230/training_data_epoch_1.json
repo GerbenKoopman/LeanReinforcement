@@ -1,0 +1,806 @@
+[
+  {
+    "type": "value",
+    "state": "X : Type u_1\nY : Type u_2\nZ : Type u_3\ninst\u271d\u00b2 : PseudoEMetricSpace X\ninst\u271d\u00b9 : PseudoEMetricSpace Y\ninst\u271d : PseudoEMetricSpace Z\ne e' : X \u2243\u1d48 X\n\u22a2 \u21d1(e * e') = \u21d1e \u2218 \u21d1e'",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u\n\u03b2 : Type v\ninst\u271d : SemilatticeInf \u03b1\na b c d : \u03b1\nh : b < c\n\u22a2 a \u2293 b < c",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "K : Type u\nL : Type v\nM : Type w\ninst\u271d\u00b2 : DivisionRing K\ninst\u271d\u00b9 : DivisionRing L\ninst\u271d : DivisionRing M\ns\u271d t s : Subfield K\nx : K\n\u22a2 x \u2208 s.toSubmonoid \u2194 x \u2208 s",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b4 : Type u_3\ninst\u271d\u00b9 : AddZeroClass \u03b4\ninst\u271d : Min \u03b4\nC : Cost \u03b1 \u03b2 \u03b4\nxs : List \u03b1\ny : \u03b2\nys : List \u03b2\n\u22a2 impl C xs y (suffixLevenshtein C xs ys) = suffixLevenshtein C xs (y :: ys)",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "G : Type u_1\nP : Type u_2\ninst\u271d : AddGroup G\nT : AddTorsor G P\nv\u2081 v\u2082 : G\np : P\n\u22a2 v\u2081 +\u1d65 p -\u1d65 (v\u2082 +\u1d65 p) = v\u2081 - v\u2082",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "G : Type u_1\nP : Type u_2\ninst\u271d : AddGroup G\nT : AddTorsor G P\nv\u2081 v\u2082 : G\np : P\n\u22a2 v\u2081 - v\u2082 = v\u2081 +\u1d65 p -\u1d65 (v\u2082 +\u1d65 p)",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type v\ndec_\u03b9 : DecidableEq \u03b9\n\u03b2 : \u03b9 \u2192 Type w\ninst\u271d\u00b9 : (i : \u03b9) \u2192 AddCommMonoid (\u03b2 i)\n\u03b3 : Type u\u2081\ninst\u271d : AddCommMonoid \u03b3\n\u03c6 : (i : \u03b9) \u2192 \u03b2 i \u2192+ \u03b3\n\u03c8 : (\u2a01 (i : \u03b9), \u03b2 i) \u2192+ \u03b3\ni : \u03b9\nx : \u03b2 i\n\u22a2 (toAddMonoid \u03c6) ((of \u03b2 i) x) = (\u03c6 i) x",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type v\ndec_\u03b9 : DecidableEq \u03b9\n\u03b2 : \u03b9 \u2192 Type w\ninst\u271d\u00b9 : (i : \u03b9) \u2192 AddCommMonoid (\u03b2 i)\n\u03b3 : Type u\u2081\ninst\u271d : AddCommMonoid \u03b3\n\u03c6 : (i : \u03b9) \u2192 \u03b2 i \u2192+ \u03b3\n\u03c8 : (\u2a01 (i : \u03b9), \u03b2 i) \u2192+ \u03b3\ni : \u03b9\nx : \u03b2 i\n\u22a2 (\u03c6 i) x = (toAddMonoid \u03c6) ((of \u03b2 i) x)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b3 : Type u_3\n\u03b4 : Type u_4\n\u03b5 : Type u_5\n\u03b9 : Type u_6\nf : \u03b1 \u2192. \u03b2\na : \u03b1\n\u22a2 PFun.id \u03b1 a = Part.some a",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03c3 : Type u_1\nR : Type u_2\ninst\u271d : Semiring R\n\u03c6 \u03c8 : MvPowerSeries \u03c3 R\n\u22a2 \u03c6 = \u03c8 \u2194 \u2200 (n : \u03c3 \u2192\u2080 \u2115), (coeff R n) \u03c6 = (coeff R n) \u03c8",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Sort u_1\n\u03b1 : Type u_2\n\u03b2 : Type u_3\nM : Type u_4\ninst\u271d\u00b9 : Zero M\ninst\u271d : LinearOrder M\ns : Set \u03b1\nf : \u03b1 \u2192 M\n\u22a2 {a | f a \u2264 0}.indicator f \u2264 s.indicator f",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\n\u03b4 : Type u_1\n\u03b9 : Sort x\nl f\u271d f\u2081 f\u2082 : Filter \u03b1\ng g\u2081 g\u2082 : Filter \u03b2\nm : \u03b1 \u2192 \u03b2\nm' : \u03b2 \u2192 \u03b3\ns : Set \u03b1\nt : Set \u03b2\nf : \u03b1 \u2192 \u03b2\n\u22a2 map f \u22a4 = \ud835\udcdf (range f)",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "X : Type u_1\nY : Type u_2\ninst\u271d : TopologicalSpace X\ns : Set X\nhs : IsSeqCompact s\nx : \u2115 \u2192 X\nhx : \u2203\u1da0 (n : \u2115) in atTop, x n \u2208 s\n\u22a2 \u2203 a \u2208 s, \u2203 \u03c6, StrictMono \u03c6 \u2227 Tendsto (x \u2218 \u03c6) atTop (\ud835\udcdd a)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "x y : \u211d\n\u22a2 sinh (3 * x) = 4 * sinh x ^ 3 + 3 * sinh x",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "p : \u2115\ninst\u271d : Fact (Nat.Prime p)\nf : CauSeq \u211a_[p] \u21d1padicNormE\nq : \u211a_[p]\n\u03b5 : \u211a\nh\u03b5 : 0 < \u03b5\n\u22a2 \u2203 r, padicNormE (q - \u2191r) < \u03b5",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "F : Type u_1\n\u03b1 : Type u_2\n\u03b2 : Type u_3\n\u03b3 : Type u_4\n\u03b4 : Type u_5\ninst\u271d\u2077 : Preorder \u03b1\ninst\u271d\u2076 : Preorder \u03b2\ninst\u271d\u2075 : Preorder \u03b3\ninst\u271d\u2074 : Preorder \u03b4\ninst\u271d\u00b3 : MulOneClass \u03b1\ninst\u271d\u00b2 : MulOneClass \u03b2\ninst\u271d\u00b9 : MulOneClass \u03b3\ninst\u271d : MulOneClass \u03b4\nf\u271d g\u271d : \u03b1 \u2192*o \u03b2\nf : \u03b2 \u2192*o \u03b3\ng : \u03b1 \u2192*o \u03b2\na : \u03b1\n\u22a2 (f.comp g) a = f (g a)",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u22a2 \u22c3\u2080 \u2205 = \u2205",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "X : Type u_1\nY : Type u_2\ninst\u271d\u00b9 : TopologicalSpace X\ninst\u271d : TopologicalSpace Y\ns t : Set X\nx : X\n\u22a2 IsIrreducible (irreducibleComponent x)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\ud835\udd5c : Type u_1\n\ud835\udd5c\u2082 : Type u_2\n\ud835\udd5c\u2083 : Type u_3\nE : Type u_4\nE\u2097 : Type u_5\nF : Type u_6\nF\u2097 : Type u_7\nG : Type u_8\nG\u2097 : Type u_9\n\ud835\udcd5 : Type u_10\ninst\u271d\u00b9\u2079 : SeminormedAddCommGroup E\ninst\u271d\u00b9\u2078 : SeminormedAddCommGroup E\u2097\ninst\u271d\u00b9\u2077 : SeminormedAddCommGroup F\ninst\u271d\u00b9\u2076 : SeminormedAddCommGroup F\u2097\ninst\u271d\u00b9\u2075 : SeminormedAddCommGroup G\ninst\u271d\u00b9\u2074 : SeminormedAddCommGroup G\u2097\ninst\u271d\u00b9\u00b3 : NontriviallyNormedField \ud835\udd5c\ninst\u271d\u00b9\u00b2 : NontriviallyNormedField \ud835\udd5c\u2082\ninst\u271d\u00b9\u00b9 : NontriviallyNormedField \ud835\udd5c\u2083\ninst\u271d\u00b9\u2070 : NormedSpace \ud835\udd5c E\ninst\u271d\u2079 : NormedSpace \ud835\udd5c E\u2097\ninst\u271d\u2078 : NormedSpace \ud835\udd5c\u2082 F\ninst\u271d\u2077 : NormedSpace \ud835\udd5c F\u2097\ninst\u271d\u2076 : NormedSpace \ud835\udd5c\u2083 G\ninst\u271d\u2075 : NormedSpace \ud835\udd5c G\u2097\n\u03c3\u2081\u2082 : \ud835\udd5c \u2192+* \ud835\udd5c\u2082\n\u03c3\u2082\u2083 : \ud835\udd5c\u2082 \u2192+* \ud835\udd5c\u2083\n\u03c3\u2081\u2083 : \ud835\udd5c \u2192+* \ud835\udd5c\u2083\ninst\u271d\u2074 : RingHomCompTriple \u03c3\u2081\u2082 \u03c3\u2082\u2083 \u03c3\u2081\u2083\ninst\u271d\u00b3 : FunLike \ud835\udcd5 E F\n\u03c3\u2082\u2081 : \ud835\udd5c\u2082 \u2192+* \ud835\udd5c\ninst\u271d\u00b2 : RingHomInvPair \u03c3\u2081\u2082 \u03c3\u2082\u2081\ninst\u271d\u00b9 : RingHomInvPair \u03c3\u2082\u2081 \u03c3\u2081\u2082\ninst\u271d : RingHomIsometric \u03c3\u2081\u2082\ne : E \u2243SL[\u03c3\u2081\u2082] F\n\u22a2 LipschitzWith \u2016\u2191e\u2016\u208a \u21d1e",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u\n\u03b2 : Type v\ninst\u271d\u00b9 : SemilatticeInf \u03b1\na b c d s s' : \u03b1\nP : Prop\ninst\u271d : Decidable P\n\u22a2 s \u2293 s' \u2264 if P then s else s'",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u\n\u03b2 : Type v\ninst\u271d\u00b9 : SemilatticeInf \u03b1\na b c d s s' : \u03b1\nP : Prop\ninst\u271d : Decidable P\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\ninst\u271d\u00b2 : CancelCommMonoidWithZero \u03b1\ninst\u271d\u00b9 : NormalizedGCDMonoid \u03b1\ninst\u271d : DecidableEq \u03b1\ns\u2081 s\u2082 : Multiset \u03b1\n\u22a2 (s\u2081.ndunion s\u2082).lcm = GCDMonoid.lcm s\u2081.lcm s\u2082.lcm",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "A : Type u_1\nB : Type u_2\nG : Type u_3\nH : Type u_4\nM : Type u_5\nN : Type u_6\nP : Type u_7\ninst\u271d\u00b9 : Inv G\ninst\u271d : Inv H\np : G \u00d7 H\n\u22a2 p\u207b\u00b9.swap = p.swap\u207b\u00b9",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "X : Type u_1\nY : Type u_2\nZ : Type u_3\nW : Type u_4\n\u03b9 : Type u_5\ninst\u271d\u00b3 : TopologicalSpace X\ninst\u271d\u00b2 : TopologicalSpace Y\ninst\u271d\u00b9 : TopologicalSpace Z\ninst\u271d : TopologicalSpace W\nf : X \u2192 Y\ng\u271d : Y \u2192 Z\ng : Z \u2192 W\nhf : IsProperMap f\nhg : IsProperMap g\n\u22a2 IsProperMap (Prod.map f g)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "F : Type u_1\n\u03b1 : Type u_2\n\u03b2 : Type u_3\n\u03b3 : Type u_4\n\u03b9 : Type u_5\n\u03ba : Type u_6\ninst\u271d : LinearOrder \u03b1\ns : Finset \u03b1\nh : s.Nonempty\n\u22a2 \u2203 a, s.min = \u2191a",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "C : Type u\u2081\ninst\u271d\u2078 : Category.{v\u2081, u\u2081} C\ninst\u271d\u2077 : MonoidalCategory C\ninst\u271d\u2076 : BraidedCategory C\nD : Type u\u2082\ninst\u271d\u2075 : Category.{v\u2082, u\u2082} D\ninst\u271d\u2074 : MonoidalCategory D\ninst\u271d\u00b3 : BraidedCategory D\nE : Type u\u2083\ninst\u271d\u00b2 : Category.{v\u2083, u\u2083} E\ninst\u271d\u00b9 : MonoidalCategory E\ninst\u271d : BraidedCategory E\nX Y : C\n\u22a2 (\u03b2_ X Y).op = \u03b2_ { unop := Y } { unop := X }",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\ud835\udd5c : Type u_1\ninst\u271d\u2074 : NormedField \ud835\udd5c\nE : Type u_2\ninst\u271d\u00b3 : NormedAddCommGroup E\ninst\u271d\u00b2 : NormedSpace \ud835\udd5c E\nF\u271d : Type u_3\ninst\u271d\u00b9 : SeminormedAddCommGroup F\u271d\ninst\u271d : NormedSpace \u211d F\u271d\nF : Subspace \ud835\udd5c E\nhFc : IsClosed \u2191F\nhF : \u2203 x, x \u2209 F\nr : \u211d\nhr : r < 1\n\u22a2 \u2203 x\u2080 \u2209 F, \u2200 y \u2208 F, r * \u2016x\u2080\u2016 \u2264 \u2016x\u2080 - y\u2016",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "p : Prop\ninst\u271d : Decidable p\n\u22a2 \u00acp \u2228 p",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\ud835\udd5c : Type u_1\ninst\u271d\u00b9\u2070 : NontriviallyNormedField \ud835\udd5c\nD : Type uD\ninst\u271d\u2079 : NormedAddCommGroup D\ninst\u271d\u2078 : NormedSpace \ud835\udd5c D\nE : Type uE\ninst\u271d\u2077 : NormedAddCommGroup E\ninst\u271d\u2076 : NormedSpace \ud835\udd5c E\nF : Type uF\ninst\u271d\u2075 : NormedAddCommGroup F\ninst\u271d\u2074 : NormedSpace \ud835\udd5c F\nG : Type uG\ninst\u271d\u00b3 : NormedAddCommGroup G\ninst\u271d\u00b2 : NormedSpace \ud835\udd5c G\nX : Type u_2\ninst\u271d\u00b9 : NormedAddCommGroup X\ninst\u271d : NormedSpace \ud835\udd5c X\ns s\u2081 t\u271d u : Set E\nf\u271d f\u2081 : E \u2192 F\ng\u271d : F \u2192 G\nx x\u2080 : E\nc : F\nb : E \u00d7 F \u2192 G\nm n\u271d : \u2115\u221e\np : E \u2192 FormalMultilinearSeries \ud835\udd5c E F\nf : E \u2192 F \u2192 G\ng : E \u2192 F\nt : Set F\nn : \u2115\u221e\nhf : ContDiffWithinAt \ud835\udd5c n (uncurry f) (insert x\u2080 s \u00d7\u02e2 t) (x\u2080, g x\u2080)\nhg : ContDiffWithinAt \ud835\udd5c m g s x\u2080\nht : \u2200\u1da0 (x : E) in \ud835\udcdd[insert x\u2080 s] x\u2080, UniqueDiffWithinAt \ud835\udd5c t (g x)\nhmn : m + 1 \u2264 n\nhst : s \u2286 g \u207b\u00b9' t\n\u22a2 ContDiffWithinAt \ud835\udd5c m (fun x => fderivWithin \ud835\udd5c (f x) t (g x)) s x\u2080",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\ud835\udd5c : Type u_1\ninst : NontriviallyNormedField \ud835\udd5c\nD : Type uD\ninst_1 : NormedAddCommGroup D\ninst_2 : NormedSpace \ud835\udd5c D\nE : Type uE\ninst_3 : NormedAddCommGroup E\ninst_4 : NormedSpace \ud835\udd5c E\nF : Type uF\ninst_5 : NormedAddCommGroup F\ninst_6 : NormedSpace \ud835\udd5c F\nG : Type uG\ninst_7 : NormedAddCommGroup G\ninst_8 : NormedSpace \ud835\udd5c G\nX : Type u_2\ninst_9 : NormedAddCommGroup X\ninst_10 : NormedSpace \ud835\udd5c X\ns s\u2081 t_1 u : Set E\nf_1 f\u2081 : E \u2192 F\ng_1 : F \u2192 G\nx x\u2080 : E\nc : F\nb : E \u00d7 F \u2192 G\nm n_1 : \u2115\u221e\np : E \u2192 FormalMultilinearSeries \ud835\udd5c E F\nf : E \u2192 F \u2192 G\ng : E \u2192 F\nt : Set F\nn : \u2115\u221e\nhf : ContDiffWithinAt \ud835\udd5c n (uncurry f) (insert x\u2080 s \u00d7\u02e2 t) (x\u2080, g x\u2080)\nhg : ContDiffWithinAt \ud835\udd5c m g s x\u2080\nhmn : m + 1 \u2264 n\nhst : s \u2286 g \u207b\u00b9' t\nleft : UniqueDiffWithinAt \ud835\udd5c t (g x\u2080)\nright : \u2200\u1da0 (x : E) in \ud835\udcdd[s] x\u2080, UniqueDiffWithinAt \ud835\udd5c t (g x)\n\u22a2 ContDiffWithinAt \ud835\udd5c m (fun x => fderivWithin \ud835\udd5c (f x) t (g x)) s x\u2080",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\nK : Type u_2\nV : Type u_3\ninst\u271d\u00b2 : DivisionRing K\ninst\u271d\u00b9 : AddCommGroup V\ninst\u271d : Module K V\nf : \u03b9 \u2192 \u2119 K V\n\u22a2 Dependent f \u2194 \u00acIndependent f",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\nK : Type u_2\nV : Type u_3\ninst\u271d\u00b2 : DivisionRing K\ninst\u271d\u00b9 : AddCommGroup V\ninst\u271d : Module K V\nf : \u03b9 \u2192 \u2119 K V\n\u22a2 \u00acIndependent f \u2194 Dependent f",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\ninst\u271d : MeasurableSpace \u03b1\nm m\u2081 m\u2082 : OuterMeasure \u03b1\n\u22a2 (m\u2081 + m\u2082).trim = m\u2081.trim + m\u2082.trim",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\ninst\u271d : MeasurableSpace \u03b1\nm m\u2081 m\u2082 : OuterMeasure \u03b1\nh : \u00ac(m\u2081 + m\u2082).trim = m\u2081.trim + m\u2082.trim\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\ninst\u271d : MeasurableSpace \u03b1\nm m\u2081 m\u2082 : OuterMeasure \u03b1\nH : \u00ac(m\u2081 + m\u2082).trim = m\u2081.trim + m\u2082.trim\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\ninst\u271d : MeasurableSpace \u03b1\nm m\u2081 m\u2082 : OuterMeasure \u03b1\nh : (m\u2081 + m\u2082).trim \u2260 m\u2081.trim + m\u2082.trim\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "t : Type u \u2192 Type u \u2192 Type u\ninst\u271d\u2075 : Bitraversable t\n\u03b2\u271d : Type u\nF G : Type u \u2192 Type u\ninst\u271d\u2074 : Applicative F\ninst\u271d\u00b3 : Applicative G\ninst\u271d\u00b2 : LawfulBitraversable t\ninst\u271d\u00b9 : LawfulApplicative F\ninst\u271d : LawfulApplicative G\n\u03b1 \u03b2 \u03b2' : Type u\nf : \u03b2 \u2192 \u03b2'\nx : t \u03b1 \u03b2\n\u22a2 tsnd (pure \u2218 f) x = pure (snd f x)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "t : Type u \u2192 Type u \u2192 Type u\ninst\u271d\u2075 : Bitraversable t\n\u03b2\u271d : Type u\nF G : Type u \u2192 Type u\ninst\u271d\u2074 : Applicative F\ninst\u271d\u00b3 : Applicative G\ninst\u271d\u00b2 : LawfulBitraversable t\ninst\u271d\u00b9 : LawfulApplicative F\ninst\u271d : LawfulApplicative G\n\u03b1 \u03b2 \u03b2' : Type u\nf : \u03b2 \u2192 \u03b2'\nx : t \u03b1 \u03b2\n\u22a2 tsnd (pure \u2218 f) x = snd f x",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "t : Type u \u2192 Type u \u2192 Type u\ninst\u271d\u2075 : Bitraversable t\n\u03b2\u271d : Type u\nF G : Type u \u2192 Type u\ninst\u271d\u2074 : Applicative F\ninst\u271d\u00b3 : Applicative G\ninst\u271d\u00b2 : LawfulBitraversable t\ninst\u271d\u00b9 : LawfulApplicative F\ninst\u271d : LawfulApplicative G\n\u03b1 \u03b2 \u03b2' : Type u\nf : \u03b2 \u2192 \u03b2'\nx : t \u03b1 \u03b2\nh : \u00actsnd (pure \u2218 f) x = pure (snd f x)\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "t : Type u \u2192 Type u \u2192 Type u\ninst\u271d\u2075 : Bitraversable t\n\u03b2\u271d : Type u\nF G : Type u \u2192 Type u\ninst\u271d\u2074 : Applicative F\ninst\u271d\u00b3 : Applicative G\ninst\u271d\u00b2 : LawfulBitraversable t\ninst\u271d\u00b9 : LawfulApplicative F\ninst\u271d : LawfulApplicative G\n\u03b1 \u03b2 \u03b2' : Type u\nf : \u03b2 \u2192 \u03b2'\nx : t \u03b1 \u03b2\nH : \u00actsnd (pure \u2218 f) x = pure (snd f x)\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "t : Type u \u2192 Type u \u2192 Type u\ninst\u271d\u2075 : Bitraversable t\n\u03b2\u271d : Type u\nF G : Type u \u2192 Type u\ninst\u271d\u2074 : Applicative F\ninst\u271d\u00b3 : Applicative G\ninst\u271d\u00b2 : LawfulBitraversable t\ninst\u271d\u00b9 : LawfulApplicative F\ninst\u271d : LawfulApplicative G\n\u03b1 \u03b2 \u03b2' : Type u\nf : \u03b2 \u2192 \u03b2'\nx : t \u03b1 \u03b2\n\u22a2 bitraverse pure (pure \u2218 f) x = snd f x",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "t : Type u \u2192 Type u \u2192 Type u\ninst\u271d\u2075 : Bitraversable t\n\u03b2\u271d : Type u\nF G : Type u \u2192 Type u\ninst\u271d\u2074 : Applicative F\ninst\u271d\u00b3 : Applicative G\ninst\u271d\u00b2 : LawfulBitraversable t\ninst\u271d\u00b9 : LawfulApplicative F\ninst\u271d : LawfulApplicative G\n\u03b1 \u03b2 \u03b2' : Type u\nf : \u03b2 \u2192 \u03b2'\nx : t \u03b1 \u03b2\n\u22a2 bitraverse pure (fun x => f x) x = snd f x",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "t : Type u \u2192 Type u \u2192 Type u\ninst\u271d\u2075 : Bitraversable t\n\u03b2\u271d : Type u\nF G : Type u \u2192 Type u\ninst\u271d\u2074 : Applicative F\ninst\u271d\u00b3 : Applicative G\ninst\u271d\u00b2 : LawfulBitraversable t\ninst\u271d\u00b9 : LawfulApplicative F\ninst\u271d : LawfulApplicative G\n\u03b1 \u03b2 \u03b2' : Type u\nf : \u03b2 \u2192 \u03b2'\n\u22a2 \u2200 (x : t \u03b1 \u03b2), tsnd (pure \u2218 f) x = snd f x",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "t : Type u \u2192 Type u \u2192 Type u\ninst\u271d\u2075 : Bitraversable t\n\u03b2\u271d : Type u\nF G : Type u \u2192 Type u\ninst\u271d\u2074 : Applicative F\ninst\u271d\u00b3 : Applicative G\ninst\u271d\u00b2 : LawfulBitraversable t\ninst\u271d\u00b9 : LawfulApplicative F\ninst\u271d : LawfulApplicative G\n\u03b1 \u03b2 \u03b2' : Type u\nf : \u03b2 \u2192 \u03b2'\nx : t \u03b1 \u03b2\n\u22a2 snd f x = bitraverse pure (pure \u2218 f) x",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "t : Type u \u2192 Type u \u2192 Type u\ninst\u271d\u2075 : Bitraversable t\n\u03b2\u271d : Type u\nF G : Type u \u2192 Type u\ninst\u271d\u2074 : Applicative F\ninst\u271d\u00b3 : Applicative G\ninst\u271d\u00b2 : LawfulBitraversable t\ninst\u271d\u00b9 : LawfulApplicative F\ninst\u271d : LawfulApplicative G\n\u03b1 \u03b2 \u03b2' : Type u\nf : \u03b2 \u2192 \u03b2'\nx : t \u03b1 \u03b2\n\u22a2 bitraverse pure (fun x => pure (f x)) x = snd f x",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "t : Type u \u2192 Type u \u2192 Type u\ninst\u271d\u2075 : Bitraversable t\n\u03b2\u271d : Type u\nF G : Type u \u2192 Type u\ninst\u271d\u2074 : Applicative F\ninst\u271d\u00b3 : Applicative G\ninst\u271d\u00b2 : LawfulBitraversable t\ninst\u271d\u00b9 : LawfulApplicative F\ninst\u271d : LawfulApplicative G\n\u03b1 \u03b2 \u03b2' : Type u\nf : \u03b2 \u2192 \u03b2'\nx : t \u03b1 \u03b2\n\u22a2 snd f x = tsnd (pure \u2218 f) x",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "t : Type u \u2192 Type u \u2192 Type u\ninst\u271d\u2075 : Bitraversable t\n\u03b2\u271d : Type u\nF G : Type u \u2192 Type u\ninst\u271d\u2074 : Applicative F\ninst\u271d\u00b3 : Applicative G\ninst\u271d\u00b2 : LawfulBitraversable t\ninst\u271d\u00b9 : LawfulApplicative F\ninst\u271d : LawfulApplicative G\n\u03b1 \u03b2 \u03b2' : Type u\nf : \u03b2 \u2192 \u03b2'\nx : t \u03b1 \u03b2\n\u22a2 tsnd (fun x => f x) x = snd f x",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "t : Type u \u2192 Type u \u2192 Type u\ninst : Bitraversable t\n\u03b2_1 : Type u\nF G : Type u \u2192 Type u\ninst_1 : Applicative F\ninst_2 : Applicative G\ninst_3 : LawfulBitraversable t\ninst_4 : LawfulApplicative F\ninst_5 : LawfulApplicative G\n\u03b1 \u03b2 \u03b2' : Type u\nf : \u03b2 \u2192 \u03b2'\nx : t \u03b1 \u03b2\nh : \u00actsnd (pure \u2218 f) x = snd f x\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "t : Type u \u2192 Type u \u2192 Type u\ninst\u271d\u2075 : Bitraversable t\n\u03b2\u271d : Type u\nF G : Type u \u2192 Type u\ninst\u271d\u2074 : Applicative F\ninst\u271d\u00b3 : Applicative G\ninst\u271d\u00b2 : LawfulBitraversable t\ninst\u271d\u00b9 : LawfulApplicative F\ninst\u271d : LawfulApplicative G\n\u03b1 \u03b2 \u03b2' : Type u\nf : \u03b2 \u2192 \u03b2'\n\u22a2 \u2200 (x : t \u03b1 \u03b2), \u00actsnd (pure \u2218 f) x = pure (snd f x) \u2192 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\ud835\udd5c : Type u_1\nE : Type u_2\nF : Type u_3\ninst\u271d\u2074 : OrderedSemiring \ud835\udd5c\ninst\u271d\u00b3 : AddCommMonoid E\ninst\u271d\u00b2 : AddCommMonoid F\ninst\u271d\u00b9 : Module \ud835\udd5c E\ninst\u271d : Module \ud835\udd5c F\ns t : Set E\nx y : E\nhst : s \u2286 t\n\u22a2 (convexHull \ud835\udd5c) s \u2286 (convexHull \ud835\udd5c) t",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b2 : Type u_2\n\u03b3 : Type u_3\nf : \u03b1 \u2192 \u03b2\na : \u03b1\n\u22a2 map f (some a) = some (f a)",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "R : Type u_1\nr : R\ninst\u271d : Semiring R\nP : R[X]\nn : \u2115\n\u22a2 IsNilpotent ((monomial n) r) \u2194 IsNilpotent r",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "R : Type u_1\nr : R\ninst\u271d : Semiring R\nP : R[X]\nn : \u2115\n\u22a2 IsNilpotent r \u2194 IsNilpotent ((monomial n) r)",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\n\u03b1' : Type u_2\n\u03b2 : Type u_3\n\u03b2' : Type u_4\n\u03b3 : Type u_5\nE : Type u_6\ninst\u271d\u2077 : MeasurableSpace \u03b1\ninst\u271d\u2076 : MeasurableSpace \u03b1'\ninst\u271d\u2075 : MeasurableSpace \u03b2\ninst\u271d\u2074 : MeasurableSpace \u03b2'\ninst\u271d\u00b3 : MeasurableSpace \u03b3\n\u03bc\u271d \u03bc' : Measure \u03b1\n\u03bd \u03bd' : Measure \u03b2\n\u03c4 : Measure \u03b3\ninst\u271d\u00b2 : NormedAddCommGroup E\ninst\u271d\u00b9 : SFinite \u03bd\ninst\u271d : SFinite \u03bc\u271d\n\u03bc : Measure \u03b1\n\u22a2 \u03bc.prod 0 = 0",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u_1\ninst\u271d\u00b9 : One \u03b1\ninst\u271d : Add \u03b1\nn : PosNum\n\u22a2 \u2191n.bit1 = _root_.bit1 \u2191n",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "K : Type u_1\nL : Type u_2\nL' : Type u_3\ninst\u271d\u2074 : Field K\ninst\u271d\u00b3 : Field L\ninst\u271d\u00b2 : Field L'\ninst\u271d\u00b9 : Algebra K L\ninst\u271d : Algebra K L'\nS s : IntermediateField K L\nx : L\n\u22a2 x \u2208 s.toSubfield \u2194 x \u2208 s",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\ninst\u271d\u00b2 : PseudoEMetricSpace \u03b1\ninst\u271d\u00b9 : PseudoEMetricSpace \u03b2\ninst\u271d : PseudoEMetricSpace \u03b3\nh : \u03b1 \u2243\u1d62 \u03b2\n\u22a2 \u21d1h \u2218 \u21d1h.symm = id",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\ninst\u271d\u00b2 : PseudoEMetricSpace \u03b1\ninst\u271d\u00b9 : PseudoEMetricSpace \u03b2\ninst\u271d : PseudoEMetricSpace \u03b3\nh : \u03b1 \u2243\u1d62 \u03b2\n\u22a2 id = \u21d1h \u2218 \u21d1h.symm",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "m : \u2124\nhm : 0 < m\np : \u2115\nhp : Fact (Nat.Prime p)\nHpv : (multiplicity (\u2191p) m).get \u22ef % 2 = 1\n\u22a2 Irrational \u221a\u2191m",
+    "value_target": -1.0,
+    "mcts_value": -0.017714204266667366
+  },
+  {
+    "type": "value",
+    "state": "m : \u2124\nhm : 0 < m\np : \u2115\nhp : Fact (Nat.Prime p)\nHpv : (multiplicity (\u2191p) m).get \u22ef % 2 = 1\nh : \u00acIrrational \u221a\u2191m\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -0.017714204266667366
+  },
+  {
+    "type": "value",
+    "state": "m : \u2124\nhm : 0 < m\np : \u2115\nhp : Fact (Nat.Prime p)\nHpv : (multiplicity (\u2191p) m).get \u22ef % 2 = 1\n\u22a2 \u221a\u2191m \u2209 Set.range Rat.cast",
+    "value_target": -1.0,
+    "mcts_value": -0.01778646744787693
+  },
+  {
+    "type": "value",
+    "state": "m : \u2124\nhm : 0 < m\np : \u2115\nhp : Fact (Nat.Prime p)\nHpv : (multiplicity (\u2191p) m).get \u22ef % 2 = 1\nh : \u00acIrrational \u221a\u2191m\n\u22a2 Irrational \u221a\u2191m",
+    "value_target": -1.0,
+    "mcts_value": -0.017714204266667366
+  },
+  {
+    "type": "value",
+    "state": "m : \u2124\nhm : 0 < m\np : \u2115\nhp : Fact (Nat.Prime p)\nHpv : (multiplicity (\u2191p) m).get \u22ef % 2 = 1\nh : True\n\u22a2 False",
+    "value_target": -1.0,
+    "mcts_value": -0.018040334805846214
+  },
+  {
+    "type": "value",
+    "state": "m : \u2124\nhm : 0 < m\np : \u2115\nhp : Fact (Nat.Prime p)\nHpv : (multiplicity (\u2191p) m).get \u22ef % 2 = 1\n\u22a2 \u00acIrrational \u221a\u2191m \u2192 False",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "m : \u2124\nhm : 0 < m\np : \u2115\nhp : Fact (Nat.Prime p)\nHpv : (multiplicity (\u2191p) m).get \u22ef % 2 = 1\n\u22a2 \u2200 (x : \u211a), \u00ac\u2191x = \u221a\u2191m",
+    "value_target": -1.0,
+    "mcts_value": -0.01778646744787693
+  },
+  {
+    "type": "value",
+    "state": "R : Type u_1\nS : Type u_2\nM : Type u_3\nA : Type u_4\nB : Type u_5\ninst\u271d\u2075 : Monoid R\ninst\u271d\u2074 : Monoid S\ninst\u271d\u00b3 : AddMonoid A\ninst\u271d\u00b2 : AddCommMonoid B\ninst\u271d\u00b9 : DistribMulAction R B\ninst\u271d : DistribMulAction S B\nr : R\nf : A \u2192+ B\n\u22a2 \u21d1(r \u2022 f) = r \u2022 \u21d1f",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "I\u2081 : Type u_1\nI\u2082 : Type u_2\nI\u2083 : Type u_3\nJ : Type u_4\ninst\u271d : Zero I\u2082\nr : I\u2081 \u00d7 I\u2082 \u00d7 I\u2083 \u2192 J\n\u03c0 : I\u2081 \u00d7 I\u2083 \u2192 J\n\u03c4 : TriangleIndexData r \u03c0\ni\u2081 : I\u2081\ni\u2083 : I\u2083\n\u22a2 r (i\u2081, 0, i\u2083) = \u03c0 (i\u2081, i\u2083)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "I\u2081 : Type u_1\nI\u2082 : Type u_2\nI\u2083 : Type u_3\nJ : Type u_4\ninst\u271d : Zero I\u2082\nr : I\u2081 \u00d7 I\u2082 \u00d7 I\u2083 \u2192 J\n\u03c0 : I\u2081 \u00d7 I\u2083 \u2192 J\n\u03c4 : TriangleIndexData r \u03c0\ni\u2081 : I\u2081\ni\u2083 : I\u2083\n\u22a2 \u03c0 (i\u2081, i\u2083) = r (i\u2081, 0, i\u2083)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\nl\u2081 l\u2082 : List \u03b1\na : \u03b1\nas : List \u03b1\nb : \u03b2\nbs : List \u03b2\n\u22a2 (a :: as).zipLeft (b :: bs) = (a, some b) :: as.zipLeft bs",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : Type u_2\n\u03b2 : Type u_3\n\u03b3 : Type u_4\n\u03c0 : \u03b9 \u2192 Type u_5\nr r' : \u03b1 \u2192 \u03b1 \u2192 Prop\nf : \u03b2 \u2192 \u03b1\ns t : Set \u03b1\nx y : \u03b1\n\u22a2 WellFounded r \u2192 s.WellFoundedOn r",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : Type u_2\n\u03b2 : Type u_3\n\u03b3 : Type u_4\n\u03c0 : \u03b9 \u2192 Type u_5\nr r' : \u03b1 \u2192 \u03b1 \u2192 Prop\nf : \u03b2 \u2192 \u03b1\ns t : Set \u03b1\nx y : \u03b1\na : WellFounded r\n\u22a2 s.WellFoundedOn r",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case h\n\u03b9 : Type u_1\n\u03b1 : Type u_2\n\u03b2 : Type u_3\n\u03b3 : Type u_4\n\u03c0 : \u03b9 \u2192 Type u_5\nr r' : \u03b1 \u2192 \u03b1 \u2192 Prop\nf : \u03b2 \u2192 \u03b1\ns t : Set \u03b1\nx y : \u03b1\na : WellFounded r\n\u22a2 \u2200 (a : \u2191s), Acc (fun a b => r \u2191a \u2191b) a",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : Type u_2\n\u03b2 : Type u_3\n\u03b3 : Type u_4\n\u03c0 : \u03b9 \u2192 Type u_5\nr r' : \u03b1 \u2192 \u03b1 \u2192 Prop\nf : \u03b2 \u2192 \u03b1\ns t : Set \u03b1\nx y : \u03b1\na : WellFounded r\n\u22a2 WellFounded fun a b => r \u2191a \u2191b",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "R : Type u\nS : Type v\nT : Type w\ninst\u271d\u00b2 : Ring R\ninst\u271d\u00b9 : Ring S\ninst\u271d : Ring T\ns : Subring R\nx y : \u21a5s\n\u22a2 \u2191(x * y) = \u2191x * \u2191y",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "m n : \u2115\n\u03b1 : Fin (n + 1) \u2192 Type u\n\u03b2 : Type v\ninst\u271d : (j : Fin (n + 1)) \u2192 AddGroup (\u03b1 j)\ni : Fin (n + 1)\nx y : \u03b1 i\np : (j : Fin n) \u2192 \u03b1 (i.succAbove j)\n\u22a2 i.insertNth x p - i.insertNth y p = Pi.single i (x - y)",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b1 : Type u\n\u03b2 : Type v\n\u03b3 : Type w\n\u03b4 : Type u_1\n\u03b9 : Sort x\nl f\u271d f\u2081 f\u2082 : Filter \u03b1\ng g\u2081 g\u2082 : Filter \u03b2\nm\u271d : \u03b1 \u2192 \u03b2\nm' : \u03b2 \u2192 \u03b3\ns : Set \u03b1\nt : Set \u03b2\nf : Filter \u03b2\nm : \u03b1 \u2192 \u03b2\nx\u271d : f.NeBot\nhm : range m \u2208 f\n\u22a2 (comap m f).NeBot",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "X\u271d : LocallyRingedSpace\nX Y : LocallyRingedSpace\u1d52\u1d56\nf : X \u27f6 Y\n\u22a2 \u0393.map f = f.unop.val.c.app { unop := \u22a4 }",
+    "value_target": 1.0,
+    "mcts_value": 1.0
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : \u03b9 \u2192 Type u_2\nf f\u2081 f\u2082 : (i : \u03b9) \u2192 Filter (\u03b1 i)\ns : (i : \u03b9) \u2192 Set (\u03b1 i)\np : (i : \u03b9) \u2192 \u03b1 i \u2192 Prop\n\u22a2 (Filter.coprod\u1d62 f).NeBot \u2194 (\u2200 (i : \u03b9), Nonempty (\u03b1 i)) \u2227 \u2203 d, (f d).NeBot",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "\ud835\udd5c : Type u_1\nE : Type u_2\nF : Type u_3\nG : Type u_4\ninst\u271d\u2076 : NontriviallyNormedField \ud835\udd5c\ninst\u271d\u2075 : NormedAddCommGroup E\ninst\u271d\u2074 : NormedSpace \ud835\udd5c E\ninst\u271d\u00b3 : NormedAddCommGroup F\ninst\u271d\u00b2 : NormedSpace \ud835\udd5c F\ninst\u271d\u00b9 : NormedAddCommGroup G\ninst\u271d : NormedSpace \ud835\udd5c G\np : FormalMultilinearSeries \ud835\udd5c E F\nr : \u211d\u22650\nh : (fun n => \u2016p n\u2016 * \u2191r ^ n) =O[atTop] fun x => 1\n\u22a2 \u2191r \u2264 p.radius",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "a b m n\u271d p\u271d n p : \u2115\n\u22a2 count p n.factors = n.factorization p",
+    "value_target": -1.0,
+    "mcts_value": -0.013791262172162533
+  },
+  {
+    "type": "value",
+    "state": "a b m n\u271d p\u271d n p : \u2115\n\u22a2 count p n.factors = if Prime p then padicValNat p n else 0",
+    "value_target": -1.0,
+    "mcts_value": -0.014442474581301212
+  },
+  {
+    "type": "value",
+    "state": "a b m n\u271d p\u271d n p : \u2115\n\u22a2 n.factorization p = count p n.factors",
+    "value_target": -1.0,
+    "mcts_value": -0.013791262172162533
+  },
+  {
+    "type": "value",
+    "state": "a b m n\u271d p\u271d n p : \u2115\n\u22a2 countP (fun x => x == p) n.factors = n.factorization p",
+    "value_target": -1.0,
+    "mcts_value": -0.014057735912501812
+  },
+  {
+    "type": "value",
+    "state": "a b m n\u271d p\u271d n p : \u2115\n\u22a2 count p\n      (match n with\n      | 0 => []\n      | 1 => []\n      | k.succ.succ =>\n        let m := (k + 2).minFac;\n        m :: ((k + 2) / m).factors) =\n    n.factorization p",
+    "value_target": -1.0,
+    "mcts_value": -0.01733141951262951
+  },
+  {
+    "type": "value",
+    "state": "case zero\na b m n p\u271d p : \u2115\n\u22a2 count p (factors 0) = (factorization 0) p\n\ncase succ\na b m n\u271d p\u271d p n : \u2115\nn_ih : count p n.factors = n.factorization p\n\u22a2 count p (n + 1).factors = (n + 1).factorization p",
+    "value_target": -1.0,
+    "mcts_value": -0.013791262172162533
+  },
+  {
+    "type": "value",
+    "state": "case pos\na b m n\u271d p\u271d n p : \u2115\nh : n = 0\n\u22a2 count p n.factors = n.factorization p\n\ncase neg\na b m n\u271d p\u271d n p : \u2115\nh : \u00acn = 0\n\u22a2 count p n.factors = n.factorization p",
+    "value_target": -1.0,
+    "mcts_value": -0.014292550273239613
+  },
+  {
+    "type": "value",
+    "state": "case inl\na b m n p\u271d p : \u2115\n\u22a2 count p (factors 0) = (factorization 0) p\n\ncase inr\na b m n\u271d p\u271d n p : \u2115\nhn : n \u2260 0\n\u22a2 count p n.factors = n.factorization p",
+    "value_target": -1.0,
+    "mcts_value": -0.014011037535965443
+  },
+  {
+    "type": "value",
+    "state": "\u03b9 : Type u_1\n\u03b1 : Type u_2\n\u03b2 : Type u_3\n\u03c0 : \u03b9 \u2192 Type u_4\ninst\u271d : GeneralizedBooleanAlgebra \u03b1\na\u271d b c d a : \u03b1\n\u22a2 Surjective fun x => x \u2206 a",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "x y : \u2102\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -0.014818967320024967
+  },
+  {
+    "type": "value",
+    "state": "case mp\nx y : \u2102\n\u22a2 abs (x + y) = abs x + abs y \u2192 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg\n\ncase mpr\nx y : \u2102\n\u22a2 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg \u2192 abs (x + y) = abs x + abs y",
+    "value_target": -1.0,
+    "mcts_value": -0.01642095483839512
+  },
+  {
+    "type": "value",
+    "state": "case inl\ny : \u2102\n\u22a2 abs (0 + y) = abs 0 + abs y \u2194 0 = 0 \u2228 y = 0 \u2228 arg 0 = y.arg\n\ncase inr\nx y : \u2102\nh0 : x \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -0.014818967320024967
+  },
+  {
+    "type": "value",
+    "state": "case inl\ny : \u2102\n\u22a2 abs (0 + y) = abs 0 + abs y \u2194 0 = 0 \u2228 y = 0 \u2228 arg 0 = y.arg\n\ncase inr\nx y : \u2102\nhx : x \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -0.015096919611096382
+  },
+  {
+    "type": "value",
+    "state": "x y : \u2102\n\u22a2 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg \u2194 abs (x + y) = abs x + abs y",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case mp\nx y : \u2102\nh : abs (x + y) = abs x + abs y\n\u22a2 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg\n\ncase mpr\nx y : \u2102\nh : x = 0 \u2228 y = 0 \u2228 x.arg = y.arg\n\u22a2 abs (x + y) = abs x + abs y",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case pos\nx y : \u2102\nhx : x = 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg\n\ncase neg\nx y : \u2102\nhx : \u00acx = 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inl\ny : \u2102\n\u22a2 abs (0 + y) = abs 0 + abs y \u2194 0 = 0 \u2228 y = 0 \u2228 arg 0 = y.arg\n\ncase inr\nx y : \u2102\nh\u2080 : x \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inl\ny : \u2102\n\u22a2 abs (0 + y) = abs 0 + abs y \u2194 0 = 0 \u2228 y = 0 \u2228 arg 0 = y.arg\n\ncase inr\nx y : \u2102\nhy : x \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case mp\nx y : \u2102\nH : abs (x + y) = abs x + abs y\n\u22a2 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg\n\ncase mpr\nx y : \u2102\nH : x = 0 \u2228 y = 0 \u2228 x.arg = y.arg\n\u22a2 abs (x + y) = abs x + abs y",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inl\ny : \u2102\n\u22a2 abs (0 + y) = abs 0 + abs y \u2194 0 = 0 \u2228 y = 0 \u2228 arg 0 = y.arg\n\ncase inr\nx y : \u2102\nh : x \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inl\ny : \u2102\n\u22a2 abs (0 + y) = abs 0 + abs y \u2194 0 = 0 \u2228 y = 0 \u2228 arg 0 = y.arg\n\ncase inr\nx y : \u2102\nhx0 : x \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case refine_1\nx y : \u2102\nh : abs (x + y) = abs x + abs y\n\u22a2 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg\n\ncase refine_2\nx y : \u2102\nh : x = 0 \u2228 y = 0 \u2228 x.arg = y.arg\n\u22a2 abs (x + y) = abs x + abs y",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "x y : \u2102\n\u22a2 { toFun := fun x => \u221a(normSq x), map_mul' := Complex.AbsTheory.abs_mul, nonneg' := Complex.AbsTheory.abs_nonneg',\n          eq_zero' := abs.proof_1, add_le' := Complex.AbsTheory.abs_add }\n        (x + y) =\n      { toFun := fun x => \u221a(normSq x), map_mul' := Complex.AbsTheory.abs_mul, nonneg' := Complex.AbsTheory.abs_nonneg',\n            eq_zero' := abs.proof_1, add_le' := Complex.AbsTheory.abs_add }\n          x +\n        { toFun := fun x => \u221a(normSq x), map_mul' := Complex.AbsTheory.abs_mul,\n            nonneg' := Complex.AbsTheory.abs_nonneg', eq_zero' := abs.proof_1, add_le' := Complex.AbsTheory.abs_add }\n          y \u2194\n    x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inl\nx y : \u2102\nhx : x = 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg\n\ncase inr\nx y : \u2102\nhx : x \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "x y : \u2102\n\u22a2 abs (y + x) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case pos\nx y : \u2102\nh : x = 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg\n\ncase neg\nx y : \u2102\nh : \u00acx = 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "x y : \u2102\n\u22a2 \u221a(normSq (x + y)) = \u221a(normSq x) + \u221a(normSq y) \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inl\nx y : \u2102\nh : x = 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg\n\ncase inr\nx y : \u2102\nh : x \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inl\ny : \u2102\n\u22a2 abs (0 + y) = abs 0 + abs y \u2194 0 = 0 \u2228 y = 0 \u2228 arg 0 = y.arg\n\ncase inr\nx y : \u2102\nh' : x \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inl\nx : \u2102\n\u22a2 abs (x + 0) = abs x + abs 0 \u2194 x = 0 \u2228 0 = 0 \u2228 x.arg = arg 0\n\ncase inr\nx y : \u2102\nhy : y \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inl\nx : \u2102\n\u22a2 abs (x + x) = abs x + abs x \u2194 x = 0 \u2228 x = 0 \u2228 x.arg = x.arg\n\ncase inr\nx y : \u2102\nh0 : x \u2260 y\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inl\nx : \u2102\n\u22a2 abs (x + x) = abs x + abs x \u2194 x = 0 \u2228 x = 0 \u2228 x.arg = x.arg\n\ncase inr\nx y : \u2102\nhx : x \u2260 y\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inl\nx : \u2102\n\u22a2 abs (x + 0) = abs x + abs 0 \u2194 x = 0 \u2228 0 = 0 \u2228 x.arg = arg 0\n\ncase inr\nx y : \u2102\nh0 : y \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inl\ny : \u2102\n\u22a2 abs (0 + y) = abs 0 + abs y \u2194 0 = 0 \u2228 y = 0 \u2228 arg 0 = y.arg\n\ncase inr\nx y : \u2102\nh00 : x \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inl\nx y : \u2102\nhx : x = 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg\n\ncase inr\nx y : \u2102\nhy : x \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inl\ny : \u2102\n\u22a2 abs (0 + y) = abs 0 + abs y \u2194 0 = 0 \u2228 y = 0 \u2228 arg 0 = y.arg\n\ncase inr\nx y : \u2102\nhn : x \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inl\ny : \u2102\n\u22a2 abs (0 + y) = abs 0 + abs y \u2194 0 = 0 \u2228 y = 0 \u2228 arg 0 = y.arg\n\ncase inr\nx y : \u2102\nH : x \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inl\ny : \u2102\n\u22a2 abs (0 + y) = abs 0 + abs y \u2194 0 = 0 \u2228 y = 0 \u2228 arg 0 = y.arg\n\ncase inr\nx y : \u2102\nh1 : x \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inl\ny : \u2102\n\u22a2 abs (0 + y) = abs 0 + abs y \u2194 0 = 0 \u2228 y = 0 \u2228 arg 0 = y.arg\n\ncase inr\nx y : \u2102\nhx\u2080 : x \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inl\ny : \u2102\n\u22a2 abs (0 + y) = abs 0 + abs y \u2194 0 = 0 \u2228 y = 0 \u2228 arg 0 = y.arg\n\ncase inr\nx y : \u2102\nhxy : x \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inl\ny : \u2102\n\u22a2 abs (0 + y) = abs 0 + abs y \u2194 0 = 0 \u2228 y = 0 \u2228 arg 0 = y.arg\n\ncase inr\nx y : \u2102\nh_neg : x \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inr\nx y : \u2102\nh : x \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inl\ny : \u2102\n\u22a2 abs (0 + y) = abs 0 + abs y \u2194 0 = 0 \u2228 y = 0 \u2228 arg 0 = y.arg\n\ncase inr\nx y : \u2102\nhx' : x \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case mpr\nx y : \u2102\n\u22a2 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg \u2192 abs (x + y) = abs x + abs y\n\ncase mp\nx y : \u2102\n\u22a2 abs (x + y) = abs x + abs y \u2192 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -0.01642095483839512
+  },
+  {
+    "type": "value",
+    "state": "case mp\nx y : \u2102\n\u22a2 abs (y + x) = abs x + abs y \u2192 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg\n\ncase mpr\nx y : \u2102\n\u22a2 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg \u2192 abs (x + y) = abs x + abs y",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inr\nx y : \u2102\nh0 : x \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg\n\ncase inl\ny : \u2102\n\u22a2 abs (0 + y) = abs 0 + abs y \u2194 0 = 0 \u2228 y = 0 \u2228 arg 0 = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -0.014818967320024967
+  },
+  {
+    "type": "value",
+    "state": "case inr\nx y : \u2102\nh0 : x \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inr\nx y : \u2102\nhx : x \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2194 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg\n\ncase inl\ny : \u2102\n\u22a2 abs (0 + y) = abs 0 + abs y \u2194 0 = 0 \u2228 y = 0 \u2228 arg 0 = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -0.015096919611096382
+  },
+  {
+    "type": "value",
+    "state": "case mpr\nx y : \u2102\n\u22a2 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg \u2192 abs (y + x) = abs x + abs y\n\ncase mp\nx y : \u2102\n\u22a2 abs (x + y) = abs x + abs y \u2192 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case pos\nx y : \u2102\nhx : x = 0\n\u22a2 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg \u2192 abs (x + y) = abs x + abs y\n\ncase neg\nx y : \u2102\nhx : \u00acx = 0\n\u22a2 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg \u2192 abs (x + y) = abs x + abs y\n\ncase mp\nx y : \u2102\n\u22a2 abs (x + y) = abs x + abs y \u2192 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case mpr.mk\ny : \u2102\nre\u271d im\u271d : \u211d\n\u22a2 { re := re\u271d, im := im\u271d } = 0 \u2228 y = 0 \u2228 { re := re\u271d, im := im\u271d }.arg = y.arg \u2192\n    abs ({ re := re\u271d, im := im\u271d } + y) = abs { re := re\u271d, im := im\u271d } + abs y\n\ncase mp\nx y : \u2102\n\u22a2 abs (x + y) = abs x + abs y \u2192 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inr.mp\nx y : \u2102\nh0 : x \u2260 0\n\u22a2 abs (x + y) = abs x + abs y \u2192 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg\n\ncase inr.mpr\nx y : \u2102\nh0 : x \u2260 0\n\u22a2 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg \u2192 abs (x + y) = abs x + abs y\n\ncase inl\ny : \u2102\n\u22a2 abs (0 + y) = abs 0 + abs y \u2194 0 = 0 \u2228 y = 0 \u2228 arg 0 = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inr.mk\ny : \u2102\nre\u271d im\u271d : \u211d\nh0 : { re := re\u271d, im := im\u271d } \u2260 0\n\u22a2 abs ({ re := re\u271d, im := im\u271d } + y) = abs { re := re\u271d, im := im\u271d } + abs y \u2194\n    { re := re\u271d, im := im\u271d } = 0 \u2228 y = 0 \u2228 { re := re\u271d, im := im\u271d }.arg = y.arg\n\ncase inl\ny : \u2102\n\u22a2 abs (0 + y) = abs 0 + abs y \u2194 0 = 0 \u2228 y = 0 \u2228 arg 0 = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inr\nx y : \u2102\nh0 : x \u2260 0\n\u22a2 x = 0 \u2228 y = 0 \u2228 x.arg = y.arg \u2194 abs (x + y) = abs x + abs y\n\ncase inl\ny : \u2102\n\u22a2 abs (0 + y) = abs 0 + abs y \u2194 0 = 0 \u2228 y = 0 \u2228 arg 0 = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  },
+  {
+    "type": "value",
+    "state": "case inr.mk\nx : \u2102\nh0 : x \u2260 0\nre\u271d im\u271d : \u211d\n\u22a2 abs (x + { re := re\u271d, im := im\u271d }) = abs x + abs { re := re\u271d, im := im\u271d } \u2194\n    x = 0 \u2228 { re := re\u271d, im := im\u271d } = 0 \u2228 x.arg = { re := re\u271d, im := im\u271d }.arg\n\ncase inl\ny : \u2102\n\u22a2 abs (0 + y) = abs 0 + abs y \u2194 0 = 0 \u2228 y = 0 \u2228 arg 0 = y.arg",
+    "value_target": -1.0,
+    "mcts_value": -1.0
+  }
+]
