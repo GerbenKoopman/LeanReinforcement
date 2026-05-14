@@ -722,6 +722,94 @@ def plot_calibration_curve(root: Any, output_path: Path) -> Optional[Path]:
     return output_path
 
 
+# ---------------------------------------------------------------------------
+# Experiment 4 — Poincaré radius vs node outcome
+# ---------------------------------------------------------------------------
+
+
+def get_radius_by_outcome(
+    root: Any,
+    is_hyperbolic: bool = False,
+    curvature: float = 1.0,
+) -> Dict[str, list]:
+    """Collect Poincaré radii (or L2 norms for Euclidean) grouped by outcome.
+
+    Returns a dict with keys ``'proof'``, ``'error'``, ``'unknown'``, each
+    containing a list of float radii for all nodes in that outcome category
+    that have a 2-D embedding.
+    """
+    radii_by_outcome: Dict[str, list] = {"proof": [], "error": [], "unknown": []}
+
+    for node, _ in _walk_tree(root):
+        embedding = _node_embedding(node)
+        if embedding is None:
+            continue
+        raw = embedding.detach().cpu().reshape(-1).numpy().astype(float)
+        if raw.shape[0] != 2:
+            continue
+
+        if is_hyperbolic:
+            disk_pt = _tangent_to_disk(torch.as_tensor(raw), curvature)
+            radius = float(np.linalg.norm(disk_pt))
+        else:
+            radius = float(np.linalg.norm(raw))
+
+        outcome = _node_outcome(node)
+        radii_by_outcome[outcome].append(radius)
+
+    return radii_by_outcome
+
+
+def plot_radius_by_outcome(
+    root: Any,
+    output_path: Path,
+    is_hyperbolic: bool = False,
+    curvature: float = 1.0,
+) -> Optional[Path]:
+    """Violin/box plot of embedding radii stratified by node outcome."""
+    data = get_radius_by_outcome(root, is_hyperbolic=is_hyperbolic, curvature=curvature)
+    # Keep only outcomes that have data
+    outcomes_present = [k for k in ("proof", "error", "unknown") if data[k]]
+    if not outcomes_present:
+        return None
+
+    import matplotlib
+
+    matplotlib.use("Agg", force=True)
+    import matplotlib.pyplot as plt
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig, ax = plt.subplots(figsize=(7, 5), constrained_layout=True)
+
+    outcome_colors = {"proof": "#2ca02c", "error": "#d62728", "unknown": "#aec7e8"}
+    parts = ax.violinplot(
+        [data[k] for k in outcomes_present],
+        positions=range(len(outcomes_present)),
+        showmedians=True,
+        showextrema=True,
+    )
+    bodies: Any = parts["bodies"]  # type: ignore[index]
+    for pc, outcome in zip(bodies, outcomes_present):
+        pc.set_facecolor(outcome_colors[outcome])
+        pc.set_alpha(0.6)
+
+    ax.set_xticks(range(len(outcomes_present)))
+    ax.set_xticklabels(outcomes_present)
+    ax.set_xlabel("node outcome")
+    ylabel = "Poincaré radius" if is_hyperbolic else "L2 norm (embedding)"
+    ax.set_ylabel(ylabel)
+    title = (
+        f"Poincaré radius by outcome  (c={curvature})"
+        if is_hyperbolic
+        else "Embedding norm by outcome"
+    )
+    ax.set_title(title)
+
+    fig.savefig(output_path, dpi=200)
+    plt.close(fig)
+    return output_path
+
+
 def analyze_search_tree_file(
     search_tree_file: Path,
     is_hyperbolic: Optional[bool] = None,
@@ -763,6 +851,12 @@ def analyze_search_tree_file(
         "shape": get_mcts_shape_analysis(root),
         "radius_vs_depth": get_embedding_radius_vs_depth(root),
         "calibration": get_value_calibration_data(root),
+        "radius_by_outcome": {
+            k: v
+            for k, v in get_radius_by_outcome(
+                root, is_hyperbolic=_is_hyp, curvature=_curv
+            ).items()
+        },
         **get_gromov_hyperbolicity_and_map(
             root, is_hyperbolic=_is_hyp, curvature=_curv
         ),
@@ -881,6 +975,12 @@ def main() -> None:
         default=False,
         help="Save a value calibration curve (reliability diagram).",
     )
+    parser.add_argument(
+        "--plot-radius-by-outcome",
+        action="store_true",
+        default=False,
+        help="Save a violin plot of embedding radii stratified by node outcome.",
+    )
     args = parser.parse_args()
 
     report = analyze_search_tree_directory(args.search_tree_dir)
@@ -930,6 +1030,23 @@ def main() -> None:
                 written = plot_calibration_curve(root, calib_path)
                 if written is not None:
                     logger.info(f"Saved calibration curve to {written}")
+
+    if args.plot_radius_by_outcome:
+        tree_files = sorted(args.search_tree_dir.glob("search_tree_*.json"))
+        if tree_files:
+            with open(tree_files[0]) as _f:
+                _rbo_payload = json.load(_f)
+            _meta = _rbo_payload.get("metadata", {})
+            _is_hyp = bool(_meta.get("is_hyperbolic", False))
+            _curv = float(_meta.get("curvature", 1.0))
+            root = _load_serialized_tree(_rbo_payload)
+            if root is not None:
+                rbo_path = args.search_tree_dir.parent / "radius_by_outcome.png"
+                written = plot_radius_by_outcome(
+                    root, rbo_path, is_hyperbolic=_is_hyp, curvature=_curv
+                )
+                if written is not None:
+                    logger.info(f"Saved radius-by-outcome plot to {written}")
 
     logger.info(f"Saved search tree analysis to {output_path}")
 
