@@ -559,6 +559,25 @@ class BaseMCTS:
         with open(tree_file, "w") as f:
             json.dump(tree_data, f, indent=2)
 
+        logger.info(f"Saved search tree to {tree_file} ({len(serialized_nodes)} nodes)")
+
+        # Clear analysis embeddings from the in-memory nodes to avoid
+        # accumulating large numbers of CPU-side tensors over long runs.
+        try:
+            nodes_to_visit = [self.root]
+            visited = set()
+            while nodes_to_visit:
+                node = nodes_to_visit.pop(0)
+                nid = id(node)
+                if nid in visited:
+                    continue
+                visited.add(nid)
+                node.analysis_embedding = None
+                nodes_to_visit.extend(node.children)
+        except Exception:
+            # Be conservative — don't let cleanup failures interrupt training.
+            pass
+
     def _select(self, node: Node) -> Node:
         """
         Phase 1: Selection

@@ -417,6 +417,10 @@ def analyze_search_tree_file(search_tree_file: Path) -> Dict[str, Any]:
 def analyze_search_tree_directory(search_tree_dir: Path) -> Dict[str, Any]:
     tree_files = sorted(search_tree_dir.glob("search_tree_*.json"))
     if not tree_files:
+        tree_files = sorted(search_tree_dir.rglob("search_tree_*.json"))
+    if not tree_files and search_tree_dir.parent is not None:
+        tree_files = sorted(search_tree_dir.parent.rglob("search_tree_*.json"))
+    if not tree_files:
         return {
             "search_tree_dir": str(search_tree_dir),
             "tree_count": 0,
