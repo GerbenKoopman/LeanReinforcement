@@ -810,6 +810,255 @@ def plot_radius_by_outcome(
     return output_path
 
 
+# ---------------------------------------------------------------------------
+# Experiment 6 — geodesic proof-path visualisation
+# ---------------------------------------------------------------------------
+
+
+def _geodesic_arc_points(
+    p1: np.ndarray,
+    p2: np.ndarray,
+    c: float = 1.0,
+    n: int = 80,
+) -> np.ndarray:
+    """Return ``n`` points along the Poincaré-disk geodesic from *p1* to *p2*.
+
+    In the Poincaré disk with curvature parameter *c* (boundary radius
+    ``R = 1/√c``) geodesics are arcs of circles orthogonal to the boundary
+    circle, or diameters when *p1*, *p2*, and the origin are collinear.
+    Falls back to a straight line for the Euclidean / degenerate case.
+    """
+    R = 1.0 / math.sqrt(c)
+    m = (p1 + p2) / 2.0
+    d = p2 - p1
+    # Perpendicular direction (left-normal of d)
+    n_vec = np.array([-d[1], d[0]], dtype=float)
+    mn = float(m @ n_vec)
+    if abs(mn) < 1e-9:
+        # Collinear with origin — straight line is the geodesic
+        return np.linspace(p1, p2, n)
+    # Center of the circle orthogonal to the boundary disk
+    # Derivation: |O|² = |O - p1|² + R²  →  t = (|d/2|² + R² - |m|²) / (2·(m·n_vec))
+    t = (float(d @ d) / 4.0 + R**2 - float(m @ m)) / (2.0 * mn)
+    center = m + t * n_vec
+    r = float(np.linalg.norm(p1 - center))
+    theta1 = math.atan2(float(p1[1] - center[1]), float(p1[0] - center[0]))
+    theta2 = math.atan2(float(p2[1] - center[1]), float(p2[0] - center[0]))
+    # Choose the shorter arc
+    diff = (theta2 - theta1 + math.pi) % (2 * math.pi) - math.pi
+    thetas = np.linspace(0.0, diff, n)
+    xs = center[0] + r * np.cos(theta1 + thetas)
+    ys = center[1] + r * np.sin(theta1 + thetas)
+    return np.column_stack([xs, ys])
+
+
+def _find_proof_paths(root: AnalysisNode) -> list[list[AnalysisNode]]:
+    """DFS to collect all root→proof_finished paths in the search tree."""
+    paths: list[list[AnalysisNode]] = []
+
+    def _dfs(node: AnalysisNode, path: list[AnalysisNode]) -> None:
+        path = path + [node]
+        if node.terminal_type == "proof_finished":
+            paths.append(path)
+            return
+        for child in node.children:
+            _dfs(child, path)
+
+    _dfs(root, [])
+    return paths
+
+
+def plot_geodesic_proof_paths(
+    root: AnalysisNode,
+    output_path: Path,
+    is_hyperbolic: bool = False,
+    curvature: float = 1.0,
+) -> Optional[Path]:
+    """Draw geodesic arcs along all root→proof_finished paths on the Poincaré disk.
+
+    Each proof path is rendered in a distinct colour as a chain of geodesic
+    segments between consecutive nodes with 2D embeddings.  Circle markers
+    indicate the root end of each path; star markers indicate the proof node.
+    Returns ``None`` when no proof paths exist or no nodes have 2D embeddings.
+    """
+    paths = _find_proof_paths(root)
+    if not paths:
+        logger.info("No proof-finished paths found; skipping geodesic path plot.")
+        return None
+
+    import matplotlib
+
+    matplotlib.use("Agg", force=True)
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots(figsize=(6, 6))
+    if is_hyperbolic:
+        R = 1.0 / math.sqrt(curvature)
+        disk = plt.Circle((0, 0), R, fill=False, color="black", linewidth=1.5)
+        ax.add_patch(disk)
+        ax.set_xlim(-R * 1.05, R * 1.05)
+        ax.set_ylim(-R * 1.05, R * 1.05)
+    else:
+        ax.set_xlim(-1.05, 1.05)
+        ax.set_ylim(-1.05, 1.05)
+
+    cmap = plt.cm.get_cmap("tab10", max(len(paths), 1))
+    any_plotted = False
+    for path_idx, path in enumerate(paths):
+        color = cmap(path_idx % 10)
+        coords: list[np.ndarray] = []
+        for node in path:
+            if (
+                node.analysis_embedding is not None
+                and len(node.analysis_embedding) == 2
+            ):
+                raw = node.analysis_embedding
+                if is_hyperbolic:
+                    pt = _tangent_to_disk(torch.as_tensor(raw), curvature)
+                else:
+                    pt = np.array(raw, dtype=float)
+                coords.append(pt)
+        if len(coords) < 2:
+            continue
+        any_plotted = True
+        for i in range(len(coords) - 1):
+            p1, p2 = coords[i], coords[i + 1]
+            if is_hyperbolic:
+                arc = _geodesic_arc_points(p1, p2, c=curvature, n=80)
+            else:
+                arc = np.array([p1, p2])
+            ax.plot(arc[:, 0], arc[:, 1], color=color, lw=1.2, alpha=0.75)
+        ax.scatter(
+            [coords[0][0]], [coords[0][1]], color=color, s=40, marker="o", zorder=5
+        )
+        ax.scatter(
+            [coords[-1][0]], [coords[-1][1]], color=color, s=80, marker="*", zorder=5
+        )
+
+    if not any_plotted:
+        plt.close(fig)
+        logger.info("No 2D embeddings on proof paths; skipping geodesic path plot.")
+        return None
+
+    geometry_label = "Poincaré disk" if is_hyperbolic else "Euclidean plane"
+    ax.set_title(f"Geodesic proof paths — {geometry_label}")
+    ax.set_aspect("equal")
+    ax.axis("off")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    return output_path
+
+
+# ---------------------------------------------------------------------------
+# Experiment 7 — entailment cone angle distribution
+# ---------------------------------------------------------------------------
+
+
+def get_entailment_cone_angles(
+    root: AnalysisNode,
+    is_hyperbolic: bool = False,
+    curvature: float = 1.0,
+) -> list[float]:
+    """Compute cone half-angles for every parent→child pair with 2D embeddings.
+
+    For each pair the angle is measured between the *parent→child* direction
+    and the *parent→origin* direction (i.e. the inward direction in hyperbolic
+    space).  A small angle means the child lies 'in front of' its parent
+    relative to the origin — deeper in the Poincaré hierarchy.
+
+    Returns a list of angles in degrees.
+    """
+    angles: list[float] = []
+
+    def _recurse(node: AnalysisNode) -> None:
+        if node.analysis_embedding is None or len(node.analysis_embedding) != 2:
+            for child in node.children:
+                _recurse(child)
+            return
+
+        raw_parent = node.analysis_embedding
+        if is_hyperbolic:
+            p_parent = _tangent_to_disk(torch.as_tensor(raw_parent), curvature)
+        else:
+            p_parent = np.array(raw_parent, dtype=float)
+
+        parent_norm = float(np.linalg.norm(p_parent))
+        if parent_norm < 1e-9:
+            for child in node.children:
+                _recurse(child)
+            return
+
+        toward_origin = -p_parent  # direction from parent toward the origin
+        for child in node.children:
+            if child.analysis_embedding is None or len(child.analysis_embedding) != 2:
+                _recurse(child)
+                continue
+            raw_child = child.analysis_embedding
+            if is_hyperbolic:
+                p_child = _tangent_to_disk(torch.as_tensor(raw_child), curvature)
+            else:
+                p_child = np.array(raw_child, dtype=float)
+
+            direction = p_child - p_parent
+            dir_norm = float(np.linalg.norm(direction))
+            if dir_norm < 1e-9:
+                _recurse(child)
+                continue
+            cos_theta = float(np.dot(direction, toward_origin)) / (
+                dir_norm * parent_norm
+            )
+            cos_theta = max(-1.0, min(1.0, cos_theta))
+            angles.append(math.degrees(math.acos(cos_theta)))
+            _recurse(child)
+
+    _recurse(root)
+    return angles
+
+
+def plot_entailment_cone_distribution(
+    root: AnalysisNode,
+    output_path: Path,
+    is_hyperbolic: bool = False,
+    curvature: float = 1.0,
+) -> Optional[Path]:
+    """Histogram of parent→child entailment cone half-angles.
+
+    In a well-structured hyperbolic hierarchy the distribution should be
+    concentrated near 0° (children deeper than parents) rather than uniform
+    across 0–180°.  Returns ``None`` when no angle data is available.
+    """
+    angles = get_entailment_cone_angles(
+        root, is_hyperbolic=is_hyperbolic, curvature=curvature
+    )
+    if not angles:
+        logger.info("No entailment cone angle data; skipping distribution plot.")
+        return None
+
+    import matplotlib
+
+    matplotlib.use("Agg", force=True)
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots(figsize=(6, 4))
+    ax.hist(angles, bins=36, range=(0.0, 180.0), edgecolor="white", color="steelblue")
+    ax.axvline(
+        float(np.mean(angles)),
+        color="red",
+        linestyle="--",
+        label=f"Mean {float(np.mean(angles)):.1f}°",
+    )
+    ax.set_xlabel("Cone half-angle (degrees)")
+    ax.set_ylabel("Count")
+    geometry_label = "Poincaré disk" if is_hyperbolic else "Euclidean plane"
+    ax.set_title(f"Entailment cone angle distribution — {geometry_label}")
+    ax.legend()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    return output_path
+
+
 def analyze_search_tree_file(
     search_tree_file: Path,
     is_hyperbolic: Optional[bool] = None,
@@ -981,6 +1230,18 @@ def main() -> None:
         default=False,
         help="Save a violin plot of embedding radii stratified by node outcome.",
     )
+    parser.add_argument(
+        "--plot-geodesic-paths",
+        action="store_true",
+        default=False,
+        help="Save a plot of geodesic arcs along root→proof paths on the Poincaré disk.",
+    )
+    parser.add_argument(
+        "--plot-entailment-cone-dist",
+        action="store_true",
+        default=False,
+        help="Save a histogram of parent→child entailment cone half-angles.",
+    )
     args = parser.parse_args()
 
     report = analyze_search_tree_directory(args.search_tree_dir)
@@ -1047,6 +1308,42 @@ def main() -> None:
                 )
                 if written is not None:
                     logger.info(f"Saved radius-by-outcome plot to {written}")
+
+    if args.plot_geodesic_paths:
+        tree_files = sorted(args.search_tree_dir.glob("search_tree_*.json"))
+        if tree_files:
+            with open(tree_files[0]) as _f:
+                _gp_payload = json.load(_f)
+            _meta = _gp_payload.get("metadata", {})
+            _is_hyp = bool(_meta.get("is_hyperbolic", False))
+            _curv = float(_meta.get("curvature", 1.0))
+            root = _load_serialized_tree(_gp_payload)
+            if root is not None:
+                gp_path = args.search_tree_dir.parent / "geodesic_proof_paths.png"
+                written = plot_geodesic_proof_paths(
+                    root, gp_path, is_hyperbolic=_is_hyp, curvature=_curv
+                )
+                if written is not None:
+                    logger.info(f"Saved geodesic proof path plot to {written}")
+
+    if args.plot_entailment_cone_dist:
+        tree_files = sorted(args.search_tree_dir.glob("search_tree_*.json"))
+        if tree_files:
+            with open(tree_files[0]) as _f:
+                _ec_payload = json.load(_f)
+            _meta = _ec_payload.get("metadata", {})
+            _is_hyp = bool(_meta.get("is_hyperbolic", False))
+            _curv = float(_meta.get("curvature", 1.0))
+            root = _load_serialized_tree(_ec_payload)
+            if root is not None:
+                ec_path = (
+                    args.search_tree_dir.parent / "entailment_cone_distribution.png"
+                )
+                written = plot_entailment_cone_distribution(
+                    root, ec_path, is_hyperbolic=_is_hyp, curvature=_curv
+                )
+                if written is not None:
+                    logger.info(f"Saved entailment cone distribution plot to {written}")
 
     logger.info(f"Saved search tree analysis to {output_path}")
 
