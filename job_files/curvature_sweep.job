@@ -1,0 +1,147 @@
+#!/bin/bash
+#
+# Curvature sweep: train a separate hyperbolic MCTS agent for each curvature
+# value in the CURV_VALUES array below, then analyse its search trees and
+# submit a dependent evaluation job.
+#
+# Launch with:
+#   sbatch --array=0-5 job_files/curvature_sweep.job
+# or restrict to a subset:
+#   sbatch --array=2-4 job_files/curvature_sweep.job
+
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=1
+#SBATCH --job-name=curvature_sweep
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=18
+#SBATCH --time=24:00:00
+#SBATCH --output=logs/curvature_sweep_%A_%a.out
+
+# --- Fail on error ---
+set -e
+set -o pipefail
+
+# --- Curvature values to sweep (indices 0..5 match --array=0-5) ---
+CURV_VALUES=(0.1 0.3 1.0 2.0 5.0 10.0)
+CURV="${CURV_VALUES[$SLURM_ARRAY_TASK_ID]}"
+
+if [ -z "$CURV" ]; then
+    echo "ERROR: SLURM_ARRAY_TASK_ID=${SLURM_ARRAY_TASK_ID} out of range (0-5)."
+    exit 1
+fi
+
+echo "======================================================"
+echo "Curvature sweep: c = ${CURV}  (task ${SLURM_ARRAY_TASK_ID})"
+echo "======================================================"
+
+# --- Environment Setup ---
+module purge
+module load 2024
+module load Anaconda3/2024.06-1
+module load CUDA/12.6.0
+
+export CUDA_HOME=$CUDA_ROOT
+export CUDA_PATH=$CUDA_ROOT
+
+source "$EBROOTANACONDA3/etc/profile.d/conda.sh"
+conda activate lean-reinforcement
+
+# Source environment variables from .env file
+set -a
+if [ -f "$HOME/lean_reinforcement/.env" ]; then
+    source "$HOME/lean_reinforcement/.env"
+fi
+set +a
+
+cd "$HOME/lean_reinforcement"
+
+# --- Training ---
+BASE_DIR="checkpoints/curvature_sweep/c${CURV}"
+
+EXTRA_TRAIN_ARGS="${EXTRA_TRAIN_ARGS:-}"
+EXTRA_TRAIN_ARGS_ARR=()
+if [ -n "$EXTRA_TRAIN_ARGS" ]; then
+    # shellcheck disable=SC2206
+    EXTRA_TRAIN_ARGS_ARR=($EXTRA_TRAIN_ARGS)
+fi
+
+TRAIN_ARGS=(
+    --no-use-wandb
+    --training-mode value_head
+    --mcts-type alpha_zero
+    --use-hyperbolic
+    --curvature "$CURV"
+    --value-head-latent-dim 2
+    --value-head-hidden-layers 1
+    --log-search-tree
+    --env-timeout 300
+    --checkpoint-dir "$BASE_DIR"
+    --indexed-corpus-path "$CORPUS_DIR/indexed_corpus.pkl"
+)
+
+if [ "${#EXTRA_TRAIN_ARGS_ARR[@]}" -gt 0 ]; then
+    TRAIN_ARGS+=("${EXTRA_TRAIN_ARGS_ARR[@]}")
+fi
+
+echo "Training with curvature: ${CURV}"
+
+TRAIN_LOG=$(mktemp)
+
+set +e
+srun python -m lean_reinforcement.training.train \
+    "${TRAIN_ARGS[@]}" 2>&1 | tee "$TRAIN_LOG"
+SRUN_EXIT=${PIPESTATUS[0]}
+set -e
+
+if [ "$SRUN_EXIT" -ne 0 ]; then
+    echo "WARNING: training step exited with code ${SRUN_EXIT}; continuing pipeline despite Slurm OOM status."
+fi
+
+RUN_DIR=$(awk -F'Using iteration checkpoint directory: ' \
+    '/Using iteration checkpoint directory:/ {print $2}' "$TRAIN_LOG" \
+    | tail -n1 | tr -d '\r')
+rm -f "$TRAIN_LOG"
+
+if [ -z "$RUN_DIR" ] || [ ! -d "$RUN_DIR" ]; then
+    echo "ERROR: Could not determine exact run directory from training logs."
+    exit 1
+fi
+
+# --- Dump config ---
+CONFIG_FILE="$RUN_DIR/training_config.json"
+set +e
+python -m lean_reinforcement.utilities.dump_config "${TRAIN_ARGS[@]}" > "$CONFIG_FILE"
+DUMP_EXIT=$?
+set -e
+if [ "$DUMP_EXIT" -ne 0 ]; then
+    echo "WARNING: Failed to write training config to $CONFIG_FILE"
+else
+    echo "Saved training config to $CONFIG_FILE"
+fi
+
+# --- Search tree analysis + 2D plot ---
+ANALYSIS_FILE="$RUN_DIR/search_tree_analysis.json"
+set +e
+python -m lean_reinforcement.utilities.tree_analysis \
+    --search-tree-dir "$RUN_DIR/search_trees" \
+    --output "$ANALYSIS_FILE" \
+    --plot-2d \
+    --color-by outcome \
+    --draw-edges \
+    --draw-entailment-cones \
+    --plot-output "$RUN_DIR/search_tree_embeddings_2d.png"
+ANALYSIS_EXIT=$?
+set -e
+if [ "$ANALYSIS_EXIT" -ne 0 ]; then
+    echo "WARNING: Search tree analysis failed for $RUN_DIR"
+else
+    echo "Saved search tree analysis to $ANALYSIS_FILE"
+fi
+
+# --- Submit dependent evaluation job ---
+echo "Submitting evaluation job for run directory: ${RUN_DIR}"
+EVAL_JOB_ID=$(sbatch --parsable \
+    --dependency=afterok:"$SLURM_JOB_ID" \
+    --export=ALL,RUN_DIR="$RUN_DIR",USE_HYPERBOLIC=1,CURVATURE="$CURV" \
+    job_files/evaluate.job)
+echo "Submitted Eval Job: ${EVAL_JOB_ID} (depends on ${SLURM_JOB_ID})"
