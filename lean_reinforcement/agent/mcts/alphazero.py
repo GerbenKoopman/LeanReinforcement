@@ -60,6 +60,12 @@ class MCTS_AlphaZero(BaseMCTS):
         self.value_head = value_head
         self.config = config
 
+    def _get_tree_metadata(self) -> dict:
+        """Emit is_hyperbolic + curvature so tree_analysis uses the right metric."""
+        is_hyp = isinstance(self.value_head, HyperbolicValueHead)
+        curvature = float(getattr(self.config, "curvature", 1.0))
+        return {"is_hyperbolic": is_hyp, "curvature": curvature}
+
     def _puct_score(self, node: Node) -> float:
         """Calculates the PUCT score for a node."""
         if node.parent is None:

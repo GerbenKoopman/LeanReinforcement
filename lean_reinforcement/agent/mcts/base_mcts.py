@@ -125,6 +125,16 @@ class BaseMCTS:
     Subclasses must implement the expansion and simulation strategies.
     """
 
+    def _get_tree_metadata(self) -> Dict[str, Any]:
+        """Return geometry/config metadata to embed in serialised search trees.
+
+        Override in subclasses that have access to a value head (e.g.
+        ``MCTS_AlphaZero``) to emit ``is_hyperbolic`` and ``curvature`` so
+        that ``tree_analysis.py`` can automatically select the right distance
+        metric when computing Gromov-δ and Poincaré disk plots.
+        """
+        return {}
+
     def __init__(
         self,
         env: LeanDojoEnv,
@@ -516,6 +526,15 @@ class BaseMCTS:
             if isinstance(analysis_embedding, torch.Tensor):
                 analysis_embedding = analysis_embedding.detach().cpu().tolist()
 
+        # Classify terminal node type so analysis tools can colour by outcome
+        terminal_type: Optional[str] = None
+        if isinstance(node.state, ProofFinished):
+            terminal_type = "proof_finished"
+        elif isinstance(node.state, LeanError):
+            terminal_type = "error"
+        elif isinstance(node.state, ProofGivenUp):
+            terminal_type = "given_up"
+
         return {
             "state": node._pp,
             "action": node.action,
@@ -523,6 +542,7 @@ class BaseMCTS:
             "max_value": node.max_value,
             "prior_p": node.prior_p,
             "depth": node.depth,
+            "terminal_type": terminal_type,
             "encoder_features": encoder_features,
             "analysis_embedding": analysis_embedding,
             "children": [child._pp for child in node.children if child._pp],
@@ -558,6 +578,7 @@ class BaseMCTS:
         tree_data = {
             "root": self.root._pp,
             "nodes": serialized_nodes,
+            "metadata": self._get_tree_metadata(),
         }
 
         with open(tree_file, "w") as f:
