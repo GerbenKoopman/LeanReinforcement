@@ -613,6 +613,115 @@ def plot_2d_embeddings(
     return output_path
 
 
+# ---------------------------------------------------------------------------
+# Experiment 3 — value calibration curves
+# ---------------------------------------------------------------------------
+
+_N_CALIB_BINS: int = 10
+
+
+def get_value_calibration_data(root: Any) -> Dict[str, Any]:
+    """Compute calibration data comparing predicted max_value to node outcome.
+
+    Buckets predicted values in [0, 1] into ``_N_CALIB_BINS`` equal-width bins
+    and computes the fraction of nodes in each bin that were eventually proven
+    (i.e. reached a ``proof_finished`` terminal).  Returns bin centres, mean
+    predicted values per bin, fraction proven per bin, and the Expected
+    Calibration Error (ECE).
+    """
+    predictions: list[float] = []
+    labels: list[int] = []  # 1 = proven, 0 = not
+
+    for node, _ in _walk_tree(root):
+        pred = float(getattr(node, "max_value", 0.0) or 0.0)
+        # Clamp to [0, 1] — value heads are trained with MSE against {0, 1}
+        pred = max(0.0, min(1.0, (pred + 1.0) / 2.0))
+        label = 1 if _node_outcome(node) == "proof" else 0
+        predictions.append(pred)
+        labels.append(label)
+
+    if not predictions:
+        return {"bins": [], "mean_pred": [], "fraction_proven": [], "ece": 0.0}
+
+    preds = np.array(predictions)
+    lbls = np.array(labels, dtype=float)
+
+    bin_edges = np.linspace(0.0, 1.0, _N_CALIB_BINS + 1)
+    bin_centres = 0.5 * (bin_edges[:-1] + bin_edges[1:])
+    mean_pred: list[float] = []
+    frac_proven: list[float] = []
+    bin_counts: list[int] = []
+
+    for lo, hi in zip(bin_edges[:-1], bin_edges[1:]):
+        mask = (preds >= lo) & (preds < hi)
+        if not mask.any():
+            mean_pred.append(float(0.5 * (lo + hi)))
+            frac_proven.append(0.0)
+            bin_counts.append(0)
+        else:
+            mean_pred.append(float(preds[mask].mean()))
+            frac_proven.append(float(lbls[mask].mean()))
+            bin_counts.append(int(mask.sum()))
+
+    total = len(predictions)
+    ece = float(
+        sum(
+            count / total * abs(mp - fp)
+            for count, mp, fp in zip(bin_counts, mean_pred, frac_proven)
+        )
+    )
+
+    return {
+        "bins": bin_centres.tolist(),
+        "mean_pred": mean_pred,
+        "fraction_proven": frac_proven,
+        "bin_counts": bin_counts,
+        "ece": ece,
+    }
+
+
+def plot_calibration_curve(root: Any, output_path: Path) -> Optional[Path]:
+    """Plot the reliability diagram (calibration curve) for one search tree."""
+    data = get_value_calibration_data(root)
+    if not data["bins"]:
+        return None
+
+    import matplotlib
+
+    matplotlib.use("Agg", force=True)
+    import matplotlib.pyplot as plt
+
+    bins = data["bins"]
+    mean_pred = data["mean_pred"]
+    frac_proven = data["fraction_proven"]
+    ece = data["ece"]
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig, ax = plt.subplots(figsize=(6, 6), constrained_layout=True)
+
+    ax.plot([0, 1], [0, 1], "k--", linewidth=1.0, label="perfect calibration")
+    ax.bar(
+        bins,
+        frac_proven,
+        width=1.0 / _N_CALIB_BINS,
+        align="center",
+        alpha=0.6,
+        color="steelblue",
+        label="fraction proven",
+    )
+    ax.plot(mean_pred, frac_proven, "ro-", markersize=5, label="mean predicted value")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.set_xlabel("predicted value (normalised)")
+    ax.set_ylabel("fraction of nodes proven")
+    ax.set_title(f"Value calibration curve  (ECE = {ece:.3f})")
+    ax.legend(fontsize=8)
+
+    fig.savefig(output_path, dpi=200)
+    plt.close(fig)
+    return output_path
+
+
 def analyze_search_tree_file(
     search_tree_file: Path,
     is_hyperbolic: Optional[bool] = None,
@@ -653,6 +762,7 @@ def analyze_search_tree_file(
         "curvature": _curv,
         "shape": get_mcts_shape_analysis(root),
         "radius_vs_depth": get_embedding_radius_vs_depth(root),
+        "calibration": get_value_calibration_data(root),
         **get_gromov_hyperbolicity_and_map(
             root, is_hyperbolic=_is_hyp, curvature=_curv
         ),
@@ -765,6 +875,12 @@ def main() -> None:
         default=False,
         help="Draw entailment cone wedge sectors around each non-leaf node.",
     )
+    parser.add_argument(
+        "--plot-calibration",
+        action="store_true",
+        default=False,
+        help="Save a value calibration curve (reliability diagram).",
+    )
     args = parser.parse_args()
 
     report = analyze_search_tree_directory(args.search_tree_dir)
@@ -802,6 +918,18 @@ def main() -> None:
                 )
                 if written is not None:
                     logger.info(f"Saved 2D embedding plot to {written}")
+
+    if args.plot_calibration:
+        tree_files = sorted(args.search_tree_dir.glob("search_tree_*.json"))
+        if tree_files:
+            with open(tree_files[0]) as _f:
+                _calib_payload = json.load(_f)
+            root = _load_serialized_tree(_calib_payload)
+            if root is not None:
+                calib_path = args.search_tree_dir.parent / "value_calibration_curve.png"
+                written = plot_calibration_curve(root, calib_path)
+                if written is not None:
+                    logger.info(f"Saved calibration curve to {written}")
 
     logger.info(f"Saved search tree analysis to {output_path}")
 
