@@ -421,6 +421,8 @@ def plot_2d_embeddings(
     color_by: str = "depth",
     is_hyperbolic: bool = False,
     curvature: float = 1.0,
+    draw_edges: bool = False,
+    draw_entailment_cones: bool = False,
 ) -> Optional[Path]:
     """Plot 2-D value-head embeddings.
 
@@ -431,12 +433,19 @@ def plot_2d_embeddings(
         is_hyperbolic: When True, transforms tangent-space coordinates to
             Poincaré disk coordinates and draws the disk boundary.
         curvature: Curvature parameter *c* (> 0) used by the Poincaré ball.
+        draw_edges: When True, draw parent→child arrows between embedded nodes.
+        draw_entailment_cones: When True, draw the half-angle sector of the
+            entailment cone centred at each non-leaf node (the angle is defined
+            by the maximum angular spread of the node's children in the
+            embedding space).
     """
     nodes: list[Any] = []
     coords: list[np.ndarray] = []
     depths: list[int] = []
     visits: list[int] = []
     outcomes: list[str] = []
+    # Map node identity → (index, coord) for edge drawing
+    node_to_idx: Dict[int, int] = {}
 
     for node, depth in _walk_tree(root):
         embedding = _node_embedding(node)
@@ -449,6 +458,7 @@ def plot_2d_embeddings(
             row = _tangent_to_disk(torch.as_tensor(raw), curvature)
         else:
             row = raw
+        node_to_idx[id(node)] = len(nodes)
         nodes.append(node)
         coords.append(row)
         depths.append(depth)
@@ -479,6 +489,68 @@ def plot_2d_embeddings(
         ax.set_xlim(-radius * 1.05, radius * 1.05)
         ax.set_ylim(-radius * 1.05, radius * 1.05)
         ax.set_aspect("equal")
+
+    # ── Tree edges ────────────────────────────────────────────────────────────
+    if draw_edges:
+        for node in nodes:
+            parent_idx = node_to_idx.get(id(node))
+            if parent_idx is None:
+                continue
+            px, py = points[parent_idx]
+            for child in _iter_children(node):
+                child_idx = node_to_idx.get(id(child))
+                if child_idx is None:
+                    continue
+                cx, cy = points[child_idx]
+                ax.annotate(
+                    "",
+                    xy=(cx, cy),
+                    xytext=(px, py),
+                    arrowprops=dict(
+                        arrowstyle="-|>",
+                        color="steelblue",
+                        alpha=0.35,
+                        linewidth=0.7,
+                        shrinkA=3,
+                        shrinkB=3,
+                    ),
+                )
+
+    # ── Entailment cones ──────────────────────────────────────────────────────
+    if draw_entailment_cones:
+        import matplotlib.patches as pat
+
+        for node, pt in zip(nodes, points):
+            children_pts = []
+            for child in _iter_children(node):
+                cidx = node_to_idx.get(id(child))
+                if cidx is not None:
+                    children_pts.append(points[cidx])
+            if len(children_pts) < 2:
+                continue
+            # Direction vectors from parent to each child in embedding space
+            vecs = [cp - pt for cp in children_pts]
+            angles = [math.degrees(math.atan2(v[1], v[0])) for v in vecs]
+            min_angle = min(angles)
+            max_angle = max(angles)
+            span = max_angle - min_angle
+            if span > 180:
+                # Wrap around case — take the complement
+                min_angle, max_angle = max_angle, min_angle + 360
+                span = 360 - span
+            # Draw a wedge sector showing the angular spread of children
+            mean_dist = float(np.mean([float(np.linalg.norm(v)) for v in vecs]))
+            wedge = pat.Wedge(
+                center=(pt[0], pt[1]),
+                r=mean_dist * 0.8,
+                theta1=min_angle,
+                theta2=max_angle,
+                facecolor="gold",
+                alpha=0.15,
+                edgecolor="darkorange",
+                linewidth=0.6,
+            )
+            ax.add_patch(wedge)
 
     # ── Scatter ───────────────────────────────────────────────────────────────
     if color_by == "outcome":
@@ -681,6 +753,18 @@ def main() -> None:
         default="outcome",
         help="How to colour nodes in the 2D embedding plot (default: outcome).",
     )
+    parser.add_argument(
+        "--draw-edges",
+        action="store_true",
+        default=False,
+        help="Draw parent→child arrows in the 2D embedding plot.",
+    )
+    parser.add_argument(
+        "--draw-entailment-cones",
+        action="store_true",
+        default=False,
+        help="Draw entailment cone wedge sectors around each non-leaf node.",
+    )
     args = parser.parse_args()
 
     report = analyze_search_tree_directory(args.search_tree_dir)
@@ -713,6 +797,8 @@ def main() -> None:
                     color_by=args.color_by,
                     is_hyperbolic=_is_hyp,
                     curvature=_curv,
+                    draw_edges=args.draw_edges,
+                    draw_entailment_cones=args.draw_entailment_cones,
                 )
                 if written is not None:
                     logger.info(f"Saved 2D embedding plot to {written}")
