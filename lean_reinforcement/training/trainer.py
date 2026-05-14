@@ -1,5 +1,6 @@
 import os
 import sys
+import math
 import time
 import json
 import glob
@@ -85,6 +86,68 @@ def _state_value_to_plain_tensor(value: Any) -> torch.Tensor:
     if not isinstance(raw, torch.Tensor):
         raise TypeError(f"Expected tensor-like state value, got {type(raw)!r}")
     return raw
+
+
+def _log_hyperbolic_stats(
+    value_head: "HyperbolicValueHead",
+    train_data: List[Dict[str, Any]],
+    sample_size: int = 256,
+) -> None:
+    """Log xi parameter value and Poincaré radius statistics to wandb.
+
+    Called once per training epoch when a HyperbolicValueHead is in use.
+    Computes the Poincaré radius distribution (mean, std, fraction of nodes
+    within 0.5, 0.9, 0.99 of the disk boundary) over a random batch of
+    training states.
+    """
+    reg = value_head.value_head
+    xi_param = getattr(reg, "xi", None)
+    if xi_param is None:
+        return
+
+    log_data: Dict[str, Any] = {"hyperbolic/xi": float(xi_param.item())}
+
+    # Sample a batch of training states to estimate radius distribution
+    sample = random.sample(train_data, min(sample_size, len(train_data)))
+    states = [item["state"] for item in sample]
+    device = next(reg.parameters()).device
+
+    try:
+        with torch.no_grad():
+            features = value_head.encode_states(states)
+            if not isinstance(features, torch.Tensor):
+                features = torch.as_tensor(features, device=device, dtype=torch.float32)
+            # latent_from_features returns the logmap_0 tangent vector
+            tangents: torch.Tensor = reg.latent_from_features(features)  # type: ignore[operator]  # (N, latent_dim)
+            # Recover manifold points: h = tanh(sqrt(c)*||v||) / (sqrt(c)*||v||) * v
+            c_val = getattr(reg.manifold, "c", None)
+            if c_val is not None:
+                _c: Any = c_val
+                c_float = float(_c.item()) if hasattr(_c, "item") else float(_c)
+            else:
+                c_float = 1.0
+            sqrt_c = math.sqrt(c_float)
+            norms = tangents.norm(dim=-1).clamp(min=1e-8)  # (N,)
+            sqrt_c_t = torch.tensor(
+                sqrt_c, dtype=tangents.dtype, device=tangents.device
+            )
+            scaled_norms = norms.mul(sqrt_c_t)
+            scale = torch.tanh(scaled_norms).div(scaled_norms)
+            poincare_pts = scale.unsqueeze(-1) * tangents
+            radii = poincare_pts.norm(dim=-1)  # (N,)
+            disk_radius = 1.0 / sqrt_c
+
+        radii_np = radii.cpu().numpy()
+        log_data["hyperbolic/radius_mean"] = float(radii_np.mean())
+        log_data["hyperbolic/radius_std"] = float(radii_np.std())
+        for frac in (0.5, 0.9, 0.99):
+            key = f"hyperbolic/frac_within_{int(frac * 100)}pct_of_disk"
+            log_data[key] = float((radii_np < frac * disk_radius).mean())
+
+    except Exception as exc:
+        logger.warning(f"_log_hyperbolic_stats failed: {exc}")
+
+    _safe_wandb_log(log_data)
 
 
 class Trainer:
@@ -1351,6 +1414,10 @@ class Trainer:
                         }
                     )
 
+                # --- Exp 5: log xi and Poincaré radius stats ---
+                if use_wandb and isinstance(value_head, HyperbolicValueHead):
+                    _log_hyperbolic_stats(value_head, balanced_train_data)
+
                 if avg_val_loss < best_val_loss:
                     best_val_loss = avg_val_loss
                     patience_counter = 0
@@ -1382,6 +1449,10 @@ class Trainer:
                             "value_head/epoch": epoch + 1,
                         }
                     )
+
+                # --- Exp 5: log xi and Poincaré radius stats (no-val path) ---
+                if use_wandb and isinstance(value_head, HyperbolicValueHead):
+                    _log_hyperbolic_stats(value_head, balanced_train_data)
 
         logger.info(
             f"Value Head training done: {epoch+1}/{epochs} epochs, "
