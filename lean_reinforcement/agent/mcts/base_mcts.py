@@ -385,6 +385,8 @@ class BaseMCTS:
                     if leaf.is_terminal:
                         if isinstance(leaf.state, ProofFinished):
                             self._backpropagate(leaf, 1.0)
+                            if self.log_search_tree and search_tree_log_dir:
+                                self._save_search_tree(Path(search_tree_log_dir))
                             return
                         elif isinstance(leaf.state, (LeanError, ProofGivenUp)):
                             self._backpropagate(leaf, -1.0)
@@ -439,6 +441,8 @@ class BaseMCTS:
                     child.release_encoder_features()
 
                     if reward == 1.0:
+                        if self.log_search_tree and search_tree_log_dir:
+                            self._save_search_tree(Path(search_tree_log_dir))
                         return
 
                 # Prune excess nodes continuously (not just at the top)
