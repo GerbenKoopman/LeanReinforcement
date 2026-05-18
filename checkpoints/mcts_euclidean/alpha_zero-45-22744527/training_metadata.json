@@ -1,6 +1,6 @@
 {
-  "last_epoch": 3,
-  "last_updated": "2026-05-14T13:32:18.927417",
+  "last_epoch": 10,
+  "last_updated": "2026-05-14T20:56:07.039167",
   "data_type": "novel_premises",
   "mcts_type": "alpha_zero",
   "num_iterations": 1000,
