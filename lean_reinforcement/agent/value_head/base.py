@@ -56,6 +56,16 @@ class BaseValueHead(nn.Module):
             raise NotImplementedError(
                 f"{type(self.value_head).__name__} does not expose latent features"
             )
+        # Keep input features on the same device as the latent projector.
+        projector_module = getattr(latent_projector, "__self__", None)
+        target_device = features.device
+        if isinstance(projector_module, nn.Module):
+            try:
+                target_device = next(projector_module.parameters()).device
+            except StopIteration:
+                pass
+        if features.device != target_device:
+            features = features.to(target_device)
         latent = cast(torch.Tensor, latent_projector(features))
         return latent.detach().cpu()
 

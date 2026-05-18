@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+# flake8: noqa
+
 import argparse
 import json
 import math
@@ -7,7 +9,7 @@ import random
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 import numpy as np
 import torch
@@ -482,7 +484,7 @@ def plot_2d_embeddings(
     # ── Disk boundary ─────────────────────────────────────────────────────────
     if is_hyperbolic:
         radius = 1.0 / math.sqrt(curvature)
-        disk_circle = plt.Circle(
+        disk_circle = mpatches.Circle(
             (0, 0), radius, color="black", fill=False, linewidth=1.5, linestyle="--"
         )
         ax.add_patch(disk_circle)
@@ -890,11 +892,12 @@ def plot_geodesic_proof_paths(
 
     matplotlib.use("Agg", force=True)
     import matplotlib.pyplot as plt
+    import matplotlib.patches as mpatches
 
     fig, ax = plt.subplots(figsize=(6, 6))
     if is_hyperbolic:
         R = 1.0 / math.sqrt(curvature)
-        disk = plt.Circle((0, 0), R, fill=False, color="black", linewidth=1.5)
+        disk = mpatches.Circle((0, 0), R, fill=False, color="black", linewidth=1.5)
         ax.add_patch(disk)
         ax.set_xlim(-R * 1.05, R * 1.05)
         ax.set_ylim(-R * 1.05, R * 1.05)
@@ -1059,6 +1062,336 @@ def plot_entailment_cone_distribution(
     return output_path
 
 
+def _extract_epoch_from_filename(path: Path, prefix: str) -> Optional[int]:
+    stem = path.stem
+    if not stem.startswith(prefix):
+        return None
+    suffix = stem[len(prefix) :]
+    if not suffix.isdigit():
+        return None
+    return int(suffix)
+
+
+def _load_json(path: Path) -> Any:
+    with open(path, "r") as handle:
+        return json.load(handle)
+
+
+def get_run_artifact_stats(run_dir: Path) -> Dict[str, Any]:
+    """Collect simple per-run stats from theorem and training-data artifacts.
+
+    This is a lightweight fallback when ``search_trees/`` is missing due to
+    interrupted runs (e.g. OOM). It summarizes theorem success by epoch and key
+    aggregates from ``training_data_epoch_*.json``.
+    """
+    theorem_files = sorted(run_dir.glob("theorem_results_epoch_*.json"))
+    training_files = sorted(run_dir.glob("training_data_epoch_*.json"))
+
+    theorem_by_epoch: list[Dict[str, Any]] = []
+    for file in theorem_files:
+        payload = _load_json(file)
+        epoch = _extract_epoch_from_filename(file, "theorem_results_epoch_")
+        if epoch is None:
+            epoch = int(payload.get("epoch", 0) or 0)
+        theorem_by_epoch.append(
+            {
+                "epoch": epoch,
+                "total": int(payload.get("total", 0) or 0),
+                "proved": int(payload.get("proved", 0) or 0),
+                "failed": int(payload.get("failed", 0) or 0),
+                "success_rate": float(payload.get("success_rate", 0.0) or 0.0),
+            }
+        )
+    theorem_by_epoch.sort(key=lambda item: int(item["epoch"]))
+
+    value_targets: list[float] = []
+    mcts_values: list[float] = []
+    visit_counts: list[int] = []
+    training_rows = 0
+    unique_states: set[str] = set()
+    for file in training_files:
+        rows = _load_json(file)
+        if not isinstance(rows, list):
+            continue
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            training_rows += 1
+            state = row.get("state")
+            if isinstance(state, str):
+                unique_states.add(state)
+            if isinstance(row.get("value_target"), (int, float)):
+                value_targets.append(float(row["value_target"]))
+            if isinstance(row.get("mcts_value"), (int, float)):
+                mcts_values.append(float(row["mcts_value"]))
+            if isinstance(row.get("visit_count"), int):
+                visit_counts.append(int(row["visit_count"]))
+
+    def _summary(values: list[float]) -> Dict[str, float]:
+        if not values:
+            return {"mean": 0.0, "std": 0.0, "min": 0.0, "max": 0.0}
+        arr = np.asarray(values, dtype=float)
+        return {
+            "mean": float(np.mean(arr)),
+            "std": float(np.std(arr)),
+            "min": float(np.min(arr)),
+            "max": float(np.max(arr)),
+        }
+
+    return {
+        "run_dir": str(run_dir),
+        "theorem_epoch_count": len(theorem_by_epoch),
+        "theorem_by_epoch": theorem_by_epoch,
+        "training_epoch_count": len(training_files),
+        "training_rows": training_rows,
+        "unique_states": len(unique_states),
+        "value_target": _summary(value_targets),
+        "mcts_value": _summary(mcts_values),
+        "visit_count": _summary([float(v) for v in visit_counts]),
+    }
+
+
+def plot_theorem_success_curve(run_dir: Path, output_path: Path) -> Optional[Path]:
+    """Plot theorem success-rate trajectory across epochs for one run."""
+    theorem_files = sorted(run_dir.glob("theorem_results_epoch_*.json"))
+    if not theorem_files:
+        return None
+
+    epochs: list[int] = []
+    success: list[float] = []
+    proved: list[int] = []
+    totals: list[int] = []
+
+    for file in theorem_files:
+        payload = _load_json(file)
+        epoch = _extract_epoch_from_filename(file, "theorem_results_epoch_")
+        if epoch is None:
+            epoch = int(payload.get("epoch", 0) or 0)
+        total = int(payload.get("total", 0) or 0)
+        proved_count = int(payload.get("proved", 0) or 0)
+        sr = float(payload.get("success_rate", 0.0) or 0.0)
+        if sr <= 1.0:
+            sr *= 100.0
+        epochs.append(epoch)
+        success.append(sr)
+        proved.append(proved_count)
+        totals.append(total)
+
+    if not epochs:
+        return None
+
+    import matplotlib
+
+    matplotlib.use("Agg", force=True)
+    import matplotlib.pyplot as plt
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig, ax1 = plt.subplots(figsize=(8, 4.5), constrained_layout=True)
+
+    ax1.plot(epochs, success, "o-", color="tab:blue", label="success rate (%)")
+    ax1.set_xlabel("epoch")
+    ax1.set_ylabel("success rate (%)", color="tab:blue")
+    ax1.tick_params(axis="y", labelcolor="tab:blue")
+
+    ax2 = ax1.twinx()
+    ax2.plot(epochs, proved, "s--", color="tab:green", label="proved")
+    ax2.plot(epochs, totals, "x:", color="tab:red", label="total")
+    ax2.set_ylabel("count", color="tab:green")
+    ax2.tick_params(axis="y", labelcolor="tab:green")
+
+    handles_1, labels_1 = ax1.get_legend_handles_labels()
+    handles_2, labels_2 = ax2.get_legend_handles_labels()
+    ax1.legend(handles_1 + handles_2, labels_1 + labels_2, loc="best", fontsize=8)
+    ax1.set_title("Theorem outcomes across epochs")
+
+    fig.savefig(output_path, dpi=180)
+    plt.close(fig)
+    return output_path
+
+
+def _compute_2d_projection(points: np.ndarray) -> np.ndarray:
+    """Simple PCA-to-2D projection without external dependencies."""
+    if points.ndim != 2:
+        raise ValueError("points must be a 2-D array")
+    n, d = points.shape
+    if n == 0:
+        return np.zeros((0, 2), dtype=float)
+    if d == 2:
+        return points.astype(float)
+    centred = points - np.mean(points, axis=0, keepdims=True)
+    _, _, vt = np.linalg.svd(centred, full_matrices=False)
+    components = vt[:2].T
+    projected: np.ndarray = centred @ components
+    return projected
+
+
+def _collect_state_records(run_dir: Path) -> list[tuple[str, float]]:
+    records: list[tuple[str, float]] = []
+    for file in sorted(run_dir.glob("training_data_epoch_*.json")):
+        rows = _load_json(file)
+        if not isinstance(rows, list):
+            continue
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            state = row.get("state")
+            if not isinstance(state, str) or not state.strip():
+                continue
+            target = row.get("value_target", 0.0)
+            target_f = float(target) if isinstance(target, (int, float)) else 0.0
+            records.append((state, target_f))
+    return records
+
+
+def plot_checkpoint_state_embeddings(
+    run_dir: Path,
+    output_path: Path,
+    sample_size: int = 600,
+) -> Optional[Path]:
+    """Plot theorem-state embeddings from the saved value-head checkpoint.
+
+    Uses ``training_data_epoch_*.json`` states and the run's latest checkpoint.
+    For hyperbolic heads with 2-D latent vectors, points are mapped to the
+    Poincaré disk; otherwise a simple PCA-to-2D projection is used.
+    """
+    config_file = run_dir / "training_config.json"
+    if not config_file.exists():
+        logger.warning(f"No training config found at {config_file}; skipping plot")
+        return None
+
+    records = _collect_state_records(run_dir)
+    if not records:
+        logger.warning(f"No training_data_epoch_*.json states found under {run_dir}")
+        return None
+
+    unique: dict[str, float] = {}
+    for state, target in records:
+        if state not in unique:
+            unique[state] = target
+    state_target_pairs = list(unique.items())
+    if len(state_target_pairs) > sample_size:
+        state_target_pairs = random.sample(state_target_pairs, sample_size)
+    states = [state for state, _ in state_target_pairs]
+    targets = np.asarray([target for _, target in state_target_pairs], dtype=float)
+
+    cfg = _load_json(config_file)
+    model_name = str(cfg.get("model_name", "kaiyuy/leandojo-lean4-tacgen-byt5-small"))
+    latent_dim = int(cfg.get("value_head_latent_dim", 1024) or 1024)
+    hidden_layers = int(cfg.get("value_head_hidden_layers", 1) or 1)
+    use_hyperbolic = bool(cfg.get("use_hyperbolic", False))
+    curvature = float(cfg.get("curvature", 1.0) or 1.0)
+    mcts_type = str(cfg.get("mcts_type", "alpha_zero"))
+
+    from lean_reinforcement.agent.transformer import Transformer
+    from lean_reinforcement.agent.value_head.hyperbolic_value_head import (
+        HyperbolicValueHead,
+    )
+    from lean_reinforcement.agent.value_head.value_head import ValueHead
+    from lean_reinforcement.utilities.checkpoint import load_checkpoint
+
+    transformer = Transformer(model_name=model_name)
+    if use_hyperbolic:
+        value_head: Any = HyperbolicValueHead(
+            transformer,
+            latent_dim=latent_dim,
+            hidden_layers=hidden_layers,
+            curvature=curvature,
+        )
+    else:
+        value_head = ValueHead(
+            transformer,
+            latent_dim=latent_dim,
+            hidden_layers=hidden_layers,
+        )
+    load_checkpoint(value_head, run_dir, prefix=f"value_head_{mcts_type}")
+    # Keep extraction on CPU to avoid GPU OOM on local/dev machines.
+    value_head.to("cpu")
+
+    def _encode_states_cpu(batch_states: list[str]) -> torch.Tensor:
+        tokenized = value_head.tokenizer(
+            batch_states,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=1024,
+        )
+        hidden_state = cast(
+            torch.Tensor,
+            value_head.encoder(tokenized.input_ids).last_hidden_state,
+        )
+        lens = tokenized.attention_mask.sum(dim=1)
+        attn_mask = tokenized.attention_mask.unsqueeze(2)
+        features = (hidden_state * attn_mask).sum(dim=1) / lens.unsqueeze(1)
+        return cast(torch.Tensor, features.detach())
+
+    latents_batches: list[np.ndarray] = []
+    batch_size = 16
+    for start in range(0, len(states), batch_size):
+        batch = states[start : start + batch_size]
+        features = _encode_states_cpu(batch)
+        latent = (
+            value_head.latent_from_features(features)
+            .detach()
+            .cpu()
+            .numpy()
+            .astype(float)
+        )
+        latents_batches.append(latent)
+    latents = np.concatenate(latents_batches, axis=0) if latents_batches else None
+    if latents is None or latents.size == 0:
+        return None
+
+    if use_hyperbolic and latents.shape[1] == 2:
+        coords = np.asarray(
+            [_tangent_to_disk(torch.as_tensor(row), curvature) for row in latents],
+            dtype=float,
+        )
+        in_disk = True
+    else:
+        coords = _compute_2d_projection(latents)
+        in_disk = False
+
+    import matplotlib
+
+    matplotlib.use("Agg", force=True)
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as mpatches
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig, ax = plt.subplots(figsize=(7, 7), constrained_layout=True)
+
+    scatter = ax.scatter(
+        coords[:, 0],
+        coords[:, 1],
+        c=targets,
+        cmap="coolwarm",
+        alpha=0.8,
+        s=20,
+        edgecolors="none",
+    )
+    cbar = fig.colorbar(scatter, ax=ax)
+    cbar.set_label("value_target")
+
+    if in_disk:
+        radius = 1.0 / math.sqrt(curvature)
+        disk = mpatches.Circle((0, 0), radius, fill=False, color="black", linewidth=1.3)
+        ax.add_patch(disk)
+        ax.set_xlim(-radius * 1.05, radius * 1.05)
+        ax.set_ylim(-radius * 1.05, radius * 1.05)
+        ax.set_aspect("equal")
+        title = "Hyperbolic theorem-state embeddings " f"(Poincaré disk, c={curvature})"
+    else:
+        title = "Euclidean theorem-state embeddings (2D projection)"
+
+    ax.set_title(title)
+    ax.set_xlabel("dim 1")
+    ax.set_ylabel("dim 2")
+
+    fig.savefig(output_path, dpi=180)
+    plt.close(fig)
+    return output_path
+
+
 def analyze_search_tree_file(
     search_tree_file: Path,
     is_hyperbolic: Optional[bool] = None,
@@ -1174,13 +1507,24 @@ def analyze_search_tree_directory(search_tree_dir: Path) -> Dict[str, Any]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Analyze serialized MCTS search trees emitted during training."
+        description=("Analyze serialized MCTS search trees emitted during training.")
     )
     parser.add_argument(
         "--search-tree-dir",
         type=Path,
-        required=True,
+        required=False,
+        default=None,
         help="Directory containing search_tree_*.json files.",
+    )
+    parser.add_argument(
+        "--run-dir",
+        type=Path,
+        default=None,
+        help=(
+            "Run directory containing theorem_results_epoch_*.json / "
+            "training_data_epoch_*.json. Used as fallback when search trees "
+            "are missing."
+        ),
     )
     parser.add_argument(
         "--output",
@@ -1204,7 +1548,7 @@ def main() -> None:
         "--color-by",
         choices=["depth", "visits", "outcome"],
         default="outcome",
-        help="How to colour nodes in the 2D embedding plot (default: outcome).",
+        help=("How to colour nodes in the 2D embedding plot " "(default: outcome)."),
     )
     parser.add_argument(
         "--draw-edges",
@@ -1242,19 +1586,51 @@ def main() -> None:
         default=False,
         help="Save a histogram of parent→child entailment cone half-angles.",
     )
+    parser.add_argument(
+        "--plot-success-curve",
+        action="store_true",
+        default=False,
+        help="Save theorem success-rate-vs-epoch plot from theorem_results_epoch_*.json.",
+    )
+    parser.add_argument(
+        "--plot-state-embeddings",
+        action="store_true",
+        default=False,
+        help="Encode states from training_data_epoch_*.json and plot learned embeddings.",
+    )
+    parser.add_argument(
+        "--embedding-sample-size",
+        type=int,
+        default=600,
+        help="Max number of unique states to encode for state embedding plot.",
+    )
     args = parser.parse_args()
 
-    report = analyze_search_tree_directory(args.search_tree_dir)
+    if args.search_tree_dir is None and args.run_dir is None:
+        parser.error("Provide --search-tree-dir or --run-dir")
 
-    output_path = args.output or (
-        args.search_tree_dir.parent / "search_tree_analysis.json"
+    search_tree_dir = args.search_tree_dir
+    if search_tree_dir is None and args.run_dir is not None:
+        search_tree_dir = args.run_dir / "search_trees"
+
+    if search_tree_dir is None:
+        parser.error("Could not determine search tree directory")
+
+    report = analyze_search_tree_directory(search_tree_dir)
+
+    if args.run_dir is not None:
+        report["run_artifacts"] = get_run_artifact_stats(args.run_dir)
+
+    default_parent = (
+        args.run_dir if args.run_dir is not None else search_tree_dir.parent
     )
+    output_path = args.output or (default_parent / "search_tree_analysis.json")
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as handle:
         json.dump(report, handle, indent=2, sort_keys=True)
 
     if args.plot_2d:
-        tree_files = sorted(args.search_tree_dir.glob("search_tree_*.json"))
+        tree_files = sorted(search_tree_dir.glob("search_tree_*.json"))
         if tree_files:
             # Detect geometry from first tree file's metadata
             with open(tree_files[0]) as _f:
@@ -1266,7 +1642,7 @@ def main() -> None:
             root = _load_serialized_tree(_meta_payload)
             if root is not None:
                 plot_path = args.plot_output or (
-                    args.search_tree_dir.parent / "search_tree_embeddings_2d.png"
+                    search_tree_dir.parent / "search_tree_embeddings_2d.png"
                 )
                 written = plot_2d_embeddings(
                     root,
@@ -1281,19 +1657,19 @@ def main() -> None:
                     logger.info(f"Saved 2D embedding plot to {written}")
 
     if args.plot_calibration:
-        tree_files = sorted(args.search_tree_dir.glob("search_tree_*.json"))
+        tree_files = sorted(search_tree_dir.glob("search_tree_*.json"))
         if tree_files:
             with open(tree_files[0]) as _f:
                 _calib_payload = json.load(_f)
             root = _load_serialized_tree(_calib_payload)
             if root is not None:
-                calib_path = args.search_tree_dir.parent / "value_calibration_curve.png"
+                calib_path = search_tree_dir.parent / "value_calibration_curve.png"
                 written = plot_calibration_curve(root, calib_path)
                 if written is not None:
                     logger.info(f"Saved calibration curve to {written}")
 
     if args.plot_radius_by_outcome:
-        tree_files = sorted(args.search_tree_dir.glob("search_tree_*.json"))
+        tree_files = sorted(search_tree_dir.glob("search_tree_*.json"))
         if tree_files:
             with open(tree_files[0]) as _f:
                 _rbo_payload = json.load(_f)
@@ -1302,7 +1678,7 @@ def main() -> None:
             _curv = float(_meta.get("curvature", 1.0))
             root = _load_serialized_tree(_rbo_payload)
             if root is not None:
-                rbo_path = args.search_tree_dir.parent / "radius_by_outcome.png"
+                rbo_path = search_tree_dir.parent / "radius_by_outcome.png"
                 written = plot_radius_by_outcome(
                     root, rbo_path, is_hyperbolic=_is_hyp, curvature=_curv
                 )
@@ -1310,7 +1686,7 @@ def main() -> None:
                     logger.info(f"Saved radius-by-outcome plot to {written}")
 
     if args.plot_geodesic_paths:
-        tree_files = sorted(args.search_tree_dir.glob("search_tree_*.json"))
+        tree_files = sorted(search_tree_dir.glob("search_tree_*.json"))
         if tree_files:
             with open(tree_files[0]) as _f:
                 _gp_payload = json.load(_f)
@@ -1319,7 +1695,7 @@ def main() -> None:
             _curv = float(_meta.get("curvature", 1.0))
             root = _load_serialized_tree(_gp_payload)
             if root is not None:
-                gp_path = args.search_tree_dir.parent / "geodesic_proof_paths.png"
+                gp_path = search_tree_dir.parent / "geodesic_proof_paths.png"
                 written = plot_geodesic_proof_paths(
                     root, gp_path, is_hyperbolic=_is_hyp, curvature=_curv
                 )
@@ -1327,7 +1703,7 @@ def main() -> None:
                     logger.info(f"Saved geodesic proof path plot to {written}")
 
     if args.plot_entailment_cone_dist:
-        tree_files = sorted(args.search_tree_dir.glob("search_tree_*.json"))
+        tree_files = sorted(search_tree_dir.glob("search_tree_*.json"))
         if tree_files:
             with open(tree_files[0]) as _f:
                 _ec_payload = json.load(_f)
@@ -1336,14 +1712,28 @@ def main() -> None:
             _curv = float(_meta.get("curvature", 1.0))
             root = _load_serialized_tree(_ec_payload)
             if root is not None:
-                ec_path = (
-                    args.search_tree_dir.parent / "entailment_cone_distribution.png"
-                )
+                ec_path = search_tree_dir.parent / "entailment_cone_distribution.png"
                 written = plot_entailment_cone_distribution(
                     root, ec_path, is_hyperbolic=_is_hyp, curvature=_curv
                 )
                 if written is not None:
                     logger.info(f"Saved entailment cone distribution plot to {written}")
+
+    if args.plot_success_curve and args.run_dir is not None:
+        success_path = args.run_dir / "theorem_success_curve.png"
+        written = plot_theorem_success_curve(args.run_dir, success_path)
+        if written is not None:
+            logger.info(f"Saved theorem success curve to {written}")
+
+    if args.plot_state_embeddings and args.run_dir is not None:
+        emb_path = args.run_dir / "state_embeddings_2d.png"
+        written = plot_checkpoint_state_embeddings(
+            args.run_dir,
+            emb_path,
+            sample_size=max(50, int(args.embedding_sample_size)),
+        )
+        if written is not None:
+            logger.info(f"Saved state embedding plot to {written}")
 
     logger.info(f"Saved search tree analysis to {output_path}")
 

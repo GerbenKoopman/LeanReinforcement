@@ -76,7 +76,8 @@ class TrainingConfig:
     # Hard memory limit (GiB) for each Lean 4 REPL subprocess.
     # Passed as --memory to the Lean runtime; exceeding it produces a
     # catchable DojoCrashError instead of triggering the OOM killer.
-    lean_memory_limit_gb: int = 8
+    # Keep conservative by default to avoid cgroup OOM when many workers run.
+    lean_memory_limit_gb: int = 2
 
     @classmethod
     def from_args(cls, args: argparse.Namespace) -> "TrainingConfig":
@@ -123,7 +124,7 @@ class TrainingConfig:
             max_tree_nodes=getattr(args, "max_tree_nodes", 10000),
             exploration_weight=getattr(args, "exploration_weight", math.sqrt(2)),
             q_weight=getattr(args, "q_weight", 0.1),
-            lean_memory_limit_gb=getattr(args, "lean_memory_limit_gb", 8),
+            lean_memory_limit_gb=getattr(args, "lean_memory_limit_gb", 2),
             log_search_tree=getattr(args, "log_search_tree", False),
         )
 
@@ -252,11 +253,11 @@ def get_config() -> TrainingConfig:
     parser.add_argument(
         "--lean-memory-limit-gb",
         type=int,
-        default=8,
+        default=2,
         help="Hard memory limit (GiB) for each Lean 4 REPL subprocess. "
         "Passed as --memory to the Lean runtime. When exceeded, Lean "
         "exits cleanly instead of triggering the OS OOM killer. "
-        "Rule of thumb: total_ram / (num_workers + 2). Default: 8.",
+        "Rule of thumb: total_ram / (num_workers + 2). Default: 2.",
     )
 
     # --- Hyperbolicity ---

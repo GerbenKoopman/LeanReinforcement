@@ -55,6 +55,7 @@ TRAIN_ARGS=(
     --training-mode value_head
     --mcts-type alpha_zero
     --use-hyperbolic
+    --lean-memory-limit-gb 2
     --value-head-latent-dim 2
     --value-head-hidden-layers 1
     --log-search-tree

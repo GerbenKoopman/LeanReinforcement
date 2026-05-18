@@ -312,11 +312,12 @@ class Trainer:
 
     def _setup_multiprocessing(self) -> None:
         mp.set_start_method("spawn", force=True)
-        self.request_queue: mp.Queue = mp.Queue()
-        self.result_queue: mp.Queue = mp.Queue()
-        self.theorem_queue: mp.Queue = mp.Queue()
+        queue_maxsize = 100
+        self.request_queue: mp.Queue = mp.Queue(maxsize=queue_maxsize)
+        self.result_queue: mp.Queue = mp.Queue(maxsize=queue_maxsize)
+        self.theorem_queue: mp.Queue = mp.Queue(maxsize=queue_maxsize)
         self.response_queues: List[mp.Queue] = [
-            mp.Queue() for _ in range(self.config.num_workers)
+            mp.Queue(maxsize=queue_maxsize) for _ in range(self.config.num_workers)
         ]
         self.workers: List[mp.Process] = []
 
