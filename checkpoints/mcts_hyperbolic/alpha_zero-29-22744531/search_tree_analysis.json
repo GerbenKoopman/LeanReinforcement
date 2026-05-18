@@ -1,0 +1,7 @@
+{
+  "aggregate": {},
+  "search_tree_dir": "checkpoints/mcts_hyperbolic/alpha_zero-29-22744531/search_trees",
+  "tree_count": 0,
+  "tree_files": [],
+  "trees": []
+}
