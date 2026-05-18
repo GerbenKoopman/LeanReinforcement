@@ -1,7 +1,3 @@
-{
-  "aggregate": {},
-  "search_tree_dir": "checkpoints/mcts_euclidean/alpha_zero-44-22710202/search_trees",
-  "tree_count": 0,
-  "tree_files": [],
-  "trees": []
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:1a0c84812d69b6f887eecfde1584d05e98649552d2597365790d2ca5648729bd
+size 162

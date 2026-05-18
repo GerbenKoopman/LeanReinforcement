@@ -2,3 +2,5 @@ leandojo_benchmark_4/novel_premises/train.json filter=lfs diff=lfs merge=lfs -te
 leandojo_benchmark_4/random/train.json filter=lfs diff=lfs merge=lfs -text
 leandojo_benchmark_4/corpus.jsonl filter=lfs diff=lfs merge=lfs -text
 *.out filter=lfs diff=lfs merge=lfs -text
+*checkpoints/* filter=lfs diff=lfs merge=lfs -text
+checkpoints/** filter=lfs diff=lfs merge=lfs -text

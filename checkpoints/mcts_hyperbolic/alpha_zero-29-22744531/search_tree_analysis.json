@@ -1,7 +1,3 @@
-{
-  "aggregate": {},
-  "search_tree_dir": "checkpoints/mcts_hyperbolic/alpha_zero-29-22744531/search_trees",
-  "tree_count": 0,
-  "tree_files": [],
-  "trees": []
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:623907ba1665bbd09f3511b8e70fe3567aa975f9b7b0cbdb5ba552f672f8f59b
+size 163

@@ -1,10 +1,3 @@
-{
-  "last_epoch": 1,
-  "last_updated": "2026-04-08T11:26:29.754026",
-  "data_type": "novel_premises",
-  "mcts_type": "alpha_zero",
-  "num_iterations": 1000,
-  "max_steps": 80,
-  "train_epochs": 50,
-  "use_final_reward": true
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:ee5516cc387d0f4cb594bbfe142d7d50f5fe3baad328d74512c1fdffefb89a8c
+size 226
